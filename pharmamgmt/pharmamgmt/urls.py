@@ -8,6 +8,5 @@ urlpatterns = [
     path('', include('core.urls')),
 ]
 
-# Add media URL during development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Add media URL for both development and production
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
