@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="form-card">
+            <h3 class="form-title">Bulk Upload Products</h3>
+            
+            <div class="alert alert-info">
+                <h5><i class="fas fa-info-circle me-2"></i>Instructions:</h5>
+                <ol>
+                    <li>Download the CSV template using the button below.</li>
+                    <li>Fill in the product details in the CSV file. Each row represents one product.</li>
+                    <li>Save the file and upload it using the form below.</li>
+                    <li>Products will be created or updated if they already exist (matching by product name and company).</li>
+                </ol>
+            </div>
+            
+            <div class="mb-4">
+                <a href="?sample=true" class="btn btn-outline-primary">
+                    <i class="fas fa-download me-2"></i>Download CSV Template
+                </a>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="csv_file" class="form-label">CSV File</label>
+                    <input type="file" name="csv_file" id="csv_file" class="form-control" required>
+                    <div class="form-text">File must be a CSV file with headers.</div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'product_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Products
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload me-2"></i>Upload
+                    </button>
+                </div>
+            </form>
+            
+            <div class="mt-4">
+                <h5>CSV Format</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Column</th>
+                                <th>Description</th>
+                                <th>Required</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>product_name</td>
+                                <td>Name of the product</td>
+                                <td>Yes</td>
+                                <td>Paracetamol 500mg</td>
+                            </tr>
+                            <tr>
+                                <td>product_company</td>
+                                <td>Manufacturer name</td>
+                                <td>Yes</td>
+                                <td>ABC Pharma</td>
+                            </tr>
+                            <tr>
+                                <td>product_packing</td>
+                                <td>Packing size</td>
+                                <td>No</td>
+                                <td>10x10</td>
+                            </tr>
+                            <tr>
+                                <td>product_salt</td>
+                                <td>Active ingredients</td>
+                                <td>No</td>
+                                <td>Paracetamol</td>
+                            </tr>
+                            <tr>
+                                <td>product_category</td>
+                                <td>Product category</td>
+                                <td>No</td>
+                                <td>Analgesic</td>
+                            </tr>
+                            <tr>
+                                <td>product_hsn</td>
+                                <td>HSN code</td>
+                                <td>No</td>
+                                <td>30049099</td>
+                            </tr>
+                            <tr>
+                                <td>product_hsn_percent</td>
+                                <td>Tax percentage</td>
+                                <td>No</td>
+                                <td>12</td>
+                            </tr>
+                            <tr>
+                                <td>rate_A</td>
+                                <td>Rate A</td>
+                                <td>No</td>
+                                <td>5.0</td>
+                            </tr>
+                            <tr>
+                                <td>rate_B</td>
+                                <td>Rate B</td>
+                                <td>No</td>
+                                <td>4.5</td>
+                            </tr>
+                            <tr>
+                                <td>rate_C</td>
+                                <td>Rate C</td>
+                                <td>No</td>
+                                <td>4.0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

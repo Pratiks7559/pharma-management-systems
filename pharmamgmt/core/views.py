@@ -320,6 +320,96 @@ def product_detail(request, pk):
     return render(request, 'products/product_detail.html', context)
 
 @login_required
+def bulk_upload_products(request):
+    if not request.user.user_type.lower() == 'admin':
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('product_list')
+    
+    if request.method == 'POST':
+        csv_file = request.FILES.get('csv_file')
+        
+        if not csv_file:
+            messages.error(request, "Please select a CSV file.")
+            return redirect('bulk_upload_products')
+        
+        if not csv_file.name.endswith('.csv'):
+            messages.error(request, "File must be a CSV.")
+            return redirect('bulk_upload_products')
+        
+        # Process CSV file
+        try:
+            decoded_file = csv_file.read().decode('utf-8').splitlines()
+            reader = csv.DictReader(decoded_file)
+            
+            success_count = 0
+            error_count = 0
+            errors = []
+            
+            for row in reader:
+                try:
+                    # Create or update product
+                    product, created = ProductMaster.objects.update_or_create(
+                        product_name=row.get('product_name', '').strip(),
+                        product_company=row.get('product_company', '').strip(),
+                        defaults={
+                            'product_packing': row.get('product_packing', '').strip(),
+                            'product_salt': row.get('product_salt', '').strip(),
+                            'product_category': row.get('product_category', '').strip(),
+                            'product_hsn': row.get('product_hsn', '').strip(),
+                            'product_hsn_percent': row.get('product_hsn_percent', '').strip(),
+                            'rate_A': float(row.get('rate_A', 0) or 0),
+                            'rate_B': float(row.get('rate_B', 0) or 0),
+                            'rate_C': float(row.get('rate_C', 0) or 0),
+                        }
+                    )
+                    success_count += 1
+                except Exception as e:
+                    error_count += 1
+                    errors.append(f"Error on row {reader.line_num}: {str(e)}")
+            
+            if success_count > 0:
+                messages.success(request, f"Successfully processed {success_count} products.")
+            
+            if error_count > 0:
+                messages.warning(request, f"Encountered {error_count} errors during import.")
+                for error in errors[:10]:  # Show first 10 errors
+                    messages.error(request, error)
+                if len(errors) > 10:
+                    messages.error(request, f"... and {len(errors) - 10} more errors.")
+            
+            return redirect('product_list')
+            
+        except Exception as e:
+            messages.error(request, f"Error processing CSV file: {str(e)}")
+            return redirect('bulk_upload_products')
+    
+    # Generate a sample CSV for download
+    if request.GET.get('sample'):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="product_template.csv"'
+        
+        writer = csv.writer(response)
+        writer.writerow([
+            'product_name', 'product_company', 'product_packing', 
+            'product_salt', 'product_category', 'product_hsn', 
+            'product_hsn_percent', 'rate_A', 'rate_B', 'rate_C'
+        ])
+        
+        # Add sample row
+        writer.writerow([
+            'Paracetamol 500mg', 'ABC Pharma', '10x10',
+            'Paracetamol', 'Analgesic', '30049099',
+            '12', '5.0', '4.5', '4.0'
+        ])
+        
+        return response
+    
+    context = {
+        'title': 'Bulk Upload Products'
+    }
+    return render(request, 'products/bulk_upload.html', context)
+
+@login_required
 def delete_product(request, pk):
     if not request.user.user_type == 'admin':
         messages.error(request, "You don't have permission to perform this action.")
