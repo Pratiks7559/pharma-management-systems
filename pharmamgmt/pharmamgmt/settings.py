@@ -10,10 +10,10 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-5&j%-b#2a$=_!)^-n2x7iq9m$w
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', '.replit.dev', '.repl.co', '.replit.app', '*']
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', '.replit.dev', '.repl.co']
 
 # CSRF settings for Replit
-CSRF_TRUSTED_ORIGINS = ['https://*.replit.dev', 'https://*.repl.co', 'https://*.replit.app', 'https://*']
+CSRF_TRUSTED_ORIGINS = ['https://*.replit.dev', 'https://*.repl.co']
 
 # Application definition
 INSTALLED_APPS = [
