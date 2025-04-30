@@ -204,12 +204,16 @@
                                 <td>{{ purchases_total|currency }}</td>
                             </tr>
                             <tr class="table-dark">
-                                <td colspan="8" class="text-end"><strong>Transport Charges:</strong></td>
+                                <td colspan="8" class="text-end"><strong>Invoice Total:</strong></td>
+                                <td>{{ invoice.invoice_total|currency }}</td>
+                            </tr>
+                            <tr class="table-dark">
+                                <td colspan="8" class="text-end"><strong>Transport Charges (Additional):</strong></td>
                                 <td>{{ invoice.transport_charges|currency }}</td>
                             </tr>
                             <tr class="table-dark">
-                                <td colspan="8" class="text-end"><strong>Invoice Total:</strong></td>
-                                <td>{{ invoice.invoice_total|currency }}</td>
+                                <td colspan="8" class="text-end"><strong>Grand Total (Invoice + Transport):</strong></td>
+                                <td>{{ invoice.invoice_total|add:invoice.transport_charges|currency }}</td>
                             </tr>
                             {% if has_pending_entries %}
                             <tr class="table-danger">

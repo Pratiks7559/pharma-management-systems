@@ -721,8 +721,8 @@ def invoice_detail(request, pk):
     purchases_total = purchases.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
     
     # Calculate the difference between invoice total and sum of purchases
-    # Transport charges are already included in the invoice total
-    invoice_pending = invoice.invoice_total - purchases_total - invoice.transport_charges
+    # Transport charges should NOT be included in the invoice total
+    invoice_pending = invoice.invoice_total - purchases_total
     
     # Get all payments for this invoice
     payments = InvoicePaid.objects.filter(ip_invoiceid=pk).order_by('-payment_date')
@@ -758,10 +758,9 @@ def add_purchase(request, invoice_id):
             purchase.product_company = product.product_company
             purchase.product_packing = product.product_packing
             
-            # Calculate transportation charges proportionally
-            total_transportation = invoice.transport_charges
-            # For simplicity, we're distributing transportation cost equally among items
-            purchase.product_transportation_charges = total_transportation / PurchaseMaster.objects.filter(product_invoiceid=invoice).count() if PurchaseMaster.objects.filter(product_invoiceid=invoice).exists() else total_transportation
+            # Transport charges are not included in product calculations
+            # They are additional charges separate from the invoice total
+            purchase.product_transportation_charges = 0
             
             # Calculate actual rate based on discount and quantity
             if purchase.purchase_calculation_mode == 'flat':
