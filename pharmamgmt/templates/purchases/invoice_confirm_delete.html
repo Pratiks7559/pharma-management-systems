@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Confirm Delete</h5>
+                </div>
+                <div class="card-body">
+                    <p class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Are you sure you want to delete the purchase invoice <strong>#{{ invoice.invoice_no }}</strong>?
+                    </p>
+                    
+                    <div class="mb-4">
+                        <h6>Invoice Details:</h6>
+                        <ul>
+                            <li><strong>Invoice No:</strong> {{ invoice.invoice_no }}</li>
+                            <li><strong>Date:</strong> {{ invoice.invoice_date }}</li>
+                            <li><strong>Supplier:</strong> {{ invoice.supplierid.supplier_name }}</li>
+                            <li><strong>Total Amount:</strong> {{ invoice.invoice_total|currency }}</li>
+                        </ul>
+                    </div>
+                    
+                    <p>This action cannot be undone. All products, payments, and data related to this invoice will be permanently removed from the system.</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-end mt-3">
+                            <a href="{% url 'invoice_detail' pk=invoice.invoiceid %}" class="btn btn-secondary me-2">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>Delete
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

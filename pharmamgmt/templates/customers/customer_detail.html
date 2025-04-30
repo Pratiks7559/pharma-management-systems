@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block page_actions %}
+<div>
+    <a href="{% url 'update_customer' pk=customer.customerid %}" class="btn btn-warning">
+        <i class="fas fa-edit me-2"></i>Edit Customer
+    </a>
+    {% if request.user.user_type == 'admin' %}
+    <a href="{% url 'delete_customer' pk=customer.customerid %}" class="btn btn-danger">
+        <i class="fas fa-trash me-2"></i>Delete Customer
+    </a>
+    {% endif %}
+    <a href="{% url 'customer_list' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Customers
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Customer Information</h5>
+            </div>
+            <div class="card-body">
+                <h4 class="mb-1">{{ customer.customer_name }}</h4>
+                <p class="text-muted mb-3">{{ customer.customer_type }}</p>
+                
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-id-card me-2"></i>Customer ID</span>
+                        <span class="badge bg-primary rounded-pill">{{ customer.customerid }}</span>
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-map-marker-alt me-2"></i><strong>Address:</strong>
+                        <div class="mt-1">{{ customer.customer_address }}</div>
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-phone me-2"></i><strong>Mobile:</strong> {{ customer.customer_mobile }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fab fa-whatsapp me-2"></i><strong>WhatsApp:</strong> {{ customer.customer_whatsapp }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-envelope me-2"></i><strong>Email:</strong> {{ customer.customer_emailid }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-user me-2"></i><strong>Contact Person:</strong> {{ customer.customer_spoc }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-clock me-2"></i><strong>Credit Days:</strong> {{ customer.customer_credit_days }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Legal Information</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="fas fa-certificate me-2"></i><strong>Drug License:</strong> {{ customer.customer_dlno }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-file-invoice me-2"></i><strong>GST Number:</strong> {{ customer.customer_gstno }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Bank Details</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="fas fa-university me-2"></i><strong>Bank Name:</strong> {{ customer.customer_bank }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-credit-card me-2"></i><strong>Account Number:</strong> {{ customer.customer_bankaccountno }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-code me-2"></i><strong>IFSC Code:</strong> {{ customer.customer_bankifsc }}
+                    </li>
+                    {% if customer.customer_upi %}
+                    <li class="list-group-item">
+                        <i class="fas fa-mobile-alt me-2"></i><strong>UPI ID:</strong> {{ customer.customer_upi }}
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Financial Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3">
+                        <h6 class="text-muted">Total Sales</h6>
+                        <h3 class="mb-0">{{ total_sales|currency }}</h3>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <h6 class="text-muted">Total Received</h6>
+                        <h3 class="mb-0">{{ total_paid|currency }}</h3>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <h6 class="text-muted">Outstanding Balance</h6>
+                        <h3 class="mb-0 {% if balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                            {{ balance|currency }}
+                        </h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Sales History</h5>
+                <a href="{% url 'add_sales_invoice' %}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus me-1"></i> New Invoice
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Paid</th>
+                                <th>Balance</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for invoice in invoices %}
+                            <tr>
+                                <td>{{ invoice.sales_invoice_no }}</td>
+                                <td>{{ invoice.sales_invoice_date }}</td>
+                                <td>{{ invoice.sales_invoice_total|currency }}</td>
+                                <td>{{ invoice.sales_invoice_paid|currency }}</td>
+                                <td class="{% if invoice.balance_due > 0 %}text-danger{% else %}text-success{% endif %}">
+                                    {{ invoice.balance_due|currency }}
+                                </td>
+                                <td>
+                                    <a href="{% url 'sales_invoice_detail' pk=invoice.sales_invoice_no %}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if invoice.balance_due > 0 %}
+                                    <a href="{% url 'add_sales_payment' invoice_id=invoice.sales_invoice_no %}" class="btn btn-sm btn-success">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">No invoices found for this customer.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

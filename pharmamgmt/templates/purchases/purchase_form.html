@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Add Product to Invoice #{{ invoice.invoice_no }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Invoice Details</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>Invoice No:</strong> {{ invoice.invoice_no }}</li>
+                                <li><strong>Date:</strong> {{ invoice.invoice_date }}</li>
+                                <li><strong>Supplier:</strong> {{ invoice.supplierid.supplier_name }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <form method="post" id="purchaseForm">
+                        {% csrf_token %}
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.productid.id_for_label }}">Product*</label>
+                            {{ form.productid }}
+                            {% if form.productid.errors %}
+                                <div class="text-danger">{{ form.productid.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_batch_no.id_for_label }}">Batch No*</label>
+                                    {{ form.product_batch_no }}
+                                    {% if form.product_batch_no.errors %}
+                                        <div class="text-danger">{{ form.product_batch_no.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_expiry.id_for_label }}">Expiry Date*</label>
+                                    {{ form.product_expiry }}
+                                    {% if form.product_expiry.errors %}
+                                        <div class="text-danger">{{ form.product_expiry.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_MRP.id_for_label }}">MRP*</label>
+                                    {{ form.product_MRP }}
+                                    {% if form.product_MRP.errors %}
+                                        <div class="text-danger">{{ form.product_MRP.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_purchase_rate.id_for_label }}">Purchase Rate*</label>
+                                    {{ form.product_purchase_rate }}
+                                    {% if form.product_purchase_rate.errors %}
+                                        <div class="text-danger">{{ form.product_purchase_rate.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_quantity.id_for_label }}">Quantity*</label>
+                                    {{ form.product_quantity }}
+                                    {% if form.product_quantity.errors %}
+                                        <div class="text-danger">{{ form.product_quantity.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_scheme.id_for_label }}">Scheme/Free Qty</label>
+                                    {{ form.product_scheme }}
+                                    {% if form.product_scheme.errors %}
+                                        <div class="text-danger">{{ form.product_scheme.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.purchase_calculation_mode.id_for_label }}">Discount Type*</label>
+                                    {{ form.purchase_calculation_mode }}
+                                    {% if form.purchase_calculation_mode.errors %}
+                                        <div class="text-danger">{{ form.purchase_calculation_mode.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_discount_got.id_for_label }}">Discount*</label>
+                                    {{ form.product_discount_got }}
+                                    {% if form.product_discount_got.errors %}
+                                        <div class="text-danger">{{ form.product_discount_got.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.IGST.id_for_label }}">GST %*</label>
+                                    {{ form.IGST }}
+                                    {% if form.IGST.errors %}
+                                        <div class="text-danger">{{ form.IGST.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="card border-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Calculated Values</h6>
+                                        <div class="calculated-values">
+                                            <div><strong>Actual Rate:</strong> <span id="actualRate">₹0.00</span></div>
+                                            <div><strong>Total Amount:</strong> <span id="totalAmount">₹0.00</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Add Product
+                            </button>
+                            <a href="{% url 'invoice_detail' pk=invoice.invoiceid %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Invoice
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const productSelect = document.getElementById('{{ form.productid.id_for_label }}');
+        const purchaseRateInput = document.getElementById('{{ form.product_purchase_rate.id_for_label }}');
+        const quantityInput = document.getElementById('{{ form.product_quantity.id_for_label }}');
+        const discountInput = document.getElementById('{{ form.product_discount_got.id_for_label }}');
+        const calcModeSelect = document.getElementById('{{ form.purchase_calculation_mode.id_for_label }}');
+        const gstInput = document.getElementById('{{ form.IGST.id_for_label }}');
+        
+        // Display elements
+        const actualRateDisplay = document.getElementById('actualRate');
+        const totalAmountDisplay = document.getElementById('totalAmount');
+        
+        // Function to fetch product details when a product is selected
+        productSelect.addEventListener('change', function() {
+            const productId = this.value;
+            if (!productId) return;
+            
+            fetch(`/api/product-info/?product_id=${productId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('{{ form.product_MRP.id_for_label }}').value = data.product_MRP || '';
+                    document.getElementById('{{ form.IGST.id_for_label }}').value = data.product_hsn_percent || '0';
+                })
+                .catch(error => console.error('Error fetching product info:', error));
+        });
+        
+        // Function to calculate and update values
+        function calculateValues() {
+            const purchaseRate = parseFloat(purchaseRateInput.value) || 0;
+            const quantity = parseFloat(quantityInput.value) || 0;
+            const discount = parseFloat(discountInput.value) || 0;
+            const gst = parseFloat(gstInput.value) || 0;
+            const calcMode = calcModeSelect.value;
+            
+            let actualRate;
+            if (calcMode === 'flat') {
+                // Flat discount amount
+                actualRate = purchaseRate - (discount / quantity);
+            } else {
+                // Percentage discount
+                actualRate = purchaseRate * (1 - (discount / 100));
+            }
+            
+            // Calculate total amount with GST
+            const baseAmount = actualRate * quantity;
+            const totalAmount = baseAmount * (1 + (gst / 100));
+            
+            // Update display
+            actualRateDisplay.textContent = `₹${actualRate.toFixed(2)}`;
+            totalAmountDisplay.textContent = `₹${totalAmount.toFixed(2)}`;
+        }
+        
+        // Add event listeners to all inputs that affect calculations
+        [purchaseRateInput, quantityInput, discountInput, calcModeSelect, gstInput].forEach(input => {
+            input.addEventListener('input', calculateValues);
+            input.addEventListener('change', calculateValues);
+        });
+    });
+</script>
+{% endblock %}

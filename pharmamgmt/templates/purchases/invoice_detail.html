@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block page_actions %}
+<div>
+    <a href="{% url 'add_purchase' invoice_id=invoice.invoiceid %}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Add Product
+    </a>
+    {% if invoice.balance_due > 0 %}
+    <a href="{% url 'add_invoice_payment' invoice_id=invoice.invoiceid %}" class="btn btn-success">
+        <i class="fas fa-money-bill-wave me-2"></i>Add Payment
+    </a>
+    {% endif %}
+    {% if request.user.user_type == 'admin' %}
+    <a href="{% url 'delete_invoice' pk=invoice.invoiceid %}" class="btn btn-danger">
+        <i class="fas fa-trash me-2"></i>Delete Invoice
+    </a>
+    {% endif %}
+    <a href="{% url 'invoice_list' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Invoices
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Invoice Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Invoice No.</h6>
+                        <h4>{{ invoice.invoice_no }}</h4>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Date</h6>
+                        <h4>{{ invoice.invoice_date }}</h4>
+                    </div>
+                </div>
+                
+                <h6 class="text-muted">Supplier</h6>
+                <h5 class="mb-3">
+                    <a href="{% url 'supplier_detail' pk=invoice.supplierid.supplierid %}">
+                        {{ invoice.supplierid.supplier_name }}
+                    </a>
+                </h5>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Transport Charges</h6>
+                        <h5>{{ invoice.transport_charges|currency }}</h5>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Invoice Total</h6>
+                        <h5>{{ invoice.invoice_total|currency }}</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Payment Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="progress mb-3" style="height: 25px;">
+                    {% if invoice.invoice_total > 0 %}
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ invoice.invoice_paid|divide:invoice.invoice_total|multiply:100 }}%;" aria-valuenow="{{ invoice.invoice_paid|divide:invoice.invoice_total|multiply:100 }}" aria-valuemin="0" aria-valuemax="100">
+                        {{ invoice.invoice_paid|divide:invoice.invoice_total|multiply:100|floatformat:1 }}%
+                    </div>
+                    {% else %}
+                    <div class="progress-bar bg-success" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                        0%
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Total Paid</h6>
+                        <h5>{{ invoice.invoice_paid|currency }}</h5>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Balance Due</h6>
+                        <h5 class="{% if invoice.balance_due > 0 %}text-danger{% else %}text-success{% endif %}">
+                            {{ invoice.balance_due|currency }}
+                        </h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Payment History</h5>
+                {% if invoice.balance_due > 0 %}
+                <a href="{% url 'add_invoice_payment' invoice_id=invoice.invoiceid %}" class="btn btn-sm btn-success">
+                    <i class="fas fa-plus"></i>
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Mode</th>
+                                <th>Reference</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.payment_date }}</td>
+                                <td>{{ payment.payment_amount|currency }}</td>
+                                <td>{{ payment.payment_mode }}</td>
+                                <td>{{ payment.payment_ref_no }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No payments recorded</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Products</h5>
+                <a href="{% url 'add_purchase' invoice_id=invoice.invoiceid %}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus me-1"></i> Add Product
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Batch No</th>
+                                <th>Expiry</th>
+                                <th>MRP</th>
+                                <th>Rate</th>
+                                <th>Qty</th>
+                                <th>Discount</th>
+                                <th>GST %</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for purchase in purchases %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'product_detail' pk=purchase.productid.productid %}">
+                                        {{ purchase.product_name }}
+                                    </a>
+                                    <div class="small text-muted">{{ purchase.product_company }} - {{ purchase.product_packing }}</div>
+                                </td>
+                                <td>{{ purchase.product_batch_no }}</td>
+                                <td>{{ purchase.product_expiry }}</td>
+                                <td>{{ purchase.product_MRP|currency }}</td>
+                                <td>{{ purchase.product_purchase_rate|currency }}</td>
+                                <td>{{ purchase.product_quantity }}</td>
+                                <td>
+                                    {% if purchase.purchase_calculation_mode == 'flat' %}
+                                        {{ purchase.product_discount_got|currency }}
+                                    {% else %}
+                                        {{ purchase.product_discount_got }}%
+                                    {% endif %}
+                                </td>
+                                <td>{{ purchase.IGST }}%</td>
+                                <td>{{ purchase.total_amount|currency }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center">No products added to this invoice</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-dark">
+                                <td colspan="8" class="text-end"><strong>Transport Charges:</strong></td>
+                                <td>{{ invoice.transport_charges|currency }}</td>
+                            </tr>
+                            <tr class="table-dark">
+                                <td colspan="8" class="text-end"><strong>Total:</strong></td>
+                                <td>{{ invoice.invoice_total|currency }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

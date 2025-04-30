@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% if supplier %}Update{% else %}Add{% endif %} Supplier</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.supplier_name.id_for_label }}">Supplier Name*</label>
+                                    {{ form.supplier_name }}
+                                    {% if form.supplier_name.errors %}
+                                        <div class="text-danger">{{ form.supplier_name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.supplier_type.id_for_label }}">Supplier Type*</label>
+                                    {{ form.supplier_type }}
+                                    {% if form.supplier_type.errors %}
+                                        <div class="text-danger">{{ form.supplier_type.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.supplier_address.id_for_label }}">Address*</label>
+                            {{ form.supplier_address }}
+                            {% if form.supplier_address.errors %}
+                                <div class="text-danger">{{ form.supplier_address.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.supplier_mobile.id_for_label }}">Mobile Number*</label>
+                                    {{ form.supplier_mobile }}
+                                    {% if form.supplier_mobile.errors %}
+                                        <div class="text-danger">{{ form.supplier_mobile.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.supplier_whatsapp.id_for_label }}">WhatsApp Number*</label>
+                                    {{ form.supplier_whatsapp }}
+                                    {% if form.supplier_whatsapp.errors %}
+                                        <div class="text-danger">{{ form.supplier_whatsapp.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.supplier_emailid.id_for_label }}">Email Address*</label>
+                                    {{ form.supplier_emailid }}
+                                    {% if form.supplier_emailid.errors %}
+                                        <div class="text-danger">{{ form.supplier_emailid.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.supplier_spoc.id_for_label }}">Contact Person (SPOC)*</label>
+                                    {{ form.supplier_spoc }}
+                                    {% if form.supplier_spoc.errors %}
+                                        <div class="text-danger">{{ form.supplier_spoc.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.supplier_dlno.id_for_label }}">Drug License Number*</label>
+                                    {{ form.supplier_dlno }}
+                                    {% if form.supplier_dlno.errors %}
+                                        <div class="text-danger">{{ form.supplier_dlno.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.supplier_gstno.id_for_label }}">GST Number*</label>
+                                    {{ form.supplier_gstno }}
+                                    {% if form.supplier_gstno.errors %}
+                                        <div class="text-danger">{{ form.supplier_gstno.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h5 class="mt-4 mb-3">Bank Details</h5>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.supplier_bank.id_for_label }}">Bank Name*</label>
+                                    {{ form.supplier_bank }}
+                                    {% if form.supplier_bank.errors %}
+                                        <div class="text-danger">{{ form.supplier_bank.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.supplier_bankaccountno.id_for_label }}">Account Number*</label>
+                                    {{ form.supplier_bankaccountno }}
+                                    {% if form.supplier_bankaccountno.errors %}
+                                        <div class="text-danger">{{ form.supplier_bankaccountno.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.supplier_bankifsc.id_for_label }}">IFSC Code*</label>
+                                    {{ form.supplier_bankifsc }}
+                                    {% if form.supplier_bankifsc.errors %}
+                                        <div class="text-danger">{{ form.supplier_bankifsc.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.supplier_upi.id_for_label }}">UPI ID</label>
+                                    {{ form.supplier_upi }}
+                                    {% if form.supplier_upi.errors %}
+                                        <div class="text-danger">{{ form.supplier_upi.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>{% if supplier %}Update{% else %}Save{% endif %} Supplier
+                            </button>
+                            <a href="{% url 'supplier_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Suppliers
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

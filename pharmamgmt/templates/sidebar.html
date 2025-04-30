@@ -1,0 +1,150 @@
+{% load static %}
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h3>PharmaMgmt</h3>
+    </div>
+    
+    <div class="sidebar-user">
+        {% if user.is_authenticated %}
+            <div class="user-pic">
+                {% if user.path %}
+                    <img src="{{ user.path.url }}" class="img-responsive img-rounded" alt="User Image">
+                {% else %}
+                    <i class="fas fa-user-circle fa-3x"></i>
+                {% endif %}
+            </div>
+            <div class="user-info">
+                <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
+                <span class="user-role">{{ user.user_type|title }}</span>
+            </div>
+        {% endif %}
+    </div>
+    
+    <ul class="nav flex-column">
+        <li class="nav-item">
+            <a href="{% url 'dashboard' %}" class="nav-link {% if request.path == '/dashboard/' or request.path == '/' %}active{% endif %}">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+        </li>
+        
+        <li class="nav-item">
+            <a href="{% url 'product_list' %}" class="nav-link {% if '/products/' in request.path %}active{% endif %}">
+                <i class="fas fa-pills"></i> Products
+            </a>
+        </li>
+        
+        <li class="nav-item">
+            <a href="{% url 'supplier_list' %}" class="nav-link {% if '/suppliers/' in request.path %}active{% endif %}">
+                <i class="fas fa-truck"></i> Suppliers
+            </a>
+        </li>
+        
+        <li class="nav-item">
+            <a href="{% url 'customer_list' %}" class="nav-link {% if '/customers/' in request.path %}active{% endif %}">
+                <i class="fas fa-users"></i> Customers
+            </a>
+        </li>
+        
+        <li class="nav-item">
+            <a href="#purchaseSubmenu" data-bs-toggle="collapse" class="nav-link {% if '/invoices/' in request.path %}active{% endif %}">
+                <i class="fas fa-shopping-cart"></i> Purchases <i class="fas fa-angle-down float-end"></i>
+            </a>
+            <ul class="collapse {% if '/invoices/' in request.path %}show{% endif %}" id="purchaseSubmenu">
+                <li>
+                    <a href="{% url 'invoice_list' %}" class="dropdown-item">
+                        <i class="fas fa-file-invoice"></i> Invoices
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'add_invoice' %}" class="dropdown-item">
+                        <i class="fas fa-plus"></i> New Invoice
+                    </a>
+                </li>
+            </ul>
+        </li>
+        
+        <li class="nav-item">
+            <a href="#salesSubmenu" data-bs-toggle="collapse" class="nav-link {% if '/sales/' in request.path %}active{% endif %}">
+                <i class="fas fa-cash-register"></i> Sales <i class="fas fa-angle-down float-end"></i>
+            </a>
+            <ul class="collapse {% if '/sales/' in request.path %}show{% endif %}" id="salesSubmenu">
+                <li>
+                    <a href="{% url 'sales_invoice_list' %}" class="dropdown-item">
+                        <i class="fas fa-file-invoice-dollar"></i> Invoices
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'add_sales_invoice' %}" class="dropdown-item">
+                        <i class="fas fa-plus"></i> New Invoice
+                    </a>
+                </li>
+            </ul>
+        </li>
+        
+        <li class="nav-item">
+            <a href="#returnsSubmenu" data-bs-toggle="collapse" class="nav-link {% if '/purchase-returns/' in request.path or '/sales-returns/' in request.path %}active{% endif %}">
+                <i class="fas fa-undo"></i> Returns <i class="fas fa-angle-down float-end"></i>
+            </a>
+            <ul class="collapse {% if '/purchase-returns/' in request.path or '/sales-returns/' in request.path %}show{% endif %}" id="returnsSubmenu">
+                <li>
+                    <a href="{% url 'purchase_return_list' %}" class="dropdown-item">
+                        <i class="fas fa-truck-loading"></i> Purchase Returns
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'sales_return_list' %}" class="dropdown-item">
+                        <i class="fas fa-people-carry"></i> Sales Returns
+                    </a>
+                </li>
+            </ul>
+        </li>
+        
+        <li class="nav-item">
+            <a href="#reportsSubmenu" data-bs-toggle="collapse" class="nav-link {% if '/reports/' in request.path %}active{% endif %}">
+                <i class="fas fa-chart-bar"></i> Reports <i class="fas fa-angle-down float-end"></i>
+            </a>
+            <ul class="collapse {% if '/reports/' in request.path %}show{% endif %}" id="reportsSubmenu">
+                <li>
+                    <a href="{% url 'inventory_report' %}" class="dropdown-item">
+                        <i class="fas fa-boxes"></i> Inventory
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'sales_report' %}" class="dropdown-item">
+                        <i class="fas fa-chart-line"></i> Sales
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'purchase_report' %}" class="dropdown-item">
+                        <i class="fas fa-shopping-basket"></i> Purchases
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'financial_report' %}" class="dropdown-item">
+                        <i class="fas fa-coins"></i> Financial
+                    </a>
+                </li>
+            </ul>
+        </li>
+        
+        {% if user.user_type == 'admin' %}
+        <li class="nav-item">
+            <a href="#adminSubmenu" data-bs-toggle="collapse" class="nav-link {% if '/users/' in request.path or '/pharmacy-details/' in request.path %}active{% endif %}">
+                <i class="fas fa-cog"></i> Admin <i class="fas fa-angle-down float-end"></i>
+            </a>
+            <ul class="collapse {% if '/users/' in request.path or '/pharmacy-details/' in request.path %}show{% endif %}" id="adminSubmenu">
+                <li>
+                    <a href="{% url 'register' %}" class="dropdown-item">
+                        <i class="fas fa-user-plus"></i> Add User
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'pharmacy_details' %}" class="dropdown-item">
+                        <i class="fas fa-clinic-medical"></i> Pharmacy Details
+                    </a>
+                </li>
+            </ul>
+        </li>
+        {% endif %}
+    </ul>
+</div>

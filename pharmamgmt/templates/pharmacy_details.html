@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ title }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.pharmaname.id_for_label }}">Pharmacy Name</label>
+                            {{ form.pharmaname }}
+                            {% if form.pharmaname.errors %}
+                                <div class="text-danger">{{ form.pharmaname.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.pharmaweburl.id_for_label }}">Website URL</label>
+                            {{ form.pharmaweburl }}
+                            {% if form.pharmaweburl.errors %}
+                                <div class="text-danger">{{ form.pharmaweburl.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.proprietorname.id_for_label }}">Proprietor Name</label>
+                            {{ form.proprietorname }}
+                            {% if form.proprietorname.errors %}
+                                <div class="text-danger">{{ form.proprietorname.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.proprietorcontact.id_for_label }}">Proprietor Contact</label>
+                            {{ form.proprietorcontact }}
+                            {% if form.proprietorcontact.errors %}
+                                <div class="text-danger">{{ form.proprietorcontact.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.proprietoremail.id_for_label }}">Proprietor Email</label>
+                            {{ form.proprietoremail }}
+                            {% if form.proprietoremail.errors %}
+                                <div class="text-danger">{{ form.proprietoremail.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save
+                            </button>
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

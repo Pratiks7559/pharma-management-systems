@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block page_actions %}
+<div>
+    <a href="{% url 'update_supplier' pk=supplier.supplierid %}" class="btn btn-warning">
+        <i class="fas fa-edit me-2"></i>Edit Supplier
+    </a>
+    {% if request.user.user_type == 'admin' %}
+    <a href="{% url 'delete_supplier' pk=supplier.supplierid %}" class="btn btn-danger">
+        <i class="fas fa-trash me-2"></i>Delete Supplier
+    </a>
+    {% endif %}
+    <a href="{% url 'supplier_list' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Suppliers
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Supplier Information</h5>
+            </div>
+            <div class="card-body">
+                <h4 class="mb-1">{{ supplier.supplier_name }}</h4>
+                <p class="text-muted mb-3">{{ supplier.supplier_type }}</p>
+                
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-id-card me-2"></i>Supplier ID</span>
+                        <span class="badge bg-primary rounded-pill">{{ supplier.supplierid }}</span>
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-map-marker-alt me-2"></i><strong>Address:</strong>
+                        <div class="mt-1">{{ supplier.supplier_address }}</div>
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-phone me-2"></i><strong>Mobile:</strong> {{ supplier.supplier_mobile }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fab fa-whatsapp me-2"></i><strong>WhatsApp:</strong> {{ supplier.supplier_whatsapp }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-envelope me-2"></i><strong>Email:</strong> {{ supplier.supplier_emailid }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-user me-2"></i><strong>Contact Person:</strong> {{ supplier.supplier_spoc }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Legal Information</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="fas fa-certificate me-2"></i><strong>Drug License:</strong> {{ supplier.supplier_dlno }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-file-invoice me-2"></i><strong>GST Number:</strong> {{ supplier.supplier_gstno }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Bank Details</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="fas fa-university me-2"></i><strong>Bank Name:</strong> {{ supplier.supplier_bank }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-credit-card me-2"></i><strong>Account Number:</strong> {{ supplier.supplier_bankaccountno }}
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-code me-2"></i><strong>IFSC Code:</strong> {{ supplier.supplier_bankifsc }}
+                    </li>
+                    {% if supplier.supplier_upi %}
+                    <li class="list-group-item">
+                        <i class="fas fa-mobile-alt me-2"></i><strong>UPI ID:</strong> {{ supplier.supplier_upi }}
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Financial Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3">
+                        <h6 class="text-muted">Total Purchase</h6>
+                        <h3 class="mb-0">{{ total_purchase|currency }}</h3>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <h6 class="text-muted">Total Paid</h6>
+                        <h3 class="mb-0">{{ total_paid|currency }}</h3>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <h6 class="text-muted">Outstanding Balance</h6>
+                        <h3 class="mb-0 {% if balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                            {{ balance|currency }}
+                        </h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Purchase History</h5>
+                <a href="{% url 'add_invoice' %}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus me-1"></i> New Invoice
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Paid</th>
+                                <th>Balance</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for invoice in invoices %}
+                            <tr>
+                                <td>{{ invoice.invoice_no }}</td>
+                                <td>{{ invoice.invoice_date }}</td>
+                                <td>{{ invoice.invoice_total|currency }}</td>
+                                <td>{{ invoice.invoice_paid|currency }}</td>
+                                <td class="{% if invoice.balance_due > 0 %}text-danger{% else %}text-success{% endif %}">
+                                    {{ invoice.balance_due|currency }}
+                                </td>
+                                <td>
+                                    <a href="{% url 'invoice_detail' pk=invoice.invoiceid %}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if invoice.balance_due > 0 %}
+                                    <a href="{% url 'add_invoice_payment' invoice_id=invoice.invoiceid %}" class="btn btn-sm btn-success">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">No invoices found for this supplier.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

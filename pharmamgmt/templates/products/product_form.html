@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% if product %}Update{% else %}Add{% endif %} Product</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_name.id_for_label }}">Product Name*</label>
+                                    {{ form.product_name }}
+                                    {% if form.product_name.errors %}
+                                        <div class="text-danger">{{ form.product_name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_company.id_for_label }}">Company*</label>
+                                    {{ form.product_company }}
+                                    {% if form.product_company.errors %}
+                                        <div class="text-danger">{{ form.product_company.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_packing.id_for_label }}">Packing*</label>
+                                    {{ form.product_packing }}
+                                    {% if form.product_packing.errors %}
+                                        <div class="text-danger">{{ form.product_packing.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_salt.id_for_label }}">Salt Composition*</label>
+                                    {{ form.product_salt }}
+                                    {% if form.product_salt.errors %}
+                                        <div class="text-danger">{{ form.product_salt.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_category.id_for_label }}">Category*</label>
+                                    {{ form.product_category }}
+                                    {% if form.product_category.errors %}
+                                        <div class="text-danger">{{ form.product_category.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_hsn.id_for_label }}">HSN Code*</label>
+                                    {{ form.product_hsn }}
+                                    {% if form.product_hsn.errors %}
+                                        <div class="text-danger">{{ form.product_hsn.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_hsn_percent.id_for_label }}">HSN Tax %*</label>
+                                    {{ form.product_hsn_percent }}
+                                    {% if form.product_hsn_percent.errors %}
+                                        <div class="text-danger">{{ form.product_hsn_percent.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_image.id_for_label }}">Product Image</label>
+                                    {{ form.product_image }}
+                                    {% if form.product_image.errors %}
+                                        <div class="text-danger">{{ form.product_image.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.rate_A.id_for_label }}">Rate A*</label>
+                                    {{ form.rate_A }}
+                                    {% if form.rate_A.errors %}
+                                        <div class="text-danger">{{ form.rate_A.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.rate_B.id_for_label }}">Rate B*</label>
+                                    {{ form.rate_B }}
+                                    {% if form.rate_B.errors %}
+                                        <div class="text-danger">{{ form.rate_B.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.rate_C.id_for_label }}">Rate C*</label>
+                                    {{ form.rate_C }}
+                                    {% if form.rate_C.errors %}
+                                        <div class="text-danger">{{ form.rate_C.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if product and product.product_image %}
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label>Current Image</label>
+                                    <div>
+                                        <img src="{{ product.product_image.url }}" alt="Product Image" class="img-thumbnail" style="max-width: 150px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>{% if product %}Update{% else %}Save{% endif %} Product
+                            </button>
+                            <a href="{% url 'product_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Products
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
