@@ -22,7 +22,8 @@ from .forms import (
     LoginForm, UserRegistrationForm, UserUpdateForm, PharmacyDetailsForm, ProductForm,
     SupplierForm, CustomerForm, InvoiceForm, InvoicePaymentForm, PurchaseForm,
     SalesInvoiceForm, SalesForm, SalesPaymentForm, ProductRateForm,
-    PurchaseReturnInvoiceForm, PurchaseReturnForm, SalesReturnInvoiceForm, SalesReturnForm
+    PurchaseReturnInvoiceForm, PurchaseReturnForm, SalesReturnInvoiceForm, SalesReturnForm,
+    ProductBulkUploadForm
 )
 from .utils import get_stock_status, generate_invoice_pdf, generate_sales_invoice_pdf
 
@@ -341,6 +342,70 @@ def delete_product(request, pk):
         'title': 'Delete Product'
     }
     return render(request, 'products/product_confirm_delete.html', context)
+
+@login_required
+def bulk_upload_products(request):
+    if not request.user.user_type in ['admin', 'manager']:
+        messages.error(request, "You don't have permission to perform this action.")
+        return redirect('product_list')
+    
+    if request.method == 'POST':
+        form = ProductBulkUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                # Process the CSV file
+                products_data = form.process_csv_file()
+                
+                # Count for statistics
+                created_count = 0
+                error_count = 0
+                errors = []
+                
+                # Create products
+                for i, product_data in enumerate(products_data, 1):
+                    try:
+                        ProductMaster.objects.create(**product_data)
+                        created_count += 1
+                    except Exception as e:
+                        error_count += 1
+                        errors.append(f"Row {i}: {str(e)}")
+                
+                # Create success message
+                if created_count > 0:
+                    messages.success(request, f"Successfully added {created_count} products!")
+                
+                # Create error messages
+                if error_count > 0:
+                    messages.warning(request, f"Failed to add {error_count} products due to errors.")
+                    for error in errors[:5]:  # Show only first 5 errors to avoid message too long
+                        messages.error(request, error)
+                    if len(errors) > 5:
+                        messages.error(request, f"... and {len(errors) - 5} more errors.")
+                
+                return redirect('product_list')
+            except Exception as e:
+                messages.error(request, f"Error processing CSV file: {str(e)}")
+    else:
+        form = ProductBulkUploadForm()
+    
+    context = {
+        'form': form,
+        'title': 'Bulk Upload Products'
+    }
+    return render(request, 'products/bulk_upload.html', context)
+
+@login_required
+def download_product_template(request):
+    """Download a CSV template for product bulk upload"""
+    # Set up the response
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="product_template.csv"'
+    
+    # Get the template file from static directory
+    with open('pharmamgmt/static/csv/product_template.csv', 'r') as f:
+        response.write(f.read())
+    
+    return response
 
 # Supplier views
 @login_required

@@ -22,6 +22,8 @@ urlpatterns = [
     # Products
     path('products/', views.product_list, name='product_list'),
     path('products/add/', views.add_product, name='add_product'),
+    path('products/bulk-upload/', views.bulk_upload_products, name='bulk_upload_products'),
+    path('products/download-template/', views.download_product_template, name='download_product_template'),
     path('products/<int:pk>/', views.product_detail, name='product_detail'),
     path('products/<int:pk>/update/', views.update_product, name='update_product'),
     path('products/<int:pk>/delete/', views.delete_product, name='delete_product'),
