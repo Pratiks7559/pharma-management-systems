@@ -79,4 +79,7 @@ urlpatterns = [
     # API endpoints for AJAX calls
     path('api/product-info/', views.get_product_info, name='get_product_info'),
     path('api/export-inventory/', views.export_inventory_csv, name='export_inventory_csv'),
+    
+    # Debug page - accessible without authentication
+    path('debug/', views.debug_view, name='debug'),
 ]
