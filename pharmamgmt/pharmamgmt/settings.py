@@ -12,6 +12,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', '.replit.dev', '.repl.co']
 
+# CSRF settings for Replit
+CSRF_TRUSTED_ORIGINS = ['https://*.replit.dev', 'https://*.repl.co']
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
