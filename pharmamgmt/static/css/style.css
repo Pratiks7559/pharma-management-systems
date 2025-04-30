@@ -257,3 +257,26 @@ body {
 .bg-danger { background-color: var(--danger-color) !important; }
 .bg-warning { background-color: var(--warning-color) !important; }
 .bg-info { background-color: var(--info-color) !important; }
+
+/* Session Timer Styles */
+.session-timer-container {
+    padding: 8px 12px;
+    border-radius: 4px;
+    color: var(--secondary-color);
+    font-weight: 500;
+}
+
+#session-timer {
+    min-width: 50px;
+    text-align: center;
+}
+
+#session-timer.text-danger {
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
