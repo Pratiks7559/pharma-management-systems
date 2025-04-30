@@ -850,6 +850,7 @@ def edit_invoice_payment(request, invoice_id, payment_id):
         'form': form,
         'invoice': invoice,
         'payment': payment,
+        'balance': invoice.invoice_total - invoice.invoice_paid + payment.payment_amount,
         'is_edit': True,
         'title': 'Edit Invoice Payment'
     }

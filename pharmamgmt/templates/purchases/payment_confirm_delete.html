@@ -21,12 +21,28 @@
                             <td>{{ invoice.invoice_no }}</td>
                         </tr>
                         <tr>
+                            <th>Supplier:</th>
+                            <td>{{ invoice.supplierid.supplier_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Invoice Total:</th>
+                            <td>₹{{ invoice.invoice_total }}</td>
+                        </tr>
+                        <tr>
+                            <th>Current Paid Amount:</th>
+                            <td>₹{{ invoice.invoice_paid }}</td>
+                        </tr>
+                        <tr>
+                            <th>Balance After Deletion:</th>
+                            <td class="text-danger">₹{{ invoice.invoice_paid|add:"-"|add:payment.payment_amount }}</td>
+                        </tr>
+                        <tr>
                             <th>Payment Date:</th>
                             <td>{{ payment.payment_date|date:"F j, Y" }}</td>
                         </tr>
                         <tr>
                             <th>Payment Amount:</th>
-                            <td>₹{{ payment.payment_amount }}</td>
+                            <td class="text-danger">₹{{ payment.payment_amount }}</td>
                         </tr>
                         <tr>
                             <th>Payment Mode:</th>
