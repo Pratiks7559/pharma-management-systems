@@ -346,30 +346,57 @@ class SalesReturnForm(forms.ModelForm):
         self.fields['return_productid'].label = 'Product'
 
 class ProductBulkUploadForm(forms.Form):
-    csv_file = forms.FileField(widget=forms.FileInput(attrs={'class': 'form-control', 'accept': '.csv'}))
+    csv_file = forms.FileField(
+        label='CSV File',
+        widget=forms.FileInput(attrs={'class': 'form-control', 'accept': '.csv'})
+    )
+    has_header = forms.BooleanField(
+        label='File has header row',
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
     
     def clean_csv_file(self):
         csv_file = self.cleaned_data.get('csv_file')
         
+        if not csv_file:
+            raise forms.ValidationError('Please upload a CSV file.')
+            
         if not csv_file.name.endswith('.csv'):
             raise forms.ValidationError('File must be a CSV file.')
         
+        # Check file size (max 5MB)
+        if csv_file.size > 5 * 1024 * 1024:
+            raise forms.ValidationError('File size must be under 5MB.')
+        
         # Read and validate CSV format
         try:
+            has_header = self.cleaned_data.get('has_header', True)
             csv_file.seek(0)
-            reader = csv.reader(io.StringIO(csv_file.read().decode('utf-8')))
-            header = next(reader)
+            content = csv_file.read().decode('utf-8')
+            reader = csv.reader(io.StringIO(content))
             
-            # Check if all required columns are present
-            required_columns = [
-                'product_name', 'product_company', 'product_packing', 'product_salt',
-                'product_category', 'product_hsn', 'product_hsn_percent',
-                'rate_A', 'rate_B', 'rate_C'
-            ]
-            
-            missing_columns = [col for col in required_columns if col not in header]
-            if missing_columns:
-                raise forms.ValidationError(f'Missing required columns: {", ".join(missing_columns)}')
+            # If file has header, check required columns
+            if has_header:
+                header = next(reader)
+                
+                # Check if all required columns are present
+                required_columns = [
+                    'product_name(required)', 'product_company(required)', 'rate_A(required)'
+                ]
+                
+                # Check for any required field (with or without the (required) suffix)
+                for req_col in required_columns:
+                    base_col = req_col.split('(')[0]
+                    found = any(col.startswith(base_col) for col in header)
+                    if not found:
+                        raise forms.ValidationError(f"Required column '{base_col}' not found in CSV header.")
+            else:
+                # If no header, check that there are enough columns for minimal data
+                first_row = next(reader)
+                if len(first_row) < 3:  # At minimum: name, company, rate_A
+                    raise forms.ValidationError("CSV file must contain at least 3 columns for product name, company, and rate A.")
             
             # Reset file pointer for later processing
             csv_file.seek(0)
@@ -381,29 +408,78 @@ class ProductBulkUploadForm(forms.Form):
     def process_csv_file(self):
         """Process the CSV file and return a list of products to be created."""
         csv_file = self.cleaned_data.get('csv_file')
+        has_header = self.cleaned_data.get('has_header', True)
         products_data = []
         
         try:
             # Read CSV file
             csv_file.seek(0)
             decoded_file = csv_file.read().decode('utf-8')
-            reader = csv.DictReader(io.StringIO(decoded_file))
+            
+            if has_header:
+                reader = csv.DictReader(io.StringIO(decoded_file))
+                rows = list(reader)
+            else:
+                # If no header, create our own field names
+                reader = csv.reader(io.StringIO(decoded_file))
+                # Define our field names based on expected order
+                fieldnames = [
+                    'product_name', 'product_company', 'product_salt', 'product_category',
+                    'product_packing', 'rate_A', 'rate_B', 'rate_C', 'hsn_code',
+                    'cgst', 'sgst', 'igst', 'description'
+                ]
+                rows = []
+                for row in reader:
+                    # Map values to field names (up to available values)
+                    row_dict = {}
+                    for i, value in enumerate(row):
+                        if i < len(fieldnames):
+                            row_dict[fieldnames[i]] = value
+                    rows.append(row_dict)
             
             # Process each row
-            for row in reader:
-                # Convert string values to appropriate types
+            for row in rows:
+                # Clean up field names (remove "(required)" from column names)
+                cleaned_row = {}
+                for key, value in row.items():
+                    clean_key = key.split('(')[0].strip()
+                    cleaned_row[clean_key] = value
+                
+                row = cleaned_row
+                
+                # Process rates - treat empty values as 0
+                rate_A = row.get('rate_A', '0').strip() or '0'
+                rate_B = row.get('rate_B', '0').strip() or '0'
+                rate_C = row.get('rate_C', '0').strip() or '0'
+                
+                # Build product HSN percent from separate tax fields if available
+                hsn_percent = row.get('product_hsn_percent', '')
+                if not hsn_percent and any(k in row for k in ['cgst', 'sgst', 'igst']):
+                    cgst = row.get('cgst', '0').strip() or '0'
+                    sgst = row.get('sgst', '0').strip() or '0'
+                    igst = row.get('igst', '0').strip() or '0'
+                    hsn_percent = f"{cgst}, {sgst}, {igst}"
+                
+                # Create a product data dictionary with default values for optional fields
                 product_data = {
-                    'product_name': row['product_name'],
-                    'product_company': row['product_company'],
-                    'product_packing': row['product_packing'],
-                    'product_salt': row['product_salt'],
-                    'product_category': row['product_category'],
-                    'product_hsn': row['product_hsn'],
-                    'product_hsn_percent': row['product_hsn_percent'],
-                    'rate_A': float(row['rate_A']),
-                    'rate_B': float(row['rate_B']),
-                    'rate_C': float(row['rate_C']),
+                    'product_name': row.get('product_name', '').strip(),
+                    'product_company': row.get('product_company', '').strip(),
+                    'product_salt': row.get('product_salt', '').strip(),
+                    'product_packing': row.get('product_packing', '').strip(),
+                    'product_category': row.get('product_category', 'other').strip(),
+                    'product_hsn': row.get('product_hsn', row.get('hsn_code', '')).strip(),
+                    'product_hsn_percent': hsn_percent,
+                    'rate_A': float(rate_A),
+                    'rate_B': float(rate_B),
+                    'rate_C': float(rate_C),
                 }
+                
+                # Validate required fields
+                if not product_data['product_name']:
+                    raise forms.ValidationError("Product name is required.")
+                if not product_data['product_company']:
+                    raise forms.ValidationError("Product company is required.")
+                
                 products_data.append(product_data)
                 
             return products_data
