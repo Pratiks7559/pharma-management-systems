@@ -321,7 +321,8 @@ def product_detail(request, pk):
 
 @login_required
 def bulk_upload_products(request):
-    if not request.user.user_type.lower() == 'admin':
+    # Check if user is admin (case-insensitive)
+    if not request.user.user_type.lower() in ['admin']:
         messages.error(request, "You don't have permission to access this page.")
         return redirect('product_list')
     
@@ -411,7 +412,8 @@ def bulk_upload_products(request):
 
 @login_required
 def delete_product(request, pk):
-    if not request.user.user_type == 'admin':
+    # Check if user is admin (case-insensitive)
+    if not request.user.user_type.lower() in ['admin']:
         messages.error(request, "You don't have permission to perform this action.")
         return redirect('product_list')
         
@@ -519,7 +521,8 @@ def supplier_detail(request, pk):
 
 @login_required
 def delete_supplier(request, pk):
-    if not request.user.user_type == 'admin':
+    # Check if user is admin (case-insensitive)
+    if not request.user.user_type.lower() in ['admin']:
         messages.error(request, "You don't have permission to perform this action.")
         return redirect('supplier_list')
         
@@ -627,7 +630,8 @@ def customer_detail(request, pk):
 
 @login_required
 def delete_customer(request, pk):
-    if not request.user.user_type == 'admin':
+    # Check if user is admin (case-insensitive)
+    if not request.user.user_type.lower() in ['admin']:
         messages.error(request, "You don't have permission to perform this action.")
         return redirect('customer_list')
         
@@ -812,7 +816,8 @@ def add_invoice_payment(request, invoice_id):
 
 @login_required
 def delete_invoice(request, pk):
-    if not request.user.user_type == 'admin':
+    # Check if user is admin (case-insensitive)
+    if not request.user.user_type.lower() in ['admin']:
         messages.error(request, "You don't have permission to perform this action.")
         return redirect('invoice_list')
         
@@ -997,7 +1002,8 @@ def add_sales_payment(request, invoice_id):
 
 @login_required
 def delete_sales_invoice(request, pk):
-    if not request.user.user_type == 'admin':
+    # Check if user is admin (case-insensitive)
+    if not request.user.user_type.lower() in ['admin']:
         messages.error(request, "You don't have permission to perform this action.")
         return redirect('sales_invoice_list')
         
