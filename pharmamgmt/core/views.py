@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
+import sys
+import django
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Count, F, Q, Func, Value
@@ -1491,3 +1493,19 @@ def export_inventory_csv(request):
         ])
     
     return response
+
+# Debug view that doesn't require authentication
+def debug_view(request):
+    """
+    A simple debug view that doesn't require authentication.
+    Useful for troubleshooting server connectivity issues.
+    """
+    from datetime import datetime
+    
+    context = {
+        'django_version': django.get_version(),
+        'python_version': f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
+        'current_time': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    }
+    
+    return render(request, 'debug.html', context)
