@@ -82,4 +82,5 @@ urlpatterns = [
     
     # Debug page - accessible without authentication
     path('debug/', views.debug_view, name='debug'),
+    path('test-login/', views.test_login_view, name='test_login'),
 ]

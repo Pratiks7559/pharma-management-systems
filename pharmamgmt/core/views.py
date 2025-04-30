@@ -1509,3 +1509,25 @@ def debug_view(request):
     }
     
     return render(request, 'debug.html', context)
+
+def test_login_view(request):
+    """
+    A simplified login view for testing authentication.
+    """
+    context = {}
+    
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        if username and password:
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                context['success'] = f"Login successful! Welcome {user.username}. You are now authenticated."
+            else:
+                context['error'] = "Authentication failed. Invalid username or password."
+        else:
+            context['error'] = "Please provide both username and password."
+    
+    return render(request, 'test_login.html', context)
