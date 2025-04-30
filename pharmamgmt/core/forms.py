@@ -6,6 +6,8 @@ from .models import (
     SalesInvoicePaid, ProductRateMaster, ReturnInvoiceMaster, PurchaseReturnInvoicePaid,
     ReturnPurchaseMaster, ReturnSalesInvoiceMaster, ReturnSalesInvoicePaid, ReturnSalesMaster
 )
+import csv
+import io
 
 class DateInput(forms.DateInput):
     input_type = 'date'
@@ -339,3 +341,69 @@ class SalesReturnForm(forms.ModelForm):
         self.fields['return_productid'].queryset = ProductMaster.objects.all()
         self.fields['return_productid'].widget.attrs.update({'class': 'form-control'})
         self.fields['return_productid'].label = 'Product'
+
+class ProductBulkUploadForm(forms.Form):
+    csv_file = forms.FileField(widget=forms.FileInput(attrs={'class': 'form-control', 'accept': '.csv'}))
+    
+    def clean_csv_file(self):
+        csv_file = self.cleaned_data.get('csv_file')
+        
+        if not csv_file.name.endswith('.csv'):
+            raise forms.ValidationError('File must be a CSV file.')
+        
+        # Read and validate CSV format
+        try:
+            csv_file.seek(0)
+            reader = csv.reader(io.StringIO(csv_file.read().decode('utf-8')))
+            header = next(reader)
+            
+            # Check if all required columns are present
+            required_columns = [
+                'product_name', 'product_company', 'product_packing', 'product_salt',
+                'product_category', 'product_hsn', 'product_hsn_percent',
+                'rate_A', 'rate_B', 'rate_C'
+            ]
+            
+            missing_columns = [col for col in required_columns if col not in header]
+            if missing_columns:
+                raise forms.ValidationError(f'Missing required columns: {", ".join(missing_columns)}')
+            
+            # Reset file pointer for later processing
+            csv_file.seek(0)
+            return csv_file
+            
+        except Exception as e:
+            raise forms.ValidationError(f'Error reading CSV file: {str(e)}')
+            
+    def process_csv_file(self):
+        """Process the CSV file and return a list of products to be created."""
+        csv_file = self.cleaned_data.get('csv_file')
+        products_data = []
+        
+        try:
+            # Read CSV file
+            csv_file.seek(0)
+            decoded_file = csv_file.read().decode('utf-8')
+            reader = csv.DictReader(io.StringIO(decoded_file))
+            
+            # Process each row
+            for row in reader:
+                # Convert string values to appropriate types
+                product_data = {
+                    'product_name': row['product_name'],
+                    'product_company': row['product_company'],
+                    'product_packing': row['product_packing'],
+                    'product_salt': row['product_salt'],
+                    'product_category': row['product_category'],
+                    'product_hsn': row['product_hsn'],
+                    'product_hsn_percent': row['product_hsn_percent'],
+                    'rate_A': float(row['rate_A']),
+                    'rate_B': float(row['rate_B']),
+                    'rate_C': float(row['rate_C']),
+                }
+                products_data.append(product_data)
+                
+            return products_data
+            
+        except Exception as e:
+            raise forms.ValidationError(f'Error processing CSV file: {str(e)}')
