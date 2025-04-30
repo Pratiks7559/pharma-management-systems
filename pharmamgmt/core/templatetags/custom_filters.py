@@ -57,6 +57,14 @@ def divide(value, arg):
         return ""
 
 @register.filter
+def absolute(value):
+    """Return the absolute value"""
+    try:
+        return abs(float(value))
+    except (ValueError, TypeError):
+        return ""
+
+@register.filter
 def get_dict_value(dictionary, key):
     """Get a value from a dictionary by key"""
     if not dictionary:

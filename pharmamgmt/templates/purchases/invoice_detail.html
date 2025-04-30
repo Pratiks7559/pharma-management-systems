@@ -200,13 +200,32 @@
                         </tbody>
                         <tfoot>
                             <tr class="table-dark">
+                                <td colspan="8" class="text-end"><strong>Sum of Products:</strong></td>
+                                <td>{{ purchases_total|currency }}</td>
+                            </tr>
+                            <tr class="table-dark">
                                 <td colspan="8" class="text-end"><strong>Transport Charges:</strong></td>
                                 <td>{{ invoice.transport_charges|currency }}</td>
                             </tr>
                             <tr class="table-dark">
-                                <td colspan="8" class="text-end"><strong>Total:</strong></td>
+                                <td colspan="8" class="text-end"><strong>Invoice Total:</strong></td>
                                 <td>{{ invoice.invoice_total|currency }}</td>
                             </tr>
+                            {% if has_pending_entries %}
+                            <tr class="table-danger">
+                                <td colspan="8" class="text-end">
+                                    <strong>Pending Entries:</strong>
+                                    <div class="small text-danger">
+                                        {% if invoice_pending > 0 %}
+                                        There are missing product entries worth {{ invoice_pending|currency }}
+                                        {% else %}
+                                        Product entries exceed invoice total by {{ invoice_pending|absolute|currency }}
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="text-danger">{{ invoice_pending|currency }}</td>
+                            </tr>
+                            {% endif %}
                         </tfoot>
                     </table>
                 </div>

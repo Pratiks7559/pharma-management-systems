@@ -717,6 +717,13 @@ def invoice_detail(request, pk):
     # Get all purchases under this invoice
     purchases = PurchaseMaster.objects.filter(product_invoiceid=pk)
     
+    # Calculate the sum of all purchase entries
+    purchases_total = purchases.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    
+    # Calculate the difference between invoice total and sum of purchases
+    # Transport charges are already included in the invoice total
+    invoice_pending = invoice.invoice_total - purchases_total - invoice.transport_charges
+    
     # Get all payments for this invoice
     payments = InvoicePaid.objects.filter(ip_invoiceid=pk).order_by('-payment_date')
     
@@ -724,6 +731,9 @@ def invoice_detail(request, pk):
         'invoice': invoice,
         'purchases': purchases,
         'payments': payments,
+        'purchases_total': purchases_total,
+        'invoice_pending': invoice_pending,
+        'has_pending_entries': abs(invoice_pending) > 0.01,  # Using a small threshold to account for floating-point errors
         'title': f'Purchase Invoice #{invoice.invoice_no}'
     }
     return render(request, 'purchases/invoice_detail.html', context)
