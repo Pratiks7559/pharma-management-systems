@@ -48,6 +48,8 @@ urlpatterns = [
     path('invoices/<int:pk>/delete/', views.delete_invoice, name='delete_invoice'),
     path('invoices/<int:invoice_id>/add-purchase/', views.add_purchase, name='add_purchase'),
     path('invoices/<int:invoice_id>/add-payment/', views.add_invoice_payment, name='add_invoice_payment'),
+    path('invoices/<int:invoice_id>/edit-payment/<int:payment_id>/', views.edit_invoice_payment, name='edit_invoice_payment'),
+    path('invoices/<int:invoice_id>/delete-payment/<int:payment_id>/', views.delete_invoice_payment, name='delete_invoice_payment'),
     
     # Sales Invoices
     path('sales/', views.sales_invoice_list, name='sales_invoice_list'),
