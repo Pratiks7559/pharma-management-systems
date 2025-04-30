@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block page_actions %}
+<div>
+    <a href="{% url 'sales_return_list' %}" class="btn btn-secondary me-2">
+        <i class="fas fa-arrow-left me-2"></i>Back to Sales Returns
+    </a>
+    <a href="{% url 'add_sales_return_item' return_id=return.return_sales_invoice_id %}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Add Item
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Return Information</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="30%">Return ID:</th>
+                        <td>{{ return.return_sales_invoice_id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Return Date:</th>
+                        <td>{{ return.return_sales_invoice_date|date:"F d, Y" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Customer:</th>
+                        <td>
+                            <a href="{% url 'customer_detail' pk=return.customerid.customerid %}">
+                                {{ return.customerid.customer_name }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Original Invoice:</th>
+                        <td>
+                            <a href="{% url 'sales_invoice_detail' pk=return.sales_invoiceid.sales_invoiceid %}">
+                                {{ return.sales_invoiceid.sales_invoice_no }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Reason:</th>
+                        <td>{{ return.return_reason }}</td>
+                    </tr>
+                    <tr>
+                        <th>Total Amount:</th>
+                        <td class="fw-bold text-primary">{{ return.return_sales_invoice_total|currency }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Payment Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert {% if return.return_sales_invoice_paid == return.return_sales_invoice_total %}alert-success{% else %}alert-warning{% endif %}">
+                    <h6 class="mb-0">
+                        <i class="fas {% if return.return_sales_invoice_paid == return.return_sales_invoice_total %}fa-check-circle{% else %}fa-exclamation-triangle{% endif %} me-2"></i>
+                        Payment Status: 
+                        {% if return.return_sales_invoice_paid == return.return_sales_invoice_total %}
+                            <span class="badge bg-success">Completed</span>
+                        {% else %}
+                            <span class="badge bg-warning">Pending</span>
+                        {% endif %}
+                    </h6>
+                </div>
+                
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="30%">Total Amount:</th>
+                        <td>{{ return.return_sales_invoice_total|currency }}</td>
+                    </tr>
+                    <tr>
+                        <th>Amount Refunded:</th>
+                        <td>{{ return.return_sales_invoice_paid|currency }}</td>
+                    </tr>
+                    <tr>
+                        <th>Balance:</th>
+                        <td class="fw-bold {% if balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                            {{ balance|currency }}
+                        </td>
+                    </tr>
+                </table>
+                
+                {% if payments %}
+                <h6 class="mt-4">Payment History</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Reference</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                                <td>{{ payment.payment_amount|currency }}</td>
+                                <td>{{ payment.payment_mode }}</td>
+                                <td>{{ payment.payment_ref_no }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Return Items</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Batch No</th>
+                        <th>Expiry</th>
+                        <th>MRP</th>
+                        <th>Rate</th>
+                        <th>Quantity</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'product_detail' pk=item.return_productid.productid %}">
+                                {{ item.return_product_name }}
+                            </a>
+                            <small class="text-muted d-block">{{ item.return_product_company }}</small>
+                        </td>
+                        <td>{{ item.return_batch }}</td>
+                        <td>{{ item.return_expiry|date:"M Y" }}</td>
+                        <td>{{ item.return_product_MRP|currency }}</td>
+                        <td>{{ item.return_rate|currency }}</td>
+                        <td>{{ item.return_sales_quantity }}</td>
+                        <td>{{ item.return_refund_amount|currency }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">No items in this return.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="fw-bold">
+                    <tr>
+                        <td colspan="6" class="text-end">Total:</td>
+                        <td>{{ return.return_sales_invoice_total|currency }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
