@@ -111,6 +111,7 @@
                                 <th>Amount</th>
                                 <th>Mode</th>
                                 <th>Reference</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -120,10 +121,20 @@
                                 <td>{{ payment.payment_amount|currency }}</td>
                                 <td>{{ payment.payment_mode }}</td>
                                 <td>{{ payment.payment_ref_no }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'edit_invoice_payment' invoice_id=invoice.invoiceid payment_id=payment.id %}" class="btn btn-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'delete_invoice_payment' invoice_id=invoice.invoiceid payment_id=payment.id %}" class="btn btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center">No payments recorded</td>
+                                <td colspan="5" class="text-center">No payments recorded</td>
                             </tr>
                             {% endfor %}
                         </tbody>

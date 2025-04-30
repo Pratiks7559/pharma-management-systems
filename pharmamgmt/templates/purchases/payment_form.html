@@ -7,7 +7,13 @@
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Add Payment for Invoice #{{ invoice.invoice_no }}</h5>
+                    <h5 class="mb-0">
+                        {% if is_edit %}
+                            Edit Payment for Invoice #{{ invoice.invoice_no }}
+                        {% else %}
+                            Add Payment for Invoice #{{ invoice.invoice_no }}
+                        {% endif %}
+                    </h5>
                 </div>
                 <div class="card-body">
                     <div class="row mb-4">
@@ -76,7 +82,12 @@
                         
                         <div class="form-group mt-4">
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>Add Payment
+                                <i class="fas fa-save me-2"></i>
+                                {% if is_edit %}
+                                    Update Payment
+                                {% else %}
+                                    Add Payment
+                                {% endif %}
                             </button>
                             <a href="{% url 'invoice_detail' pk=invoice.invoiceid %}" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left me-2"></i>Back to Invoice
@@ -96,16 +107,31 @@
         const paymentAmountInput = document.getElementById('{{ form.payment_amount.id_for_label }}');
         const balanceDue = {{ balance }};
         
-        // Set default payment amount to balance due
+        {% if not is_edit %}
+        // Only set default amount for new payments
         paymentAmountInput.value = balanceDue.toFixed(2);
+        {% endif %}
         
         // Add validation to prevent payment amount from exceeding balance due
         paymentAmountInput.addEventListener('change', function() {
             const amount = parseFloat(this.value) || 0;
+            {% if is_edit %}
+            // For edit, we need to calculate the max allowed amount
+            // Allow the original amount plus the remaining balance
+            const originalAmount = {{ payment.payment_amount }};
+            const maxAmount = originalAmount + balanceDue;
+            
+            if (amount > maxAmount) {
+                alert('Payment amount cannot exceed ' + maxAmount.toFixed(2));
+                this.value = maxAmount.toFixed(2);
+            }
+            {% else %}
+            // For new payments, just check against balance
             if (amount > balanceDue) {
                 alert('Payment amount cannot exceed the remaining balance of ' + balanceDue.toFixed(2));
                 this.value = balanceDue.toFixed(2);
             }
+            {% endif %}
         });
     });
 </script>

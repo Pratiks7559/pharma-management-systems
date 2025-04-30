@@ -815,6 +815,70 @@ def add_invoice_payment(request, invoice_id):
     return render(request, 'purchases/payment_form.html', context)
 
 @login_required
+def edit_invoice_payment(request, invoice_id, payment_id):
+    invoice = get_object_or_404(InvoiceMaster, invoiceid=invoice_id)
+    payment = get_object_or_404(InvoicePaid, id=payment_id, ip_invoiceid=invoice_id)
+    
+    # Store original payment amount to calculate difference
+    original_amount = payment.payment_amount
+    
+    if request.method == 'POST':
+        form = InvoicePaymentForm(request.POST, instance=payment)
+        if form.is_valid():
+            # Calculate the difference between new and old payment amount
+            new_payment = form.save(commit=False)
+            difference = new_payment.payment_amount - original_amount
+            
+            # Check if new amount would exceed the invoice total
+            if invoice.invoice_paid + difference > invoice.invoice_total:
+                messages.error(request, "Payment amount cannot exceed the invoice total.")
+                return redirect('edit_invoice_payment', invoice_id=invoice_id, payment_id=payment_id)
+            
+            # Update payment
+            new_payment.save()
+            
+            # Update invoice paid amount
+            invoice.invoice_paid += difference
+            invoice.save()
+            
+            messages.success(request, f"Payment updated successfully!")
+            return redirect('invoice_detail', pk=invoice_id)
+    else:
+        form = InvoicePaymentForm(instance=payment)
+    
+    context = {
+        'form': form,
+        'invoice': invoice,
+        'payment': payment,
+        'is_edit': True,
+        'title': 'Edit Invoice Payment'
+    }
+    return render(request, 'purchases/payment_form.html', context)
+
+@login_required
+def delete_invoice_payment(request, invoice_id, payment_id):
+    invoice = get_object_or_404(InvoiceMaster, invoiceid=invoice_id)
+    payment = get_object_or_404(InvoicePaid, id=payment_id, ip_invoiceid=invoice_id)
+    
+    if request.method == 'POST':
+        # Update invoice paid amount
+        invoice.invoice_paid -= payment.payment_amount
+        invoice.save()
+        
+        # Delete payment
+        payment.delete()
+        
+        messages.success(request, "Payment deleted successfully!")
+        return redirect('invoice_detail', pk=invoice_id)
+    
+    context = {
+        'payment': payment,
+        'invoice': invoice,
+        'title': 'Delete Invoice Payment'
+    }
+    return render(request, 'purchases/payment_confirm_delete.html', context)
+
+@login_required
 def delete_invoice(request, pk):
     # Check if user is admin (case-insensitive)
     if not request.user.user_type.lower() in ['admin']:
