@@ -817,7 +817,7 @@ def add_invoice_payment(request, invoice_id):
 @login_required
 def edit_invoice_payment(request, invoice_id, payment_id):
     invoice = get_object_or_404(InvoiceMaster, invoiceid=invoice_id)
-    payment = get_object_or_404(InvoicePaid, id=payment_id, ip_invoiceid=invoice_id)
+    payment = get_object_or_404(InvoicePaid, payment_id=payment_id, ip_invoiceid=invoice_id)
     
     # Store original payment amount to calculate difference
     original_amount = payment.payment_amount
@@ -859,7 +859,7 @@ def edit_invoice_payment(request, invoice_id, payment_id):
 @login_required
 def delete_invoice_payment(request, invoice_id, payment_id):
     invoice = get_object_or_404(InvoiceMaster, invoiceid=invoice_id)
-    payment = get_object_or_404(InvoicePaid, id=payment_id, ip_invoiceid=invoice_id)
+    payment = get_object_or_404(InvoicePaid, payment_id=payment_id, ip_invoiceid=invoice_id)
     
     if request.method == 'POST':
         # Update invoice paid amount

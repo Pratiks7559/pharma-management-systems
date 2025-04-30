@@ -123,10 +123,10 @@
                                 <td>{{ payment.payment_ref_no }}</td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <a href="{% url 'edit_invoice_payment' invoice_id=invoice.invoiceid payment_id=payment.id %}" class="btn btn-warning">
+                                        <a href="{% url 'edit_invoice_payment' invoice_id=invoice.invoiceid payment_id=payment.payment_id %}" class="btn btn-warning">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="{% url 'delete_invoice_payment' invoice_id=invoice.invoiceid payment_id=payment.id %}" class="btn btn-danger">
+                                        <a href="{% url 'delete_invoice_payment' invoice_id=invoice.invoiceid payment_id=payment.payment_id %}" class="btn btn-danger">
                                             <i class="fas fa-trash"></i>
                                         </a>
                                     </div>
