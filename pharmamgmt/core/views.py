@@ -16,7 +16,8 @@ from .models import (
     Web_User, Pharmacy_Details, ProductMaster, SupplierMaster, CustomerMaster,
     InvoiceMaster, InvoicePaid, PurchaseMaster, SalesInvoiceMaster, SalesMaster,
     SalesInvoicePaid, ProductRateMaster, ReturnInvoiceMaster, PurchaseReturnInvoicePaid,
-    ReturnPurchaseMaster, ReturnSalesInvoiceMaster, ReturnSalesInvoicePaid, ReturnSalesMaster
+    ReturnPurchaseMaster, ReturnSalesInvoiceMaster, ReturnSalesInvoicePaid, ReturnSalesMaster,
+    SaleRateMaster
 )
 from .forms import (
     LoginForm, UserRegistrationForm, UserUpdateForm, PharmacyDetailsForm, ProductForm,
@@ -1073,13 +1074,33 @@ def add_sale(request, invoice_id):
             sale.product_company = product.product_company
             sale.product_packing = product.product_packing
             
+            # Get batch-specific rates if available
+            batch_specific_rate = None
+            if sale.product_batch_no:
+                try:
+                    batch_specific_rate = SaleRateMaster.objects.get(
+                        productid=product, 
+                        product_batch_no=sale.product_batch_no
+                    )
+                except SaleRateMaster.DoesNotExist:
+                    batch_specific_rate = None
+            
             # Set appropriate rate based on customer type and selected rate type
             if sale.rate_applied == 'A':
-                sale.sale_rate = product.rate_A
+                if batch_specific_rate:
+                    sale.sale_rate = batch_specific_rate.rate_A
+                else:
+                    sale.sale_rate = product.rate_A
             elif sale.rate_applied == 'B':
-                sale.sale_rate = product.rate_B
+                if batch_specific_rate:
+                    sale.sale_rate = batch_specific_rate.rate_B
+                else:
+                    sale.sale_rate = product.rate_B
             elif sale.rate_applied == 'C':
-                sale.sale_rate = product.rate_C
+                if batch_specific_rate:
+                    sale.sale_rate = batch_specific_rate.rate_C
+                else:
+                    sale.sale_rate = product.rate_C
             # Custom rate is already set in the form
             
             # Calculate total amount based on discount
