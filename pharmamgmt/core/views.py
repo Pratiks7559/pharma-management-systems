@@ -985,6 +985,8 @@ def add_sales_invoice(request):
             # Initialize paid amount to 0
             invoice.sales_invoice_paid = 0
             
+            # Note: We don't need to set sales_invoice_total anymore as it's now calculated dynamically from sales items
+            
             invoice.save()
             messages.success(request, f"Sales Invoice #{invoice.sales_invoice_no} added successfully!")
             return redirect('sales_invoice_detail', pk=invoice.sales_invoice_no)

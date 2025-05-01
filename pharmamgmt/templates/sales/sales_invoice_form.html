@@ -46,11 +46,12 @@
                         </div>
                         
                         <div class="form-group mb-3">
-                            <label for="{{ form.sales_invoice_total.id_for_label }}">Invoice Total*</label>
-                            {{ form.sales_invoice_total }}
-                            {% if form.sales_invoice_total.errors %}
-                                <div class="text-danger">{{ form.sales_invoice_total.errors }}</div>
+                            <label for="{{ form.sales_transport_charges.id_for_label }}">Transport Charges</label>
+                            {{ form.sales_transport_charges }}
+                            {% if form.sales_transport_charges.errors %}
+                                <div class="text-danger">{{ form.sales_transport_charges.errors }}</div>
                             {% endif %}
+                            <small class="form-text text-muted">Any additional charges for transport (optional)</small>
                         </div>
                         
                         <div class="alert alert-info">

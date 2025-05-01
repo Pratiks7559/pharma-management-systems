@@ -148,12 +148,18 @@ class SalesInvoiceMaster(models.Model):
     sales_invoice_no=models.CharField(primary_key=True, max_length=20)
     sales_invoice_date=models.DateField(null=False, blank=False)
     customerid=models.ForeignKey(CustomerMaster, on_delete=models.CASCADE)
-    sales_transport_charges=models.FloatField()
-    sales_invoice_total=models.FloatField(null=False, blank=False)
+    sales_transport_charges=models.FloatField(default=0)
     sales_invoice_paid=models.FloatField(null=False, blank=False, default=0)
     
     def __str__(self):
         return f"Sales Invoice #{self.sales_invoice_no} - {self.customerid.customer_name}"
+    
+    @property
+    def sales_invoice_total(self):
+        """Calculate total from the sum of all sales items"""
+        from django.db.models import Sum
+        sales_total = SalesMaster.objects.filter(sales_invoice_no=self.sales_invoice_no).aggregate(Sum('sale_total_amount'))
+        return sales_total['sale_total_amount__sum'] or 0
     
     @property
     def balance_due(self):
