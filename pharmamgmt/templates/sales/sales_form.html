@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Add Product to Sales Invoice #{{ invoice.sales_invoice_no }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Invoice Details</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>Invoice No:</strong> {{ invoice.sales_invoice_no }}</li>
+                                <li><strong>Date:</strong> {{ invoice.sales_invoice_date }}</li>
+                                <li><strong>Customer:</strong> {{ invoice.customerid.customer_name }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <form method="post" id="salesForm">
+                        {% csrf_token %}
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.productid.id_for_label }}">Product*</label>
+                            {{ form.productid }}
+                            {% if form.productid.errors %}
+                                <div class="text-danger">{{ form.productid.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_batch_no.id_for_label }}">Batch No*</label>
+                                    {{ form.product_batch_no }}
+                                    {% if form.product_batch_no.errors %}
+                                        <div class="text-danger">{{ form.product_batch_no.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.rate_applied.id_for_label }}">Rate Type*</label>
+                                    {{ form.rate_applied }}
+                                    {% if form.rate_applied.errors %}
+                                        <div class="text-danger">{{ form.rate_applied.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.custom_rate.id_for_label }}">Custom Rate</label>
+                                    {{ form.custom_rate }}
+                                    <small class="form-text text-muted">Leave empty to use selected rate type</small>
+                                    {% if form.custom_rate.errors %}
+                                        <div class="text-danger">{{ form.custom_rate.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.sale_quantity.id_for_label }}">Quantity*</label>
+                                    {{ form.sale_quantity }}
+                                    {% if form.sale_quantity.errors %}
+                                        <div class="text-danger">{{ form.sale_quantity.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.sale_igst.id_for_label }}">GST %*</label>
+                                    {{ form.sale_igst }}
+                                    {% if form.sale_igst.errors %}
+                                        <div class="text-danger">{{ form.sale_igst.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.sale_calculation_mode.id_for_label }}">Discount Type*</label>
+                                    {{ form.sale_calculation_mode }}
+                                    {% if form.sale_calculation_mode.errors %}
+                                        <div class="text-danger">{{ form.sale_calculation_mode.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.sale_discount.id_for_label }}">Discount*</label>
+                                    {{ form.sale_discount }}
+                                    {% if form.sale_discount.errors %}
+                                        <div class="text-danger">{{ form.sale_discount.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="card border-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Calculated Values</h6>
+                                        <div class="calculated-values">
+                                            <div><strong>Actual Rate:</strong> <span id="actualRate">₹0.00</span></div>
+                                            <div><strong>Total Amount:</strong> <span id="totalAmount">₹0.00</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Add Product
+                            </button>
+                            <a href="{% url 'sales_invoice_detail' pk=invoice.sales_invoice_no %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Invoice
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const productSelect = document.getElementById('{{ form.productid.id_for_label }}');
+        const rateTypeSelect = document.getElementById('{{ form.rate_applied.id_for_label }}');
+        const customRateInput = document.getElementById('{{ form.custom_rate.id_for_label }}');
+        const quantityInput = document.getElementById('{{ form.sale_quantity.id_for_label }}');
+        const discountInput = document.getElementById('{{ form.sale_discount.id_for_label }}');
+        const calcModeSelect = document.getElementById('{{ form.sale_calculation_mode.id_for_label }}');
+        const gstInput = document.getElementById('{{ form.sale_igst.id_for_label }}');
+        
+        // Display elements
+        const actualRateDisplay = document.getElementById('actualRate');
+        const totalAmountDisplay = document.getElementById('totalAmount');
+        
+        // Product rates storage
+        let productRates = {
+            A: 0,
+            B: 0,
+            C: 0
+        };
+        
+        // Function to fetch product details when a product is selected
+        productSelect.addEventListener('change', function() {
+            const productId = this.value;
+            if (!productId) return;
+            
+            fetch(`/api/product-info/?product_id=${productId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Store rates
+                    productRates.A = parseFloat(data.rate_A) || 0;
+                    productRates.B = parseFloat(data.rate_B) || 0;
+                    productRates.C = parseFloat(data.rate_C) || 0;
+                    
+                    // Set GST percent
+                    document.getElementById('{{ form.sale_igst.id_for_label }}').value = data.product_hsn_percent || '0';
+                    
+                    // Update calculations
+                    calculateValues();
+                })
+                .catch(error => console.error('Error fetching product info:', error));
+        });
+        
+        // Function to calculate and update values
+        function calculateValues() {
+            let saleRate;
+            
+            // Determine which rate to use
+            if (customRateInput.value) {
+                saleRate = parseFloat(customRateInput.value) || 0;
+            } else {
+                const rateType = rateTypeSelect.value;
+                saleRate = productRates[rateType] || 0;
+            }
+            
+            const quantity = parseFloat(quantityInput.value) || 0;
+            const discount = parseFloat(discountInput.value) || 0;
+            const gst = parseFloat(gstInput.value) || 0;
+            const calcMode = calcModeSelect.value;
+            
+            let actualRate;
+            if (calcMode === 'flat') {
+                // Flat discount amount
+                actualRate = saleRate - (discount / quantity);
+            } else {
+                // Percentage discount
+                actualRate = saleRate * (1 - (discount / 100));
+            }
+            
+            // Calculate total amount with GST
+            const baseAmount = actualRate * quantity;
+            const totalAmount = baseAmount * (1 + (gst / 100));
+            
+            // Update display
+            actualRateDisplay.textContent = `₹${actualRate.toFixed(2)}`;
+            totalAmountDisplay.textContent = `₹${totalAmount.toFixed(2)}`;
+        }
+        
+        // Add event listeners to all inputs that affect calculations
+        [rateTypeSelect, customRateInput, quantityInput, discountInput, calcModeSelect, gstInput].forEach(input => {
+            input.addEventListener('input', calculateValues);
+            input.addEventListener('change', calculateValues);
+        });
+    });
+</script>
+{% endblock %}
