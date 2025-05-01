@@ -66,6 +66,16 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group mb-3">
+                                    <label for="{{ form.sale_rate.id_for_label }}">Applied Rate</label>
+                                    {{ form.sale_rate }}
+                                    <small class="form-text text-muted">Automatically set based on rate type</small>
+                                    {% if form.sale_rate.errors %}
+                                        <div class="text-danger">{{ form.sale_rate.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
                                     <label for="{{ form.sale_quantity.id_for_label }}">Quantity*</label>
                                     {{ form.sale_quantity }}
                                     {% if form.sale_quantity.errors %}
@@ -73,12 +83,34 @@
                                     {% endif %}
                                 </div>
                             </div>
+                        </div>
+                        
+                        <div class="row mb-3">
                             <div class="col-md-4">
                                 <div class="form-group mb-3">
                                     <label for="{{ form.sale_igst.id_for_label }}">GST %*</label>
                                     {{ form.sale_igst }}
                                     {% if form.sale_igst.errors %}
                                         <div class="text-danger">{{ form.sale_igst.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_expiry.id_for_label }}">Expiry Date*</label>
+                                    {{ form.product_expiry }}
+                                    {% if form.product_expiry.errors %}
+                                        <div class="text-danger">{{ form.product_expiry.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.sale_scheme.id_for_label }}">Scheme</label>
+                                    {{ form.sale_scheme }}
+                                    <small class="form-text text-muted">Bonus quantity</small>
+                                    {% if form.sale_scheme.errors %}
+                                        <div class="text-danger">{{ form.sale_scheme.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -210,7 +242,6 @@
                 saleRateInput.value = productRates[rateType] || 0;
             }
         }
-        }
         
         // Fetch product details when product is selected
         productSelect.addEventListener('change', function() {
@@ -260,8 +291,21 @@
             totalAmountDisplay.textContent = `₹${totalAmount.toFixed(2)}`;
         }
         
+        // Add event listeners for updating the sale rate field
+        rateTypeSelect.addEventListener('change', function() {
+            updateSaleRateField();
+            calculateValues();
+        });
+        
+        customRateInput.addEventListener('input', function() {
+            if (rateTypeSelect.value === 'custom') {
+                updateSaleRateField();
+            }
+            calculateValues();
+        });
+        
         // Add event listeners to all inputs that affect calculations
-        [rateTypeSelect, customRateInput, quantityInput, discountInput, calcModeSelect, gstInput].forEach(input => {
+        [quantityInput, discountInput, calcModeSelect, gstInput].forEach(input => {
             input.addEventListener('input', calculateValues);
             input.addEventListener('change', calculateValues);
         });
