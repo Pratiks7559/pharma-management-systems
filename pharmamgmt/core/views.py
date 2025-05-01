@@ -1730,3 +1730,103 @@ def export_inventory_csv(request):
         ])
     
     return response
+
+# Sale Rate Management Views
+@login_required
+def sale_rate_list(request):
+    # Fetch sale rates
+    sale_rates = SaleRateMaster.objects.all().select_related('productid').order_by('productid__product_name', 'product_batch_no')
+    
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        sale_rates = sale_rates.filter(
+            Q(productid__product_name__icontains=search_query) | 
+            Q(product_batch_no__icontains=search_query)
+        )
+    
+    # Pagination
+    paginator = Paginator(sale_rates, 10)  # 10 items per page
+    page_number = request.GET.get('page')
+    sale_rates = paginator.get_page(page_number)
+    
+    context = {
+        'sale_rates': sale_rates,
+        'search_query': search_query,
+        'title': 'Sale Rate List'
+    }
+    return render(request, 'rates/sale_rate_list.html', context)
+
+@login_required
+def add_sale_rate(request):
+    if request.method == 'POST':
+        form = SaleRateForm(request.POST)
+        if form.is_valid():
+            # Check if a rate for this product and batch already exists
+            try:
+                # Try to get existing record
+                existing_rate = SaleRateMaster.objects.get(
+                    productid=form.cleaned_data['productid'],
+                    product_batch_no=form.cleaned_data['product_batch_no']
+                )
+                # If found, show an error
+                messages.error(request, f"A rate for this product and batch already exists. Please edit the existing record instead.")
+                return redirect('sale_rate_list')
+            except SaleRateMaster.DoesNotExist:
+                # If not found, save the new rate
+                sale_rate = form.save()
+                messages.success(request, f"Sale rate for {sale_rate.productid.product_name} - Batch {sale_rate.product_batch_no} added successfully!")
+                return redirect('sale_rate_list')
+    else:
+        form = SaleRateForm()
+    
+    context = {
+        'form': form,
+        'title': 'Add Sale Rate'
+    }
+    return render(request, 'rates/sale_rate_form.html', context)
+
+@login_required
+def update_sale_rate(request, pk):
+    sale_rate = get_object_or_404(SaleRateMaster, pk=pk)
+    
+    if request.method == 'POST':
+        form = SaleRateForm(request.POST, instance=sale_rate)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Sale rate for {sale_rate.productid.product_name} - Batch {sale_rate.product_batch_no} updated successfully!")
+            return redirect('sale_rate_list')
+    else:
+        form = SaleRateForm(instance=sale_rate)
+    
+    context = {
+        'form': form,
+        'sale_rate': sale_rate,
+        'title': 'Update Sale Rate'
+    }
+    return render(request, 'rates/sale_rate_form.html', context)
+
+@login_required
+def delete_sale_rate(request, pk):
+    # Check if user is admin (case-insensitive)
+    if not request.user.user_type.lower() in ['admin']:
+        messages.error(request, "You don't have permission to perform this action.")
+        return redirect('sale_rate_list')
+        
+    sale_rate = get_object_or_404(SaleRateMaster, pk=pk)
+    
+    if request.method == 'POST':
+        product_name = sale_rate.productid.product_name
+        batch_no = sale_rate.product_batch_no
+        try:
+            sale_rate.delete()
+            messages.success(request, f"Sale rate for {product_name} - Batch {batch_no} deleted successfully!")
+        except Exception as e:
+            messages.error(request, f"Cannot delete sale rate. Error: {str(e)}")
+        return redirect('sale_rate_list')
+    
+    context = {
+        'sale_rate': sale_rate,
+        'title': 'Delete Sale Rate'
+    }
+    return render(request, 'rates/sale_rate_confirm_delete.html', context)

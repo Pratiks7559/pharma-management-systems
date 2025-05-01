@@ -4,7 +4,8 @@ from .models import (
     Web_User, Pharmacy_Details, ProductMaster, SupplierMaster, CustomerMaster,
     InvoiceMaster, InvoicePaid, PurchaseMaster, SalesInvoiceMaster, SalesMaster,
     SalesInvoicePaid, ProductRateMaster, ReturnInvoiceMaster, PurchaseReturnInvoicePaid,
-    ReturnPurchaseMaster, ReturnSalesInvoiceMaster, ReturnSalesInvoicePaid, ReturnSalesMaster
+    ReturnPurchaseMaster, ReturnSalesInvoiceMaster, ReturnSalesInvoicePaid, ReturnSalesMaster,
+    SaleRateMaster
 )
 
 class DateInput(forms.DateInput):
@@ -343,3 +344,17 @@ class SalesReturnForm(forms.ModelForm):
         self.fields['return_productid'].queryset = ProductMaster.objects.all()
         self.fields['return_productid'].widget.attrs.update({'class': 'form-control'})
         self.fields['return_productid'].label = 'Product'
+        
+class SaleRateForm(forms.ModelForm):
+    productid = forms.ModelChoiceField(
+        queryset=ProductMaster.objects.all().order_by('product_name'),
+        widget=forms.Select(attrs={'class': 'form-control select2'})
+    )
+    product_batch_no = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+    rate_A = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    rate_B = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    rate_C = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    
+    class Meta:
+        model = SaleRateMaster
+        fields = ['productid', 'product_batch_no', 'rate_A', 'rate_B', 'rate_C']
