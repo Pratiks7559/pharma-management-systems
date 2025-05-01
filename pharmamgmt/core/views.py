@@ -1099,7 +1099,10 @@ def add_sale(request, invoice_id):
                     batch_specific_rate = None
             
             # Set appropriate rate based on customer type and selected rate type
-            if sale.rate_applied == 'A':
+            if form.cleaned_data.get('custom_rate') and sale.rate_applied == 'custom':
+                # Use the custom rate provided
+                sale.sale_rate = form.cleaned_data.get('custom_rate')
+            elif sale.rate_applied == 'A':
                 if batch_specific_rate:
                     sale.sale_rate = batch_specific_rate.rate_A
                 else:
@@ -1114,7 +1117,6 @@ def add_sale(request, invoice_id):
                     sale.sale_rate = batch_specific_rate.rate_C
                 else:
                     sale.sale_rate = product.rate_C
-            # Custom rate is already set in the form
             
             # Calculate total amount based on discount
             if sale.sale_calculation_mode == 'flat':

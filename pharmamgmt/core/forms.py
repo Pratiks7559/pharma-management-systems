@@ -211,11 +211,12 @@ class SalesInvoiceForm(forms.ModelForm):
 class SalesForm(forms.ModelForm):
     product_batch_no = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
     product_expiry = forms.DateField(widget=DateInput(attrs={'class': 'form-control'}))
-    sale_rate = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    sale_rate = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'readonly': 'readonly'}))
     sale_quantity = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     sale_scheme = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     sale_discount = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     sale_igst = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    custom_rate = forms.FloatField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     RATE_CHOICES = [
         ('A', 'Rate A'),
         ('B', 'Rate B'),
@@ -233,7 +234,7 @@ class SalesForm(forms.ModelForm):
         model = SalesMaster
         fields = ['productid', 'product_batch_no', 'product_expiry', 
                  'sale_rate', 'sale_quantity', 'sale_scheme',
-                 'sale_discount', 'sale_igst', 'rate_applied', 'sale_calculation_mode']
+                 'sale_discount', 'sale_igst', 'custom_rate', 'rate_applied', 'sale_calculation_mode']
         exclude = ['sales_invoice_no', 'customerid', 'product_name', 'product_company', 
                   'product_packing', 'product_MRP', 'sale_total_amount', 'sale_entry_date']
         

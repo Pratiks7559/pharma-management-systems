@@ -188,10 +188,28 @@
                     // Set GST percent
                     document.getElementById('{{ form.sale_igst.id_for_label }}').value = data.product_hsn_percent || '0';
                     
+                    // Update the sale rate field based on the selected rate type
+                    updateSaleRateField();
+                    
                     // Update calculations
                     calculateValues();
                 })
                 .catch(error => console.error('Error fetching product info:', error));
+        }
+        
+        // Function to update the sale rate field based on rate type
+        function updateSaleRateField() {
+            const rateType = rateTypeSelect.value;
+            const saleRateInput = document.getElementById('{{ form.sale_rate.id_for_label }}');
+            
+            if (rateType === 'custom' && customRateInput.value) {
+                // Use custom rate if selected and available
+                saleRateInput.value = customRateInput.value;
+            } else if (rateType !== 'custom') {
+                // Use the appropriate rate from productRates
+                saleRateInput.value = productRates[rateType] || 0;
+            }
+        }
         }
         
         // Fetch product details when product is selected
