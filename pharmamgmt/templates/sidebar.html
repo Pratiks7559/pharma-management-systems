@@ -28,9 +28,21 @@
         </li>
         
         <li class="nav-item">
-            <a href="{% url 'product_list' %}" class="nav-link {% if '/products/' in request.path %}active{% endif %}">
-                <i class="fas fa-pills"></i> Products
+            <a href="#productsSubmenu" data-bs-toggle="collapse" class="nav-link {% if '/products/' in request.path or '/rates/' in request.path %}active{% endif %}">
+                <i class="fas fa-pills"></i> Products <i class="fas fa-angle-down float-end"></i>
             </a>
+            <ul class="collapse {% if '/products/' in request.path or '/rates/' in request.path %}show{% endif %}" id="productsSubmenu">
+                <li>
+                    <a href="{% url 'product_list' %}" class="dropdown-item">
+                        <i class="fas fa-list"></i> Product List
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'sale_rate_list' %}" class="dropdown-item">
+                        <i class="fas fa-tags"></i> Batch Rates
+                    </a>
+                </li>
+            </ul>
         </li>
         
         <li class="nav-item">
