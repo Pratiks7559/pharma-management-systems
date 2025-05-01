@@ -316,27 +316,3 @@ class SaleRateMaster(models.Model):
         
     def __str__(self):
         return f"Batch Rates for {self.productid.product_name} - Batch {self.product_batch_no}"
-        
-class MedicationSubstitution(models.Model):
-    SUBSTITUTION_CHOICES = [
-        ('SALT_BASED', 'Same Salt'),
-        ('GENERIC', 'Generic Alternative'),
-        ('THERAPEUTIC', 'Therapeutic Alternative'),
-        ('BRANDED', 'Branded Alternative'),
-    ]
-    
-    primary_medication = models.ForeignKey(ProductMaster, on_delete=models.CASCADE, related_name='primary_medication')
-    substitute_medication = models.ForeignKey(ProductMaster, on_delete=models.CASCADE, related_name='substitute_medication')
-    substitution_type = models.CharField(max_length=20, choices=SUBSTITUTION_CHOICES, default='SALT_BASED')
-    priority = models.PositiveSmallIntegerField(default=1, help_text="Lower number means higher priority in recommendations")
-    notes = models.TextField(blank=True, null=True, help_text="Any additional information about this substitution")
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['primary_medication', 'substitute_medication'], 
-                                   name='unique_medication_substitution')
-        ]
-        
-    def __str__(self):
-        return f"{self.primary_medication.product_name} → {self.substitute_medication.product_name} ({self.get_substitution_type_display()})"
