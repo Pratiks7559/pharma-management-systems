@@ -777,6 +777,42 @@ def add_purchase(request, invoice_id):
             
             purchase.save()
             
+            # Save batch-specific sale rates to SaleRateMaster
+            rate_A = form.cleaned_data.get('rate_A')
+            rate_B = form.cleaned_data.get('rate_B')
+            rate_C = form.cleaned_data.get('rate_C')
+            
+            # Check if any of the rates were specified
+            if rate_A is not None or rate_B is not None or rate_C is not None:
+                # Default to product master rates if not specified
+                if rate_A is None:
+                    rate_A = product.rate_A
+                if rate_B is None:
+                    rate_B = product.rate_B
+                if rate_C is None:
+                    rate_C = product.rate_C
+                
+                # Check if a rate entry already exists for this product batch
+                try:
+                    batch_rate = SaleRateMaster.objects.get(
+                        productid=product,
+                        product_batch_no=purchase.product_batch_no
+                    )
+                    # Update existing entry
+                    batch_rate.rate_A = rate_A
+                    batch_rate.rate_B = rate_B
+                    batch_rate.rate_C = rate_C
+                    batch_rate.save()
+                except SaleRateMaster.DoesNotExist:
+                    # Create new entry
+                    SaleRateMaster.objects.create(
+                        productid=product,
+                        product_batch_no=purchase.product_batch_no,
+                        rate_A=rate_A,
+                        rate_B=rate_B,
+                        rate_C=rate_C
+                    )
+            
             messages.success(request, f"Purchase for {purchase.product_name} added successfully!")
             return redirect('invoice_detail', pk=invoice_id)
     else:

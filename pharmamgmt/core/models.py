@@ -301,3 +301,18 @@ class ReturnSalesMaster(models.Model):
     
     def __str__(self):
         return f"Sales Return: {self.return_product_name} - {self.return_product_batch_no} - {self.return_sale_quantity}"
+
+class SaleRateMaster(models.Model):
+    productid=models.ForeignKey(ProductMaster, on_delete=models.CASCADE)
+    product_batch_no=models.CharField(max_length=20)
+    rate_A=models.FloatField(default=0.0)
+    rate_B=models.FloatField(default=0.0)
+    rate_C=models.FloatField(default=0.0)
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['productid', 'product_batch_no'], name='unique_productid_product_batch_no')
+        ]
+        
+    def __str__(self):
+        return f"Batch Rates for {self.productid.product_name} - Batch {self.product_batch_no}"

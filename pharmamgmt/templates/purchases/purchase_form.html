@@ -136,6 +136,37 @@
                             </div>
                         </div>
                         
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Batch-Specific Selling Rates</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-3">
+                                            <label for="{{ form.rate_A.id_for_label }}">Rate A</label>
+                                            {{ form.rate_A }}
+                                            <small class="form-text text-muted">Price for Type-A customers</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-3">
+                                            <label for="{{ form.rate_B.id_for_label }}">Rate B</label>
+                                            {{ form.rate_B }}
+                                            <small class="form-text text-muted">Price for Type-B customers</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group mb-3">
+                                            <label for="{{ form.rate_C.id_for_label }}">Rate C</label>
+                                            {{ form.rate_C }}
+                                            <small class="form-text text-muted">Price for Type-C customers</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="form-group mt-4">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save me-2"></i>Add Product
@@ -176,6 +207,9 @@
                 .then(data => {
                     document.getElementById('{{ form.product_MRP.id_for_label }}').value = data.product_MRP || '';
                     document.getElementById('{{ form.IGST.id_for_label }}').value = data.product_hsn_percent || '0';
+                    document.getElementById('{{ form.rate_A.id_for_label }}').value = data.rate_A || '';
+                    document.getElementById('{{ form.rate_B.id_for_label }}').value = data.rate_B || '';
+                    document.getElementById('{{ form.rate_C.id_for_label }}').value = data.rate_C || '';
                 })
                 .catch(error => console.error('Error fetching product info:', error));
         });

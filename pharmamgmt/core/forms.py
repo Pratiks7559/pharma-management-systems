@@ -176,11 +176,17 @@ class PurchaseForm(forms.ModelForm):
     ]
     purchase_calculation_mode = forms.ChoiceField(choices=CALC_MODE_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}))
     
+    # Fields for batch-specific sale rates
+    rate_A = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), required=False)
+    rate_B = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), required=False)
+    rate_C = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), required=False)
+    
     class Meta:
         model = PurchaseMaster
         fields = ['productid', 'product_batch_no', 'product_expiry', 'product_MRP',
                  'product_purchase_rate', 'product_quantity', 'product_scheme',
-                 'product_discount_got', 'IGST', 'purchase_calculation_mode']
+                 'product_discount_got', 'IGST', 'purchase_calculation_mode',
+                 'rate_A', 'rate_B', 'rate_C']
         exclude = ['product_supplierid', 'product_invoiceid', 'product_invoice_no',
                   'product_name', 'product_company', 'product_packing',
                   'product_transportation_charges', 'actual_rate_per_qty',
