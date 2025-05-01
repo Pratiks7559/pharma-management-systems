@@ -164,9 +164,12 @@ def dashboard(request):
     current_month_start = today.replace(day=1)
     
     # Monthly sales
-    monthly_sales = SalesInvoiceMaster.objects.filter(
+    monthly_sales_invoices = SalesInvoiceMaster.objects.filter(
         sales_invoice_date__gte=current_month_start
-    ).aggregate(total=Sum('sales_invoice_total'))['total'] or 0
+    )
+    monthly_sales = SalesMaster.objects.filter(
+        sales_invoice_no__in=monthly_sales_invoices
+    ).aggregate(total=Sum('sale_total_amount'))['total'] or 0
     
     # Monthly purchases
     monthly_purchases = InvoiceMaster.objects.filter(
@@ -174,9 +177,19 @@ def dashboard(request):
     ).aggregate(total=Sum('invoice_total'))['total'] or 0
     
     # Total outstanding payments from customers
-    total_receivable = SalesInvoiceMaster.objects.aggregate(
-        total=Sum(F('sales_invoice_total') - F('sales_invoice_paid'))
-    )['total'] or 0
+    # Calculate total sales amounts
+    sales_totals = SalesMaster.objects.values('sales_invoice_no').annotate(
+        invoice_total=Sum('sale_total_amount')
+    )
+    
+    # Create a dictionary mapping invoice numbers to their total amounts
+    invoice_totals = {item['sales_invoice_no']: item['invoice_total'] for item in sales_totals}
+    
+    # Calculate total receivable
+    total_receivable = 0
+    for invoice in SalesInvoiceMaster.objects.all():
+        invoice_total = invoice_totals.get(invoice.sales_invoice_no, 0)
+        total_receivable += (invoice_total - invoice.sales_invoice_paid)
     
     # Total outstanding payments to suppliers
     total_payable = InvoiceMaster.objects.aggregate(
@@ -1138,8 +1151,13 @@ def add_sales_payment(request, invoice_id):
             payment = form.save(commit=False)
             payment.sales_ip_invoice_no = invoice
             
+            # Calculate invoice total from sale items
+            invoice_total = SalesMaster.objects.filter(
+                sales_invoice_no=invoice.sales_invoice_no
+            ).aggregate(total=Sum('sale_total_amount'))['total'] or 0
+            
             # Check if payment amount is valid
-            if payment.sales_payment_amount > (invoice.sales_invoice_total - invoice.sales_invoice_paid):
+            if payment.sales_payment_amount > (invoice_total - invoice.sales_invoice_paid):
                 messages.error(request, "Payment amount cannot exceed the remaining balance.")
                 return redirect('add_sales_payment', invoice_id=invoice_id)
             
@@ -1154,10 +1172,15 @@ def add_sales_payment(request, invoice_id):
     else:
         form = SalesPaymentForm()
     
+    # Calculate invoice total from sale items for context
+    invoice_total = SalesMaster.objects.filter(
+        sales_invoice_no=invoice.sales_invoice_no
+    ).aggregate(total=Sum('sale_total_amount'))['total'] or 0
+    
     context = {
         'form': form,
         'invoice': invoice,
-        'balance': invoice.sales_invoice_total - invoice.sales_invoice_paid,
+        'balance': invoice_total - invoice.sales_invoice_paid,
         'title': 'Add Sales Payment'
     }
     return render(request, 'sales/payment_form.html', context)
@@ -1431,8 +1454,13 @@ def sales_report(request):
         sales_invoice_date__range=[start_date, end_date]
     ).order_by('-sales_invoice_date')
     
+    # Get all sales for these invoices
+    sales_items = SalesMaster.objects.filter(
+        sales_invoice_no__in=sales_invoices
+    )
+    
     # Calculate totals
-    total_sales = sales_invoices.aggregate(Sum('sales_invoice_total'))['sales_invoice_total__sum'] or 0
+    total_sales = sales_items.aggregate(total=Sum('sale_total_amount'))['total'] or 0
     total_received = sales_invoices.aggregate(Sum('sales_invoice_paid'))['sales_invoice_paid__sum'] or 0
     total_pending = total_sales - total_received
     
@@ -1445,10 +1473,10 @@ def sales_report(request):
     ).order_by('-total_amount')
     
     # Get customer-wise sales
-    customer_sales = SalesInvoiceMaster.objects.filter(
-        sales_invoice_date__range=[start_date, end_date]
-    ).values('customerid__customer_name').annotate(
-        total_amount=Sum('sales_invoice_total')
+    customer_sales = SalesMaster.objects.filter(
+        sales_invoice_no__sales_invoice_date__range=[start_date, end_date]
+    ).values('sales_invoice_no__customerid__customer_name').annotate(
+        total_amount=Sum('sale_total_amount')
     ).order_by('-total_amount')
     
     context = {
