@@ -80,4 +80,10 @@ urlpatterns = [
     # API endpoints for AJAX calls
     path('api/product-info/', views.get_product_info, name='get_product_info'),
     path('api/export-inventory/', views.export_inventory_csv, name='export_inventory_csv'),
+    
+    # Sale Rate Management
+    path('rates/', views.sale_rate_list, name='sale_rate_list'),
+    path('rates/add/', views.add_sale_rate, name='add_sale_rate'),
+    path('rates/<int:pk>/update/', views.update_sale_rate, name='update_sale_rate'),
+    path('rates/<int:pk>/delete/', views.delete_sale_rate, name='delete_sale_rate'),
 ]

@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Batch-Specific Sale Rates</h1>
+        <a href="{% url 'add_sale_rate' %}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Add New Rate
+        </a>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Search Rates</h6>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{% url 'sale_rate_list' %}">
+                <div class="input-group">
+                    <input type="text" class="form-control" name="search" placeholder="Search by product name or batch number" value="{{ search_query }}">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search fa-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sale Rates Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Sale Rates</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Company</th>
+                            <th>Batch No</th>
+                            <th>Rate A</th>
+                            <th>Rate B</th>
+                            <th>Rate C</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rate in sale_rates %}
+                        <tr>
+                            <td>{{ rate.productid.product_name }}</td>
+                            <td>{{ rate.productid.product_company }}</td>
+                            <td>{{ rate.product_batch_no }}</td>
+                            <td>{{ rate.rate_A }}</td>
+                            <td>{{ rate.rate_B }}</td>
+                            <td>{{ rate.rate_C }}</td>
+                            <td>
+                                <a href="{% url 'update_sale_rate' rate.pk %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'delete_sale_rate' rate.pk %}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No sale rates found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if sale_rates.has_other_pages %}
+            <div class="pagination justify-content-center mt-4">
+                <ul class="pagination">
+                    {% if sale_rates.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ sale_rates.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#"><i class="fas fa-angle-left"></i></a>
+                    </li>
+                    {% endif %}
+
+                    {% for i in sale_rates.paginator.page_range %}
+                    {% if sale_rates.number == i %}
+                    <li class="page-item active">
+                        <a class="page-link" href="#">{{ i }}</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ i }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if sale_rates.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ sale_rates.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#"><i class="fas fa-angle-right"></i></a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            {% if sale_rate %}
+                Update Sale Rate for {{ sale_rate.productid.product_name }} - Batch {{ sale_rate.product_batch_no }}
+            {% else %}
+                Add New Sale Rate
+            {% endif %}
+        </h1>
+        <a href="{% url 'sale_rate_list' %}" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to Sale Rates
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        {% if sale_rate %}
+                            Update Sale Rate
+                        {% else %}
+                            Add Sale Rate
+                        {% endif %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="form-group">
+                            <label for="{{ form.productid.id_for_label }}">Product:</label>
+                            {{ form.productid }}
+                            {% if form.productid.errors %}
+                                <div class="text-danger">{{ form.productid.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.product_batch_no.id_for_label }}">Batch Number:</label>
+                            {{ form.product_batch_no }}
+                            {% if form.product_batch_no.errors %}
+                                <div class="text-danger">{{ form.product_batch_no.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.rate_A.id_for_label }}">Rate A:</label>
+                                    {{ form.rate_A }}
+                                    {% if form.rate_A.errors %}
+                                        <div class="text-danger">{{ form.rate_A.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.rate_B.id_for_label }}">Rate B:</label>
+                                    {{ form.rate_B }}
+                                    {% if form.rate_B.errors %}
+                                        <div class="text-danger">{{ form.rate_B.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.rate_C.id_for_label }}">Rate C:</label>
+                                    {{ form.rate_C }}
+                                    {% if form.rate_C.errors %}
+                                        <div class="text-danger">{{ form.rate_C.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                {% if sale_rate %}
+                                    Update Sale Rate
+                                {% else %}
+                                    Add Sale Rate
+                                {% endif %}
+                            </button>
+                            <a href="{% url 'sale_rate_list' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Rate Information</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Rate A</strong> - Applied to Type-A customers</p>
+                    <p><strong>Rate B</strong> - Applied to Type-B customers</p>
+                    <p><strong>Rate C</strong> - Applied to Type-C customers</p>
+                    <hr>
+                    <p>These rates will be automatically selected when creating sales based on the customer type.</p>
+                    <p>If no batch-specific rate is found, the system will use the default rates from the product.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Initialize select2 for enhanced dropdown
+        $('.select2').select2({
+            placeholder: "Select a product",
+            width: '100%'
+        });
+    });
+</script>
+{% endblock %}
