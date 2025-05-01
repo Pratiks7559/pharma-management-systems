@@ -1640,6 +1640,8 @@ def financial_report(request):
 def get_product_info(request):
     if request.method == 'GET' and 'product_id' in request.GET:
         product_id = request.GET.get('product_id')
+        batch_no = request.GET.get('batch_no')
+        
         try:
             product = ProductMaster.objects.get(productid=product_id)
             stock_info = get_stock_status(product_id)
@@ -1655,6 +1657,22 @@ def get_product_info(request):
                 'product_hsn_percent': product.product_hsn_percent,
                 'stock_quantity': stock_info['current_stock']
             }
+            
+            # If batch number is provided, try to get batch-specific rates
+            if batch_no:
+                try:
+                    batch_rate = SaleRateMaster.objects.get(
+                        productid=product,
+                        product_batch_no=batch_no
+                    )
+                    # Override with batch-specific rates
+                    data['rate_A'] = batch_rate.rate_A
+                    data['rate_B'] = batch_rate.rate_B
+                    data['rate_C'] = batch_rate.rate_C
+                except SaleRateMaster.DoesNotExist:
+                    # Keep using product default rates
+                    pass
+            
             return JsonResponse(data)
         except ProductMaster.DoesNotExist:
             return JsonResponse({'error': 'Product not found'}, status=404)

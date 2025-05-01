@@ -145,10 +145,21 @@
         const discountInput = document.getElementById('{{ form.sale_discount.id_for_label }}');
         const calcModeSelect = document.getElementById('{{ form.sale_calculation_mode.id_for_label }}');
         const gstInput = document.getElementById('{{ form.sale_igst.id_for_label }}');
+        const batchNoInput = document.getElementById('{{ form.product_batch_no.id_for_label }}');
         
         // Display elements
         const actualRateDisplay = document.getElementById('actualRate');
         const totalAmountDisplay = document.getElementById('totalAmount');
+        
+        // Set the rate type based on customer type when the page loads
+        const customerType = "{{ invoice.customerid.customer_type|upper }}";
+        if (customerType.includes('TYPE-A')) {
+            rateTypeSelect.value = 'A';
+        } else if (customerType.includes('TYPE-B')) {
+            rateTypeSelect.value = 'B';
+        } else if (customerType.includes('TYPE-C')) {
+            rateTypeSelect.value = 'C';
+        }
         
         // Product rates storage
         let productRates = {
@@ -157,12 +168,16 @@
             C: 0
         };
         
-        // Function to fetch product details when a product is selected
-        productSelect.addEventListener('change', function() {
-            const productId = this.value;
+        // Function to fetch product details
+        function fetchProductDetails(productId, batchNo = '') {
             if (!productId) return;
             
-            fetch(`/api/product-info/?product_id=${productId}`)
+            let url = `/api/product-info/?product_id=${productId}`;
+            if (batchNo) {
+                url += `&batch_no=${batchNo}`;
+            }
+            
+            fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     // Store rates
@@ -177,6 +192,19 @@
                     calculateValues();
                 })
                 .catch(error => console.error('Error fetching product info:', error));
+        }
+        
+        // Fetch product details when product is selected
+        productSelect.addEventListener('change', function() {
+            fetchProductDetails(this.value, batchNoInput.value);
+        });
+        
+        // Fetch batch-specific rates when batch number changes
+        batchNoInput.addEventListener('change', function() {
+            const productId = productSelect.value;
+            if (productId) {
+                fetchProductDetails(productId, this.value);
+            }
         });
         
         // Function to calculate and update values
