@@ -193,15 +193,14 @@ class PurchaseForm(forms.ModelForm):
         self.fields['productid'].label = 'Product'
 
 class SalesInvoiceForm(forms.ModelForm):
-    sales_invoice_no = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
     sales_invoice_date = forms.DateField(widget=DateInput(attrs={'class': 'form-control'}))
     customerid = forms.ModelChoiceField(queryset=CustomerMaster.objects.all(), widget=forms.Select(attrs={'class': 'form-control'}))
-    sales_transport_charges = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    sales_transport_charges = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), initial=0)
     sales_invoice_total = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     
     class Meta:
         model = SalesInvoiceMaster
-        fields = ['sales_invoice_no', 'sales_invoice_date', 'customerid', 'sales_transport_charges', 'sales_invoice_total']
+        fields = ['sales_invoice_date', 'customerid', 'sales_transport_charges', 'sales_invoice_total']
 
 class SalesForm(forms.ModelForm):
     product_batch_no = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))

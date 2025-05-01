@@ -16,20 +16,17 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label for="{{ form.sales_invoice_no.id_for_label }}">Invoice Number*</label>
-                                    {{ form.sales_invoice_no }}
-                                    {% if form.sales_invoice_no.errors %}
-                                        <div class="text-danger">{{ form.sales_invoice_no.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
                                     <label for="{{ form.sales_invoice_date.id_for_label }}">Invoice Date*</label>
                                     {{ form.sales_invoice_date }}
                                     {% if form.sales_invoice_date.errors %}
                                         <div class="text-danger">{{ form.sales_invoice_date.errors }}</div>
                                     {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-info mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Invoice number will be auto-generated
                                 </div>
                             </div>
                         </div>

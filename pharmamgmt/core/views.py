@@ -956,7 +956,32 @@ def add_sales_invoice(request):
         form = SalesInvoiceForm(request.POST)
         if form.is_valid():
             invoice = form.save(commit=False)
-            invoice.sales_invoice_paid = 0  # Initialize paid amount to 0
+            
+            # Auto-generate the invoice number
+            # Format: SINV-YYYYMMDD-XXX where XXX is a sequential number
+            today = datetime.now()
+            date_prefix = today.strftime('%Y%m%d')
+            invoice_prefix = f"SINV-{date_prefix}-"
+            
+            # Find the highest invoice number for today
+            latest_invoices = SalesInvoiceMaster.objects.filter(
+                sales_invoice_no__startswith=invoice_prefix
+            ).order_by('-sales_invoice_no')
+            
+            if latest_invoices.exists():
+                # Extract the last sequential number and increment it
+                latest_number = latest_invoices.first().sales_invoice_no
+                sequence = int(latest_number.split('-')[-1]) + 1
+            else:
+                # Start with 1 if no invoices exist for today
+                sequence = 1
+                
+            # Create the new invoice number
+            invoice.sales_invoice_no = f"{invoice_prefix}{sequence:03d}"
+            
+            # Initialize paid amount to 0
+            invoice.sales_invoice_paid = 0
+            
             invoice.save()
             messages.success(request, f"Sales Invoice #{invoice.sales_invoice_no} added successfully!")
             return redirect('sales_invoice_detail', pk=invoice.sales_invoice_no)
