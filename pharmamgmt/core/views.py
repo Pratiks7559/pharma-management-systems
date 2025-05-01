@@ -1118,16 +1118,19 @@ def add_sale(request, invoice_id):
                 else:
                     sale.sale_rate = product.rate_C
             
-            # Calculate total amount based on discount
+            # Calculate base price for all units
+            base_price = sale.sale_rate * sale.sale_quantity
+            
+            # Apply discount first
             if sale.sale_calculation_mode == 'flat':
                 # Flat discount amount
-                actual_rate = sale.sale_rate - (sale.sale_discount / sale.sale_quantity if sale.sale_quantity else 0)
+                discounted_amount = base_price - sale.sale_discount
             else:
                 # Percentage discount
-                actual_rate = sale.sale_rate * (1 - (sale.sale_discount / 100))
+                discounted_amount = base_price * (1 - (sale.sale_discount / 100))
             
-            # Add GST if applicable
-            sale.sale_total_amount = (actual_rate * sale.sale_quantity) * (1 + (sale.sale_igst / 100))
+            # Then add GST to the discounted amount
+            sale.sale_total_amount = discounted_amount * (1 + (sale.sale_igst / 100))
             
             sale.save()
             
@@ -1383,18 +1386,19 @@ def add_sales_return_item(request, return_id):
             return_item.return_product_company = product.product_company
             return_item.return_product_packing = product.product_packing
             
-            # Calculate total amount
+            # Calculate base amount
             base_amount = return_item.return_sale_rate * return_item.return_sale_quantity
-            discount_amount = 0
             
-            # Apply discount
+            # Apply discount first
+            discounted_amount = base_amount
             if return_item.return_sale_discount > 0:
-                discount_amount = (return_item.return_sale_discount / 100) * base_amount
+                if return_item.return_sale_discount < 100:  # Assuming percentage discount
+                    discounted_amount = base_amount * (1 - (return_item.return_sale_discount / 100))
+                else:  # Assuming flat discount
+                    discounted_amount = base_amount - return_item.return_sale_discount
             
-            # Apply GST
-            gst_amount = ((base_amount - discount_amount) * return_item.return_sale_igst) / 100
-            
-            return_item.return_sale_total_amount = base_amount - discount_amount + gst_amount
+            # Then apply GST to the discounted amount
+            return_item.return_sale_total_amount = discounted_amount * (1 + (return_item.return_sale_igst / 100))
             
             return_item.save()
             
@@ -1685,11 +1689,13 @@ def get_product_info(request):
                 'rate_C': product.rate_C,
                 'product_hsn': product.product_hsn,
                 'product_hsn_percent': product.product_hsn_percent,
-                'stock_quantity': stock_info['current_stock']
+                'stock_quantity': stock_info['current_stock'],
+                'product_expiry': None
             }
             
-            # If batch number is provided, try to get batch-specific rates
+            # If batch number is provided
             if batch_no:
+                # Try to get batch-specific rates
                 try:
                     batch_rate = SaleRateMaster.objects.get(
                         productid=product,
@@ -1701,6 +1707,19 @@ def get_product_info(request):
                     data['rate_C'] = batch_rate.rate_C
                 except SaleRateMaster.DoesNotExist:
                     # Keep using product default rates
+                    pass
+                
+                # Get expiry date from purchases for this batch
+                try:
+                    purchase = PurchaseMaster.objects.filter(
+                        productid=product,
+                        product_batch_no=batch_no
+                    ).order_by('-purchase_entry_date').first()
+                    
+                    if purchase and purchase.product_expiry:
+                        data['product_expiry'] = purchase.product_expiry.strftime('%Y-%m-%d')
+                except Exception as e:
+                    # If there's any error, just continue without the expiry date
                     pass
             
             return JsonResponse(data)

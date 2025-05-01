@@ -220,6 +220,11 @@
                     // Set GST percent
                     document.getElementById('{{ form.sale_igst.id_for_label }}').value = data.product_hsn_percent || '0';
                     
+                    // Set expiry date if available from purchase
+                    if (data.product_expiry) {
+                        document.getElementById('{{ form.product_expiry.id_for_label }}').value = data.product_expiry;
+                    }
+                    
                     // Update the sale rate field based on the selected rate type
                     updateSaleRateField();
                     
@@ -273,18 +278,24 @@
             const gst = parseFloat(gstInput.value) || 0;
             const calcMode = calcModeSelect.value;
             
-            let actualRate;
+            // Calculate base price per unit
+            let basePrice = saleRate * quantity;
+            
+            // Apply discount first
+            let discountedAmount;
             if (calcMode === 'flat') {
                 // Flat discount amount
-                actualRate = saleRate - (discount / quantity);
+                discountedAmount = basePrice - discount;
             } else {
                 // Percentage discount
-                actualRate = saleRate * (1 - (discount / 100));
+                discountedAmount = basePrice * (1 - (discount / 100));
             }
             
-            // Calculate total amount with GST
-            const baseAmount = actualRate * quantity;
-            const totalAmount = baseAmount * (1 + (gst / 100));
+            // Calculate actual rate per unit (after discount)
+            const actualRate = discountedAmount / quantity;
+            
+            // Apply GST after discount
+            const totalAmount = discountedAmount * (1 + (gst / 100));
             
             // Update display
             actualRateDisplay.textContent = `₹${actualRate.toFixed(2)}`;
