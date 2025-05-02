@@ -225,6 +225,18 @@
                         document.getElementById('{{ form.product_expiry.id_for_label }}').value = data.product_expiry;
                     }
                     
+                    // Check stock availability
+                    const stockStatusDiv = document.getElementById('stock-status');
+                    if (stockStatusDiv) {
+                        if (data.batch_stock_available) {
+                            stockStatusDiv.innerHTML = `<div class="alert alert-success">Stock Available: ${data.batch_stock_quantity} units</div>`;
+                            document.getElementById('submit-btn').disabled = false;
+                        } else {
+                            stockStatusDiv.innerHTML = `<div class="alert alert-danger">Out of Stock! This product with batch number ${batch_no} is not available.</div>`;
+                            document.getElementById('submit-btn').disabled = true;
+                        }
+                    }
+                    
                     // Update the sale rate field based on the selected rate type
                     updateSaleRateField();
                     

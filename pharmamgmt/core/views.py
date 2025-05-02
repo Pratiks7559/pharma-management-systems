@@ -1081,6 +1081,32 @@ def add_sale(request, invoice_id):
             sale.sales_invoice_no = invoice
             sale.customerid = invoice.customerid
             
+            # Check stock availability first
+            from .utils import get_batch_stock_status
+            batch_quantity, is_available = get_batch_stock_status(
+                sale.productid.productid, sale.product_batch_no
+            )
+            
+            # If product is out of stock, show an error and don't save
+            if not is_available:
+                messages.error(request, f"Cannot add sale. Product {sale.productid.product_name} with batch {sale.product_batch_no} is out of stock.")
+                context = {
+                    'form': form,
+                    'invoice': invoice,
+                    'title': 'Add Sale'
+                }
+                return render(request, 'sales/sales_form.html', context)
+            
+            # If not enough quantity available, show error and don't save
+            if batch_quantity < sale.sale_quantity:
+                messages.error(request, f"Cannot add sale. Only {batch_quantity} units available for product {sale.productid.product_name} with batch {sale.product_batch_no}.")
+                context = {
+                    'form': form,
+                    'invoice': invoice,
+                    'title': 'Add Sale'
+                }
+                return render(request, 'sales/sales_form.html', context)
+            
             # Get product details from the selected product
             product = sale.productid
             sale.product_name = product.product_name
@@ -1721,6 +1747,12 @@ def get_product_info(request):
                 except Exception as e:
                     # If there's any error, just continue without the expiry date
                     pass
+                
+                # Check stock availability for this batch
+                from .utils import get_batch_stock_status
+                batch_quantity, is_available = get_batch_stock_status(product_id, batch_no)
+                data['batch_stock_quantity'] = batch_quantity
+                data['batch_stock_available'] = is_available
             
             return JsonResponse(data)
         except ProductMaster.DoesNotExist:
