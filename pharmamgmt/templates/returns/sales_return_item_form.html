@@ -7,16 +7,16 @@
         <div class="col-md-10">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Add Product to Sales Return #{{ return_invoice.salesreturninvoiceid }}</h5>
+                    <h5 class="mb-0">Add Product to Sales Return #{{ return_invoice.return_sales_invoice_no }}</h5>
                 </div>
                 <div class="card-body">
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <h6 class="text-muted">Return Details</h6>
                             <ul class="list-unstyled">
-                                <li><strong>Return No:</strong> {{ return_invoice.salesreturninvoiceid }}</li>
-                                <li><strong>Date:</strong> {{ return_invoice.salesreturninvoice_date }}</li>
-                                <li><strong>Customer:</strong> {{ return_invoice.salesreturncustomerid.customer_name }}</li>
+                                <li><strong>Return No:</strong> {{ return_invoice.return_sales_invoice_no }}</li>
+                                <li><strong>Date:</strong> {{ return_invoice.return_sales_invoice_date }}</li>
+                                <li><strong>Customer:</strong> {{ return_invoice.return_sales_customerid.customer_name }}</li>
                             </ul>
                         </div>
                     </div>
