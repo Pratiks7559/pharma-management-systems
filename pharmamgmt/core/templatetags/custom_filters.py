@@ -71,6 +71,23 @@ def get_dict_value(dictionary, key):
         return ""
     return dictionary.get(key, "")
 
+@register.filter
+def sum_field(items, field_name):
+    """Sum a specific field across all items in a queryset"""
+    if not items:
+        return 0
+    
+    total = 0
+    for item in items:
+        try:
+            value = getattr(item, field_name, 0)
+            if value is not None:
+                total += float(value)
+        except (ValueError, TypeError, AttributeError):
+            pass
+    
+    return total
+
 @register.simple_tag
 def calculate_balance(invoice_total, invoice_paid):
     """Calculate balance amount for an invoice"""

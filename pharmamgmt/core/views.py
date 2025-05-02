@@ -1553,20 +1553,49 @@ def purchase_return_list(request):
 
 @login_required
 def add_purchase_return(request):
+    # Generate the return invoice number format that will be used
+    # Format: PURR-YYYYMMDD-XXX where XXX is a sequential number
+    today = datetime.now()
+    date_prefix = today.strftime('%Y%m%d')
+    invoice_prefix = f"PURR-{date_prefix}-"
+    
+    # Find the highest return invoice number for today
+    latest_returns = ReturnInvoiceMaster.objects.filter(
+        returninvoiceid__startswith=invoice_prefix
+    ).order_by('-returninvoiceid')
+    
+    if latest_returns.exists():
+        # Extract the last sequential number and increment it
+        latest_number = latest_returns.first().returninvoiceid
+        sequence = int(latest_number.split('-')[-1]) + 1
+    else:
+        # Start with 1 if no returns exist for today
+        sequence = 1
+        
+    # Create the new return invoice number
+    new_return_id = f"{invoice_prefix}{sequence:03d}"
+
     if request.method == 'POST':
         form = PurchaseReturnInvoiceForm(request.POST)
         if form.is_valid():
             return_invoice = form.save(commit=False)
+            # Set the generated return invoice number
+            return_invoice.returninvoiceid = new_return_id
             return_invoice.returninvoice_paid = 0  # Initialize paid amount to 0
             return_invoice.save()
             messages.success(request, f"Purchase Return #{return_invoice.returninvoiceid} added successfully!")
             return redirect('purchase_return_detail', pk=return_invoice.returninvoiceid)
     else:
-        form = PurchaseReturnInvoiceForm()
+        # Pre-fill the form with initial values
+        initial_data = {
+            'returninvoice_date': today.date(),
+        }
+        form = PurchaseReturnInvoiceForm(initial=initial_data)
     
     context = {
         'form': form,
-        'title': 'Add Purchase Return'
+        'title': 'Add Purchase Return',
+        'preview_id': new_return_id
     }
     return render(request, 'returns/purchase_return_form.html', context)
 
@@ -1645,20 +1674,49 @@ def sales_return_list(request):
 
 @login_required
 def add_sales_return(request):
+    # Generate the sales return invoice number format that will be used
+    # Format: SRET-YYYYMMDD-XXX where XXX is a sequential number
+    today = datetime.now()
+    date_prefix = today.strftime('%Y%m%d')
+    invoice_prefix = f"SRET-{date_prefix}-"
+    
+    # Find the highest sales return invoice number for today
+    latest_returns = ReturnSalesInvoiceMaster.objects.filter(
+        return_sales_invoice_no__startswith=invoice_prefix
+    ).order_by('-return_sales_invoice_no')
+    
+    if latest_returns.exists():
+        # Extract the last sequential number and increment it
+        latest_number = latest_returns.first().return_sales_invoice_no
+        sequence = int(latest_number.split('-')[-1]) + 1
+    else:
+        # Start with 1 if no returns exist for today
+        sequence = 1
+        
+    # Create the new return invoice number
+    new_return_id = f"{invoice_prefix}{sequence:03d}"
+
     if request.method == 'POST':
         form = SalesReturnInvoiceForm(request.POST)
         if form.is_valid():
             return_invoice = form.save(commit=False)
+            # Set the generated return invoice number
+            return_invoice.return_sales_invoice_no = new_return_id
             return_invoice.return_sales_invoice_paid = 0  # Initialize paid amount to 0
             return_invoice.save()
             messages.success(request, f"Sales Return #{return_invoice.return_sales_invoice_no} added successfully!")
             return redirect('sales_return_detail', pk=return_invoice.return_sales_invoice_no)
     else:
-        form = SalesReturnInvoiceForm()
+        # Pre-fill the form with initial values
+        initial_data = {
+            'return_sales_invoice_date': today.date(),
+        }
+        form = SalesReturnInvoiceForm(initial=initial_data)
     
     context = {
         'form': form,
-        'title': 'Add Sales Return'
+        'title': 'Add Sales Return',
+        'preview_id': new_return_id
     }
     return render(request, 'returns/sales_return_form.html', context)
 

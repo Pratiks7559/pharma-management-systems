@@ -11,16 +11,19 @@
                 <h5 class="mb-0">New Sales Return</h5>
             </div>
             <div class="card-body">
+                <div class="alert alert-info mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-info-circle me-2 fa-lg"></i>
+                        <div>
+                            <strong>Return Invoice ID:</strong> {{ preview_id }}
+                            <div><small>This ID will be automatically assigned to the return</small></div>
+                            {{ form.return_sales_invoice_no }}
+                        </div>
+                    </div>
+                </div>
+                
                 <form method="post">
                     {% csrf_token %}
-                    
-                    <div class="form-group mb-3">
-                        <label for="{{ form.return_sales_invoice_no.id_for_label }}">Return Invoice No*</label>
-                        {{ form.return_sales_invoice_no }}
-                        {% if form.return_sales_invoice_no.errors %}
-                            <div class="text-danger">{{ form.return_sales_invoice_no.errors }}</div>
-                        {% endif %}
-                    </div>
                     
                     <div class="form-group mb-3">
                         <label for="{{ form.return_sales_customerid.id_for_label }}">Customer*</label>
