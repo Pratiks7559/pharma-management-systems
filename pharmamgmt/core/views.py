@@ -25,7 +25,7 @@ from .forms import (
     SalesInvoiceForm, SalesForm, SalesPaymentForm, ProductRateForm,
     PurchaseReturnInvoiceForm, PurchaseReturnForm, SalesReturnInvoiceForm, SalesReturnForm
 )
-from .utils import get_stock_status, generate_invoice_pdf, generate_sales_invoice_pdf
+from .utils import get_stock_status, get_batch_stock_status, generate_invoice_pdf, generate_sales_invoice_pdf
 
 # Authentication views
 def login_view(request):
@@ -1695,9 +1695,9 @@ def add_purchase_return_item(request, return_id):
             
             if purchase_data:
                 # Check current stock for this batch
-                current_stock = get_batch_stock(product_id, batch_no)
+                batch_stock, is_available = get_batch_stock_status(product_id, batch_no)
                 
-                if current_stock <= 0:
+                if batch_stock <= 0:
                     return JsonResponse({
                         'exists': True,
                         'expiry': purchase_data.product_expiry.strftime('%Y-%m-%d'),
@@ -1713,8 +1713,8 @@ def add_purchase_return_item(request, return_id):
                     'expiry': purchase_data.product_expiry.strftime('%Y-%m-%d'),
                     'rate': purchase_data.product_purchase_rate,
                     'mrp': purchase_data.product_MRP,
-                    'available_qty': current_stock,
-                    'message': f'Product found in purchase records. Current stock: {current_stock}'
+                    'available_qty': batch_stock,
+                    'message': f'Product found in purchase records. Current stock: {batch_stock}'
                 })
             else:
                 return JsonResponse({
@@ -1746,10 +1746,10 @@ def add_purchase_return_item(request, return_id):
                 return render(request, 'returns/purchase_return_item_form.html', context)
             
             # Check stock availability
-            current_stock = get_batch_stock(return_item.returnproductid.productid, return_item.returnproduct_batch_no)
+            batch_stock, is_available = get_batch_stock_status(return_item.returnproductid.productid, return_item.returnproduct_batch_no)
             
-            if current_stock < return_item.returnproduct_quantity:
-                messages.error(request, f"Error: Insufficient stock! Available: {current_stock}, Attempted to return: {return_item.returnproduct_quantity}")
+            if batch_stock < return_item.returnproduct_quantity:
+                messages.error(request, f"Error: Insufficient stock! Available: {batch_stock}, Attempted to return: {return_item.returnproduct_quantity}")
                 context = {
                     'form': form,
                     'return_invoice': return_invoice,
