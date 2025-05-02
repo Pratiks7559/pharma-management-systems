@@ -166,6 +166,7 @@
                                 <th>Discount</th>
                                 <th>GST %</th>
                                 <th>Total</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -191,6 +192,16 @@
                                 </td>
                                 <td>{{ purchase.IGST }}%</td>
                                 <td>{{ purchase.total_amount|currency }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'edit_purchase' invoice_id=invoice.invoiceid purchase_id=purchase.purchaseid %}" class="btn btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'delete_purchase' invoice_id=invoice.invoiceid purchase_id=purchase.purchaseid %}" class="btn btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
                             </tr>
                             {% empty %}
                             <tr>
