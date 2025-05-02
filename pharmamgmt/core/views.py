@@ -1641,6 +1641,79 @@ def delete_purchase_return(request, pk):
     return render(request, 'returns/purchase_return_confirm_delete.html', context)
 
 @login_required
+def edit_purchase_return_item(request, return_id, item_id):
+    # Check if user is admin or manager (case-insensitive)
+    if not request.user.user_type.lower() in ['admin', 'manager']:
+        messages.error(request, "You don't have permission to perform this action.")
+        return redirect('purchase_return_detail', pk=return_id)
+        
+    return_item = get_object_or_404(ReturnPurchaseMaster, pk=item_id)
+    return_invoice = return_item.returninvoiceid
+    
+    if request.method == 'POST':
+        form = PurchaseReturnForm(request.POST, instance=return_item)
+        if form.is_valid():
+            # Store the original amount to calculate difference
+            original_amount = return_item.returntotal_amount
+            
+            # Update the item without saving yet
+            updated_item = form.save(commit=False)
+            
+            # Set additional fields
+            updated_item.returninvoiceid = return_invoice
+            updated_item.returnproduct_supplierid = return_invoice.returnsupplierid
+            
+            # Get product details
+            product = updated_item.returnproductid
+            updated_item.returnproduct_name = product.product_name
+            updated_item.returnproduct_company = product.product_company
+            updated_item.returnproduct_packing = product.product_packing
+            
+            # Verify stock availability for increased quantity
+            if updated_item.returnproduct_quantity > return_item.returnproduct_quantity:
+                batch_stock, is_available = get_batch_stock_status(
+                    product.productid, 
+                    updated_item.returnproduct_batch_no
+                )
+                
+                additional_qty = updated_item.returnproduct_quantity - return_item.returnproduct_quantity
+                
+                if batch_stock < additional_qty:
+                    messages.error(request, f"Error: Insufficient stock! Available: {batch_stock}, Attempted to add: {additional_qty}")
+                    context = {
+                        'form': form,
+                        'return_invoice': return_invoice,
+                        'return_item': return_item,
+                        'title': 'Edit Return Item'
+                    }
+                    return render(request, 'returns/purchase_return_item_edit_form.html', context)
+            
+            # Calculate total amount
+            updated_item.returntotal_amount = updated_item.returnproduct_purchase_rate * updated_item.returnproduct_quantity
+            
+            # Save the updated item
+            updated_item.save()
+            
+            # Update the return invoice total
+            total_amount = ReturnPurchaseMaster.objects.filter(returninvoiceid=return_id).aggregate(
+                total=Sum('returntotal_amount'))['total'] or 0
+            return_invoice.returninvoice_total = total_amount + return_invoice.return_charges
+            return_invoice.save()
+            
+            messages.success(request, "Return item updated successfully!")
+            return redirect('purchase_return_detail', pk=return_id)
+    else:
+        form = PurchaseReturnForm(instance=return_item)
+    
+    context = {
+        'form': form,
+        'return_invoice': return_invoice,
+        'return_item': return_item,
+        'title': 'Edit Return Item'
+    }
+    return render(request, 'returns/purchase_return_item_edit_form.html', context)
+
+@login_required
 def delete_purchase_return_item(request, return_id, item_id):
     # Check if user is admin (case-insensitive)
     if not request.user.user_type.lower() in ['admin']:
@@ -1903,6 +1976,71 @@ def delete_sales_return(request, pk):
         'title': 'Delete Sales Return'
     }
     return render(request, 'returns/sales_return_confirm_delete.html', context)
+
+@login_required
+def edit_sales_return_item(request, return_id, item_id):
+    # Check if user is admin or manager (case-insensitive)
+    if not request.user.user_type.lower() in ['admin', 'manager']:
+        messages.error(request, "You don't have permission to perform this action.")
+        return redirect('sales_return_detail', pk=return_id)
+        
+    return_item = get_object_or_404(ReturnSalesMaster, pk=item_id)
+    return_invoice = return_item.return_sales_invoice_no
+    
+    if request.method == 'POST':
+        form = SalesReturnForm(request.POST, instance=return_item)
+        if form.is_valid():
+            # Store the original amount to calculate difference
+            original_amount = return_item.return_sale_total_amount
+            
+            # Update the item without saving yet
+            updated_item = form.save(commit=False)
+            
+            # Set additional fields
+            updated_item.return_sales_invoice_no = return_invoice
+            updated_item.return_customerid = return_invoice.return_sales_customerid
+            
+            # Get product details
+            product = updated_item.return_productid
+            updated_item.return_product_name = product.product_name
+            updated_item.return_product_company = product.product_company
+            updated_item.return_product_packing = product.product_packing
+            
+            # Calculate base amount
+            base_amount = updated_item.return_sale_rate * updated_item.return_sale_quantity
+            
+            # Apply discount first
+            discounted_amount = base_amount
+            if updated_item.return_sale_discount > 0:
+                if updated_item.return_sale_discount < 100:  # Assuming percentage discount
+                    discounted_amount = base_amount * (1 - (updated_item.return_sale_discount / 100))
+                else:  # Assuming flat discount
+                    discounted_amount = base_amount - updated_item.return_sale_discount
+            
+            # Then apply GST to the discounted amount
+            updated_item.return_sale_total_amount = discounted_amount * (1 + (updated_item.return_sale_igst / 100))
+            
+            # Save the updated item
+            updated_item.save()
+            
+            # Update the invoice total
+            total_amount = ReturnSalesMaster.objects.filter(return_sales_invoice_no=return_id).aggregate(
+                total=Sum('return_sale_total_amount'))['total'] or 0
+            return_invoice.return_sales_invoice_total = total_amount + return_invoice.return_sales_charges
+            return_invoice.save()
+            
+            messages.success(request, "Return item updated successfully!")
+            return redirect('sales_return_detail', pk=return_id)
+    else:
+        form = SalesReturnForm(instance=return_item)
+    
+    context = {
+        'form': form,
+        'return_invoice': return_invoice,
+        'return_item': return_item,
+        'title': 'Edit Return Item'
+    }
+    return render(request, 'returns/sales_return_item_edit_form.html', context)
 
 @login_required
 def delete_sales_return_item(request, return_id, item_id):

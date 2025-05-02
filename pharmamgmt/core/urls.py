@@ -69,6 +69,7 @@ urlpatterns = [
     path('purchase-returns/<str:pk>/', views.purchase_return_detail, name='purchase_return_detail'),
     path('purchase-returns/<str:pk>/delete/', views.delete_purchase_return, name='delete_purchase_return'),
     path('purchase-returns/<str:return_id>/add-item/', views.add_purchase_return_item, name='add_purchase_return_item'),
+    path('purchase-returns/<str:return_id>/edit-item/<int:item_id>/', views.edit_purchase_return_item, name='edit_purchase_return_item'),
     path('purchase-returns/<str:return_id>/delete-item/<int:item_id>/', views.delete_purchase_return_item, name='delete_purchase_return_item'),
     
     # Sales Returns
@@ -77,6 +78,7 @@ urlpatterns = [
     path('sales-returns/<str:pk>/', views.sales_return_detail, name='sales_return_detail'),
     path('sales-returns/<str:pk>/delete/', views.delete_sales_return, name='delete_sales_return'),
     path('sales-returns/<str:return_id>/add-item/', views.add_sales_return_item, name='add_sales_return_item'),
+    path('sales-returns/<str:return_id>/edit-item/<int:item_id>/', views.edit_sales_return_item, name='edit_sales_return_item'),
     path('sales-returns/<str:return_id>/delete-item/<int:item_id>/', views.delete_sales_return_item, name='delete_sales_return_item'),
     
     # Reports

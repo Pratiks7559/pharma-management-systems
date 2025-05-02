@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extrahead %}
+<script>
+    $(document).ready(function() {
+        // Auto-fill batch details from AJAX call
+        $('#id_return_product_batch_no').on('change', function() {
+            const batch_no = $(this).val();
+            const product_id = $('#id_return_productid').val();
+            
+            if (batch_no && product_id) {
+                $.ajax({
+                    url: '{% url "add_sales_return_item" return_id=return_invoice.return_sales_invoice_no %}',
+                    data: {
+                        'product_id': product_id,
+                        'batch_no': batch_no
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        if (data.exists) {
+                            $('#id_return_product_expiry').val(data.expiry);
+                            $('#id_return_sale_rate').val(data.rate);
+                            
+                            // Show sales info
+                            $('#sales_info').html('<div class="alert alert-success">' + data.message + ' Original quantity: ' + data.quantity + '</div>');
+                        } else {
+                            $('#sales_info').html('<div class="alert alert-warning">' + data.message + '</div>');
+                        }
+                    }
+                });
+            }
+        });
+        
+        // Calculate total on change
+        function updateTotal() {
+            const qty = $('#id_return_sale_quantity').val() || 0;
+            const rate = $('#id_return_sale_rate').val() || 0;
+            const discount = $('#id_return_sale_discount').val() || 0;
+            const igst = $('#id_return_sale_igst').val() || 0;
+            
+            // Calculate base amount
+            let base_amount = parseFloat(qty) * parseFloat(rate);
+            
+            // Apply discount
+            let discounted_amount = base_amount;
+            if (parseFloat(discount) > 0) {
+                if (parseFloat(discount) < 100) {
+                    // Percentage discount
+                    discounted_amount = base_amount * (1 - (parseFloat(discount) / 100));
+                } else {
+                    // Fixed discount
+                    discounted_amount = base_amount - parseFloat(discount);
+                }
+            }
+            
+            // Apply GST
+            const total = discounted_amount * (1 + (parseFloat(igst) / 100));
+            
+            if (!isNaN(total)) {
+                $('#total_preview').text(total.toFixed(2));
+            }
+        }
+        
+        $('#id_return_sale_quantity, #id_return_sale_rate, #id_return_sale_discount, #id_return_sale_igst').on('change', updateTotal);
+        
+        // Initialize calculation
+        updateTotal();
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">{{ title }}</h6>
+                    <a href="{% url 'sales_return_detail' pk=return_invoice.return_sales_invoice_no %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Return
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Return Details</h6>
+                            <p>
+                                <strong>Return No:</strong> {{ return_invoice.return_sales_invoice_no }}<br>
+                                <strong>Date:</strong> {{ return_invoice.return_sales_invoice_date }}<br>
+                                <strong>Customer:</strong> {{ return_invoice.return_sales_customerid.customer_name }}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div id="sales_info"></div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="id_return_productid">Product</label>
+                                {{ form.return_productid }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="id_return_product_batch_no">Batch No</label>
+                                {{ form.return_product_batch_no }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="id_return_product_expiry">Expiry Date</label>
+                                {{ form.return_product_expiry }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label for="id_return_sale_rate">Sale Rate</label>
+                                {{ form.return_sale_rate }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="id_return_product_MRP">MRP</label>
+                                {{ form.return_product_MRP }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="id_return_sale_quantity">Quantity</label>
+                                {{ form.return_sale_quantity }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label for="id_return_sale_discount">Discount</label>
+                                {{ form.return_sale_discount }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="id_return_sale_igst">GST %</label>
+                                {{ form.return_sale_igst }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label>Total Amount</label>
+                                <div class="form-control bg-light">₹ <span id="total_preview">{{ return_item.return_sale_total_amount }}</span></div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="id_return_reason">Return Reason</label>
+                                {{ form.return_reason }}
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Update Return Item
+                            </button>
+                            <a href="{% url 'sales_return_detail' pk=return_invoice.return_sales_invoice_no %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

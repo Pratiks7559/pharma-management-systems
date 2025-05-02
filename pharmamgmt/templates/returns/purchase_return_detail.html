@@ -74,6 +74,9 @@
                                     <td>₹{{ item.returntotal_amount|floatformat:2 }}</td>
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{% url 'edit_purchase_return_item' return_id=return_invoice.returninvoiceid item_id=item.id %}" class="btn btn-outline-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
                                             <a href="{% url 'delete_purchase_return_item' return_id=return_invoice.returninvoiceid item_id=item.id %}" class="btn btn-outline-danger">
                                                 <i class="fas fa-trash"></i>
                                             </a>
