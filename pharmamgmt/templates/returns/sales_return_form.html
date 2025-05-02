@@ -15,32 +15,49 @@
                     {% csrf_token %}
                     
                     <div class="form-group mb-3">
-                        <label for="{{ form.salesreturncustomerid.id_for_label }}">Customer*</label>
-                        {{ form.salesreturncustomerid }}
-                        {% if form.salesreturncustomerid.errors %}
-                            <div class="text-danger">{{ form.salesreturncustomerid.errors }}</div>
+                        <label for="{{ form.return_sales_invoice_no.id_for_label }}">Return Invoice No*</label>
+                        {{ form.return_sales_invoice_no }}
+                        {% if form.return_sales_invoice_no.errors %}
+                            <div class="text-danger">{{ form.return_sales_invoice_no.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="{{ form.return_sales_customerid.id_for_label }}">Customer*</label>
+                        {{ form.return_sales_customerid }}
+                        {% if form.return_sales_customerid.errors %}
+                            <div class="text-danger">{{ form.return_sales_customerid.errors }}</div>
                         {% endif %}
                     </div>
                     
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="{{ form.salesreturninvoice_date.id_for_label }}">Return Date*</label>
-                                {{ form.salesreturninvoice_date }}
-                                {% if form.salesreturninvoice_date.errors %}
-                                    <div class="text-danger">{{ form.salesreturninvoice_date.errors }}</div>
+                                <label for="{{ form.return_sales_invoice_date.id_for_label }}">Return Date*</label>
+                                {{ form.return_sales_invoice_date }}
+                                {% if form.return_sales_invoice_date.errors %}
+                                    <div class="text-danger">{{ form.return_sales_invoice_date.errors }}</div>
                                 {% endif %}
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="{{ form.salesreturninvoice_remarks.id_for_label }}">Remarks</label>
-                                {{ form.salesreturninvoice_remarks }}
-                                {% if form.salesreturninvoice_remarks.errors %}
-                                    <div class="text-danger">{{ form.salesreturninvoice_remarks.errors }}</div>
+                                <label for="{{ form.return_sales_charges.id_for_label }}">Return Charges</label>
+                                {{ form.return_sales_charges }}
+                                {% if form.return_sales_charges.errors %}
+                                    <div class="text-danger">{{ form.return_sales_charges.errors }}</div>
                                 {% endif %}
                             </div>
                         </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="{{ form.return_sales_invoice_total.id_for_label }}">Return Total*</label>
+                        {{ form.return_sales_invoice_total }}
+                        <small class="form-text text-muted">Enter initial amount (can be updated later)</small>
+                        {% if form.return_sales_invoice_total.errors %}
+                            <div class="text-danger">{{ form.return_sales_invoice_total.errors }}</div>
+                        {% endif %}
                     </div>
                     
                     <div class="form-group mt-4">

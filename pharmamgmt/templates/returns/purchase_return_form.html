@@ -15,6 +15,14 @@
                     {% csrf_token %}
                     
                     <div class="form-group mb-3">
+                        <label for="{{ form.returninvoiceid.id_for_label }}">Return Invoice ID*</label>
+                        {{ form.returninvoiceid }}
+                        {% if form.returninvoiceid.errors %}
+                            <div class="text-danger">{{ form.returninvoiceid.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group mb-3">
                         <label for="{{ form.returnsupplierid.id_for_label }}">Supplier*</label>
                         {{ form.returnsupplierid }}
                         {% if form.returnsupplierid.errors %}
@@ -34,13 +42,22 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="{{ form.returninvoice_remarks.id_for_label }}">Remarks</label>
-                                {{ form.returninvoice_remarks }}
-                                {% if form.returninvoice_remarks.errors %}
-                                    <div class="text-danger">{{ form.returninvoice_remarks.errors }}</div>
+                                <label for="{{ form.return_charges.id_for_label }}">Return Charges</label>
+                                {{ form.return_charges }}
+                                {% if form.return_charges.errors %}
+                                    <div class="text-danger">{{ form.return_charges.errors }}</div>
                                 {% endif %}
                             </div>
                         </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="{{ form.returninvoice_total.id_for_label }}">Return Total*</label>
+                        {{ form.returninvoice_total }}
+                        <small class="form-text text-muted">Enter initial amount (can be updated later)</small>
+                        {% if form.returninvoice_total.errors %}
+                            <div class="text-danger">{{ form.returninvoice_total.errors }}</div>
+                        {% endif %}
                     </div>
                     
                     <div class="form-group mt-4">
