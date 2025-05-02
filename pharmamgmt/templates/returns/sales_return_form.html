@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">New Sales Return</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="form-group mb-3">
+                        <label for="{{ form.salesreturncustomerid.id_for_label }}">Customer*</label>
+                        {{ form.salesreturncustomerid }}
+                        {% if form.salesreturncustomerid.errors %}
+                            <div class="text-danger">{{ form.salesreturncustomerid.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.salesreturninvoice_date.id_for_label }}">Return Date*</label>
+                                {{ form.salesreturninvoice_date }}
+                                {% if form.salesreturninvoice_date.errors %}
+                                    <div class="text-danger">{{ form.salesreturninvoice_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.salesreturninvoice_remarks.id_for_label }}">Remarks</label>
+                                {{ form.salesreturninvoice_remarks }}
+                                {% if form.salesreturninvoice_remarks.errors %}
+                                    <div class="text-danger">{{ form.salesreturninvoice_remarks.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Create Return
+                        </button>
+                        <a href="{% url 'sales_return_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

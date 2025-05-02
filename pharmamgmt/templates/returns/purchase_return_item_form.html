@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Add Product to Purchase Return #{{ return_invoice.returninvoiceid }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Return Details</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>Return No:</strong> {{ return_invoice.returninvoiceid }}</li>
+                                <li><strong>Date:</strong> {{ return_invoice.returninvoice_date }}</li>
+                                <li><strong>Supplier:</strong> {{ return_invoice.returnsupplierid.supplier_name }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.productid.id_for_label }}">Product*</label>
+                            {{ form.productid }}
+                            {% if form.productid.errors %}
+                                <div class="text-danger">{{ form.productid.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_batch_no.id_for_label }}">Batch No*</label>
+                                    {{ form.product_batch_no }}
+                                    {% if form.product_batch_no.errors %}
+                                        <div class="text-danger">{{ form.product_batch_no.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_expiry.id_for_label }}">Expiry Date*</label>
+                                    {{ form.product_expiry }}
+                                    {% if form.product_expiry.errors %}
+                                        <div class="text-danger">{{ form.product_expiry.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_purchase_rate.id_for_label }}">Purchase Rate*</label>
+                                    {{ form.product_purchase_rate }}
+                                    {% if form.product_purchase_rate.errors %}
+                                        <div class="text-danger">{{ form.product_purchase_rate.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_MRP.id_for_label }}">MRP*</label>
+                                    {{ form.product_MRP }}
+                                    {% if form.product_MRP.errors %}
+                                        <div class="text-danger">{{ form.product_MRP.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_quantity.id_for_label }}">Quantity*</label>
+                                    {{ form.product_quantity }}
+                                    {% if form.product_quantity.errors %}
+                                        <div class="text-danger">{{ form.product_quantity.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.IGST.id_for_label }}">GST %*</label>
+                                    {{ form.IGST }}
+                                    {% if form.IGST.errors %}
+                                        <div class="text-danger">{{ form.IGST.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.purchase_calculation_mode.id_for_label }}">Discount Type*</label>
+                                    {{ form.purchase_calculation_mode }}
+                                    {% if form.purchase_calculation_mode.errors %}
+                                        <div class="text-danger">{{ form.purchase_calculation_mode.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_discount_got.id_for_label }}">Discount*</label>
+                                    {{ form.product_discount_got }}
+                                    {% if form.product_discount_got.errors %}
+                                        <div class="text-danger">{{ form.product_discount_got.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.return_remarks.id_for_label }}">Remarks</label>
+                                    {{ form.return_remarks }}
+                                    {% if form.return_remarks.errors %}
+                                        <div class="text-danger">{{ form.return_remarks.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Add Product
+                            </button>
+                            <a href="{% url 'purchase_return_detail' pk=return_invoice.returninvoiceid %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Return
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

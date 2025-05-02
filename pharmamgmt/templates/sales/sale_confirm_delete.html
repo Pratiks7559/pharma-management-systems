@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">Confirm Sale Deletion</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Warning!</strong> Are you sure you want to delete the sale of <strong>{{ sale.product_name }}</strong>?
+                        <p class="mt-2">This action cannot be undone.</p>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <tr>
+                                <th>Product:</th>
+                                <td>{{ sale.product_name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Batch No:</th>
+                                <td>{{ sale.product_batch_no }}</td>
+                            </tr>
+                            <tr>
+                                <th>Quantity:</th>
+                                <td>{{ sale.sale_quantity }}</td>
+                            </tr>
+                            <tr>
+                                <th>Rate:</th>
+                                <td>{{ sale.sale_rate|currency }}</td>
+                            </tr>
+                            <tr>
+                                <th>Amount:</th>
+                                <td>{{ sale.sale_total_amount|currency }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between mt-3">
+                            <a href="{% url 'sales_invoice_detail' pk=invoice.sales_invoice_no %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Delete Sale
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

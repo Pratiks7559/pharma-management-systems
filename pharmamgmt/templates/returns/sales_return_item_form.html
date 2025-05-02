@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Add Product to Sales Return #{{ return_invoice.salesreturninvoiceid }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Return Details</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>Return No:</strong> {{ return_invoice.salesreturninvoiceid }}</li>
+                                <li><strong>Date:</strong> {{ return_invoice.salesreturninvoice_date }}</li>
+                                <li><strong>Customer:</strong> {{ return_invoice.salesreturncustomerid.customer_name }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.productid.id_for_label }}">Product*</label>
+                            {{ form.productid }}
+                            {% if form.productid.errors %}
+                                <div class="text-danger">{{ form.productid.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_batch_no.id_for_label }}">Batch No*</label>
+                                    {{ form.product_batch_no }}
+                                    {% if form.product_batch_no.errors %}
+                                        <div class="text-danger">{{ form.product_batch_no.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.rate_applied.id_for_label }}">Rate Type*</label>
+                                    {{ form.rate_applied }}
+                                    {% if form.rate_applied.errors %}
+                                        <div class="text-danger">{{ form.rate_applied.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.custom_rate.id_for_label }}">Custom Rate</label>
+                                    {{ form.custom_rate }}
+                                    <small class="form-text text-muted">Leave empty to use selected rate type</small>
+                                    {% if form.custom_rate.errors %}
+                                        <div class="text-danger">{{ form.custom_rate.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.sales_rate.id_for_label }}">Applied Rate</label>
+                                    {{ form.sales_rate }}
+                                    <small class="form-text text-muted">Automatically set based on rate type</small>
+                                    {% if form.sales_rate.errors %}
+                                        <div class="text-danger">{{ form.sales_rate.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.sales_quantity.id_for_label }}">Quantity*</label>
+                                    {{ form.sales_quantity }}
+                                    {% if form.sales_quantity.errors %}
+                                        <div class="text-danger">{{ form.sales_quantity.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.sales_igst.id_for_label }}">GST %*</label>
+                                    {{ form.sales_igst }}
+                                    {% if form.sales_igst.errors %}
+                                        <div class="text-danger">{{ form.sales_igst.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.sales_calculation_mode.id_for_label }}">Discount Type*</label>
+                                    {{ form.sales_calculation_mode }}
+                                    {% if form.sales_calculation_mode.errors %}
+                                        <div class="text-danger">{{ form.sales_calculation_mode.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.sales_discount.id_for_label }}">Discount*</label>
+                                    {{ form.sales_discount }}
+                                    {% if form.sales_discount.errors %}
+                                        <div class="text-danger">{{ form.sales_discount.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.return_remarks.id_for_label }}">Remarks</label>
+                                    {{ form.return_remarks }}
+                                    {% if form.return_remarks.errors %}
+                                        <div class="text-danger">{{ form.return_remarks.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Add Product
+                            </button>
+                            <a href="{% url 'sales_return_detail' pk=return_invoice.salesreturninvoiceid %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Return
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

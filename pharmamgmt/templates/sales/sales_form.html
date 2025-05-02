@@ -7,7 +7,13 @@
         <div class="col-md-10">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Add Product to Sales Invoice #{{ invoice.sales_invoice_no }}</h5>
+                    <h5 class="mb-0">
+                        {% if is_edit %}
+                            Edit Product in Sales Invoice #{{ invoice.sales_invoice_no }}
+                        {% else %}
+                            Add Product to Sales Invoice #{{ invoice.sales_invoice_no }}
+                        {% endif %}
+                    </h5>
                 </div>
                 <div class="card-body">
                     <div class="row mb-4">
@@ -162,7 +168,7 @@
                         
                         <div class="form-group mt-4">
                             <button type="submit" id="submit-btn" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>Add Product
+                                <i class="fas fa-save me-2"></i>{% if is_edit %}Update Product{% else %}Add Product{% endif %}
                             </button>
                             <a href="{% url 'sales_invoice_detail' pk=invoice.sales_invoice_no %}" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left me-2"></i>Back to Invoice
@@ -346,7 +352,17 @@
                     .then(data => {
                         if (data.batch_stock_quantity) {
                             const requestedQuantity = parseFloat(this.value) || 0;
-                            const availableQuantity = parseFloat(data.batch_stock_quantity) || 0;
+                            let availableQuantity = parseFloat(data.batch_stock_quantity) || 0;
+                            
+                            // For edit mode, add the current sale's quantity to the available quantity
+                            // since that quantity is already allocated to this sale
+                            {% if is_edit %}
+                            const currentSaleQuantity = {{ sale.sale_quantity }};
+                            // If we're editing the same product and batch, add its quantity back
+                            if (productId == {{ sale.productid.productid }} && batchNo == "{{ sale.product_batch_no }}") {
+                                availableQuantity += currentSaleQuantity;
+                            }
+                            {% endif %}
                             
                             const stockStatusDiv = document.getElementById('stock-status');
                             if (stockStatusDiv) {
