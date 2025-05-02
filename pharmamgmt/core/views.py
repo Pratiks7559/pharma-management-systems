@@ -1618,22 +1618,165 @@ def purchase_return_detail(request, pk):
     return render(request, 'returns/purchase_return_detail.html', context)
 
 @login_required
+def delete_purchase_return(request, pk):
+    # Check if user is admin (case-insensitive)
+    if not request.user.user_type.lower() in ['admin']:
+        messages.error(request, "You don't have permission to perform this action.")
+        return redirect('purchase_return_list')
+        
+    return_invoice = get_object_or_404(ReturnInvoiceMaster, returninvoiceid=pk)
+    
+    if request.method == 'POST':
+        try:
+            return_invoice.delete()
+            messages.success(request, f"Purchase Return #{pk} deleted successfully!")
+        except Exception as e:
+            messages.error(request, f"Cannot delete return invoice. Error: {str(e)}")
+        return redirect('purchase_return_list')
+    
+    context = {
+        'return_invoice': return_invoice,
+        'title': 'Delete Purchase Return'
+    }
+    return render(request, 'returns/purchase_return_confirm_delete.html', context)
+
+@login_required
+def delete_purchase_return_item(request, return_id, item_id):
+    # Check if user is admin (case-insensitive)
+    if not request.user.user_type.lower() in ['admin']:
+        messages.error(request, "You don't have permission to perform this action.")
+        return redirect('purchase_return_detail', pk=return_id)
+        
+    return_item = get_object_or_404(ReturnPurchaseMaster, pk=item_id)
+    return_invoice = return_item.returninvoiceid
+    
+    if request.method == 'POST':
+        try:
+            # Store the item amount to adjust the invoice total
+            item_amount = return_item.returntotal_amount
+            
+            # Delete the item
+            return_item.delete()
+            
+            # Update the invoice total
+            total_amount = ReturnPurchaseMaster.objects.filter(returninvoiceid=return_id).aggregate(
+                total=Sum('returntotal_amount'))['total'] or 0
+            return_invoice.returninvoice_total = total_amount + return_invoice.return_charges
+            return_invoice.save()
+            
+            messages.success(request, "Return item deleted successfully!")
+        except Exception as e:
+            messages.error(request, f"Cannot delete return item. Error: {str(e)}")
+        return redirect('purchase_return_detail', pk=return_id)
+    
+    context = {
+        'return_item': return_item,
+        'return_invoice': return_invoice,
+        'title': 'Delete Return Item'
+    }
+    return render(request, 'returns/purchase_return_item_confirm_delete.html', context)
+
+@login_required
 def add_purchase_return_item(request, return_id):
     return_invoice = get_object_or_404(ReturnInvoiceMaster, returninvoiceid=return_id)
+    
+    # For AJAX request to get batch info
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.method == 'GET':
+        product_id = request.GET.get('product_id')
+        batch_no = request.GET.get('batch_no')
+        
+        if product_id and batch_no:
+            # Check if the product was purchased with this batch from this supplier
+            purchase_data = PurchaseMaster.objects.filter(
+                productid_id=product_id, 
+                product_batch_no=batch_no,
+                product_supplierid=return_invoice.returnsupplierid
+            ).first()
+            
+            if purchase_data:
+                # Check current stock for this batch
+                current_stock = get_batch_stock(product_id, batch_no)
+                
+                if current_stock <= 0:
+                    return JsonResponse({
+                        'exists': True,
+                        'expiry': purchase_data.product_expiry.strftime('%Y-%m-%d'),
+                        'rate': purchase_data.product_purchase_rate,
+                        'mrp': purchase_data.product_MRP,
+                        'available_qty': 0,
+                        'message': 'Warning: No stock available for return!'
+                    })
+                
+                # Return product details including expiry
+                return JsonResponse({
+                    'exists': True,
+                    'expiry': purchase_data.product_expiry.strftime('%Y-%m-%d'),
+                    'rate': purchase_data.product_purchase_rate,
+                    'mrp': purchase_data.product_MRP,
+                    'available_qty': current_stock,
+                    'message': f'Product found in purchase records. Current stock: {current_stock}'
+                })
+            else:
+                return JsonResponse({
+                    'exists': False,
+                    'message': 'Error: This product with this batch was not purchased from this supplier!'
+                })
+        
+        return JsonResponse({'exists': False, 'message': 'Invalid product or batch number'})
     
     if request.method == 'POST':
         form = PurchaseReturnForm(request.POST)
         if form.is_valid():
             return_item = form.save(commit=False)
             
+            # Verify product was purchased from this supplier
+            purchase_exists = PurchaseMaster.objects.filter(
+                productid=return_item.returnproductid,
+                product_batch_no=return_item.returnproduct_batch_no,
+                product_supplierid=return_invoice.returnsupplierid
+            ).exists()
+            
+            if not purchase_exists:
+                messages.error(request, "Error: This product with this batch was not purchased from this supplier!")
+                context = {
+                    'form': form,
+                    'return_invoice': return_invoice,
+                    'title': 'Add Return Item'
+                }
+                return render(request, 'returns/purchase_return_item_form.html', context)
+            
+            # Check stock availability
+            current_stock = get_batch_stock(return_item.returnproductid.productid, return_item.returnproduct_batch_no)
+            
+            if current_stock < return_item.returnproduct_quantity:
+                messages.error(request, f"Error: Insufficient stock! Available: {current_stock}, Attempted to return: {return_item.returnproduct_quantity}")
+                context = {
+                    'form': form,
+                    'return_invoice': return_invoice,
+                    'title': 'Add Return Item'
+                }
+                return render(request, 'returns/purchase_return_item_form.html', context)
+            
             # Set additional fields
             return_item.returninvoiceid = return_invoice
             return_item.returnproduct_supplierid = return_invoice.returnsupplierid
+            
+            # Get product details
+            product = return_item.returnproductid
+            return_item.returnproduct_name = product.product_name
+            return_item.returnproduct_company = product.product_company
+            return_item.returnproduct_packing = product.product_packing
             
             # Calculate total amount
             return_item.returntotal_amount = return_item.returnproduct_purchase_rate * return_item.returnproduct_quantity
             
             return_item.save()
+            
+            # Update the return invoice total
+            total_amount = ReturnPurchaseMaster.objects.filter(returninvoiceid=return_id).aggregate(
+                total=Sum('returntotal_amount'))['total'] or 0
+            return_invoice.returninvoice_total = total_amount + return_invoice.return_charges
+            return_invoice.save()
             
             messages.success(request, f"Return item added successfully!")
             return redirect('purchase_return_detail', pk=return_id)
@@ -1742,10 +1885,63 @@ def sales_return_detail(request, pk):
 def add_sales_return_item(request, return_id):
     return_invoice = get_object_or_404(ReturnSalesInvoiceMaster, return_sales_invoice_no=return_id)
     
+    # For AJAX request to get batch info
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.method == 'GET':
+        product_id = request.GET.get('product_id')
+        batch_no = request.GET.get('batch_no')
+        
+        if product_id and batch_no:
+            # Check if the product was sold with this batch
+            sales_data = SalesMaster.objects.filter(
+                productid_id=product_id, 
+                product_batch_no=batch_no,
+                customerid=return_invoice.return_sales_customerid
+            ).first()
+            
+            if sales_data:
+                # Return product details including expiry
+                return JsonResponse({
+                    'exists': True,
+                    'expiry': sales_data.product_expiry.strftime('%Y-%m-%d'),
+                    'rate': sales_data.sale_rate,
+                    'quantity': sales_data.sale_quantity,
+                    'message': 'Product found in sales records.'
+                })
+            else:
+                # Verify product is in inventory with this batch
+                purchase_data = PurchaseMaster.objects.filter(
+                    productid_id=product_id,
+                    product_batch_no=batch_no
+                ).first()
+                
+                if purchase_data:
+                    return JsonResponse({
+                        'exists': False,
+                        'expiry': purchase_data.product_expiry.strftime('%Y-%m-%d'),
+                        'message': 'Warning: This product with this batch was not sold to this customer!'
+                    })
+                else:
+                    return JsonResponse({
+                        'exists': False,
+                        'message': 'Error: This product with this batch number does not exist in inventory!'
+                    })
+        
+        return JsonResponse({'exists': False, 'message': 'Invalid product or batch number'})
+    
     if request.method == 'POST':
         form = SalesReturnForm(request.POST)
         if form.is_valid():
             return_item = form.save(commit=False)
+            
+            # Verify product was actually sold to this customer
+            sales_exist = SalesMaster.objects.filter(
+                productid=return_item.return_productid,
+                product_batch_no=return_item.return_product_batch_no,
+                customerid=return_invoice.return_sales_customerid
+            ).exists()
+            
+            if not sales_exist:
+                messages.error(request, "Warning: This product with this batch was not sold to this customer!")
             
             # Set additional fields
             return_item.return_sales_invoice_no = return_invoice
