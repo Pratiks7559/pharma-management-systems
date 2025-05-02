@@ -248,7 +248,8 @@ class ReturnPurchaseMaster(models.Model):
     returnproduct_quantity=models.FloatField()
     returnproduct_scheme=models.FloatField(default=0.0)
     returnproduct_charges=models.FloatField()
-    returntotal_amount=models.FloatField(default=0.0)       
+    returntotal_amount=models.FloatField(default=0.0)
+    return_reason=models.CharField(max_length=200, blank=True, null=True)
     returnpurchase_entry_date=models.DateField(default=datetime.now)
     
     def __str__(self):
@@ -297,7 +298,9 @@ class ReturnSalesMaster(models.Model):
     return_sale_discount=models.FloatField(default=0.0)
     return_sale_igst=models.FloatField(default=0.0)
     return_sale_total_amount=models.FloatField(default=0.0)
+    return_reason=models.CharField(max_length=200, blank=True, null=True)
     return_sale_entry_date=models.DateTimeField(default=datetime.now)
+    return_sale_calculation_mode=models.CharField(max_length=20, default='percentage', choices=[('percentage', 'Percentage'), ('fixed', 'Fixed Amount')])
     
     def __str__(self):
         return f"Sales Return: {self.return_product_name} - {self.return_product_batch_no} - {self.return_sale_quantity}"

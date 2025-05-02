@@ -296,12 +296,14 @@ class PurchaseReturnForm(forms.ModelForm):
     returnproduct_quantity = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     returnproduct_scheme = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     returnproduct_charges = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    return_reason = forms.CharField(required=False, widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
     
     class Meta:
         model = ReturnPurchaseMaster
         fields = ['returnproductid', 'returnproduct_batch_no', 'returnproduct_expiry', 
                  'returnproduct_MRP', 'returnproduct_purchase_rate', 
-                 'returnproduct_quantity', 'returnproduct_scheme', 'returnproduct_charges']
+                 'returnproduct_quantity', 'returnproduct_scheme', 'returnproduct_charges',
+                 'return_reason']
         exclude = ['returninvoiceid', 'returnproduct_supplierid', 'returntotal_amount', 'returnpurchase_entry_date']
         
     def __init__(self, *args, **kwargs):
@@ -330,12 +332,19 @@ class SalesReturnForm(forms.ModelForm):
     return_sale_scheme = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     return_sale_discount = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     return_sale_igst = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    return_reason = forms.CharField(required=False, widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
+    return_sale_calculation_mode = forms.ChoiceField(
+        choices=[('percentage', 'Percentage'), ('fixed', 'Fixed Amount')],
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        initial='percentage'
+    )
     
     class Meta:
         model = ReturnSalesMaster
         fields = ['return_productid', 'return_product_batch_no', 'return_product_expiry',
                  'return_sale_rate', 'return_sale_quantity', 'return_sale_scheme',
-                 'return_sale_discount', 'return_sale_igst']
+                 'return_sale_discount', 'return_sale_igst', 'return_reason',
+                 'return_sale_calculation_mode']
         exclude = ['return_sales_invoice_no', 'return_customerid', 'return_product_name',
                   'return_product_company', 'return_product_packing', 'return_product_MRP',
                   'return_sale_total_amount', 'return_sale_entry_date']
