@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-trash text-danger"></i> 
+            {{ title }}
+        </h6>
+        <a href="{% url 'sales_return_detail' pk=return_invoice.return_sales_invoice_no %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-danger">
+            <h5><i class="fas fa-exclamation-triangle"></i> Warning!</h5>
+            <p>You are about to delete Sales Return <strong>{{ return_invoice.return_sales_invoice_no }}</strong>. This action cannot be undone.</p>
+            <p>This will permanently delete all return items and payment records associated with this invoice.</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <h5>Sales Return Details</h5>
+                <table class="table table-bordered">
+                    <tr>
+                        <th>Return Invoice Number</th>
+                        <td>{{ return_invoice.return_sales_invoice_no }}</td>
+                    </tr>
+                    <tr>
+                        <th>Return Date</th>
+                        <td>{{ return_invoice.return_sales_invoice_date }}</td>
+                    </tr>
+                    <tr>
+                        <th>Customer</th>
+                        <td>{{ return_invoice.return_sales_customerid.customer_name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Total Amount</th>
+                        <td>₹ {{ return_invoice.return_sales_invoice_total|inr_format }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <form method="post" class="mt-4">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Confirm Delete
+            </button>
+            <a href="{% url 'sales_return_detail' pk=return_invoice.return_sales_invoice_no %}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}

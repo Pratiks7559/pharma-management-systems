@@ -14,6 +14,9 @@
                         <a href="{% url 'add_sales_return_item' return_id=return_invoice.return_sales_invoice_no %}" class="btn btn-primary btn-sm">
                             <i class="fas fa-plus-circle me-1"></i>Add Product
                         </a>
+                        <a href="{% url 'delete_sales_return' pk=return_invoice.return_sales_invoice_no %}" class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash me-1"></i>Delete Return
+                        </a>
                         <a href="{% url 'sales_return_list' %}" class="btn btn-outline-secondary btn-sm">
                             <i class="fas fa-arrow-left me-1"></i>Back to List
                         </a>

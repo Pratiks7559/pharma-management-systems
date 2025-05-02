@@ -1882,6 +1882,65 @@ def sales_return_detail(request, pk):
     return render(request, 'returns/sales_return_detail.html', context)
 
 @login_required
+def delete_sales_return(request, pk):
+    # Check if user is admin (case-insensitive)
+    if not request.user.user_type.lower() in ['admin']:
+        messages.error(request, "You don't have permission to perform this action.")
+        return redirect('sales_return_list')
+        
+    return_invoice = get_object_or_404(ReturnSalesInvoiceMaster, return_sales_invoice_no=pk)
+    
+    if request.method == 'POST':
+        try:
+            return_invoice.delete()
+            messages.success(request, f"Sales Return #{pk} deleted successfully!")
+        except Exception as e:
+            messages.error(request, f"Cannot delete return invoice. Error: {str(e)}")
+        return redirect('sales_return_list')
+    
+    context = {
+        'return_invoice': return_invoice,
+        'title': 'Delete Sales Return'
+    }
+    return render(request, 'returns/sales_return_confirm_delete.html', context)
+
+@login_required
+def delete_sales_return_item(request, return_id, item_id):
+    # Check if user is admin (case-insensitive)
+    if not request.user.user_type.lower() in ['admin']:
+        messages.error(request, "You don't have permission to perform this action.")
+        return redirect('sales_return_detail', pk=return_id)
+        
+    return_item = get_object_or_404(ReturnSalesMaster, pk=item_id)
+    return_invoice = return_item.return_sales_invoice_no
+    
+    if request.method == 'POST':
+        try:
+            # Store the item amount to adjust the invoice total
+            item_amount = return_item.return_sale_total_amount
+            
+            # Delete the item
+            return_item.delete()
+            
+            # Update the invoice total
+            total_amount = ReturnSalesMaster.objects.filter(return_sales_invoice_no=return_id).aggregate(
+                total=Sum('return_sale_total_amount'))['total'] or 0
+            return_invoice.return_sales_invoice_total = total_amount + return_invoice.return_sales_charges
+            return_invoice.save()
+            
+            messages.success(request, "Return item deleted successfully!")
+        except Exception as e:
+            messages.error(request, f"Cannot delete return item. Error: {str(e)}")
+        return redirect('sales_return_detail', pk=return_id)
+    
+    context = {
+        'return_item': return_item,
+        'return_invoice': return_invoice,
+        'title': 'Delete Return Item'
+    }
+    return render(request, 'returns/sales_return_item_confirm_delete.html', context)
+
+@login_required
 def add_sales_return_item(request, return_id):
     return_invoice = get_object_or_404(ReturnSalesInvoiceMaster, return_sales_invoice_no=return_id)
     
