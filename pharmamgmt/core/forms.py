@@ -278,11 +278,11 @@ class ProductRateForm(forms.ModelForm):
         self.fields['rate_productid'].label = 'Product'
 
 class PurchaseReturnInvoiceForm(forms.ModelForm):
-    returninvoiceid = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+    returninvoiceid = forms.CharField(required=False, widget=forms.HiddenInput())
     returninvoice_date = forms.DateField(widget=DateInput(attrs={'class': 'form-control'}))
     returnsupplierid = forms.ModelChoiceField(queryset=SupplierMaster.objects.all(), widget=forms.Select(attrs={'class': 'form-control'}))
-    return_charges = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
-    returninvoice_total = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    return_charges = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), initial=0.0)
+    returninvoice_total = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), initial=0.0)
     
     class Meta:
         model = ReturnInvoiceMaster
@@ -311,11 +311,11 @@ class PurchaseReturnForm(forms.ModelForm):
         self.fields['returnproductid'].label = 'Product'
 
 class SalesReturnInvoiceForm(forms.ModelForm):
-    return_sales_invoice_no = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+    return_sales_invoice_no = forms.CharField(required=False, widget=forms.HiddenInput())
     return_sales_invoice_date = forms.DateField(widget=DateInput(attrs={'class': 'form-control'}))
     return_sales_customerid = forms.ModelChoiceField(queryset=CustomerMaster.objects.all(), widget=forms.Select(attrs={'class': 'form-control'}))
-    return_sales_charges = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
-    return_sales_invoice_total = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    return_sales_charges = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), initial=0.0)
+    return_sales_invoice_total = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), initial=0.0)
     
     class Meta:
         model = ReturnSalesInvoiceMaster
