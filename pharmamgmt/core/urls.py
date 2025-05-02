@@ -47,6 +47,8 @@ urlpatterns = [
     path('invoices/<int:pk>/', views.invoice_detail, name='invoice_detail'),
     path('invoices/<int:pk>/delete/', views.delete_invoice, name='delete_invoice'),
     path('invoices/<int:invoice_id>/add-purchase/', views.add_purchase, name='add_purchase'),
+    path('invoices/<int:invoice_id>/edit-purchase/<int:purchase_id>/', views.edit_purchase, name='edit_purchase'),
+    path('invoices/<int:invoice_id>/delete-purchase/<int:purchase_id>/', views.delete_purchase, name='delete_purchase'),
     path('invoices/<int:invoice_id>/add-payment/', views.add_invoice_payment, name='add_invoice_payment'),
     path('invoices/<int:invoice_id>/edit-payment/<int:payment_id>/', views.edit_invoice_payment, name='edit_invoice_payment'),
     path('invoices/<int:invoice_id>/delete-payment/<int:payment_id>/', views.delete_invoice_payment, name='delete_invoice_payment'),
@@ -57,6 +59,8 @@ urlpatterns = [
     path('sales/<str:pk>/', views.sales_invoice_detail, name='sales_invoice_detail'),
     path('sales/<str:pk>/delete/', views.delete_sales_invoice, name='delete_sales_invoice'),
     path('sales/<str:invoice_id>/add-sale/', views.add_sale, name='add_sale'),
+    path('sales/<str:invoice_id>/edit-sale/<int:sale_id>/', views.edit_sale, name='edit_sale'),
+    path('sales/<str:invoice_id>/delete-sale/<int:sale_id>/', views.delete_sale, name='delete_sale'),
     path('sales/<str:invoice_id>/add-payment/', views.add_sales_payment, name='add_sales_payment'),
     
     # Purchase Returns

@@ -840,6 +840,141 @@ def add_purchase(request, invoice_id):
     return render(request, 'purchases/purchase_form.html', context)
 
 @login_required
+def edit_purchase(request, invoice_id, purchase_id):
+    invoice = get_object_or_404(InvoiceMaster, invoiceid=invoice_id)
+    purchase = get_object_or_404(PurchaseMaster, purchaseid=purchase_id)
+    
+    # Ensure this purchase belongs to the specified invoice
+    if purchase.product_invoiceid.invoiceid != invoice.invoiceid:
+        messages.error(request, "This purchase does not belong to the specified invoice.")
+        return redirect('invoice_detail', pk=invoice_id)
+    
+    if request.method == 'POST':
+        form = PurchaseForm(request.POST, instance=purchase)
+        if form.is_valid():
+            purchase = form.save(commit=False)
+            
+            # Get product details from the selected product
+            product = purchase.productid
+            purchase.product_name = product.product_name
+            purchase.product_company = product.product_company
+            purchase.product_packing = product.product_packing
+            
+            # Transport charges are not included in product calculations
+            purchase.product_transportation_charges = 0
+            
+            # Calculate actual rate based on discount and quantity
+            if purchase.purchase_calculation_mode == 'flat':
+                # Flat discount amount
+                purchase.actual_rate_per_qty = purchase.product_purchase_rate - (purchase.product_discount_got / purchase.product_quantity)
+            else:
+                # Percentage discount
+                purchase.actual_rate_per_qty = purchase.product_purchase_rate * (1 - (purchase.product_discount_got / 100))
+            
+            purchase.product_actual_rate = purchase.actual_rate_per_qty
+            
+            # Calculate total amount
+            purchase.total_amount = purchase.product_actual_rate * purchase.product_quantity
+            
+            purchase.save()
+            
+            # Save batch-specific sale rates to SaleRateMaster
+            rate_A = form.cleaned_data.get('rate_A')
+            rate_B = form.cleaned_data.get('rate_B')
+            rate_C = form.cleaned_data.get('rate_C')
+            
+            # Check if any of the rates were specified
+            if rate_A is not None or rate_B is not None or rate_C is not None:
+                # Default to product master rates if not specified
+                if rate_A is None:
+                    rate_A = product.rate_A
+                if rate_B is None:
+                    rate_B = product.rate_B
+                if rate_C is None:
+                    rate_C = product.rate_C
+                
+                # Check if a rate entry already exists for this product batch
+                try:
+                    batch_rate = SaleRateMaster.objects.get(
+                        productid=product,
+                        product_batch_no=purchase.product_batch_no
+                    )
+                    # Update existing entry
+                    batch_rate.rate_A = rate_A
+                    batch_rate.rate_B = rate_B
+                    batch_rate.rate_C = rate_C
+                    batch_rate.save()
+                except SaleRateMaster.DoesNotExist:
+                    # Create new entry
+                    SaleRateMaster.objects.create(
+                        productid=product,
+                        product_batch_no=purchase.product_batch_no,
+                        rate_A=rate_A,
+                        rate_B=rate_B,
+                        rate_C=rate_C
+                    )
+            
+            messages.success(request, f"Purchase for {purchase.product_name} updated successfully!")
+            return redirect('invoice_detail', pk=invoice_id)
+    else:
+        # Try to get current rates for this product and batch
+        try:
+            batch_rate = SaleRateMaster.objects.get(
+                productid=purchase.productid,
+                product_batch_no=purchase.product_batch_no
+            )
+            
+            # Initialize the form with current values including rates
+            form = PurchaseForm(instance=purchase, initial={
+                'rate_A': batch_rate.rate_A,
+                'rate_B': batch_rate.rate_B,
+                'rate_C': batch_rate.rate_C
+            })
+        except SaleRateMaster.DoesNotExist:
+            # No batch-specific rates found, use default form
+            form = PurchaseForm(instance=purchase)
+    
+    context = {
+        'form': form,
+        'invoice': invoice,
+        'purchase': purchase,
+        'title': 'Edit Purchase',
+        'is_edit': True
+    }
+    return render(request, 'purchases/purchase_form.html', context)
+
+@login_required
+def delete_purchase(request, invoice_id, purchase_id):
+    invoice = get_object_or_404(InvoiceMaster, invoiceid=invoice_id)
+    purchase = get_object_or_404(PurchaseMaster, purchaseid=purchase_id)
+    
+    # Ensure this purchase belongs to the specified invoice
+    if purchase.product_invoiceid.invoiceid != invoice.invoiceid:
+        messages.error(request, "This purchase does not belong to the specified invoice.")
+        return redirect('invoice_detail', pk=invoice_id)
+    
+    # Check if user is admin (case-insensitive)
+    if not request.user.user_type.lower() in ['admin']:
+        messages.error(request, "You don't have permission to perform this action.")
+        return redirect('invoice_detail', pk=invoice_id)
+    
+    if request.method == 'POST':
+        product_name = purchase.product_name
+        try:
+            purchase.delete()
+            messages.success(request, f"Purchase for {product_name} deleted successfully!")
+        except Exception as e:
+            messages.error(request, f"Cannot delete purchase. Error: {str(e)}")
+        return redirect('invoice_detail', pk=invoice_id)
+    
+    context = {
+        'invoice': invoice,
+        'purchase': purchase,
+        'title': 'Delete Purchase'
+    }
+    return render(request, 'purchases/purchase_confirm_delete.html', context)
+
+@login_required
 def add_invoice_payment(request, invoice_id):
     invoice = get_object_or_404(InvoiceMaster, invoiceid=invoice_id)
     
@@ -1171,6 +1306,158 @@ def add_sale(request, invoice_id):
         'title': 'Add Sale'
     }
     return render(request, 'sales/sales_form.html', context)
+
+@login_required
+def edit_sale(request, invoice_id, sale_id):
+    invoice = get_object_or_404(SalesInvoiceMaster, sales_invoice_no=invoice_id)
+    sale = get_object_or_404(SalesMaster, id=sale_id)
+    
+    # Ensure this sale belongs to the specified invoice
+    if sale.sales_invoice_no.sales_invoice_no != invoice.sales_invoice_no:
+        messages.error(request, "This sale does not belong to the specified invoice.")
+        return redirect('sales_invoice_detail', pk=invoice_id)
+    
+    if request.method == 'POST':
+        form = SalesForm(request.POST, instance=sale)
+        if form.is_valid():
+            sale = form.save(commit=False)
+            
+            # Check stock availability first
+            from .utils import get_batch_stock_status
+            batch_quantity, is_available = get_batch_stock_status(
+                sale.productid.productid, sale.product_batch_no
+            )
+            
+            # For edit, we need to consider current quantity of this sale item
+            current_sale = SalesMaster.objects.get(id=sale_id)
+            additional_qty_needed = sale.sale_quantity - current_sale.sale_quantity
+            
+            # If product is out of stock, show an error and don't save
+            if not is_available and additional_qty_needed > 0:
+                messages.error(request, f"Cannot update sale. Product {sale.productid.product_name} with batch {sale.product_batch_no} is out of stock.")
+                context = {
+                    'form': form,
+                    'invoice': invoice,
+                    'sale': sale,
+                    'title': 'Edit Sale',
+                    'is_edit': True
+                }
+                return render(request, 'sales/sales_form.html', context)
+            
+            # If not enough quantity available, show error and don't save
+            if batch_quantity < additional_qty_needed:
+                messages.error(request, f"Cannot update sale. Only {batch_quantity} additional units available for product {sale.productid.product_name} with batch {sale.product_batch_no}.")
+                context = {
+                    'form': form,
+                    'invoice': invoice,
+                    'sale': sale,
+                    'title': 'Edit Sale',
+                    'is_edit': True
+                }
+                return render(request, 'sales/sales_form.html', context)
+            
+            # Get product details from the selected product
+            product = sale.productid
+            sale.product_name = product.product_name
+            sale.product_company = product.product_company
+            sale.product_packing = product.product_packing
+            
+            # Get batch-specific rates if available
+            batch_specific_rate = None
+            if sale.product_batch_no:
+                try:
+                    batch_specific_rate = SaleRateMaster.objects.get(
+                        productid=product, 
+                        product_batch_no=sale.product_batch_no
+                    )
+                except SaleRateMaster.DoesNotExist:
+                    batch_specific_rate = None
+            
+            # Set appropriate rate based on customer type and selected rate type
+            if form.cleaned_data.get('custom_rate') and sale.rate_applied == 'custom':
+                # Use the custom rate provided
+                sale.sale_rate = form.cleaned_data.get('custom_rate')
+            elif sale.rate_applied == 'A':
+                if batch_specific_rate:
+                    sale.sale_rate = batch_specific_rate.rate_A
+                else:
+                    sale.sale_rate = product.rate_A
+            elif sale.rate_applied == 'B':
+                if batch_specific_rate:
+                    sale.sale_rate = batch_specific_rate.rate_B
+                else:
+                    sale.sale_rate = product.rate_B
+            elif sale.rate_applied == 'C':
+                if batch_specific_rate:
+                    sale.sale_rate = batch_specific_rate.rate_C
+                else:
+                    sale.sale_rate = product.rate_C
+            
+            # Calculate base price for all units
+            base_price = sale.sale_rate * sale.sale_quantity
+            
+            # Apply discount first
+            if sale.sale_calculation_mode == 'flat':
+                # Flat discount amount
+                discounted_amount = base_price - sale.sale_discount
+            else:
+                # Percentage discount
+                discounted_amount = base_price * (1 - (sale.sale_discount / 100))
+            
+            # Then add GST to the discounted amount
+            sale.sale_total_amount = discounted_amount * (1 + (sale.sale_igst / 100))
+            
+            sale.save()
+            
+            messages.success(request, f"Sale for {sale.product_name} updated successfully!")
+            return redirect('sales_invoice_detail', pk=invoice_id)
+    else:
+        # Initialize form with existing data
+        form = SalesForm(instance=sale)
+        
+        # For custom rate, we need to set the initial value
+        if sale.rate_applied == 'custom':
+            form.fields['custom_rate'].initial = sale.sale_rate
+    
+    context = {
+        'form': form,
+        'invoice': invoice,
+        'sale': sale,
+        'title': 'Edit Sale',
+        'is_edit': True
+    }
+    return render(request, 'sales/sales_form.html', context)
+
+@login_required
+def delete_sale(request, invoice_id, sale_id):
+    invoice = get_object_or_404(SalesInvoiceMaster, sales_invoice_no=invoice_id)
+    sale = get_object_or_404(SalesMaster, id=sale_id)
+    
+    # Ensure this sale belongs to the specified invoice
+    if sale.sales_invoice_no.sales_invoice_no != invoice.sales_invoice_no:
+        messages.error(request, "This sale does not belong to the specified invoice.")
+        return redirect('sales_invoice_detail', pk=invoice_id)
+    
+    # Check if user is admin (case-insensitive)
+    if not request.user.user_type.lower() in ['admin']:
+        messages.error(request, "You don't have permission to perform this action.")
+        return redirect('sales_invoice_detail', pk=invoice_id)
+    
+    if request.method == 'POST':
+        product_name = sale.product_name
+        try:
+            sale.delete()
+            messages.success(request, f"Sale for {product_name} deleted successfully!")
+        except Exception as e:
+            messages.error(request, f"Cannot delete sale. Error: {str(e)}")
+        return redirect('sales_invoice_detail', pk=invoice_id)
+    
+    context = {
+        'invoice': invoice,
+        'sale': sale,
+        'title': 'Delete Sale'
+    }
+    return render(request, 'sales/sale_confirm_delete.html', context)
 
 @login_required
 def add_sales_payment(request, invoice_id):
