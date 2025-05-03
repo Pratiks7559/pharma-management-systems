@@ -9,6 +9,8 @@
             const product_id = $('#id_returnproductid').val();
             const batch_no = $('#id_returnproduct_batch_no').val();
             
+            console.log("Fetching details for product:", product_id, "batch:", batch_no);
+            
             if (product_id && batch_no) {
                 $.ajax({
                     url: window.location.href,
@@ -21,6 +23,7 @@
                         $('#batch_info').html('<div class="alert alert-info">Loading batch information...</div>');
                     },
                     success: function(data) {
+                        console.log("API response:", data);
                         if (data.exists) {
                             // Auto-fill fields
                             $('#id_returnproduct_expiry').val(data.expiry);
@@ -44,8 +47,9 @@
                             $('#batch_info').html('<div class="alert alert-warning">' + data.message + '</div>');
                         }
                     },
-                    error: function() {
-                        $('#batch_info').html('<div class="alert alert-danger">Error retrieving batch information.</div>');
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        console.error("AJAX error:", textStatus, errorThrown);
+                        $('#batch_info').html('<div class="alert alert-danger">Error retrieving batch information: ' + textStatus + '</div>');
                     }
                 });
             }
@@ -53,6 +57,7 @@
         
         // Trigger batch details lookup when either product or batch changes
         $('#id_returnproductid, #id_returnproduct_batch_no').change(function() {
+            console.log("Field changed:", this.id);
             fetchBatchDetails();
         });
         
@@ -61,6 +66,8 @@
             const qty = $('#id_returnproduct_quantity').val() || 0;
             const rate = $('#id_returnproduct_purchase_rate').val() || 0;
             const total = parseFloat(qty) * parseFloat(rate);
+            
+            console.log("Calculating total:", qty, "*", rate, "=", total);
             
             if (!isNaN(total)) {
                 $('#total_preview').text(total.toFixed(2));
