@@ -7,10 +7,16 @@
     <div class="sidebar-user">
         {% if user.is_authenticated %}
             <div class="user-pic">
-                {% if user.path %}
+                {% if user.path and user.path.url != '/media/images/default.png' %}
                     <img src="{{ user.path.url }}" class="img-responsive img-rounded" alt="User Image">
                 {% else %}
-                    <i class="fas fa-user-circle fa-3x"></i>
+                    {% if user.user_type|lower == 'admin' %}
+                        <img src="{% static 'images/profiles/admin_default.svg' %}" class="img-responsive img-rounded" alt="Admin Image">
+                    {% elif user.user_type|lower == 'manager' %}
+                        <img src="{% static 'images/profiles/manager_default.svg' %}" class="img-responsive img-rounded" alt="Manager Image">
+                    {% else %}
+                        <img src="{% static 'images/profiles/staff_default.svg' %}" class="img-responsive img-rounded" alt="Staff Image">
+                    {% endif %}
                 {% endif %}
             </div>
             <div class="user-info">
