@@ -134,11 +134,12 @@
             // Get values directly from DOM by ID
             const quantity = parseFloat($('#id_returnproduct_quantity').val() || 0);
             const rate = parseFloat($('#id_returnproduct_purchase_rate').val() || 0);
+            const charges = parseFloat($('#id_returnproduct_charges').val() || 0);
             
-            // Calculate total
-            const total = quantity * rate;
+            // Calculate total (quantity * rate + charges)
+            const total = (quantity * rate) + charges;
             
-            console.log("Direct calculation:", quantity, "*", rate, "=", total);
+            console.log("Direct calculation:", quantity, "*", rate, "+", charges, "=", total);
             
             // Update display
             if (!isNaN(total)) {
@@ -149,7 +150,7 @@
         }
         
         // Bind events directly to input elements by ID
-        $('#id_returnproduct_quantity, #id_returnproduct_purchase_rate').on('input change keyup', function() {
+        $('#id_returnproduct_quantity, #id_returnproduct_purchase_rate, #id_returnproduct_charges').on('input change keyup', function() {
             console.log(`Field changed: ${this.id} with value ${this.value}`);
             calculatePurchaseReturnTotal();
         });

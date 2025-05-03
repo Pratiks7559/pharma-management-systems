@@ -1685,8 +1685,8 @@ def edit_purchase_return_item(request, return_id, item_id):
                     }
                     return render(request, 'returns/purchase_return_item_edit_form.html', context)
             
-            # Calculate total amount
-            updated_item.returntotal_amount = updated_item.returnproduct_purchase_rate * updated_item.returnproduct_quantity
+            # Calculate total amount (including charges)
+            updated_item.returntotal_amount = (updated_item.returnproduct_purchase_rate * updated_item.returnproduct_quantity) + updated_item.returnproduct_charges
             
             # Save the updated item
             updated_item.save()
@@ -1844,8 +1844,8 @@ def add_purchase_return_item(request, return_id):
             # The product details are accessed via the returnproductid foreign key relation
             # No need to set additional fields as they'll be accessed through the relation
             
-            # Calculate total amount
-            return_item.returntotal_amount = return_item.returnproduct_purchase_rate * return_item.returnproduct_quantity
+            # Calculate total amount (including charges)
+            return_item.returntotal_amount = (return_item.returnproduct_purchase_rate * return_item.returnproduct_quantity) + return_item.returnproduct_charges
             
             return_item.save()
             
