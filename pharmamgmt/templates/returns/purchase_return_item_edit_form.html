@@ -41,16 +41,32 @@
             }
         });
         
-        // Calculate total on change of quantity or rate
-        $('#id_returnproduct_quantity, #id_returnproduct_purchase_rate').on('change', function() {
-            const qty = $('#id_returnproduct_quantity').val() || 0;
-            const rate = $('#id_returnproduct_purchase_rate').val() || 0;
-            const total = parseFloat(qty) * parseFloat(rate);
+        // Calculate total on change of quantity, rate or charges
+        function calculateTotal() {
+            const qty = parseFloat($('#id_returnproduct_quantity').val() || 0);
+            const rate = parseFloat($('#id_returnproduct_purchase_rate').val() || 0);
+            const charges = parseFloat($('#id_returnproduct_charges').val() || 0);
+            
+            // Calculate total (quantity * rate + charges)
+            const total = (qty * rate) + charges;
+            
+            console.log(`Calculation: ${qty} * ${rate} + ${charges} = ${total}`);
             
             if (!isNaN(total)) {
                 $('#total_preview').text(total.toFixed(2));
+            } else {
+                $('#total_preview').text('0.00');
             }
+        }
+        
+        // Bind calculation to all relevant fields
+        $('#id_returnproduct_quantity, #id_returnproduct_purchase_rate, #id_returnproduct_charges').on('input change keyup', function() {
+            calculateTotal();
         });
+        
+        // Initial calculation and periodic update
+        calculateTotal();
+        setInterval(calculateTotal, 2000);
     });
 </script>
 {% endblock %}
@@ -97,7 +113,7 @@
                             </div>
                         </div>
                         
-                        <div class="row">
+                        <div class="row mb-3">
                             <div class="col-md-3 mb-3">
                                 <label for="id_returnproduct_purchase_rate">Purchase Rate</label>
                                 {{ form.returnproduct_purchase_rate }}
@@ -111,6 +127,17 @@
                                 {{ form.returnproduct_quantity }}
                             </div>
                             <div class="col-md-3 mb-3">
+                                <label for="id_returnproduct_scheme">Scheme</label>
+                                {{ form.returnproduct_scheme }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="id_returnproduct_charges">Charges</label>
+                                {{ form.returnproduct_charges }}
+                            </div>
+                            <div class="col-md-8 mb-3">
                                 <label>Total Amount</label>
                                 <div class="form-control bg-light">₹ <span id="total_preview">{{ return_item.returntotal_amount }}</span></div>
                             </div>

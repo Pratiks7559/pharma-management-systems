@@ -6,51 +6,10 @@
     $(document).ready(function() {
         console.log("Document ready - initializing purchase return form");
         
-        // Debugging - Log all form elements to console
-        $('form :input').each(function() {
-            console.log(`Form input: id=${this.id}, name=${this.name}, type=${this.type}`);
-        });
-        
-        // Dynamically find field selectors for event binding - MUST BE DONE FIRST
-        // Using direct ID selectors for better reliability
-        const productField = $('#id_returnproductid');
-        const batchField = $('#id_returnproduct_batch_no');
-        const expiryField = $('#id_returnproduct_expiry');
-        const rateField = $('#id_returnproduct_purchase_rate');
-        const quantityField = $('#id_returnproduct_quantity');
-        const mrpField = $('#id_returnproduct_MRP');
-        
-        // Get the IDs from the found fields
-        const productSelector = productField.length ? productField.attr('id') : null;
-        const batchSelector = batchField.length ? batchField.attr('id') : null;
-        const expirySelector = expiryField.length ? expiryField.attr('id') : null;
-        const rateSelector = rateField.length ? rateField.attr('id') : null;
-        const quantitySelector = quantityField.length ? quantityField.attr('id') : null;
-        const mrpSelector = mrpField.length ? mrpField.attr('id') : null;
-        
-        console.log("Found selectors:", {
-            productSelector, batchSelector, expirySelector, rateSelector, quantitySelector, mrpSelector
-        });
-        
         // Function to fetch batch details when product and batch are selected
         function fetchBatchDetails() {
-            // Debug all form fields to find the correct IDs
-            const allFormFields = $('form :input');
-            console.log("All form fields:", allFormFields.map(function() { 
-                return { id: this.id, name: this.name, value: this.value }; 
-            }).get());
-            
-            // Use the exact field names for the form
-            const productField = $(`#${productSelector}`);
-            const batchField = $(`#${batchSelector}`);
-            
-            console.log("Found fields:", {
-                product: productField.length ? { id: productField.attr('id'), name: productField.attr('name'), value: productField.val() } : 'Not found',
-                batch: batchField.length ? { id: batchField.attr('id'), name: batchField.attr('name'), value: batchField.val() } : 'Not found'
-            });
-            
-            const product_id = productField.val();
-            const batch_no = batchField.val();
+            const product_id = $('#id_returnproductid').val();
+            const batch_no = $('#id_returnproduct_batch_no').val();
             
             console.log("Fetching details for product:", product_id, "batch:", batch_no);
             
@@ -71,27 +30,11 @@
                     success: function(data) {
                         console.log("API response:", data);
                         if (data.exists) {
-                            // Auto-fill fields using dynamic selectors - make sure selectors are valid
-                            if (expirySelector) {
-                                $(`#${expirySelector}`).val(data.expiry);
-                                console.log("Set expiry date to:", data.expiry);
-                            }
-                            
-                            if (rateSelector) {
-                                $(`#${rateSelector}`).val(data.rate);
-                                console.log("Set purchase rate to:", data.rate);
-                            }
-                            
-                            if (mrpSelector) {
-                                $(`#${mrpSelector}`).val(data.mrp);
-                                console.log("Set MRP to:", data.mrp);
-                            }
-                            
-                            // Set max quantity based on available stock
-                            if (quantitySelector) {
-                                $(`#${quantitySelector}`).attr('max', data.available_qty);
-                                console.log("Set max quantity to:", data.available_qty);
-                            }
+                            // Auto-fill fields
+                            $('#id_returnproduct_expiry').val(data.expiry);
+                            $('#id_returnproduct_purchase_rate').val(data.rate);
+                            $('#id_returnproduct_MRP').val(data.mrp);
+                            $('#id_returnproduct_quantity').attr('max', data.available_qty);
                             
                             // Update stock info message
                             if (data.available_qty <= 0) {
@@ -99,18 +42,16 @@
                             } else {
                                 $('#batch_info').html('<div class="alert alert-success">' + data.message + '</div>');
                             }
+                            
+                            // Update total after setting values
+                            calculateTotal();
                         } else {
                             // Clear fields if batch not found
-                            if (expirySelector) {
-                                $(`#${expirySelector}`).val('');
-                            }
-                            if (rateSelector) {
-                                $(`#${rateSelector}`).val('');
-                            }
-                            if (mrpSelector) {
-                                $(`#${mrpSelector}`).val('');
-                            }
+                            $('#id_returnproduct_expiry').val('');
+                            $('#id_returnproduct_purchase_rate').val('');
+                            $('#id_returnproduct_MRP').val('');
                             $('#batch_info').html('<div class="alert alert-warning">' + data.message + '</div>');
+                            calculateTotal();
                         }
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
@@ -122,16 +63,15 @@
         }
         
         // Trigger batch details lookup when either product or batch changes
-        if (productSelector && batchSelector) {
-            $(`#${productSelector}, #${batchSelector}`).change(function() {
-                console.log("Field changed:", this.id);
-                fetchBatchDetails();
-            });
-        }
+        $('#id_returnproductid, #id_returnproduct_batch_no').change(function() {
+            console.log("Product or batch field changed:", this.id);
+            fetchBatchDetails();
+        });
         
-        // Direct calculation method with direct DOM access
-        function calculatePurchaseReturnTotal() {
-            // Get values directly from DOM by ID
+        // Simple direct calculation function
+        function calculateTotal() {
+            console.log("Calculating total");
+            
             const quantity = parseFloat($('#id_returnproduct_quantity').val() || 0);
             const rate = parseFloat($('#id_returnproduct_purchase_rate').val() || 0);
             const charges = parseFloat($('#id_returnproduct_charges').val() || 0);
@@ -139,7 +79,7 @@
             // Calculate total (quantity * rate + charges)
             const total = (quantity * rate) + charges;
             
-            console.log("Direct calculation:", quantity, "*", rate, "+", charges, "=", total);
+            console.log(`Calculation: ${quantity} * ${rate} + ${charges} = ${total}`);
             
             // Update display
             if (!isNaN(total)) {
@@ -149,29 +89,17 @@
             }
         }
         
-        // Bind events directly to input elements by ID
+        // Bind events to input elements for calculation
         $('#id_returnproduct_quantity, #id_returnproduct_purchase_rate, #id_returnproduct_charges').on('input change keyup', function() {
             console.log(`Field changed: ${this.id} with value ${this.value}`);
-            calculatePurchaseReturnTotal();
-        });
-        
-        // Recalculate when form fields change from any source
-        $('form :input').on('change', function() {
-            console.log(`Form field changed: ${this.id}`);
-            calculatePurchaseReturnTotal();
-        });
-        
-        // Calculate total when AJAX completes
-        $(document).ajaxComplete(function() {
-            console.log("AJAX request completed - recalculating total");
-            calculatePurchaseReturnTotal();
+            calculateTotal();
         });
         
         // Initial calculation
-        calculatePurchaseReturnTotal();
+        calculateTotal();
         
-        // Setup a periodic check to ensure the total is calculated
-        setInterval(calculatePurchaseReturnTotal, 1000);
+        // Setup a periodic check to ensure the total is calculated (every 2 seconds)
+        setInterval(calculateTotal, 2000);
     });
 </script>
 {% endblock %}
