@@ -6,19 +6,23 @@
     $(document).ready(function() {
         // Function to fetch batch details when product and batch are selected
         function fetchBatchDetails() {
-            console.log("Sales form fields:", {
-                productid_field: document.getElementById('id_return_productid'),
-                batch_no_field: document.getElementById('id_return_product_batch_no')
-            });
-            
-            // Try with plain selector
-            const all_product_fields = $('[name*="product"]');
-            console.log("All sales product-related fields:", all_product_fields.map(function() { 
-                return { id: this.id, name: this.name }; 
+            // Debug all form fields to find the correct IDs
+            const allFormFields = $('form :input');
+            console.log("All sales form fields:", allFormFields.map(function() { 
+                return { id: this.id, name: this.name, value: this.value }; 
             }).get());
             
-            const product_id = $('#id_return_productid').val();
-            const batch_no = $('#id_return_product_batch_no').val();
+            // Try to find fields based on name patterns
+            const productField = $('select[name$="productid"]').first();
+            const batchField = $('input[name$="batch_no"]').first();
+            
+            console.log("Found sales fields:", {
+                product: productField.length ? { id: productField.attr('id'), name: productField.attr('name') } : 'Not found',
+                batch: batchField.length ? { id: batchField.attr('id'), name: batchField.attr('name') } : 'Not found'
+            });
+            
+            const product_id = productField.val();
+            const batch_no = batchField.val();
             
             console.log("Fetching sales details for product:", product_id, "batch:", batch_no);
             
@@ -39,16 +43,24 @@
                     success: function(data) {
                         console.log("Sales API response:", data);
                         if (data.exists) {
-                            // Auto-fill fields
-                            $('#id_return_product_expiry').val(data.expiry);
-                            $('#id_return_sale_rate').val(data.rate);
+                            // Auto-fill fields using dynamic selectors
+                            if (expirySelector) {
+                                $(`#${expirySelector}`).val(data.expiry);
+                            }
+                            if (rateSelector) {
+                                $(`#${rateSelector}`).val(data.rate);
+                            }
                             
                             // Show sales info
                             $('#sales_info').html('<div class="alert alert-success">' + data.message + ' Original quantity: ' + data.quantity + '</div>');
                         } else {
                             // Clear fields if batch not found or not sold to this customer
-                            $('#id_return_product_expiry').val('');
-                            $('#id_return_sale_rate').val('');
+                            if (expirySelector) {
+                                $(`#${expirySelector}`).val('');
+                            }
+                            if (rateSelector) {
+                                $(`#${rateSelector}`).val('');
+                            }
                             $('#sales_info').html('<div class="alert alert-warning">' + data.message + '</div>');
                         }
                     },
@@ -60,19 +72,34 @@
             }
         }
         
+        // Dynamically find field selectors for event binding
+        const productSelector = $('select[name$="productid"]').attr('id');
+        const batchSelector = $('input[name$="batch_no"]').attr('id');
+        const expirySelector = $('input[name$="expiry"]').attr('id');
+        const rateSelector = $('input[name*="sale_rate"]').attr('id');
+        const quantitySelector = $('input[name*="quantity"]').attr('id');
+        const discountSelector = $('input[name*="discount"]').attr('id');
+        const igstSelector = $('input[name*="igst"]').attr('id');
+        const discountTypeSelector = $('select[name*="calculation_mode"]').attr('id');
+        
+        console.log("Found sales form selectors:", {
+            productSelector, batchSelector, expirySelector, rateSelector, 
+            quantitySelector, discountSelector, igstSelector, discountTypeSelector
+        });
+        
         // Trigger batch details lookup when either product or batch changes
-        $('#id_return_productid, #id_return_product_batch_no').change(function() {
+        $(`#${productSelector}, #${batchSelector}`).change(function() {
             console.log("Sales field changed:", this.id);
             fetchBatchDetails();
         });
         
         // Calculate total on change of quantity, rate, discount or GST
         function updateTotal() {
-            const qty = $('#id_return_sale_quantity').val() || 0;
-            const rate = $('#id_return_sale_rate').val() || 0;
-            const discount = $('#id_return_sale_discount').val() || 0;
-            const igst = $('#id_return_sale_igst').val() || 0;
-            const discountType = $('#id_return_sale_calculation_mode').val();
+            const qty = $(`#${quantitySelector}`).val() || 0;
+            const rate = $(`#${rateSelector}`).val() || 0;
+            const discount = $(`#${discountSelector}`).val() || 0;
+            const igst = $(`#${igstSelector}`).val() || 0;
+            const discountType = $(`#${discountTypeSelector}`).val();
             
             // Calculate base amount
             let base_amount = parseFloat(qty) * parseFloat(rate);
@@ -97,7 +124,8 @@
             }
         }
         
-        $('#id_return_sale_quantity, #id_return_sale_rate, #id_return_sale_discount, #id_return_sale_igst, #id_return_sale_calculation_mode').on('input change', function() {
+        // Bind events to dynamic selectors
+        $(`#${quantitySelector}, #${rateSelector}, #${discountSelector}, #${igstSelector}, #${discountTypeSelector}`).on('input change', function() {
             updateTotal();
         });
         
