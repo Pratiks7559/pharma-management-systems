@@ -1755,8 +1755,10 @@ def add_purchase_return_item(request, return_id):
     
     # For AJAX request to get batch info
     if request.method == 'GET' and 'product_id' in request.GET:
+        print("*** AJAX Request Detected for Purchase Return ***")
         product_id = request.GET.get('product_id')
         batch_no = request.GET.get('batch_no')
+        print(f"*** Requested: Product ID: {product_id}, Batch: {batch_no} ***")
         
         if product_id and batch_no:
             # Check if the product was purchased with this batch from this supplier
@@ -1769,32 +1771,40 @@ def add_purchase_return_item(request, return_id):
             if purchase_data:
                 # Check current stock for this batch
                 batch_stock, is_available = get_batch_stock_status(product_id, batch_no)
+                print(f"*** Found Purchase Data: Expiry: {purchase_data.product_expiry}, Rate: {purchase_data.product_purchase_rate}, MRP: {purchase_data.product_MRP} ***")
+                print(f"*** Stock Status: Available Qty: {batch_stock}, Is Available: {is_available} ***")
                 
                 if batch_stock <= 0:
-                    return JsonResponse({
+                    response_data = {
                         'exists': True,
                         'expiry': purchase_data.product_expiry.strftime('%Y-%m-%d'),
                         'rate': purchase_data.product_purchase_rate,
                         'mrp': purchase_data.product_MRP,
                         'available_qty': 0,
                         'message': 'Warning: No stock available for return!'
-                    })
+                    }
+                    print(f"*** Sending Response: {response_data} ***")
+                    return JsonResponse(response_data)
                 
                 # Return product details including expiry
-                return JsonResponse({
+                response_data = {
                     'exists': True,
                     'expiry': purchase_data.product_expiry.strftime('%Y-%m-%d'),
                     'rate': purchase_data.product_purchase_rate,
                     'mrp': purchase_data.product_MRP,
                     'available_qty': batch_stock,
                     'message': f'Product found in purchase records. Current stock: {batch_stock}'
-                })
+                }
+                print(f"*** Sending Response: {response_data} ***")
+                return JsonResponse(response_data)
             else:
+                print("*** No purchase data found for this supplier/batch combination ***")
                 return JsonResponse({
                     'exists': False,
                     'message': 'Error: This product with this batch was not purchased from this supplier!'
                 })
         
+        print("*** Invalid product or batch number ***")
         return JsonResponse({'exists': False, 'message': 'Invalid product or batch number'})
     
     if request.method == 'POST':
@@ -2084,8 +2094,10 @@ def add_sales_return_item(request, return_id):
     
     # For AJAX request to get batch info
     if request.method == 'GET' and 'product_id' in request.GET:
+        print("*** AJAX Request Detected for Sales Return ***")
         product_id = request.GET.get('product_id')
         batch_no = request.GET.get('batch_no')
+        print(f"*** Requested: Product ID: {product_id}, Batch: {batch_no} ***")
         
         if product_id and batch_no:
             # Check if the product was sold with this batch
@@ -2096,15 +2108,21 @@ def add_sales_return_item(request, return_id):
             ).first()
             
             if sales_data:
+                print(f"*** Found Sales Data: Expiry: {sales_data.product_expiry}, Rate: {sales_data.sale_rate}, Quantity: {sales_data.sale_quantity} ***")
+                
                 # Return product details including expiry
-                return JsonResponse({
+                response_data = {
                     'exists': True,
                     'expiry': sales_data.product_expiry.strftime('%Y-%m-%d'),
                     'rate': sales_data.sale_rate,
                     'quantity': sales_data.sale_quantity,
                     'message': 'Product found in sales records.'
-                })
+                }
+                print(f"*** Sending Response: {response_data} ***")
+                return JsonResponse(response_data)
             else:
+                print("*** No sales data found for this customer/batch combination ***")
+                
                 # Verify product is in inventory with this batch
                 purchase_data = PurchaseMaster.objects.filter(
                     productid_id=product_id,
@@ -2112,17 +2130,22 @@ def add_sales_return_item(request, return_id):
                 ).first()
                 
                 if purchase_data:
-                    return JsonResponse({
+                    print(f"*** Found in inventory but not sold to this customer: Expiry: {purchase_data.product_expiry} ***")
+                    response_data = {
                         'exists': False,
                         'expiry': purchase_data.product_expiry.strftime('%Y-%m-%d'),
                         'message': 'Warning: This product with this batch was not sold to this customer!'
-                    })
+                    }
+                    print(f"*** Sending Response: {response_data} ***")
+                    return JsonResponse(response_data)
                 else:
+                    print("*** Product not found in inventory with this batch number ***")
                     return JsonResponse({
                         'exists': False,
                         'message': 'Error: This product with this batch number does not exist in inventory!'
                     })
         
+        print("*** Invalid product or batch number ***")
         return JsonResponse({'exists': False, 'message': 'Invalid product or batch number'})
     
     if request.method == 'POST':
