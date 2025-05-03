@@ -18,6 +18,9 @@
                         'product_id': product_id,
                         'batch_no': batch_no
                     },
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
                     dataType: 'json',
                     beforeSend: function() {
                         $('#sales_info').html('<div class="alert alert-info">Loading sales information...</div>');

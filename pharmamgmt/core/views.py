@@ -1754,7 +1754,7 @@ def add_purchase_return_item(request, return_id):
     return_invoice = get_object_or_404(ReturnInvoiceMaster, returninvoiceid=return_id)
     
     # For AJAX request to get batch info
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.method == 'GET':
+    if request.method == 'GET' and 'product_id' in request.GET:
         product_id = request.GET.get('product_id')
         batch_no = request.GET.get('batch_no')
         
@@ -2083,7 +2083,7 @@ def add_sales_return_item(request, return_id):
     return_invoice = get_object_or_404(ReturnSalesInvoiceMaster, return_sales_invoice_no=return_id)
     
     # For AJAX request to get batch info
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.method == 'GET':
+    if request.method == 'GET' and 'product_id' in request.GET:
         product_id = request.GET.get('product_id')
         batch_no = request.GET.get('batch_no')
         
