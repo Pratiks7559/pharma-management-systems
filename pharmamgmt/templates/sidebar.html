@@ -26,7 +26,8 @@
         {% endif %}
     </div>
     
-    <ul class="nav flex-column">
+    <div class="nav-scrollable-wrapper">
+        <ul class="nav flex-column">
         <li class="nav-item">
             <a href="{% url 'dashboard' %}" class="nav-link {% if request.path == '/dashboard/' or request.path == '/' %}active{% endif %}">
                 <i class="fas fa-tachometer-alt"></i> Dashboard
@@ -175,4 +176,5 @@
         </li>
         {% endif %}
     </ul>
+    </div>
 </div>

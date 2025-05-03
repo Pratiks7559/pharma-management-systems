@@ -35,7 +35,7 @@ body {
     flex-direction: column;
 }
 
-.sidebar > ul.nav {
+.nav-scrollable-wrapper {
     flex: 1;
     overflow-y: auto;
     scrollbar-width: thin;
@@ -43,20 +43,20 @@ body {
     max-height: calc(100vh - 170px); /* Adjust based on header and user info height */
 }
 
-.sidebar > ul.nav::-webkit-scrollbar {
+.nav-scrollable-wrapper::-webkit-scrollbar {
     width: 6px;
 }
 
-.sidebar > ul.nav::-webkit-scrollbar-track {
+.nav-scrollable-wrapper::-webkit-scrollbar-track {
     background: transparent;
 }
 
-.sidebar > ul.nav::-webkit-scrollbar-thumb {
+.nav-scrollable-wrapper::-webkit-scrollbar-thumb {
     background-color: rgba(255, 255, 255, 0.2);
     border-radius: 20px;
 }
 
-.sidebar > ul.nav::-webkit-scrollbar-thumb:hover {
+.nav-scrollable-wrapper::-webkit-scrollbar-thumb:hover {
     background-color: rgba(255, 255, 255, 0.3);
 }
 
