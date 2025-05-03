@@ -1,6 +1,93 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
 
+{% block extrahead %}
+<script>
+    $(document).ready(function() {
+        // Function to fetch batch details when product and batch are selected
+        function fetchBatchDetails() {
+            const product_id = $('#id_return_productid').val();
+            const batch_no = $('#id_return_product_batch_no').val();
+            
+            if (product_id && batch_no) {
+                $.ajax({
+                    url: window.location.href,
+                    data: {
+                        'product_id': product_id,
+                        'batch_no': batch_no
+                    },
+                    dataType: 'json',
+                    beforeSend: function() {
+                        $('#sales_info').html('<div class="alert alert-info">Loading sales information...</div>');
+                    },
+                    success: function(data) {
+                        if (data.exists) {
+                            // Auto-fill fields
+                            $('#id_return_product_expiry').val(data.expiry);
+                            $('#id_return_sale_rate').val(data.rate);
+                            
+                            // Show sales info
+                            $('#sales_info').html('<div class="alert alert-success">' + data.message + ' Original quantity: ' + data.quantity + '</div>');
+                        } else {
+                            // Clear fields if batch not found or not sold to this customer
+                            $('#id_return_product_expiry').val('');
+                            $('#id_return_sale_rate').val('');
+                            $('#sales_info').html('<div class="alert alert-warning">' + data.message + '</div>');
+                        }
+                    },
+                    error: function() {
+                        $('#sales_info').html('<div class="alert alert-danger">Error retrieving sales information.</div>');
+                    }
+                });
+            }
+        }
+        
+        // Trigger batch details lookup when either product or batch changes
+        $('#id_return_productid, #id_return_product_batch_no').change(function() {
+            fetchBatchDetails();
+        });
+        
+        // Calculate total on change of quantity, rate, discount or GST
+        function updateTotal() {
+            const qty = $('#id_return_sale_quantity').val() || 0;
+            const rate = $('#id_return_sale_rate').val() || 0;
+            const discount = $('#id_return_sale_discount').val() || 0;
+            const igst = $('#id_return_sale_igst').val() || 0;
+            const discountType = $('#id_return_sale_calculation_mode').val();
+            
+            // Calculate base amount
+            let base_amount = parseFloat(qty) * parseFloat(rate);
+            
+            // Apply discount
+            let discounted_amount = base_amount;
+            if (parseFloat(discount) > 0) {
+                if (discountType === 'percentage') {
+                    // Percentage discount
+                    discounted_amount = base_amount * (1 - (parseFloat(discount) / 100));
+                } else {
+                    // Fixed discount
+                    discounted_amount = base_amount - parseFloat(discount);
+                }
+            }
+            
+            // Apply GST
+            const total = discounted_amount * (1 + (parseFloat(igst) / 100));
+            
+            if (!isNaN(total)) {
+                $('#total_preview').text(total.toFixed(2));
+            }
+        }
+        
+        $('#id_return_sale_quantity, #id_return_sale_rate, #id_return_sale_discount, #id_return_sale_igst, #id_return_sale_calculation_mode').on('input change', function() {
+            updateTotal();
+        });
+        
+        // Initialize calculation
+        updateTotal();
+    });
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <div class="row justify-content-center">
@@ -20,6 +107,9 @@
                             </ul>
                         </div>
                     </div>
+                    
+                    <!-- Display sales information -->
+                    <div id="sales_info" class="mb-3"></div>
                     
                     <form method="post">
                         {% csrf_token %}
@@ -116,12 +206,30 @@
                         </div>
                         
                         <div class="row mb-3">
-                            <div class="col-md-12">
+                            <div class="col-md-8">
                                 <div class="form-group mb-3">
                                     <label for="{{ form.return_remarks.id_for_label }}">Remarks</label>
                                     {{ form.return_remarks }}
                                     {% if form.return_remarks.errors %}
                                         <div class="text-danger">{{ form.return_remarks.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label>Total Amount (Preview)</label>
+                                    <div class="form-control bg-light">₹ <span id="total_preview">0.00</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.return_reason.id_for_label }}">Return Reason</label>
+                                    {{ form.return_reason }}
+                                    {% if form.return_reason.errors %}
+                                        <div class="text-danger">{{ form.return_reason.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
