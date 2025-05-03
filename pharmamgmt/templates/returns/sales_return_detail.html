@@ -78,12 +78,18 @@
                                     <td>₹{{ item.return_sale_total_amount|floatformat:2 }}</td>
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
+                                            {% if item.id %}
                                             <a href="{% url 'edit_sales_return_item' return_id=return_invoice.return_sales_invoice_no item_id=item.id %}" class="btn btn-outline-primary">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             <a href="{% url 'delete_sales_return_item' return_id=return_invoice.return_sales_invoice_no item_id=item.id %}" class="btn btn-outline-danger">
                                                 <i class="fas fa-trash"></i>
                                             </a>
+                                            {% else %}
+                                            <button class="btn btn-outline-secondary" disabled>
+                                                <i class="fas fa-ban"></i>
+                                            </button>
+                                            {% endif %}
                                         </div>
                                     </td>
                                 </tr>
