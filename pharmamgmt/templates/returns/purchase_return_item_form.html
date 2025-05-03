@@ -1,6 +1,75 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
 
+{% block extrahead %}
+<script>
+    $(document).ready(function() {
+        // Function to fetch batch details when product and batch are selected
+        function fetchBatchDetails() {
+            const product_id = $('#id_returnproductid').val();
+            const batch_no = $('#id_returnproduct_batch_no').val();
+            
+            if (product_id && batch_no) {
+                $.ajax({
+                    url: window.location.href,
+                    data: {
+                        'product_id': product_id,
+                        'batch_no': batch_no
+                    },
+                    dataType: 'json',
+                    beforeSend: function() {
+                        $('#batch_info').html('<div class="alert alert-info">Loading batch information...</div>');
+                    },
+                    success: function(data) {
+                        if (data.exists) {
+                            // Auto-fill fields
+                            $('#id_returnproduct_expiry').val(data.expiry);
+                            $('#id_returnproduct_purchase_rate').val(data.rate);
+                            $('#id_returnproduct_MRP').val(data.mrp);
+                            
+                            // Set max quantity based on available stock
+                            $('#id_returnproduct_quantity').attr('max', data.available_qty);
+                            
+                            // Update stock info message
+                            if (data.available_qty <= 0) {
+                                $('#batch_info').html('<div class="alert alert-danger">' + data.message + '</div>');
+                            } else {
+                                $('#batch_info').html('<div class="alert alert-success">' + data.message + '</div>');
+                            }
+                        } else {
+                            // Clear fields if batch not found
+                            $('#id_returnproduct_expiry').val('');
+                            $('#id_returnproduct_purchase_rate').val('');
+                            $('#id_returnproduct_MRP').val('');
+                            $('#batch_info').html('<div class="alert alert-warning">' + data.message + '</div>');
+                        }
+                    },
+                    error: function() {
+                        $('#batch_info').html('<div class="alert alert-danger">Error retrieving batch information.</div>');
+                    }
+                });
+            }
+        }
+        
+        // Trigger batch details lookup when either product or batch changes
+        $('#id_returnproductid, #id_returnproduct_batch_no').change(function() {
+            fetchBatchDetails();
+        });
+        
+        // Calculate total on change of quantity or rate
+        $('#id_returnproduct_quantity, #id_returnproduct_purchase_rate').on('input', function() {
+            const qty = $('#id_returnproduct_quantity').val() || 0;
+            const rate = $('#id_returnproduct_purchase_rate').val() || 0;
+            const total = parseFloat(qty) * parseFloat(rate);
+            
+            if (!isNaN(total)) {
+                $('#total_preview').text(total.toFixed(2));
+            }
+        });
+    });
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <div class="row justify-content-center">
@@ -20,6 +89,9 @@
                             </ul>
                         </div>
                     </div>
+                    
+                    <!-- Display batch information -->
+                    <div id="batch_info" class="mb-3"></div>
                     
                     <form method="post">
                         {% csrf_token %}
@@ -84,7 +156,7 @@
                         </div>
                         
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="form-group mb-3">
                                     <label for="{{ form.returnproduct_scheme.id_for_label }}">Scheme</label>
                                     {{ form.returnproduct_scheme }}
@@ -93,12 +165,30 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="form-group mb-3">
                                     <label for="{{ form.returnproduct_charges.id_for_label }}">Charges</label>
                                     {{ form.returnproduct_charges }}
                                     {% if form.returnproduct_charges.errors %}
                                         <div class="text-danger">{{ form.returnproduct_charges.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label>Total Amount (Preview)</label>
+                                    <div class="form-control bg-light">₹ <span id="total_preview">0.00</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.return_reason.id_for_label }}">Return Reason</label>
+                                    {{ form.return_reason }}
+                                    {% if form.return_reason.errors %}
+                                        <div class="text-danger">{{ form.return_reason.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
