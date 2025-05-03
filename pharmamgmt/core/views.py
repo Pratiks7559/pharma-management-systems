@@ -2220,6 +2220,134 @@ def inventory_report(request):
         'title': 'Inventory Report'
     }
     return render(request, 'reports/inventory_report.html', context)
+    
+@login_required
+def batch_inventory_report(request):
+    products = ProductMaster.objects.all().order_by('product_name')
+    
+    batch_inventory_data = []
+    total_value = 0
+    
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        products = products.filter(
+            Q(product_name__icontains=search_query) | 
+            Q(product_company__icontains=search_query) |
+            Q(product_category__icontains=search_query)
+        )
+    
+    for product in products:
+        stock_info = get_stock_status(product.productid)
+        
+        # Add batch details if there's stock
+        if stock_info['current_stock'] > 0 and stock_info['expiry_stock']:
+            for batch in stock_info['expiry_stock']:
+                batch_value = batch['quantity'] * batch['mrp']
+                total_value += batch_value
+                
+                days_to_expiry = (batch['expiry'] - timezone.now().date()).days if batch['expiry'] else 0
+                
+                batch_inventory_data.append({
+                    'product': product,
+                    'batch_no': batch['batch_no'],
+                    'expiry': batch['expiry'],
+                    'days_to_expiry': days_to_expiry,
+                    'quantity': batch['quantity'],
+                    'purchase_rate': batch['purchase_rate'],
+                    'mrp': batch['mrp'],
+                    'value': batch_value
+                })
+    
+    # Sort by expiry date (ascending)
+    batch_inventory_data.sort(key=lambda x: (x['expiry'] or datetime.max.date()))
+    
+    context = {
+        'batch_inventory_data': batch_inventory_data,
+        'total_value': total_value,
+        'search_query': search_query,
+        'title': 'Batch-wise Inventory Report'
+    }
+    return render(request, 'reports/batch_inventory_report.html', context)
+
+@login_required
+def dateexpiry_inventory_report(request):
+    products = ProductMaster.objects.all().order_by('product_name')
+    
+    # Get date filters
+    expiry_from = request.GET.get('expiry_from', '')
+    expiry_to = request.GET.get('expiry_to', '')
+    
+    # Convert string dates to datetime objects
+    try:
+        expiry_from_date = datetime.strptime(expiry_from, '%Y-%m-%d').date() if expiry_from else None
+        expiry_to_date = datetime.strptime(expiry_to, '%Y-%m-%d').date() if expiry_to else None
+    except ValueError:
+        expiry_from_date = None
+        expiry_to_date = None
+    
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        products = products.filter(
+            Q(product_name__icontains=search_query) | 
+            Q(product_company__icontains=search_query) |
+            Q(product_category__icontains=search_query)
+        )
+    
+    # Group by expiry date
+    expiry_grouped_data = {}
+    total_value = 0
+    
+    for product in products:
+        stock_info = get_stock_status(product.productid)
+        
+        if stock_info['current_stock'] > 0 and stock_info['expiry_stock']:
+            for batch in stock_info['expiry_stock']:
+                # Skip if outside the date range
+                if expiry_from_date and batch['expiry'] < expiry_from_date:
+                    continue
+                if expiry_to_date and batch['expiry'] > expiry_to_date:
+                    continue
+                    
+                expiry_date = batch['expiry']
+                batch_value = batch['quantity'] * batch['mrp']
+                total_value += batch_value
+                
+                # Group by expiry date
+                if expiry_date not in expiry_grouped_data:
+                    days_to_expiry = (expiry_date - timezone.now().date()).days if expiry_date else 0
+                    expiry_grouped_data[expiry_date] = {
+                        'expiry_date': expiry_date,
+                        'days_to_expiry': days_to_expiry,
+                        'products': [],
+                        'total_value': 0
+                    }
+                
+                expiry_grouped_data[expiry_date]['products'].append({
+                    'product': product,
+                    'batch_no': batch['batch_no'],
+                    'quantity': batch['quantity'],
+                    'purchase_rate': batch['purchase_rate'],
+                    'mrp': batch['mrp'],
+                    'value': batch_value
+                })
+                
+                expiry_grouped_data[expiry_date]['total_value'] += batch_value
+    
+    # Convert to list and sort by expiry date
+    expiry_data = list(expiry_grouped_data.values())
+    expiry_data.sort(key=lambda x: x['expiry_date'] or datetime.max.date())
+    
+    context = {
+        'expiry_data': expiry_data,
+        'total_value': total_value,
+        'search_query': search_query,
+        'expiry_from': expiry_from,
+        'expiry_to': expiry_to,
+        'title': 'Expiry Date-wise Inventory Report'
+    }
+    return render(request, 'reports/dateexpiry_inventory_report.html', context)
 
 @login_required
 def sales_report(request):

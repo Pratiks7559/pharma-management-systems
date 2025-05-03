@@ -83,6 +83,8 @@ urlpatterns = [
     
     # Reports
     path('reports/inventory/', views.inventory_report, name='inventory_report'),
+    path('reports/inventory/batch/', views.batch_inventory_report, name='batch_inventory_report'),
+    path('reports/inventory/expiry/', views.dateexpiry_inventory_report, name='dateexpiry_inventory_report'),
     path('reports/sales/', views.sales_report, name='sales_report'),
     path('reports/purchases/', views.purchase_report, name='purchase_report'),
     path('reports/financial/', views.financial_report, name='financial_report'),
