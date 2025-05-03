@@ -59,11 +59,36 @@ body {
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.sidebar .logo img {
+.sidebar .logo img,
+.sidebar .user-pic img {
     width: 70px;
     height: 70px;
     border-radius: 50%;
     object-fit: cover;
+}
+
+.sidebar .user-pic {
+    text-align: center;
+    padding: 15px 0 5px 0;
+}
+
+.sidebar .user-info {
+    text-align: center;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar .user-name {
+    display: block;
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 2px;
+}
+
+.sidebar .user-role {
+    display: block;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .sidebar-header {
