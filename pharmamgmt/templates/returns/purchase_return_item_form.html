@@ -4,6 +4,18 @@
 {% block extrahead %}
 <script>
     $(document).ready(function() {
+        // Dynamically find field selectors for event binding - MUST BE DONE FIRST
+        const productSelector = $('select[name$="returnproductid"]').attr('id');
+        const batchSelector = $('input[name$="returnproduct_batch_no"]').attr('id');
+        const expirySelector = $('input[name$="returnproduct_expiry"]').attr('id');
+        const rateSelector = $('input[name$="returnproduct_purchase_rate"]').attr('id');
+        const quantitySelector = $('input[name$="returnproduct_quantity"]').attr('id');
+        const mrpSelector = $('input[name$="returnproduct_MRP"]').attr('id');
+        
+        console.log("Found selectors:", {
+            productSelector, batchSelector, expirySelector, rateSelector, quantitySelector, mrpSelector
+        });
+        
         // Function to fetch batch details when product and batch are selected
         function fetchBatchDetails() {
             // Debug all form fields to find the correct IDs
@@ -12,13 +24,13 @@
                 return { id: this.id, name: this.name, value: this.value }; 
             }).get());
             
-            // Try to find fields based on name patterns
-            const productField = $('select[name$="productid"]').first();
-            const batchField = $('input[name$="batch_no"]').first();
+            // Use the exact field names for the form
+            const productField = $(`#${productSelector}`);
+            const batchField = $(`#${batchSelector}`);
             
             console.log("Found fields:", {
-                product: productField.length ? { id: productField.attr('id'), name: productField.attr('name') } : 'Not found',
-                batch: batchField.length ? { id: batchField.attr('id'), name: batchField.attr('name') } : 'Not found'
+                product: productField.length ? { id: productField.attr('id'), name: productField.attr('name'), value: productField.val() } : 'Not found',
+                batch: batchField.length ? { id: batchField.attr('id'), name: batchField.attr('name'), value: batchField.val() } : 'Not found'
             });
             
             const product_id = productField.val();
@@ -43,15 +55,27 @@
                     success: function(data) {
                         console.log("API response:", data);
                         if (data.exists) {
-                            // Auto-fill fields using dynamic selectors
-                            $(`#${expirySelector}`).val(data.expiry);
-                            $(`#${rateSelector}`).val(data.rate);
+                            // Auto-fill fields using dynamic selectors - make sure selectors are valid
+                            if (expirySelector) {
+                                $(`#${expirySelector}`).val(data.expiry);
+                                console.log("Set expiry date to:", data.expiry);
+                            }
+                            
+                            if (rateSelector) {
+                                $(`#${rateSelector}`).val(data.rate);
+                                console.log("Set purchase rate to:", data.rate);
+                            }
+                            
                             if (mrpSelector) {
                                 $(`#${mrpSelector}`).val(data.mrp);
+                                console.log("Set MRP to:", data.mrp);
                             }
                             
                             // Set max quantity based on available stock
-                            $(`#${quantitySelector}`).attr('max', data.available_qty);
+                            if (quantitySelector) {
+                                $(`#${quantitySelector}`).attr('max', data.available_qty);
+                                console.log("Set max quantity to:", data.available_qty);
+                            }
                             
                             // Update stock info message
                             if (data.available_qty <= 0) {
@@ -61,8 +85,12 @@
                             }
                         } else {
                             // Clear fields if batch not found
-                            $(`#${expirySelector}`).val('');
-                            $(`#${rateSelector}`).val('');
+                            if (expirySelector) {
+                                $(`#${expirySelector}`).val('');
+                            }
+                            if (rateSelector) {
+                                $(`#${rateSelector}`).val('');
+                            }
                             if (mrpSelector) {
                                 $(`#${mrpSelector}`).val('');
                             }
@@ -77,36 +105,28 @@
             }
         }
         
-        // Dynamically find field selectors for event binding
-        const productSelector = $('select[name$="productid"]').attr('id');
-        const batchSelector = $('input[name$="batch_no"]').attr('id');
-        const expirySelector = $('input[name$="expiry"]').attr('id');
-        const rateSelector = $('input[name*="purchase_rate"]').attr('id');
-        const quantitySelector = $('input[name*="quantity"]').attr('id');
-        const mrpSelector = $('input[name*="MRP"]').attr('id');
-        
-        console.log("Found selectors:", {
-            productSelector, batchSelector, expirySelector, rateSelector, quantitySelector, mrpSelector
-        });
-        
         // Trigger batch details lookup when either product or batch changes
-        $(`#${productSelector}, #${batchSelector}`).change(function() {
-            console.log("Field changed:", this.id);
-            fetchBatchDetails();
-        });
+        if (productSelector && batchSelector) {
+            $(`#${productSelector}, #${batchSelector}`).change(function() {
+                console.log("Field changed:", this.id);
+                fetchBatchDetails();
+            });
+        }
         
         // Calculate total on change of quantity or rate
-        $(`#${quantitySelector}, #${rateSelector}`).on('input', function() {
-            const qty = $(`#${quantitySelector}`).val() || 0;
-            const rate = $(`#${rateSelector}`).val() || 0;
-            const total = parseFloat(qty) * parseFloat(rate);
-            
-            console.log("Calculating total:", qty, "*", rate, "=", total);
-            
-            if (!isNaN(total)) {
-                $('#total_preview').text(total.toFixed(2));
-            }
-        });
+        if (quantitySelector && rateSelector) {
+            $(`#${quantitySelector}, #${rateSelector}`).on('input', function() {
+                const qty = $(`#${quantitySelector}`).val() || 0;
+                const rate = $(`#${rateSelector}`).val() || 0;
+                const total = parseFloat(qty) * parseFloat(rate);
+                
+                console.log("Calculating total:", qty, "*", rate, "=", total);
+                
+                if (!isNaN(total)) {
+                    $('#total_preview').text(total.toFixed(2));
+                }
+            });
+        }
     });
 </script>
 {% endblock %}

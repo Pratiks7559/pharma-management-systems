@@ -4,6 +4,21 @@
 {% block extrahead %}
 <script>
     $(document).ready(function() {
+        // Dynamically find field selectors for event binding - MUST BE DONE FIRST
+        const productSelector = $('select[name$="returnproductid"]').attr('id');
+        const batchSelector = $('input[name$="returnproduct_batch_no"]').attr('id');
+        const expirySelector = $('input[name$="returnproduct_expiry"]').attr('id');
+        const rateSelector = $('input[name$="returnproduct_sale_rate"]').attr('id');
+        const quantitySelector = $('input[name$="returnproduct_quantity"]').attr('id');
+        const discountSelector = $('input[name$="returnproduct_discount"]').attr('id');
+        const igstSelector = $('input[name$="returnproduct_igst"]').attr('id');
+        const discountTypeSelector = $('select[name$="returnproduct_calculation_mode"]').attr('id');
+        
+        console.log("Found sales form selectors:", {
+            productSelector, batchSelector, expirySelector, rateSelector, 
+            quantitySelector, discountSelector, igstSelector, discountTypeSelector
+        });
+        
         // Function to fetch batch details when product and batch are selected
         function fetchBatchDetails() {
             // Debug all form fields to find the correct IDs
@@ -12,13 +27,13 @@
                 return { id: this.id, name: this.name, value: this.value }; 
             }).get());
             
-            // Try to find fields based on name patterns
-            const productField = $('select[name$="productid"]').first();
-            const batchField = $('input[name$="batch_no"]').first();
+            // Use the exact field selectors from above
+            const productField = $(`#${productSelector}`);
+            const batchField = $(`#${batchSelector}`);
             
             console.log("Found sales fields:", {
-                product: productField.length ? { id: productField.attr('id'), name: productField.attr('name') } : 'Not found',
-                batch: batchField.length ? { id: batchField.attr('id'), name: batchField.attr('name') } : 'Not found'
+                product: productField.length ? { id: productField.attr('id'), name: productField.attr('name'), value: productField.val() } : 'Not found',
+                batch: batchField.length ? { id: batchField.attr('id'), name: batchField.attr('name'), value: batchField.val() } : 'Not found'
             });
             
             const product_id = productField.val();
@@ -46,9 +61,11 @@
                             // Auto-fill fields using dynamic selectors
                             if (expirySelector) {
                                 $(`#${expirySelector}`).val(data.expiry);
+                                console.log("Set sales expiry date to:", data.expiry);
                             }
                             if (rateSelector) {
                                 $(`#${rateSelector}`).val(data.rate);
+                                console.log("Set sales rate to:", data.rate);
                             }
                             
                             // Show sales info
@@ -72,26 +89,13 @@
             }
         }
         
-        // Dynamically find field selectors for event binding
-        const productSelector = $('select[name$="productid"]').attr('id');
-        const batchSelector = $('input[name$="batch_no"]').attr('id');
-        const expirySelector = $('input[name$="expiry"]').attr('id');
-        const rateSelector = $('input[name*="sale_rate"]').attr('id');
-        const quantitySelector = $('input[name*="quantity"]').attr('id');
-        const discountSelector = $('input[name*="discount"]').attr('id');
-        const igstSelector = $('input[name*="igst"]').attr('id');
-        const discountTypeSelector = $('select[name*="calculation_mode"]').attr('id');
-        
-        console.log("Found sales form selectors:", {
-            productSelector, batchSelector, expirySelector, rateSelector, 
-            quantitySelector, discountSelector, igstSelector, discountTypeSelector
-        });
-        
         // Trigger batch details lookup when either product or batch changes
-        $(`#${productSelector}, #${batchSelector}`).change(function() {
-            console.log("Sales field changed:", this.id);
-            fetchBatchDetails();
-        });
+        if (productSelector && batchSelector) {
+            $(`#${productSelector}, #${batchSelector}`).change(function() {
+                console.log("Sales field changed:", this.id);
+                fetchBatchDetails();
+            });
+        }
         
         // Calculate total on change of quantity, rate, discount or GST
         function updateTotal() {
@@ -162,29 +166,29 @@
                         {% csrf_token %}
                         
                         <div class="form-group mb-3">
-                            <label for="{{ form.productid.id_for_label }}">Product*</label>
-                            {{ form.productid }}
-                            {% if form.productid.errors %}
-                                <div class="text-danger">{{ form.productid.errors }}</div>
+                            <label for="{{ form.returnproductid.id_for_label }}">Product*</label>
+                            {{ form.returnproductid }}
+                            {% if form.returnproductid.errors %}
+                                <div class="text-danger">{{ form.returnproductid.errors }}</div>
                             {% endif %}
                         </div>
                         
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label for="{{ form.product_batch_no.id_for_label }}">Batch No*</label>
-                                    {{ form.product_batch_no }}
-                                    {% if form.product_batch_no.errors %}
-                                        <div class="text-danger">{{ form.product_batch_no.errors }}</div>
+                                    <label for="{{ form.returnproduct_batch_no.id_for_label }}">Batch No*</label>
+                                    {{ form.returnproduct_batch_no }}
+                                    {% if form.returnproduct_batch_no.errors %}
+                                        <div class="text-danger">{{ form.returnproduct_batch_no.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label for="{{ form.rate_applied.id_for_label }}">Rate Type*</label>
-                                    {{ form.rate_applied }}
-                                    {% if form.rate_applied.errors %}
-                                        <div class="text-danger">{{ form.rate_applied.errors }}</div>
+                                    <label for="{{ form.returnproduct_expiry.id_for_label }}">Expiry Date*</label>
+                                    {{ form.returnproduct_expiry }}
+                                    {% if form.returnproduct_expiry.errors %}
+                                        <div class="text-danger">{{ form.returnproduct_expiry.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -193,30 +197,28 @@
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <div class="form-group mb-3">
-                                    <label for="{{ form.custom_rate.id_for_label }}">Custom Rate</label>
-                                    {{ form.custom_rate }}
-                                    <small class="form-text text-muted">Leave empty to use selected rate type</small>
-                                    {% if form.custom_rate.errors %}
-                                        <div class="text-danger">{{ form.custom_rate.errors }}</div>
+                                    <label for="{{ form.returnproduct_sale_rate.id_for_label }}">Sale Rate*</label>
+                                    {{ form.returnproduct_sale_rate }}
+                                    {% if form.returnproduct_sale_rate.errors %}
+                                        <div class="text-danger">{{ form.returnproduct_sale_rate.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group mb-3">
-                                    <label for="{{ form.sales_rate.id_for_label }}">Applied Rate</label>
-                                    {{ form.sales_rate }}
-                                    <small class="form-text text-muted">Automatically set based on rate type</small>
-                                    {% if form.sales_rate.errors %}
-                                        <div class="text-danger">{{ form.sales_rate.errors }}</div>
+                                    <label for="{{ form.returnproduct_quantity.id_for_label }}">Quantity*</label>
+                                    {{ form.returnproduct_quantity }}
+                                    {% if form.returnproduct_quantity.errors %}
+                                        <div class="text-danger">{{ form.returnproduct_quantity.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group mb-3">
-                                    <label for="{{ form.sales_quantity.id_for_label }}">Quantity*</label>
-                                    {{ form.sales_quantity }}
-                                    {% if form.sales_quantity.errors %}
-                                        <div class="text-danger">{{ form.sales_quantity.errors }}</div>
+                                    <label for="{{ form.returnproduct_calculation_mode.id_for_label }}">Discount Type*</label>
+                                    {{ form.returnproduct_calculation_mode }}
+                                    {% if form.returnproduct_calculation_mode.errors %}
+                                        <div class="text-danger">{{ form.returnproduct_calculation_mode.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -225,40 +227,19 @@
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <div class="form-group mb-3">
-                                    <label for="{{ form.sales_igst.id_for_label }}">GST %*</label>
-                                    {{ form.sales_igst }}
-                                    {% if form.sales_igst.errors %}
-                                        <div class="text-danger">{{ form.sales_igst.errors }}</div>
+                                    <label for="{{ form.returnproduct_discount.id_for_label }}">Discount*</label>
+                                    {{ form.returnproduct_discount }}
+                                    {% if form.returnproduct_discount.errors %}
+                                        <div class="text-danger">{{ form.returnproduct_discount.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group mb-3">
-                                    <label for="{{ form.sales_calculation_mode.id_for_label }}">Discount Type*</label>
-                                    {{ form.sales_calculation_mode }}
-                                    {% if form.sales_calculation_mode.errors %}
-                                        <div class="text-danger">{{ form.sales_calculation_mode.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.sales_discount.id_for_label }}">Discount*</label>
-                                    {{ form.sales_discount }}
-                                    {% if form.sales_discount.errors %}
-                                        <div class="text-danger">{{ form.sales_discount.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-8">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.return_remarks.id_for_label }}">Remarks</label>
-                                    {{ form.return_remarks }}
-                                    {% if form.return_remarks.errors %}
-                                        <div class="text-danger">{{ form.return_remarks.errors }}</div>
+                                    <label for="{{ form.returnproduct_igst.id_for_label }}">GST %*</label>
+                                    {{ form.returnproduct_igst }}
+                                    {% if form.returnproduct_igst.errors %}
+                                        <div class="text-danger">{{ form.returnproduct_igst.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -266,6 +247,18 @@
                                 <div class="form-group mb-3">
                                     <label>Total Amount (Preview)</label>
                                     <div class="form-control bg-light">₹ <span id="total_preview">0.00</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.return_remarks.id_for_label }}">Remarks</label>
+                                    {{ form.return_remarks }}
+                                    {% if form.return_remarks.errors %}
+                                        <div class="text-danger">{{ form.return_remarks.errors }}</div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
