@@ -144,6 +144,14 @@
             updateTotal();
         });
         
+        // Calculate total when data is loaded from AJAX
+        $(document).ajaxComplete(function(event, xhr, settings) {
+            if (settings.url === window.location.href && settings.data && settings.data.includes('product_id')) {
+                console.log("AJAX completed - recalculating sales return total");
+                updateTotal();
+            }
+        });
+        
         // Initialize calculation
         updateTotal();
     });

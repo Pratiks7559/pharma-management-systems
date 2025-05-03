@@ -122,20 +122,36 @@
             });
         }
         
+        // Function to calculate total amount
+        function calculateTotal() {
+            if (!quantitySelector || !rateSelector) return;
+            
+            const qty = $(`#${quantitySelector}`).val() || 0;
+            const rate = $(`#${rateSelector}`).val() || 0;
+            const total = parseFloat(qty) * parseFloat(rate);
+            
+            console.log("Calculating total:", qty, "*", rate, "=", total);
+            
+            if (!isNaN(total)) {
+                $('#total_preview').text(total.toFixed(2));
+            }
+        }
+        
         // Calculate total on change of quantity or rate
         if (quantitySelector && rateSelector) {
-            $(`#${quantitySelector}, #${rateSelector}`).on('input', function() {
-                const qty = $(`#${quantitySelector}`).val() || 0;
-                const rate = $(`#${rateSelector}`).val() || 0;
-                const total = parseFloat(qty) * parseFloat(rate);
-                
-                console.log("Calculating total:", qty, "*", rate, "=", total);
-                
-                if (!isNaN(total)) {
-                    $('#total_preview').text(total.toFixed(2));
-                }
-            });
+            $(`#${quantitySelector}, #${rateSelector}`).on('input change', calculateTotal);
         }
+        
+        // Calculate total when data is loaded from AJAX
+        $(document).ajaxComplete(function(event, xhr, settings) {
+            if (settings.url === window.location.href && settings.data && settings.data.includes('product_id')) {
+                console.log("AJAX completed - recalculating total");
+                calculateTotal();
+            }
+        });
+        
+        // Initial calculation
+        calculateTotal();
     });
 </script>
 {% endblock %}
