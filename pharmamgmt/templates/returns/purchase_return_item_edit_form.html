@@ -2,9 +2,11 @@
 
 {% block title %}{{ title }}{% endblock %}
 
-{% block extrahead %}
+{% block extra_js %}
 <script>
     $(document).ready(function() {
+        console.log("Document ready - initializing purchase return edit form");
+        
         // Auto-fill batch details from AJAX call
         $('#id_returnproduct_batch_no').on('change', function() {
             const batch_no = $(this).val();
@@ -33,6 +35,9 @@
                             
                             // Update max quantity
                             $('#id_returnproduct_quantity').attr('max', data.available_qty);
+                            
+                            // Recalculate total
+                            calculateTotal();
                         } else {
                             $('#stock_info').html('<div class="alert alert-danger">' + data.message + '</div>');
                         }
@@ -61,6 +66,7 @@
         
         // Bind calculation to all relevant fields
         $('#id_returnproduct_quantity, #id_returnproduct_purchase_rate, #id_returnproduct_charges').on('input change keyup', function() {
+            console.log(`Field changed: ${this.id} with value ${this.value}`);
             calculateTotal();
         });
         
