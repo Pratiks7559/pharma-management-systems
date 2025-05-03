@@ -327,6 +327,7 @@ class SalesReturnInvoiceForm(forms.ModelForm):
 class SalesReturnForm(forms.ModelForm):
     return_product_batch_no = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
     return_product_expiry = forms.DateField(widget=DateInput(attrs={'class': 'form-control'}))
+    return_product_MRP = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     return_sale_rate = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     return_sale_quantity = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     return_sale_scheme = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), required=False, initial=0)
@@ -342,11 +343,11 @@ class SalesReturnForm(forms.ModelForm):
     class Meta:
         model = ReturnSalesMaster
         fields = ['return_productid', 'return_product_batch_no', 'return_product_expiry',
-                 'return_sale_rate', 'return_sale_quantity', 'return_sale_scheme',
+                 'return_product_MRP', 'return_sale_rate', 'return_sale_quantity', 'return_sale_scheme',
                  'return_sale_discount', 'return_sale_igst', 'return_reason',
                  'return_sale_calculation_mode']
         exclude = ['return_sales_invoice_no', 'return_customerid', 'return_product_name',
-                  'return_product_company', 'return_product_packing', 'return_product_MRP',
+                  'return_product_company', 'return_product_packing',
                   'return_sale_total_amount', 'return_sale_entry_date']
         
     def __init__(self, *args, **kwargs):
