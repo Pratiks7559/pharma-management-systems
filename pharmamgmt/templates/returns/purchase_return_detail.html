@@ -65,7 +65,7 @@
                             <tbody>
                                 {% for item in returns %}
                                 <tr>
-                                    <td>{{ item.returnproduct_name }} {% if item.returnproduct_packing %}({{ item.returnproduct_packing }}){% endif %}</td>
+                                    <td>{{ item.returnproductid.product_name }} {% if item.returnproductid.product_packing %}({{ item.returnproductid.product_packing }}){% endif %}</td>
                                     <td>{{ item.returnproduct_batch_no }}</td>
                                     <td>{{ item.returnproduct_expiry|date:"M Y" }}</td>
                                     <td>₹{{ item.returnproduct_MRP|floatformat:2 }}</td>

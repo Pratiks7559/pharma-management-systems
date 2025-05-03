@@ -1663,11 +1663,8 @@ def edit_purchase_return_item(request, return_id, item_id):
             updated_item.returninvoiceid = return_invoice
             updated_item.returnproduct_supplierid = return_invoice.returnsupplierid
             
-            # Get product details
-            product = updated_item.returnproductid
-            updated_item.returnproduct_name = product.product_name
-            updated_item.returnproduct_company = product.product_company
-            updated_item.returnproduct_packing = product.product_packing
+            # The product details are accessed via the returnproductid foreign key relation
+            # No need to set additional fields as they'll be accessed through the relation
             
             # Verify stock availability for increased quantity
             if updated_item.returnproduct_quantity > return_item.returnproduct_quantity:
@@ -1844,11 +1841,8 @@ def add_purchase_return_item(request, return_id):
             return_item.returninvoiceid = return_invoice
             return_item.returnproduct_supplierid = return_invoice.returnsupplierid
             
-            # Get product details
-            product = return_item.returnproductid
-            return_item.returnproduct_name = product.product_name
-            return_item.returnproduct_company = product.product_company
-            return_item.returnproduct_packing = product.product_packing
+            # The product details are accessed via the returnproductid foreign key relation
+            # No need to set additional fields as they'll be accessed through the relation
             
             # Calculate total amount
             return_item.returntotal_amount = return_item.returnproduct_purchase_rate * return_item.returnproduct_quantity
