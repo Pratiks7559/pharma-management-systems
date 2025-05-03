@@ -177,29 +177,29 @@
                         {% csrf_token %}
                         
                         <div class="form-group mb-3">
-                            <label for="{{ form.returnproductid.id_for_label }}">Product*</label>
-                            {{ form.returnproductid }}
-                            {% if form.returnproductid.errors %}
-                                <div class="text-danger">{{ form.returnproductid.errors }}</div>
+                            <label for="{{ form.return_productid.id_for_label }}">Product*</label>
+                            {{ form.return_productid }}
+                            {% if form.return_productid.errors %}
+                                <div class="text-danger">{{ form.return_productid.errors }}</div>
                             {% endif %}
                         </div>
                         
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label for="{{ form.returnproduct_batch_no.id_for_label }}">Batch No*</label>
-                                    {{ form.returnproduct_batch_no }}
-                                    {% if form.returnproduct_batch_no.errors %}
-                                        <div class="text-danger">{{ form.returnproduct_batch_no.errors }}</div>
+                                    <label for="{{ form.return_product_batch_no.id_for_label }}">Batch No*</label>
+                                    {{ form.return_product_batch_no }}
+                                    {% if form.return_product_batch_no.errors %}
+                                        <div class="text-danger">{{ form.return_product_batch_no.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label for="{{ form.returnproduct_expiry.id_for_label }}">Expiry Date*</label>
-                                    {{ form.returnproduct_expiry }}
-                                    {% if form.returnproduct_expiry.errors %}
-                                        <div class="text-danger">{{ form.returnproduct_expiry.errors }}</div>
+                                    <label for="{{ form.return_product_expiry.id_for_label }}">Expiry Date*</label>
+                                    {{ form.return_product_expiry }}
+                                    {% if form.return_product_expiry.errors %}
+                                        <div class="text-danger">{{ form.return_product_expiry.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -208,28 +208,28 @@
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <div class="form-group mb-3">
-                                    <label for="{{ form.returnproduct_sale_rate.id_for_label }}">Sale Rate*</label>
-                                    {{ form.returnproduct_sale_rate }}
-                                    {% if form.returnproduct_sale_rate.errors %}
-                                        <div class="text-danger">{{ form.returnproduct_sale_rate.errors }}</div>
+                                    <label for="{{ form.return_sale_rate.id_for_label }}">Sale Rate*</label>
+                                    {{ form.return_sale_rate }}
+                                    {% if form.return_sale_rate.errors %}
+                                        <div class="text-danger">{{ form.return_sale_rate.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group mb-3">
-                                    <label for="{{ form.returnproduct_quantity.id_for_label }}">Quantity*</label>
-                                    {{ form.returnproduct_quantity }}
-                                    {% if form.returnproduct_quantity.errors %}
-                                        <div class="text-danger">{{ form.returnproduct_quantity.errors }}</div>
+                                    <label for="{{ form.return_sale_quantity.id_for_label }}">Quantity*</label>
+                                    {{ form.return_sale_quantity }}
+                                    {% if form.return_sale_quantity.errors %}
+                                        <div class="text-danger">{{ form.return_sale_quantity.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group mb-3">
-                                    <label for="{{ form.returnproduct_calculation_mode.id_for_label }}">Discount Type*</label>
-                                    {{ form.returnproduct_calculation_mode }}
-                                    {% if form.returnproduct_calculation_mode.errors %}
-                                        <div class="text-danger">{{ form.returnproduct_calculation_mode.errors }}</div>
+                                    <label for="{{ form.return_sale_calculation_mode.id_for_label }}">Discount Type*</label>
+                                    {{ form.return_sale_calculation_mode }}
+                                    {% if form.return_sale_calculation_mode.errors %}
+                                        <div class="text-danger">{{ form.return_sale_calculation_mode.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -238,19 +238,19 @@
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <div class="form-group mb-3">
-                                    <label for="{{ form.returnproduct_discount.id_for_label }}">Discount*</label>
-                                    {{ form.returnproduct_discount }}
-                                    {% if form.returnproduct_discount.errors %}
-                                        <div class="text-danger">{{ form.returnproduct_discount.errors }}</div>
+                                    <label for="{{ form.return_sale_discount.id_for_label }}">Discount*</label>
+                                    {{ form.return_sale_discount }}
+                                    {% if form.return_sale_discount.errors %}
+                                        <div class="text-danger">{{ form.return_sale_discount.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group mb-3">
-                                    <label for="{{ form.returnproduct_igst.id_for_label }}">GST %*</label>
-                                    {{ form.returnproduct_igst }}
-                                    {% if form.returnproduct_igst.errors %}
-                                        <div class="text-danger">{{ form.returnproduct_igst.errors }}</div>
+                                    <label for="{{ form.return_sale_igst.id_for_label }}">GST %*</label>
+                                    {{ form.return_sale_igst }}
+                                    {% if form.return_sale_igst.errors %}
+                                        <div class="text-danger">{{ form.return_sale_igst.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
