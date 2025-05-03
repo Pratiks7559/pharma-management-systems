@@ -44,3 +44,30 @@ def absolute(value):
         return abs(float(value))
     except (ValueError, TypeError):
         return 0
+
+@register.filter
+def divide(value, arg):
+    """Divides the value by the arg."""
+    try:
+        arg = float(arg)
+        if arg == 0:
+            return 0
+        return float(value) / arg
+    except (ValueError, TypeError, ZeroDivisionError):
+        return 0
+
+@register.filter
+def multiply(value, arg):
+    """Multiplies the value by the arg."""
+    try:
+        return float(value) * float(arg)
+    except (ValueError, TypeError):
+        return 0
+
+@register.filter
+def percentage(value, arg=100):
+    """Calculates value as a percentage of arg."""
+    try:
+        return (float(value) / float(arg)) * 100
+    except (ValueError, TypeError, ZeroDivisionError):
+        return 0
