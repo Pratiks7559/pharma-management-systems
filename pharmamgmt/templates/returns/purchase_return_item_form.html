@@ -4,14 +4,21 @@
 {% block extrahead %}
 <script>
     $(document).ready(function() {
+        console.log("Document ready - initializing purchase return form");
+        
+        // Debugging - Log all form elements to console
+        $('form :input').each(function() {
+            console.log(`Form input: id=${this.id}, name=${this.name}, type=${this.type}`);
+        });
+        
         // Dynamically find field selectors for event binding - MUST BE DONE FIRST
-        // Using jQuery selectors that match even with prefixes/suffixes
-        const productField = $('select[id*="returnproductid"]');
-        const batchField = $('input[id*="returnproduct_batch_no"]');
-        const expiryField = $('input[id*="returnproduct_expiry"]');
-        const rateField = $('input[id*="returnproduct_purchase_rate"]');
-        const quantityField = $('input[id*="returnproduct_quantity"]');
-        const mrpField = $('input[id*="returnproduct_MRP"]');
+        // Using direct ID selectors for better reliability
+        const productField = $('#id_returnproductid');
+        const batchField = $('#id_returnproduct_batch_no');
+        const expiryField = $('#id_returnproduct_expiry');
+        const rateField = $('#id_returnproduct_purchase_rate');
+        const quantityField = $('#id_returnproduct_quantity');
+        const mrpField = $('#id_returnproduct_MRP');
         
         // Get the IDs from the found fields
         const productSelector = productField.length ? productField.attr('id') : null;
@@ -122,36 +129,48 @@
             });
         }
         
-        // Function to calculate total amount
-        function calculateTotal() {
-            if (!quantitySelector || !rateSelector) return;
+        // Direct calculation method with direct DOM access
+        function calculatePurchaseReturnTotal() {
+            // Get values directly from DOM by ID
+            const quantity = parseFloat($('#id_returnproduct_quantity').val() || 0);
+            const rate = parseFloat($('#id_returnproduct_purchase_rate').val() || 0);
             
-            const qty = $(`#${quantitySelector}`).val() || 0;
-            const rate = $(`#${rateSelector}`).val() || 0;
-            const total = parseFloat(qty) * parseFloat(rate);
+            // Calculate total
+            const total = quantity * rate;
             
-            console.log("Calculating total:", qty, "*", rate, "=", total);
+            console.log("Direct calculation:", quantity, "*", rate, "=", total);
             
+            // Update display
             if (!isNaN(total)) {
                 $('#total_preview').text(total.toFixed(2));
+            } else {
+                $('#total_preview').text('0.00');
             }
         }
         
-        // Calculate total on change of quantity or rate
-        if (quantitySelector && rateSelector) {
-            $(`#${quantitySelector}, #${rateSelector}`).on('input change', calculateTotal);
-        }
+        // Bind events directly to input elements by ID
+        $('#id_returnproduct_quantity, #id_returnproduct_purchase_rate').on('input change keyup', function() {
+            console.log(`Field changed: ${this.id} with value ${this.value}`);
+            calculatePurchaseReturnTotal();
+        });
         
-        // Calculate total when data is loaded from AJAX
-        $(document).ajaxComplete(function(event, xhr, settings) {
-            if (settings.url === window.location.href && settings.data && settings.data.includes('product_id')) {
-                console.log("AJAX completed - recalculating total");
-                calculateTotal();
-            }
+        // Recalculate when form fields change from any source
+        $('form :input').on('change', function() {
+            console.log(`Form field changed: ${this.id}`);
+            calculatePurchaseReturnTotal();
+        });
+        
+        // Calculate total when AJAX completes
+        $(document).ajaxComplete(function() {
+            console.log("AJAX request completed - recalculating total");
+            calculatePurchaseReturnTotal();
         });
         
         // Initial calculation
-        calculateTotal();
+        calculatePurchaseReturnTotal();
+        
+        // Setup a periodic check to ensure the total is calculated
+        setInterval(calculatePurchaseReturnTotal, 1000);
     });
 </script>
 {% endblock %}

@@ -108,52 +108,76 @@
             });
         }
         
-        // Calculate total on change of quantity, rate, discount or GST
-        function updateTotal() {
-            const qty = $(`#${quantitySelector}`).val() || 0;
-            const rate = $(`#${rateSelector}`).val() || 0;
-            const discount = $(`#${discountSelector}`).val() || 0;
-            const igst = $(`#${igstSelector}`).val() || 0;
-            const discountType = $(`#${discountTypeSelector}`).val();
+        // Direct calculation method with direct DOM access for sales return
+        function calculateSalesReturnTotal() {
+            // Get values directly from DOM by ID
+            const quantity = parseFloat($('#id_return_sale_quantity').val() || 0);
+            const rate = parseFloat($('#id_return_sale_rate').val() || 0);
+            const discount = parseFloat($('#id_return_sale_discount').val() || 0);
+            const igst = parseFloat($('#id_return_sale_igst').val() || 0);
+            const discountType = $('#id_return_sale_calculation_mode').val();
+            
+            console.log("Sales return values:", {
+                quantity: quantity,
+                rate: rate,
+                discount: discount,
+                igst: igst,
+                discountType: discountType
+            });
             
             // Calculate base amount
-            let base_amount = parseFloat(qty) * parseFloat(rate);
+            let base_amount = quantity * rate;
+            console.log("Base amount:", base_amount);
             
             // Apply discount
             let discounted_amount = base_amount;
-            if (parseFloat(discount) > 0) {
+            if (discount > 0) {
                 if (discountType === 'percentage') {
                     // Percentage discount
-                    discounted_amount = base_amount * (1 - (parseFloat(discount) / 100));
+                    discounted_amount = base_amount * (1 - (discount / 100));
+                    console.log("Applied percentage discount:", discount + "%", "Result:", discounted_amount);
                 } else {
                     // Fixed discount
-                    discounted_amount = base_amount - parseFloat(discount);
+                    discounted_amount = base_amount - discount;
+                    console.log("Applied fixed discount:", discount, "Result:", discounted_amount);
                 }
             }
             
             // Apply GST
-            const total = discounted_amount * (1 + (parseFloat(igst) / 100));
+            const total = discounted_amount * (1 + (igst / 100));
+            console.log("Applied GST:", igst + "%", "Final total:", total);
             
+            // Update display
             if (!isNaN(total)) {
                 $('#total_preview').text(total.toFixed(2));
+            } else {
+                $('#total_preview').text('0.00');
             }
         }
         
-        // Bind events to dynamic selectors
-        $(`#${quantitySelector}, #${rateSelector}, #${discountSelector}, #${igstSelector}, #${discountTypeSelector}`).on('input change', function() {
-            updateTotal();
+        // Bind events directly to input elements by ID
+        $('#id_return_sale_quantity, #id_return_sale_rate, #id_return_sale_discount, #id_return_sale_igst, #id_return_sale_calculation_mode').on('input change keyup', function() {
+            console.log(`Field changed: ${this.id} with value ${this.value}`);
+            calculateSalesReturnTotal();
         });
         
-        // Calculate total when data is loaded from AJAX
-        $(document).ajaxComplete(function(event, xhr, settings) {
-            if (settings.url === window.location.href && settings.data && settings.data.includes('product_id')) {
-                console.log("AJAX completed - recalculating sales return total");
-                updateTotal();
-            }
+        // Recalculate when any form field changes
+        $('form :input').on('change', function() {
+            console.log(`Form field changed: ${this.id}`);
+            calculateSalesReturnTotal();
+        });
+        
+        // Calculate total when AJAX completes
+        $(document).ajaxComplete(function() {
+            console.log("AJAX request completed - recalculating sales return total");
+            calculateSalesReturnTotal();
         });
         
         // Initialize calculation
-        updateTotal();
+        calculateSalesReturnTotal();
+        
+        // Setup a periodic check to ensure the total is calculated
+        setInterval(calculateSalesReturnTotal, 1000);
     });
 </script>
 {% endblock %}
