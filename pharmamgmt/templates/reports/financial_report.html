@@ -1,0 +1,374 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .date-range-form {
+        max-width: 400px;
+        margin-bottom: 20px;
+    }
+    .stats-card {
+        margin-bottom: 20px;
+    }
+    .profit {
+        color: #28a745;
+    }
+    .loss {
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
+        <a href="#" onclick="window.print()" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-download fa-sm text-white-50"></i> Generate Report
+        </a>
+    </div>
+
+    <!-- Date Range Selector -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Select Date Range</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="date-range-form">
+                <div class="form-row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="start_date">Start Date</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="end_date">End Date</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Apply</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Financial Summary -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Gross Sales</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">₹ {{ sales|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-cart-plus fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Gross Purchases</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">₹ {{ purchases|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-shopping-bag fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Sales Returns</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">₹ {{ sales_returns|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-undo fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Purchase Returns</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">₹ {{ purchase_returns|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-undo-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Net Figures -->
+    <div class="row">
+        <div class="col-xl-6 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Net Sales (After Returns)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">₹ {{ net_sales|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-6 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Net Purchases (After Returns)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">₹ {{ net_purchases|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-bar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gross Profit -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <div class="card shadow h-100 py-2 {% if gross_profit > 0 %}border-left-success{% else %}border-left-danger{% endif %}">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold {% if gross_profit > 0 %}text-success{% else %}text-danger{% endif %} text-uppercase mb-1">
+                                Gross Profit</div>
+                            <div class="h5 mb-0 font-weight-bold {% if gross_profit > 0 %}profit{% else %}loss{% endif %}">
+                                ₹ {{ gross_profit|floatformat:2 }}
+                                {% if gross_profit > 0 %}
+                                <small class="text-success">(Profit)</small>
+                                {% else %}
+                                <small class="text-danger">(Loss)</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas {% if gross_profit > 0 %}fa-smile{% else %}fa-frown{% endif %} fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Sales Trend Chart -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Monthly Sales Trend (Past 12 Months)</h6>
+        </div>
+        <div class="card-body">
+            <div class="chart-area">
+                <canvas id="monthlySalesChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Outstanding Amounts -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Outstanding Receivables (Top Customers)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="receivablesTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Outstanding Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in outstanding_receivables %}
+                                <tr>
+                                    <td>{{ item.customer_name }}</td>
+                                    <td>₹ {{ item.outstanding|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center">No outstanding receivables</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>Total Receivables:</th>
+                                    <th>₹ {{ total_receivables|floatformat:2 }}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Outstanding Payables (Top Suppliers)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="payablesTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Supplier</th>
+                                    <th>Outstanding Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in outstanding_payables %}
+                                <tr>
+                                    <td>{{ item.supplier_name }}</td>
+                                    <td>₹ {{ item.outstanding|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center">No outstanding payables</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>Total Payables:</th>
+                                    <th>₹ {{ total_payables|floatformat:2 }}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize DataTables
+        $('#receivablesTable').DataTable({
+            "order": [[1, "desc"]]  // Sort by outstanding amount (descending) by default
+        });
+        
+        $('#payablesTable').DataTable({
+            "order": [[1, "desc"]]  // Sort by outstanding amount (descending) by default
+        });
+
+        // Monthly Sales Chart
+        var monthlyLabels = [
+            {% for item in monthly_sales %}
+                "{{ item.month|date:'M Y' }}"{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        
+        var monthlySales = [
+            {% for item in monthly_sales %}
+                {{ item.total }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        var ctx = document.getElementById('monthlySalesChart').getContext('2d');
+        var monthlySalesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: monthlyLabels,
+                datasets: [{
+                    label: 'Monthly Sales',
+                    lineTension: 0.3,
+                    backgroundColor: "rgba(78, 115, 223, 0.05)",
+                    borderColor: "rgba(78, 115, 223, 1)",
+                    pointRadius: 3,
+                    pointBackgroundColor: "rgba(78, 115, 223, 1)",
+                    pointBorderColor: "rgba(78, 115, 223, 1)",
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
+                    pointHoverBorderColor: "rgba(78, 115, 223, 1)",
+                    pointHitRadius: 10,
+                    pointBorderWidth: 2,
+                    data: monthlySales,
+                }],
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: "rgb(234, 236, 244)",
+                            zeroLineColor: "rgb(234, 236, 244)",
+                            drawBorder: false,
+                            borderDash: [2],
+                            zeroLineBorderDash: [2]
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString();
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Sales: ₹' + context.raw.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                maintainAspectRatio: false
+            }
+        });
+    });
+</script>
+{% endblock %}

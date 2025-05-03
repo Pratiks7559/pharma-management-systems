@@ -1,0 +1,358 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .date-range-form {
+        max-width: 400px;
+        margin-bottom: 20px;
+    }
+    .pending-payment {
+        color: #dc3545;
+        font-weight: bold;
+    }
+    .fully-paid {
+        color: #28a745;
+        font-weight: bold;
+    }
+    .charts-container {
+        margin-top: 30px;
+    }
+    .chart-card {
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
+        <a href="#" onclick="window.print()" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-download fa-sm text-white-50"></i> Generate Report
+        </a>
+    </div>
+
+    <!-- Date Range Selector -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Select Date Range</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="date-range-form">
+                <div class="form-row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="start_date">Start Date</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="end_date">End Date</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Apply</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sales Summary -->
+    <div class="row">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Sales ({{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }})</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">₹ {{ total_sales|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Amount Received</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">₹ {{ total_received|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Amount Pending</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">₹ {{ total_pending|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales Invoices -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Sales Invoices</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="salesTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Invoice No</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Total Amount</th>
+                            <th>Paid Amount</th>
+                            <th>Balance</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in sales_invoices %}
+                        <tr>
+                            <td>{{ invoice.sales_invoice_no }}</td>
+                            <td>{{ invoice.sales_invoice_date }}</td>
+                            <td>{{ invoice.customerid.customer_name }}</td>
+                            <td>₹ {{ invoice.sales_invoice_total|floatformat:2 }}</td>
+                            <td>₹ {{ invoice.sales_invoice_paid|floatformat:2 }}</td>
+                            <td>₹ {{ invoice.sales_invoice_total|sub:invoice.sales_invoice_paid|floatformat:2 }}</td>
+                            <td>
+                                {% if invoice.sales_invoice_paid >= invoice.sales_invoice_total %}
+                                <span class="fully-paid">Fully Paid</span>
+                                {% else %}
+                                <span class="pending-payment">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'sales_invoice_detail' pk=invoice.sales_invoice_no %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center">No sales invoices found for the selected period</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales Analysis by Product & Customer -->
+    <div class="row">
+        <!-- Product-wise Sales -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Product-wise Sales</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="productSalesTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Total Quantity</th>
+                                    <th>Total Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in product_sales %}
+                                <tr>
+                                    <td>{{ item.productid__product_name }}</td>
+                                    <td>{{ item.total_quantity }}</td>
+                                    <td>₹ {{ item.total_amount|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No product sales data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer-wise Sales -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Customer-wise Sales</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="customerSalesTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Customer Name</th>
+                                    <th>Total Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in customer_sales %}
+                                <tr>
+                                    <td>{{ item.sales_invoice_no__customerid__customer_name }}</td>
+                                    <td>₹ {{ item.total_amount|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center">No customer sales data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Container -->
+    <div class="charts-container row">
+        <!-- Product Distribution Chart -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Product Sales Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="productChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Distribution Chart -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Customer Sales Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="customerChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize DataTables
+        $('#salesTable').DataTable({
+            "order": [[1, "desc"]]  // Sort by date (descending) by default
+        });
+        
+        $('#productSalesTable').DataTable({
+            "order": [[2, "desc"]]  // Sort by total amount (descending) by default
+        });
+        
+        $('#customerSalesTable').DataTable({
+            "order": [[1, "desc"]]  // Sort by total amount (descending) by default
+        });
+
+        // Generate random colors for charts
+        function generateColors(num) {
+            var colors = [];
+            for (var i = 0; i < num; i++) {
+                var r = Math.floor(Math.random() * 200);
+                var g = Math.floor(Math.random() * 200);
+                var b = Math.floor(Math.random() * 200);
+                colors.push('rgba(' + r + ', ' + g + ', ' + b + ', 0.7)');
+            }
+            return colors;
+        }
+
+        // Product Sales Chart
+        var productCtx = document.getElementById('productChart').getContext('2d');
+        var productData = {
+            labels: [{% for item in product_sales|slice:":10" %}'{{ item.productid__product_name }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+            datasets: [{
+                label: 'Sales Amount',
+                data: [{% for item in product_sales|slice:":10" %}{{ item.total_amount }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                backgroundColor: generateColors({{ product_sales|slice:":10"|length }})
+            }]
+        };
+        var productChart = new Chart(productCtx, {
+            type: 'pie',
+            data: productData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Top 10 Products by Sales Amount'
+                    }
+                }
+            }
+        });
+
+        // Customer Sales Chart
+        var customerCtx = document.getElementById('customerChart').getContext('2d');
+        var customerData = {
+            labels: [{% for item in customer_sales|slice:":10" %}'{{ item.sales_invoice_no__customerid__customer_name }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+            datasets: [{
+                label: 'Sales Amount',
+                data: [{% for item in customer_sales|slice:":10" %}{{ item.total_amount }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                backgroundColor: generateColors({{ customer_sales|slice:":10"|length }})
+            }]
+        };
+        var customerChart = new Chart(customerCtx, {
+            type: 'pie',
+            data: customerData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Top 10 Customers by Sales Amount'
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

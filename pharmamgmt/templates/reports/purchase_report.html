@@ -1,0 +1,358 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .date-range-form {
+        max-width: 400px;
+        margin-bottom: 20px;
+    }
+    .pending-payment {
+        color: #dc3545;
+        font-weight: bold;
+    }
+    .fully-paid {
+        color: #28a745;
+        font-weight: bold;
+    }
+    .charts-container {
+        margin-top: 30px;
+    }
+    .chart-card {
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
+        <a href="#" onclick="window.print()" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-download fa-sm text-white-50"></i> Generate Report
+        </a>
+    </div>
+
+    <!-- Date Range Selector -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Select Date Range</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="date-range-form">
+                <div class="form-row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="start_date">Start Date</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="end_date">End Date</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Apply</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Purchase Summary -->
+    <div class="row">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Purchases ({{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }})</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">₹ {{ total_purchases|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Amount Paid</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">₹ {{ total_paid|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Amount Pending</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">₹ {{ total_pending|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Purchase Invoices -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Purchase Invoices</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="purchaseTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Invoice No</th>
+                            <th>Date</th>
+                            <th>Supplier</th>
+                            <th>Total Amount</th>
+                            <th>Paid Amount</th>
+                            <th>Balance</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in purchase_invoices %}
+                        <tr>
+                            <td>{{ invoice.invoice_no }}</td>
+                            <td>{{ invoice.invoice_date }}</td>
+                            <td>{{ invoice.supplierid.supplier_name }}</td>
+                            <td>₹ {{ invoice.invoice_total|floatformat:2 }}</td>
+                            <td>₹ {{ invoice.invoice_paid|floatformat:2 }}</td>
+                            <td>₹ {{ invoice.invoice_total|sub:invoice.invoice_paid|floatformat:2 }}</td>
+                            <td>
+                                {% if invoice.invoice_paid >= invoice.invoice_total %}
+                                <span class="fully-paid">Fully Paid</span>
+                                {% else %}
+                                <span class="pending-payment">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'invoice_detail' pk=invoice.invoiceid %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center">No purchase invoices found for the selected period</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Purchase Analysis by Product & Supplier -->
+    <div class="row">
+        <!-- Product-wise Purchases -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Product-wise Purchases</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="productPurchasesTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Total Quantity</th>
+                                    <th>Total Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in product_purchases %}
+                                <tr>
+                                    <td>{{ item.productid__product_name }}</td>
+                                    <td>{{ item.total_quantity }}</td>
+                                    <td>₹ {{ item.total_amount|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No product purchase data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Supplier-wise Purchases -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Supplier-wise Purchases</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="supplierPurchasesTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Supplier Name</th>
+                                    <th>Total Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in supplier_purchases %}
+                                <tr>
+                                    <td>{{ item.supplierid__supplier_name }}</td>
+                                    <td>₹ {{ item.total_amount|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center">No supplier purchase data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Container -->
+    <div class="charts-container row">
+        <!-- Product Distribution Chart -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Product Purchase Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="productChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Supplier Distribution Chart -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Supplier Purchase Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="supplierChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize DataTables
+        $('#purchaseTable').DataTable({
+            "order": [[1, "desc"]]  // Sort by date (descending) by default
+        });
+        
+        $('#productPurchasesTable').DataTable({
+            "order": [[2, "desc"]]  // Sort by total amount (descending) by default
+        });
+        
+        $('#supplierPurchasesTable').DataTable({
+            "order": [[1, "desc"]]  // Sort by total amount (descending) by default
+        });
+
+        // Generate random colors for charts
+        function generateColors(num) {
+            var colors = [];
+            for (var i = 0; i < num; i++) {
+                var r = Math.floor(Math.random() * 200);
+                var g = Math.floor(Math.random() * 200);
+                var b = Math.floor(Math.random() * 200);
+                colors.push('rgba(' + r + ', ' + g + ', ' + b + ', 0.7)');
+            }
+            return colors;
+        }
+
+        // Product Purchases Chart
+        var productCtx = document.getElementById('productChart').getContext('2d');
+        var productData = {
+            labels: [{% for item in product_purchases|slice:":10" %}'{{ item.productid__product_name }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+            datasets: [{
+                label: 'Purchase Amount',
+                data: [{% for item in product_purchases|slice:":10" %}{{ item.total_amount }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                backgroundColor: generateColors({{ product_purchases|slice:":10"|length }})
+            }]
+        };
+        var productChart = new Chart(productCtx, {
+            type: 'pie',
+            data: productData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Top 10 Products by Purchase Amount'
+                    }
+                }
+            }
+        });
+
+        // Supplier Purchases Chart
+        var supplierCtx = document.getElementById('supplierChart').getContext('2d');
+        var supplierData = {
+            labels: [{% for item in supplier_purchases|slice:":10" %}'{{ item.supplierid__supplier_name }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+            datasets: [{
+                label: 'Purchase Amount',
+                data: [{% for item in supplier_purchases|slice:":10" %}{{ item.total_amount }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                backgroundColor: generateColors({{ supplier_purchases|slice:":10"|length }})
+            }]
+        };
+        var supplierChart = new Chart(supplierCtx, {
+            type: 'pie',
+            data: supplierData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Top 10 Suppliers by Purchase Amount'
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
