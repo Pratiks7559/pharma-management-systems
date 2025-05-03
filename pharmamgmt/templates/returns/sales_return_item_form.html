@@ -6,6 +6,17 @@
     $(document).ready(function() {
         // Function to fetch batch details when product and batch are selected
         function fetchBatchDetails() {
+            console.log("Sales form fields:", {
+                productid_field: document.getElementById('id_return_productid'),
+                batch_no_field: document.getElementById('id_return_product_batch_no')
+            });
+            
+            // Try with plain selector
+            const all_product_fields = $('[name*="product"]');
+            console.log("All sales product-related fields:", all_product_fields.map(function() { 
+                return { id: this.id, name: this.name }; 
+            }).get());
+            
             const product_id = $('#id_return_productid').val();
             const batch_no = $('#id_return_product_batch_no').val();
             
