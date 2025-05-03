@@ -1,7 +1,15 @@
 from django import template
 from decimal import Decimal
+import locale
 
 register = template.Library()
+
+# Try to set locale for Indian Rupee formatting
+try:
+    locale.setlocale(locale.LC_ALL, 'en_IN.UTF-8')
+except:
+    # Fallback to default locale if Indian locale not available
+    locale.setlocale(locale.LC_ALL, '')
 
 @register.filter
 def sub(value, arg):
@@ -108,3 +116,55 @@ def sum_field(value, field_name):
         return total
     except Exception:
         return 0
+
+@register.filter
+def inr_format(value):
+    """
+    Format a number as Indian Rupees (INR).
+    
+    Examples:
+        1234.56 -> ₹ 1,234.56
+        1234567.89 -> ₹ 12,34,567.89
+    """
+    try:
+        # Convert to float first
+        value = float(value)
+        
+        # Format with commas using Indian numbering system
+        if value < 0:
+            sign = "-"
+            value = abs(value)
+        else:
+            sign = ""
+            
+        # First format with conventional commas
+        formatted = f"{value:,.2f}"
+        
+        # Handle special case for Indian format
+        parts = formatted.split('.')
+        integer_part = parts[0]
+        
+        # Don't format small numbers
+        if len(integer_part.replace(',', '')) <= 3:
+            return f"₹ {sign}{formatted}"
+        
+        # Custom format for Indian system (lakh, crore)
+        # First remove existing commas
+        integer_part = integer_part.replace(',', '')
+        
+        # Format in Indian style (3,2,2,...)
+        result = integer_part[-3:]  # Last 3 digits
+        integer_part = integer_part[:-3]  # Remaining digits
+        
+        # Add commas every 2 digits
+        while integer_part:
+            result = integer_part[-2:] + ',' + result if integer_part[-2:] else integer_part + ',' + result
+            integer_part = integer_part[:-2]
+        
+        # Re-combine with decimal part
+        if len(parts) > 1:
+            return f"₹ {sign}{result}.{parts[1]}"
+        else:
+            return f"₹ {sign}{result}"
+    except (ValueError, TypeError):
+        return "₹ 0.00"
