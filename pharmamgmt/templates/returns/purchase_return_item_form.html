@@ -5,12 +5,21 @@
 <script>
     $(document).ready(function() {
         // Dynamically find field selectors for event binding - MUST BE DONE FIRST
-        const productSelector = $('select[name$="returnproductid"]').attr('id');
-        const batchSelector = $('input[name$="returnproduct_batch_no"]').attr('id');
-        const expirySelector = $('input[name$="returnproduct_expiry"]').attr('id');
-        const rateSelector = $('input[name$="returnproduct_purchase_rate"]').attr('id');
-        const quantitySelector = $('input[name$="returnproduct_quantity"]').attr('id');
-        const mrpSelector = $('input[name$="returnproduct_MRP"]').attr('id');
+        // Using jQuery selectors that match even with prefixes/suffixes
+        const productField = $('select[id*="returnproductid"]');
+        const batchField = $('input[id*="returnproduct_batch_no"]');
+        const expiryField = $('input[id*="returnproduct_expiry"]');
+        const rateField = $('input[id*="returnproduct_purchase_rate"]');
+        const quantityField = $('input[id*="returnproduct_quantity"]');
+        const mrpField = $('input[id*="returnproduct_MRP"]');
+        
+        // Get the IDs from the found fields
+        const productSelector = productField.length ? productField.attr('id') : null;
+        const batchSelector = batchField.length ? batchField.attr('id') : null;
+        const expirySelector = expiryField.length ? expiryField.attr('id') : null;
+        const rateSelector = rateField.length ? rateField.attr('id') : null;
+        const quantitySelector = quantityField.length ? quantityField.attr('id') : null;
+        const mrpSelector = mrpField.length ? mrpField.attr('id') : null;
         
         console.log("Found selectors:", {
             productSelector, batchSelector, expirySelector, rateSelector, quantitySelector, mrpSelector
