@@ -1,56 +1,17 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
 
-{% block extrahead %}
+{% block extra_js %}
 <script>
     $(document).ready(function() {
-        // Dynamically find field selectors for event binding - MUST BE DONE FIRST
-        // Using jQuery selectors that match even with prefixes/suffixes
-        const productField = $('select[id*="returnproductid"]');
-        const batchField = $('input[id*="returnproduct_batch_no"]');
-        const expiryField = $('input[id*="returnproduct_expiry"]');
-        const rateField = $('input[id*="returnproduct_sale_rate"]');
-        const quantityField = $('input[id*="returnproduct_quantity"]');
-        const discountField = $('input[id*="returnproduct_discount"]');
-        const igstField = $('input[id*="returnproduct_igst"]');
-        const discountTypeField = $('select[id*="returnproduct_calculation_mode"]');
-        
-        // Get the IDs from the found fields
-        const productSelector = productField.length ? productField.attr('id') : null;
-        const batchSelector = batchField.length ? batchField.attr('id') : null;
-        const expirySelector = expiryField.length ? expiryField.attr('id') : null;
-        const rateSelector = rateField.length ? rateField.attr('id') : null;
-        const quantitySelector = quantityField.length ? quantityField.attr('id') : null;
-        const discountSelector = discountField.length ? discountField.attr('id') : null;
-        const igstSelector = igstField.length ? igstField.attr('id') : null;
-        const discountTypeSelector = discountTypeField.length ? discountTypeField.attr('id') : null;
-        
-        console.log("Found sales form selectors:", {
-            productSelector, batchSelector, expirySelector, rateSelector, 
-            quantitySelector, discountSelector, igstSelector, discountTypeSelector
-        });
+        console.log("Document ready - initializing sales return form");
         
         // Function to fetch batch details when product and batch are selected
         function fetchBatchDetails() {
-            // Debug all form fields to find the correct IDs
-            const allFormFields = $('form :input');
-            console.log("All sales form fields:", allFormFields.map(function() { 
-                return { id: this.id, name: this.name, value: this.value }; 
-            }).get());
+            const product_id = $('#id_returnproductid').val();
+            const batch_no = $('#id_return_product_batch_no').val();
             
-            // Use the exact field selectors from above
-            const productField = $(`#${productSelector}`);
-            const batchField = $(`#${batchSelector}`);
-            
-            console.log("Found sales fields:", {
-                product: productField.length ? { id: productField.attr('id'), name: productField.attr('name'), value: productField.val() } : 'Not found',
-                batch: batchField.length ? { id: batchField.attr('id'), name: batchField.attr('name'), value: batchField.val() } : 'Not found'
-            });
-            
-            const product_id = productField.val();
-            const batch_no = batchField.val();
-            
-            console.log("Fetching sales details for product:", product_id, "batch:", batch_no);
+            console.log("Fetching details for product:", product_id, "batch:", batch_no);
             
             if (product_id && batch_no) {
                 $.ajax({
@@ -64,51 +25,50 @@
                     },
                     dataType: 'json',
                     beforeSend: function() {
-                        $('#sales_info').html('<div class="alert alert-info">Loading sales information...</div>');
+                        $('#batch_info').html('<div class="alert alert-info">Loading batch information...</div>');
                     },
                     success: function(data) {
-                        console.log("Sales API response:", data);
+                        console.log("API response:", data);
                         if (data.exists) {
-                            // Auto-fill fields using dynamic selectors
-                            if (expirySelector) {
-                                $(`#${expirySelector}`).val(data.expiry);
-                                console.log("Set sales expiry date to:", data.expiry);
-                            }
-                            if (rateSelector) {
-                                $(`#${rateSelector}`).val(data.rate);
-                                console.log("Set sales rate to:", data.rate);
+                            // Auto-fill fields
+                            $('#id_return_product_expiry').val(data.expiry);
+                            $('#id_return_sale_rate').val(data.rate);
+                            $('#id_return_product_MRP').val(data.mrp);
+                            $('#id_return_sale_quantity').attr('max', data.available_qty);
+                            
+                            // Update stock info message
+                            if (data.available_qty <= 0) {
+                                $('#batch_info').html('<div class="alert alert-danger">' + data.message + '</div>');
+                            } else {
+                                $('#batch_info').html('<div class="alert alert-success">' + data.message + '</div>');
                             }
                             
-                            // Show sales info
-                            $('#sales_info').html('<div class="alert alert-success">' + data.message + ' Original quantity: ' + data.quantity + '</div>');
+                            // Update total after setting values
+                            calculateSalesReturnTotal();
                         } else {
-                            // Clear fields if batch not found or not sold to this customer
-                            if (expirySelector) {
-                                $(`#${expirySelector}`).val('');
-                            }
-                            if (rateSelector) {
-                                $(`#${rateSelector}`).val('');
-                            }
-                            $('#sales_info').html('<div class="alert alert-warning">' + data.message + '</div>');
+                            // Clear fields if batch not found
+                            $('#id_return_product_expiry').val('');
+                            $('#id_return_sale_rate').val('');
+                            $('#id_return_product_MRP').val('');
+                            $('#batch_info').html('<div class="alert alert-warning">' + data.message + '</div>');
+                            calculateSalesReturnTotal();
                         }
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
                         console.error("AJAX error:", textStatus, errorThrown);
-                        $('#sales_info').html('<div class="alert alert-danger">Error retrieving sales information: ' + textStatus + '</div>');
+                        $('#batch_info').html('<div class="alert alert-danger">Error retrieving batch information: ' + textStatus + '</div>');
                     }
                 });
             }
         }
         
         // Trigger batch details lookup when either product or batch changes
-        if (productSelector && batchSelector) {
-            $(`#${productSelector}, #${batchSelector}`).change(function() {
-                console.log("Sales field changed:", this.id);
-                fetchBatchDetails();
-            });
-        }
+        $('#id_returnproductid, #id_return_product_batch_no').change(function() {
+            console.log("Product or batch field changed:", this.id);
+            fetchBatchDetails();
+        });
         
-        // Direct calculation method with direct DOM access for sales return
+        // Direct calculation function
         function calculateSalesReturnTotal() {
             // Get values directly from DOM by ID
             const quantity = parseFloat($('#id_return_sale_quantity').val() || 0);
@@ -117,67 +77,58 @@
             const igst = parseFloat($('#id_return_sale_igst').val() || 0);
             const discountType = $('#id_return_sale_calculation_mode').val();
             
-            console.log("Sales return values:", {
-                quantity: quantity,
-                rate: rate,
-                discount: discount,
-                igst: igst,
-                discountType: discountType
-            });
-            
-            // Calculate base amount
-            let base_amount = quantity * rate;
-            console.log("Base amount:", base_amount);
+            // Calculate subtotal (quantity * rate)
+            let subtotal = quantity * rate;
             
             // Apply discount
-            let discounted_amount = base_amount;
-            if (discount > 0) {
-                if (discountType === 'percentage') {
-                    // Percentage discount
-                    discounted_amount = base_amount * (1 - (discount / 100));
-                    console.log("Applied percentage discount:", discount + "%", "Result:", discounted_amount);
-                } else {
-                    // Fixed discount
-                    discounted_amount = base_amount - discount;
-                    console.log("Applied fixed discount:", discount, "Result:", discounted_amount);
-                }
+            let discountAmount = 0;
+            if (discountType === 'percentage') {
+                discountAmount = subtotal * (discount / 100);
+            } else {
+                discountAmount = discount;
             }
             
-            // Apply GST
-            const total = discounted_amount * (1 + (igst / 100));
-            console.log("Applied GST:", igst + "%", "Final total:", total);
+            // Apply discount to subtotal
+            let discountedAmount = subtotal - discountAmount;
             
-            // Update display
+            // Calculate GST on discounted amount
+            let gstAmount = discountedAmount * (igst / 100);
+            
+            // Calculate final total
+            let total = discountedAmount + gstAmount;
+            
+            console.log("Direct calculation:", {
+                quantity, rate, discount, igst, discountType,
+                subtotal, discountAmount, discountedAmount, gstAmount, total
+            });
+            
+            // Update displays
             if (!isNaN(total)) {
+                $('#subtotal_preview').text(subtotal.toFixed(2));
+                $('#discount_preview').text(discountAmount.toFixed(2));
+                $('#taxable_preview').text(discountedAmount.toFixed(2));
+                $('#gst_preview').text(gstAmount.toFixed(2));
                 $('#total_preview').text(total.toFixed(2));
             } else {
+                $('#subtotal_preview').text('0.00');
+                $('#discount_preview').text('0.00');
+                $('#taxable_preview').text('0.00');
+                $('#gst_preview').text('0.00');
                 $('#total_preview').text('0.00');
             }
         }
         
-        // Bind events directly to input elements by ID
+        // Bind calculation events directly to input elements by ID
         $('#id_return_sale_quantity, #id_return_sale_rate, #id_return_sale_discount, #id_return_sale_igst, #id_return_sale_calculation_mode').on('input change keyup', function() {
             console.log(`Field changed: ${this.id} with value ${this.value}`);
             calculateSalesReturnTotal();
         });
         
-        // Recalculate when any form field changes
-        $('form :input').on('change', function() {
-            console.log(`Form field changed: ${this.id}`);
-            calculateSalesReturnTotal();
-        });
-        
-        // Calculate total when AJAX completes
-        $(document).ajaxComplete(function() {
-            console.log("AJAX request completed - recalculating sales return total");
-            calculateSalesReturnTotal();
-        });
-        
-        // Initialize calculation
+        // Initial calculation
         calculateSalesReturnTotal();
         
         // Setup a periodic check to ensure the total is calculated
-        setInterval(calculateSalesReturnTotal, 1000);
+        setInterval(calculateSalesReturnTotal, 2000);
     });
 </script>
 {% endblock %}
@@ -197,22 +148,22 @@
                             <ul class="list-unstyled">
                                 <li><strong>Return No:</strong> {{ return_invoice.return_sales_invoice_no }}</li>
                                 <li><strong>Date:</strong> {{ return_invoice.return_sales_invoice_date }}</li>
-                                <li><strong>Customer:</strong> {{ return_invoice.return_sales_customerid.customer_name }}</li>
+                                <li><strong>Customer:</strong> {{ return_invoice.return_customerid.customer_name }}</li>
                             </ul>
                         </div>
                     </div>
                     
-                    <!-- Display sales information -->
-                    <div id="sales_info" class="mb-3"></div>
+                    <!-- Display batch information -->
+                    <div id="batch_info" class="mb-3"></div>
                     
                     <form method="post">
                         {% csrf_token %}
                         
                         <div class="form-group mb-3">
-                            <label for="{{ form.return_productid.id_for_label }}">Product*</label>
-                            {{ form.return_productid }}
-                            {% if form.return_productid.errors %}
-                                <div class="text-danger">{{ form.return_productid.errors }}</div>
+                            <label for="{{ form.returnproductid.id_for_label }}">Product*</label>
+                            {{ form.returnproductid }}
+                            {% if form.returnproductid.errors %}
+                                <div class="text-danger">{{ form.returnproductid.errors }}</div>
                             {% endif %}
                         </div>
                         
@@ -240,6 +191,15 @@
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <div class="form-group mb-3">
+                                    <label for="{{ form.return_product_MRP.id_for_label }}">MRP*</label>
+                                    {{ form.return_product_MRP }}
+                                    {% if form.return_product_MRP.errors %}
+                                        <div class="text-danger">{{ form.return_product_MRP.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
                                     <label for="{{ form.return_sale_rate.id_for_label }}">Sale Rate*</label>
                                     {{ form.return_sale_rate }}
                                     {% if form.return_sale_rate.errors %}
@@ -256,21 +216,21 @@
                                     {% endif %}
                                 </div>
                             </div>
+                        </div>
+                        
+                        <div class="row mb-3">
                             <div class="col-md-4">
                                 <div class="form-group mb-3">
-                                    <label for="{{ form.return_sale_calculation_mode.id_for_label }}">Discount Type*</label>
+                                    <label for="{{ form.return_sale_calculation_mode.id_for_label }}">Discount Type</label>
                                     {{ form.return_sale_calculation_mode }}
                                     {% if form.return_sale_calculation_mode.errors %}
                                         <div class="text-danger">{{ form.return_sale_calculation_mode.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="row mb-3">
                             <div class="col-md-4">
                                 <div class="form-group mb-3">
-                                    <label for="{{ form.return_sale_discount.id_for_label }}">Discount*</label>
+                                    <label for="{{ form.return_sale_discount.id_for_label }}">Discount</label>
                                     {{ form.return_sale_discount }}
                                     {% if form.return_sale_discount.errors %}
                                         <div class="text-danger">{{ form.return_sale_discount.errors }}</div>
@@ -279,11 +239,38 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group mb-3">
-                                    <label for="{{ form.return_sale_igst.id_for_label }}">GST %*</label>
+                                    <label for="{{ form.return_sale_igst.id_for_label }}">GST %</label>
                                     {{ form.return_sale_igst }}
                                     {% if form.return_sale_igst.errors %}
                                         <div class="text-danger">{{ form.return_sale_igst.errors }}</div>
                                     {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered bg-light">
+                                        <tbody>
+                                            <tr>
+                                                <th>Subtotal:</th>
+                                                <td class="text-end">₹ <span id="subtotal_preview">0.00</span></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Discount:</th>
+                                                <td class="text-end">₹ <span id="discount_preview">0.00</span></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Taxable Value:</th>
+                                                <td class="text-end">₹ <span id="taxable_preview">0.00</span></td>
+                                            </tr>
+                                            <tr>
+                                                <th>GST Amount:</th>
+                                                <td class="text-end">₹ <span id="gst_preview">0.00</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                             <div class="col-md-4">

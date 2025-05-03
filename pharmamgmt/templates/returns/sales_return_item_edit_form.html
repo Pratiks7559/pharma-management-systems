@@ -2,9 +2,11 @@
 
 {% block title %}{{ title }}{% endblock %}
 
-{% block extrahead %}
+{% block extra_js %}
 <script>
     $(document).ready(function() {
+        console.log("Document ready - initializing sales return edit form");
+        
         // Auto-fill batch details from AJAX call
         $('#id_return_product_batch_no').on('change', function() {
             const batch_no = $(this).val();
@@ -25,6 +27,9 @@
                             
                             // Show sales info
                             $('#sales_info').html('<div class="alert alert-success">' + data.message + ' Original quantity: ' + data.quantity + '</div>');
+                            
+                            // Update total after setting values
+                            updateTotal();
                         } else {
                             $('#sales_info').html('<div class="alert alert-warning">' + data.message + '</div>');
                         }
@@ -35,38 +40,52 @@
         
         // Calculate total on change
         function updateTotal() {
-            const qty = $('#id_return_sale_quantity').val() || 0;
-            const rate = $('#id_return_sale_rate').val() || 0;
-            const discount = $('#id_return_sale_discount').val() || 0;
-            const igst = $('#id_return_sale_igst').val() || 0;
+            console.log("Calculating sales return total");
+            
+            const qty = parseFloat($('#id_return_sale_quantity').val() || 0);
+            const rate = parseFloat($('#id_return_sale_rate').val() || 0);
+            const discount = parseFloat($('#id_return_sale_discount').val() || 0);
+            const igst = parseFloat($('#id_return_sale_igst').val() || 0);
+            const discountType = $('#id_return_sale_calculation_mode').val();
             
             // Calculate base amount
-            let base_amount = parseFloat(qty) * parseFloat(rate);
+            let base_amount = qty * rate;
             
             // Apply discount
             let discounted_amount = base_amount;
-            if (parseFloat(discount) > 0) {
-                if (parseFloat(discount) < 100) {
+            if (discount > 0) {
+                if (discountType === 'percentage') {
                     // Percentage discount
-                    discounted_amount = base_amount * (1 - (parseFloat(discount) / 100));
+                    discounted_amount = base_amount * (1 - (discount / 100));
                 } else {
                     // Fixed discount
-                    discounted_amount = base_amount - parseFloat(discount);
+                    discounted_amount = base_amount - discount;
                 }
             }
             
             // Apply GST
-            const total = discounted_amount * (1 + (parseFloat(igst) / 100));
+            const total = discounted_amount * (1 + (igst / 100));
+            
+            console.log(`Calculation: ${qty} * ${rate} with discount ${discount} (${discountType}) and GST ${igst}% = ${total}`);
             
             if (!isNaN(total)) {
                 $('#total_preview').text(total.toFixed(2));
+            } else {
+                $('#total_preview').text('0.00');
             }
         }
         
-        $('#id_return_sale_quantity, #id_return_sale_rate, #id_return_sale_discount, #id_return_sale_igst').on('change', updateTotal);
+        // Bind events to input elements for calculation
+        $('#id_return_sale_quantity, #id_return_sale_rate, #id_return_sale_discount, #id_return_sale_igst, #id_return_sale_calculation_mode').on('input change keyup', function() {
+            console.log(`Field changed: ${this.id} with value ${this.value}`);
+            updateTotal();
+        });
         
-        // Initialize calculation
+        // Initial calculation
         updateTotal();
+        
+        // Setup a periodic check to ensure the total is calculated
+        setInterval(updateTotal, 2000);
     });
 </script>
 {% endblock %}
