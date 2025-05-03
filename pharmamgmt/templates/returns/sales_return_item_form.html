@@ -8,7 +8,7 @@
         
         // Function to fetch batch details when product and batch are selected
         function fetchBatchDetails() {
-            const product_id = $('#id_returnproductid').val();
+            const product_id = $('#id_return_productid').val();
             const batch_no = $('#id_return_product_batch_no').val();
             
             console.log("Fetching details for product:", product_id, "batch:", batch_no);
@@ -63,7 +63,7 @@
         }
         
         // Trigger batch details lookup when either product or batch changes
-        $('#id_returnproductid, #id_return_product_batch_no').change(function() {
+        $('#id_return_productid, #id_return_product_batch_no').change(function() {
             console.log("Product or batch field changed:", this.id);
             fetchBatchDetails();
         });
@@ -160,10 +160,10 @@
                         {% csrf_token %}
                         
                         <div class="form-group mb-3">
-                            <label for="{{ form.returnproductid.id_for_label }}">Product*</label>
-                            {{ form.returnproductid }}
-                            {% if form.returnproductid.errors %}
-                                <div class="text-danger">{{ form.returnproductid.errors }}</div>
+                            <label for="{{ form.return_productid.id_for_label }}">Product*</label>
+                            {{ form.return_productid }}
+                            {% if form.return_productid.errors %}
+                                <div class="text-danger">{{ form.return_productid.errors }}</div>
                             {% endif %}
                         </div>
                         
