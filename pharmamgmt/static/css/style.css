@@ -36,11 +36,40 @@ body {
 }
 
 .nav-scrollable-wrapper {
-    flex: 1;
-    overflow-y: auto;
+    height: calc(100vh - 200px); /* Fixed height based on header and user info */
+    overflow-y: scroll; /* Always show scrollbar */
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
-    max-height: calc(100vh - 170px); /* Adjust based on header and user info height */
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 10px;
+}
+
+.nav-scrollable-wrapper ul.nav {
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
+.nav-scrollable-wrapper .nav-item {
+    width: 100%;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-scrollable-wrapper .nav-link {
+    padding: 10px 15px;
+    color: #fff;
+    text-decoration: none;
+    display: block;
+    transition: background-color 0.3s;
+}
+
+.nav-scrollable-wrapper .nav-link:hover,
+.nav-scrollable-wrapper .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-scrollable-wrapper .collapse {
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
 .nav-scrollable-wrapper::-webkit-scrollbar {
