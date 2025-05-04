@@ -36,6 +36,17 @@
                             $('#id_return_product_MRP').val(data.mrp);
                             $('#id_return_sale_quantity').attr('max', data.available_qty);
                             
+                            // Auto-populate discount type, discount, and GST from original sale
+                            if (data.discount_type) {
+                                $('#id_return_sale_calculation_mode').val(data.discount_type);
+                            }
+                            if (data.discount !== undefined) {
+                                $('#id_return_sale_discount').val(data.discount);
+                            }
+                            if (data.igst !== undefined) {
+                                $('#id_return_sale_igst').val(data.igst);
+                            }
+                            
                             // Update stock info message
                             if (data.available_qty <= 0) {
                                 $('#batch_info').html('<div class="alert alert-danger">' + data.message + '</div>');
@@ -50,6 +61,9 @@
                             $('#id_return_product_expiry').val('');
                             $('#id_return_sale_rate').val('');
                             $('#id_return_product_MRP').val('');
+                            $('#id_return_sale_discount').val('0');
+                            $('#id_return_sale_igst').val('0');
+                            $('#id_return_sale_calculation_mode').val('percentage');
                             $('#batch_info').html('<div class="alert alert-warning">' + data.message + '</div>');
                             calculateSalesReturnTotal();
                         }

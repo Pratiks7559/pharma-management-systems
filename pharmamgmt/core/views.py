@@ -2151,12 +2151,16 @@ def add_sales_return_item(request, return_id):
             if sales_data:
                 print(f"*** Found Sales Data: Expiry: {sales_data.product_expiry}, Rate: {sales_data.sale_rate}, Quantity: {sales_data.sale_quantity} ***")
                 
-                # Return product details including expiry
+                # Return product details including expiry, MRP, discount, and GST
                 response_data = {
                     'exists': True,
                     'expiry': sales_data.product_expiry.strftime('%Y-%m-%d'),
                     'rate': sales_data.sale_rate,
                     'quantity': sales_data.sale_quantity,
+                    'mrp': sales_data.product_MRP,
+                    'discount_type': sales_data.sale_calculation_mode or 'percentage',
+                    'discount': sales_data.sale_discount or 0,
+                    'igst': sales_data.sale_igst or 0,
                     'message': 'Product found in sales records.'
                 }
                 print(f"*** Sending Response: {response_data} ***")
