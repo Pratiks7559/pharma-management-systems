@@ -84,16 +84,12 @@ class ProductForm(forms.ModelForm):
     product_category = forms.ChoiceField(choices=CATEGORY_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}))
     product_hsn = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
     product_hsn_percent = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    rate_A = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control'}))
-    rate_B = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control'}))
-    rate_C = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control'}))
     product_image = forms.ImageField(required=False, widget=forms.FileInput(attrs={'class': 'form-control'}))
     
     class Meta:
         model = ProductMaster
         fields = ['product_name', 'product_company', 'product_packing', 'product_salt', 
-                  'product_category', 'product_hsn', 'product_hsn_percent', 
-                  'rate_A', 'rate_B', 'rate_C', 'product_image']
+                  'product_category', 'product_hsn', 'product_hsn_percent', 'product_image']
 
 class SupplierForm(forms.ModelForm):
     supplier_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))

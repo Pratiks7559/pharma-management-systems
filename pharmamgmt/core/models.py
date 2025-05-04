@@ -39,9 +39,6 @@ class ProductMaster(models.Model):
     product_category=models.CharField(max_length=30, default=None)
     product_hsn=models.CharField(max_length=20, default=None)
     product_hsn_percent=models.CharField(max_length=20, default=None)
-    rate_A=models.FloatField(default=0.0)
-    rate_B=models.FloatField(default=0.0)
-    rate_C=models.FloatField(default=0.0)
     
     def __str__(self):
         return f"{self.product_name} ({self.product_company})"
