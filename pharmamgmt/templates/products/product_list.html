@@ -37,9 +37,7 @@
                         <th>Company</th>
                         <th>Packing</th>
                         <th>Category</th>
-                        <th>Rate A</th>
-                        <th>Rate B</th>
-                        <th>Rate C</th>
+                        <th>Stock</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -51,9 +49,7 @@
                         <td>{{ product.product_company }}</td>
                         <td>{{ product.product_packing }}</td>
                         <td>{{ product.product_category }}</td>
-                        <td>{{ product.rate_A|currency }}</td>
-                        <td>{{ product.rate_B|currency }}</td>
-                        <td>{{ product.rate_C|currency }}</td>
+                        <td>{{ product.stock_level|default:"Not available" }}</td>
                         <td>
                             <a href="{% url 'product_detail' pk=product.productid %}" class="btn btn-sm btn-info">
                                 <i class="fas fa-eye"></i>
@@ -70,7 +66,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="9" class="text-center">No products found.</td>
+                        <td colspan="6" class="text-center">No products found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
