@@ -25,7 +25,7 @@ from .forms import (
     SalesInvoiceForm, SalesForm, SalesPaymentForm, ProductRateForm,
     PurchaseReturnInvoiceForm, PurchaseReturnForm, SalesReturnInvoiceForm, SalesReturnForm
 )
-from .utils import get_stock_status, get_batch_stock_status, generate_invoice_pdf, generate_sales_invoice_pdf
+from .utils import get_stock_status, get_batch_stock_status, generate_invoice_pdf, generate_sales_invoice_pdf, get_avg_mrp
 
 # Authentication views
 def login_view(request):

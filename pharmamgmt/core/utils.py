@@ -134,3 +134,32 @@ def generate_sales_invoice_pdf(invoice):
     # In a real implementation, you would create a PDF here
     # For now, this is just a placeholder
     return None
+
+
+def get_avg_mrp(product_id):
+    """
+    Calculate the average MRP for a product based on all available batches
+    Used as a replacement for the removed rate_A field in inventory valuation
+    """
+    # Get all purchase entries for this product with stock remaining
+    stock_info = get_stock_status(product_id)
+    
+    if not stock_info['expiry_stock']:
+        # No stock available, try to get the most recent purchase MRP
+        latest_purchase = PurchaseMaster.objects.filter(productid=product_id).order_by('-purchase_entry_date').first()
+        if latest_purchase:
+            return latest_purchase.product_MRP
+        return 0.0  # No purchases found
+    
+    # Calculate weighted average MRP based on available batches
+    total_value = 0
+    total_quantity = 0
+    
+    for batch in stock_info['expiry_stock']:
+        batch_value = batch['quantity'] * batch['mrp']
+        total_value += batch_value
+        total_quantity += batch['quantity']
+    
+    if total_quantity > 0:
+        return total_value / total_quantity
+    return 0.0
