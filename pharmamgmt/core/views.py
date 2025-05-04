@@ -2766,3 +2766,32 @@ def delete_sale_rate(request, pk):
         'title': 'Delete Sale Rate'
     }
     return render(request, 'rates/sale_rate_confirm_delete.html', context)
+
+@login_required
+def delete_user(request, pk):
+    # Check if user is admin
+    if not request.user.user_type.lower() == 'admin':
+        messages.error(request, "You don't have permission to perform this action.")
+        return redirect('dashboard')
+    
+    # Prevent admin from deleting themselves
+    if request.user.id == pk:
+        messages.error(request, "You cannot delete your own account.")
+        return redirect('user_list')
+    
+    user = get_object_or_404(Web_User, id=pk)
+    
+    if request.method == 'POST':
+        username = user.username
+        try:
+            user.delete()
+            messages.success(request, f"User '{username}' deleted successfully!")
+        except Exception as e:
+            messages.error(request, f"Cannot delete user. Error: {str(e)}")
+        return redirect('user_list')
+    
+    context = {
+        'user_obj': user,  # Using user_obj to avoid conflict with request.user
+        'title': 'Delete User'
+    }
+    return render(request, 'user_confirm_delete.html', context)
