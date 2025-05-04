@@ -877,11 +877,10 @@ def edit_purchase(request, invoice_id, purchase_id):
             if rate_A is not None or rate_B is not None or rate_C is not None:
                 # Default to product master rates if not specified
                 if rate_A is None:
-                    rate_A = product.rate_A
-                if rate_B is None:
-                    rate_B = product.rate_B
-                if rate_C is None:
-                    rate_C = product.rate_C
+                    # Get rates from SaleRateMaster or default values
+                    rate_A = 0.0
+                    rate_B = 0.0
+                    rate_C = 0.0
                 
                 # Check if a rate entry already exists for this product batch
                 try:
@@ -1427,12 +1426,12 @@ def edit_sale(request, invoice_id, sale_id):
                 if batch_specific_rate:
                     sale.sale_rate = batch_specific_rate.rate_B
                 else:
-                    sale.sale_rate = product.rate_B
+                    sale.sale_rate = purchase.product_MRP  # Fallback to MRP
             elif sale.rate_applied == 'C':
                 if batch_specific_rate:
                     sale.sale_rate = batch_specific_rate.rate_C
                 else:
-                    sale.sale_rate = product.rate_C
+                    sale.sale_rate = purchase.product_MRP  # Fallback to MRP
             
             # Calculate base price for all units
             base_price = sale.sale_rate * sale.sale_quantity
@@ -2634,10 +2633,10 @@ def get_product_info(request):
                 'product_name': product.product_name,
                 'product_company': product.product_company,
                 'product_packing': product.product_packing,
-                'rate_A': product.rate_A,
-                'rate_B': product.rate_B,
-                'rate_C': product.rate_C,
-                'product_hsn': product.product_hsn,
+                # Product data fields
+                "id": product.productid,
+                "name": product.product_name,
+                "company": product.product_company,
                 'product_hsn_percent': product.product_hsn_percent,
                 'stock_quantity': stock_info['current_stock'],
                 'product_expiry': None
