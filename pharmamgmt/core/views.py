@@ -258,8 +258,15 @@ def product_list(request):
             Q(product_salt__icontains=search_query)
         )
     
+    # Get products with stock data for display
+    products_with_stock = []
+    for product in products:
+        stock_info = get_stock_status(product.productid)
+        product.stock_level = stock_info['current_stock']
+        products_with_stock.append(product)
+    
     # Pagination
-    paginator = Paginator(products, 10)  # 10 products per page
+    paginator = Paginator(products_with_stock, 10)  # 10 products per page
     page_number = request.GET.get('page')
     products = paginator.get_page(page_number)
     
@@ -2248,7 +2255,7 @@ def inventory_report(request):
         inventory_data.append({
             'product': product,
             'current_stock': stock_info['current_stock'],
-            'value': stock_info['current_stock'] * product.rate_A  # Using rate_A as base rate
+            'value': stock_info['current_stock'] * get_avg_mrp(product.productid)  # Using avg MRP as base rate
         })
     
     # Calculate total inventory value
@@ -2702,7 +2709,7 @@ def export_inventory_csv(request):
             product.product_packing,
             product.product_category,
             stock_info['current_stock'],
-            stock_info['current_stock'] * product.rate_A  # Using rate_A as base rate
+            stock_info['current_stock'] * get_avg_mrp(product.productid)  # Using avg MRP as base rate
         ])
     
     return response
