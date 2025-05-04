@@ -1204,6 +1204,57 @@ def sales_invoice_detail(request, pk):
     return render(request, 'sales/sales_invoice_detail.html', context)
 
 @login_required
+def print_sales_bill(request, pk):
+    invoice = get_object_or_404(SalesInvoiceMaster, sales_invoice_no=pk)
+    
+    # Get all sales under this invoice
+    sales = SalesMaster.objects.filter(sales_invoice_no=pk)
+    
+    # Get all payments for this invoice
+    payments = SalesInvoicePaid.objects.filter(sales_ip_invoice_no=pk).order_by('-sales_payment_date')
+    
+    # Get pharmacy details for the bill header
+    try:
+        pharmacy = Pharmacy_Details.objects.first()
+    except Pharmacy_Details.DoesNotExist:
+        pharmacy = None
+    
+    # Calculate totals and tax amounts
+    subtotal = 0
+    total_tax = 0
+    
+    for sale in sales:
+        # Base price before tax
+        base_price = sale.sale_rate * sale.sale_quantity
+        
+        # Apply discount
+        if sale.sale_calculation_mode == 'flat':
+            # Flat discount in rupees
+            base_price_after_discount = base_price - sale.sale_discount
+        else:
+            # Percentage discount
+            base_price_after_discount = base_price - (base_price * sale.sale_discount / 100)
+        
+        # Calculate tax amount
+        tax_amount = base_price_after_discount * (sale.sale_igst / 100)
+        
+        subtotal += base_price_after_discount
+        total_tax += tax_amount
+    
+    context = {
+        'invoice': invoice,
+        'sales': sales,
+        'payments': payments,
+        'pharmacy': pharmacy,
+        'subtotal': subtotal,
+        'total_tax': total_tax,
+        'total': invoice.sales_invoice_total,
+        'balance': invoice.balance_due,
+        'title': f'Print Bill: {invoice.sales_invoice_no}'
+    }
+    return render(request, 'sales/print_sales_bill.html', context)
+
+@login_required
 def add_sale(request, invoice_id):
     invoice = get_object_or_404(SalesInvoiceMaster, sales_invoice_no=invoice_id)
     

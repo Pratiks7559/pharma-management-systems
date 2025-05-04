@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    {% load static %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @media print {
+            body {
+                font-size: 12px;
+                color: #000;
+                background-color: #fff;
+                margin: 0;
+                padding: 0;
+            }
+            .container {
+                width: 100%;
+                max-width: 100%;
+                padding: 5mm;
+                margin: 0;
+            }
+            .print-only {
+                display: block !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .card {
+                border: none !important;
+                box-shadow: none !important;
+            }
+            .card-header {
+                background-color: transparent !important;
+                border-bottom: 1px solid #000;
+                font-weight: bold;
+            }
+            .table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .table th, .table td {
+                border: 1px solid #000;
+                padding: 3px;
+            }
+            .table th {
+                background-color: #f1f1f1;
+            }
+            @page {
+                size: A4;
+                margin: 10mm;
+            }
+            .bill-header {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            .pharmacy-name {
+                font-size: 18px;
+                font-weight: bold;
+            }
+            .bill-info {
+                margin-bottom: 15px;
+                font-size: 11px;
+            }
+            .bill-total {
+                font-weight: bold;
+                font-size: 14px;
+            }
+            .bill-note {
+                font-size: 10px;
+                margin-top: 20px;
+                font-style: italic;
+            }
+            .col-print-1 {width:8%;  float:left;}
+            .col-print-2 {width:16%; float:left;}
+            .col-print-3 {width:25%; float:left;}
+            .col-print-4 {width:33%; float:left;}
+            .col-print-5 {width:42%; float:left;}
+            .col-print-6 {width:50%; float:left;}
+            .col-print-7 {width:58%; float:left;}
+            .col-print-8 {width:66%; float:left;}
+            .col-print-9 {width:75%; float:left;}
+            .col-print-10{width:83%; float:left;}
+            .col-print-11{width:92%; float:left;}
+            .col-print-12{width:100%; float:left;}
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <!-- Print Controls - Only visible on screen -->
+        <div class="row mb-4 no-print">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="mb-3">Print Bill</h3>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary" onclick="window.print();">
+                                <i class="fas fa-print me-2"></i>Print
+                            </button>
+                            <a href="{% url 'sales_invoice_detail' pk=invoice.sales_invoice_no %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Invoice
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actual Bill Content - Will be printed -->
+        <div class="bill-content">
+            <div class="bill-header">
+                {% if pharmacy %}
+                <div class="pharmacy-name">{{ pharmacy.pharmaname }}</div>
+                <div class="pharmacy-address">{{ pharmacy.pharmaweburl }}</div>
+                <div class="pharmacy-contact">
+                    Proprietor: {{ pharmacy.proprietorname }} | 
+                    Contact: {{ pharmacy.proprietorcontact }} | 
+                    Email: {{ pharmacy.proprietoremail }}
+                </div>
+                {% else %}
+                <div class="pharmacy-name">PHARMACY MANAGEMENT SYSTEM</div>
+                <div class="pharmacy-address">Your Trusted Healthcare Partner</div>
+                {% endif %}
+                <div class="mt-3">
+                    <h4>SALES INVOICE</h4>
+                </div>
+            </div>
+            
+            <div class="row bill-info">
+                <div class="col-print-6">
+                    <strong>Invoice No:</strong> {{ invoice.sales_invoice_no }}<br>
+                    <strong>Date:</strong> {{ invoice.sales_invoice_date }}<br>
+                    <strong>Customer:</strong> {{ invoice.customerid.customer_name }}<br>
+                    <strong>Address:</strong> {{ invoice.customerid.customer_address }}<br>
+                    <strong>Contact:</strong> {{ invoice.customerid.customer_mobile }}
+                </div>
+                <div class="col-print-6 text-end">
+                    <strong>GSTIN:</strong> {{ invoice.customerid.customer_gstno }}<br>
+                    <strong>DL No:</strong> {{ invoice.customerid.customer_dlno }}<br>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr>
+                            <th width="5%">S.No</th>
+                            <th width="30%">Description</th>
+                            <th width="10%">Batch</th>
+                            <th width="8%">Expiry</th>
+                            <th width="8%">MRP</th>
+                            <th width="8%">Rate</th>
+                            <th width="5%">Qty</th>
+                            <th width="8%">Discount</th>
+                            <th width="8%">GST%</th>
+                            <th width="10%">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in sales %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                {{ sale.product_name }}
+                                <div class="small">{{ sale.product_company }} - {{ sale.product_packing }}</div>
+                            </td>
+                            <td>{{ sale.product_batch_no }}</td>
+                            <td>{{ sale.product_expiry|date:"m/Y" }}</td>
+                            <td>{{ sale.product_MRP }}</td>
+                            <td>{{ sale.sale_rate }}</td>
+                            <td>{{ sale.sale_quantity }}</td>
+                            <td>
+                                {% if sale.sale_calculation_mode == 'flat' %}
+                                    {{ sale.sale_discount }}
+                                {% else %}
+                                    {{ sale.sale_discount }}%
+                                {% endif %}
+                            </td>
+                            <td>{{ sale.sale_igst }}%</td>
+                            <td class="text-end">{{ sale.sale_total_amount }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="8" class="text-end"><strong>Sub Total:</strong></td>
+                            <td colspan="2" class="text-end">{{ subtotal }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="8" class="text-end"><strong>Tax Amount:</strong></td>
+                            <td colspan="2" class="text-end">{{ total_tax }}</td>
+                        </tr>
+                        <tr class="bill-total">
+                            <td colspan="8" class="text-end"><strong>Grand Total:</strong></td>
+                            <td colspan="2" class="text-end">{{ total }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="8" class="text-end"><strong>Amount Paid:</strong></td>
+                            <td colspan="2" class="text-end">{{ invoice.sales_invoice_paid }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="8" class="text-end"><strong>Balance Due:</strong></td>
+                            <td colspan="2" class="text-end">{{ balance }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-print-6">
+                    <div class="bill-note">
+                        <p>Terms & Conditions:</p>
+                        <ol>
+                            <li>Goods once sold will not be taken back or exchanged.</li>
+                            <li>All disputes are subject to local jurisdiction only.</li>
+                            <li>Payment terms: As per agreed terms.</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="col-print-6 text-end">
+                    <div class="mt-5">
+                        <p>For {{ pharmacy.pharmaname }}</p>
+                        <div class="mt-4">Authorized Signatory</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto print when page loads
+        window.onload = function() {
+            // Uncomment the line below to automatically open print dialog when page loads
+            // window.print();
+        };
+    </script>
+</body>
+</html>
