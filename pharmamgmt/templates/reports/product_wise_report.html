@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
+        
+        <!-- Search Form -->
+        <div class="col-md-4">
+            <form method="GET" class="d-none d-sm-inline-block form-inline">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control bg-light border-0 small" 
+                           placeholder="Search products..." value="{{ search_query }}">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search fa-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Product-wise Transaction Summary</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="productTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%">#</th>
+                            <th style="width: 15%">Product</th>
+                            <th style="width: 15%">Company</th>
+                            <th style="width: 8%">Purchase Qty</th>
+                            <th style="width: 8%">Purchase Value</th>
+                            <th style="width: 8%">Sale Qty</th>
+                            <th style="width: 8%">Sale Value</th>
+                            <th style="width: 8%">Purchase Return Qty</th>
+                            <th style="width: 8%">Purchase Return Value</th>
+                            <th style="width: 8%">Sale Return Qty</th>
+                            <th style="width: 8%">Sale Return Value</th>
+                            <th style="width: 8%">Net Qty</th>
+                            <th style="width: 8%">Net Profit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in product_data %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <a href="{% url 'product_detail' item.product.productid %}">
+                                    {{ item.product.product_name }}
+                                </a>
+                            </td>
+                            <td>{{ item.product.product_company }}</td>
+                            <td>{{ item.total_purchase_qty|floatformat:0 }}</td>
+                            <td>{{ item.total_purchase_value|floatformat:0 }}</td>
+                            <td>{{ item.total_sale_qty|floatformat:0 }}</td>
+                            <td>{{ item.total_sale_value|floatformat:0 }}</td>
+                            <td>{{ item.total_purchase_return_qty|floatformat:0 }}</td>
+                            <td>{{ item.total_purchase_return_value|floatformat:0 }}</td>
+                            <td>{{ item.total_sale_return_qty|floatformat:0 }}</td>
+                            <td>{{ item.total_sale_return_value|floatformat:0 }}</td>
+                            <td>{{ item.net_quantity|floatformat:0 }}</td>
+                            <td>
+                                {% if item.profit > 0 %}
+                                <span class="text-success">{{ item.profit|floatformat:0 }}</span>
+                                {% else %}
+                                <span class="text-danger">{{ item.profit|floatformat:0 }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="13" class="text-center">No transaction data found for the selected products.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="font-weight-bold bg-light">
+                            <td colspan="3" class="text-right">Grand Total:</td>
+                            <td>{{ grand_total.total_purchase_qty|floatformat:0 }}</td>
+                            <td>{{ grand_total.total_purchase_value|floatformat:0 }}</td>
+                            <td>{{ grand_total.total_sale_qty|floatformat:0 }}</td>
+                            <td>{{ grand_total.total_sale_value|floatformat:0 }}</td>
+                            <td>{{ grand_total.total_purchase_return_qty|floatformat:0 }}</td>
+                            <td>{{ grand_total.total_purchase_return_value|floatformat:0 }}</td>
+                            <td>{{ grand_total.total_sale_return_qty|floatformat:0 }}</td>
+                            <td>{{ grand_total.total_sale_return_value|floatformat:0 }}</td>
+                            <td>{{ grand_total.net_quantity|floatformat:0 }}</td>
+                            <td>
+                                {% if grand_total.profit > 0 %}
+                                <span class="text-success">{{ grand_total.profit|floatformat:0 }}</span>
+                                {% else %}
+                                <span class="text-danger">{{ grand_total.profit|floatformat:0 }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#productTable').DataTable({
+            "order": [], // Disable initial sorting
+            "pageLength": 25,
+            "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+            "dom": 'Bfrtip',
+            "buttons": [
+                'copy', 'csv', 'excel', 'pdf', 'print'
+            ]
+        });
+    });
+</script>
+{% endblock %}

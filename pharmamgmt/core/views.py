@@ -2242,6 +2242,98 @@ def add_sales_return_item(request, return_id):
     }
     return render(request, 'returns/sales_return_item_form.html', context)
 
+# Product Wise Report
+@login_required
+def product_wise_report(request):
+    """
+    Generate a report showing total purchases, sales, purchase returns, and sales returns for each product
+    """
+    # Get all products
+    products = ProductMaster.objects.all().order_by('product_name')
+    
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        products = products.filter(
+            Q(product_name__icontains=search_query) | 
+            Q(product_company__icontains=search_query) |
+            Q(product_salt__icontains=search_query)
+        )
+    
+    # Get product-wise data
+    product_data = []
+    for product in products:
+        # Get total purchases
+        purchases = PurchaseMaster.objects.filter(productid=product.productid)
+        total_purchase_qty = purchases.aggregate(total=Sum('product_quantity'))['total'] or 0
+        total_purchase_value = purchases.aggregate(
+            total=Sum(F('product_quantity') * F('product_purchase_rate'))
+        )['total'] or 0
+        
+        # Get total sales
+        sales = SalesMaster.objects.filter(productid=product.productid)
+        total_sale_qty = sales.aggregate(total=Sum('sale_quantity'))['total'] or 0
+        total_sale_value = sales.aggregate(total=Sum('sale_total_amount'))['total'] or 0
+        
+        # Get total purchase returns
+        purchase_returns = ReturnPurchaseMaster.objects.filter(returnproductid=product.productid)
+        total_purchase_return_qty = purchase_returns.aggregate(total=Sum('returnproduct_quantity'))['total'] or 0
+        total_purchase_return_value = purchase_returns.aggregate(
+            total=Sum(F('returnproduct_quantity') * F('returnproduct_purchase_rate'))
+        )['total'] or 0
+        
+        # Get total sales returns
+        sales_returns = ReturnSalesMaster.objects.filter(return_productid=product.productid)
+        total_sale_return_qty = sales_returns.aggregate(total=Sum('return_sale_quantity'))['total'] or 0
+        total_sale_return_value = sales_returns.aggregate(total=Sum('return_sale_total_amount'))['total'] or 0
+        
+        # Calculate net quantities and values
+        net_quantity = total_purchase_qty - total_sale_qty - total_purchase_return_qty + total_sale_return_qty
+        net_purchase_value = total_purchase_value - total_purchase_return_value
+        net_sale_value = total_sale_value - total_sale_return_value
+        
+        # Only include products with some transaction history
+        if total_purchase_qty > 0 or total_sale_qty > 0 or total_purchase_return_qty > 0 or total_sale_return_qty > 0:
+            product_data.append({
+                'product': product,
+                'total_purchase_qty': total_purchase_qty,
+                'total_purchase_value': total_purchase_value,
+                'total_sale_qty': total_sale_qty,
+                'total_sale_value': total_sale_value,
+                'total_purchase_return_qty': total_purchase_return_qty,
+                'total_purchase_return_value': total_purchase_return_value,
+                'total_sale_return_qty': total_sale_return_qty,
+                'total_sale_return_value': total_sale_return_value,
+                'net_quantity': net_quantity,
+                'net_purchase_value': net_purchase_value,
+                'net_sale_value': net_sale_value,
+                'profit': net_sale_value - net_purchase_value,
+            })
+    
+    # Calculate totals for all products
+    grand_total = {
+        'total_purchase_qty': sum(item['total_purchase_qty'] for item in product_data),
+        'total_purchase_value': sum(item['total_purchase_value'] for item in product_data),
+        'total_sale_qty': sum(item['total_sale_qty'] for item in product_data),
+        'total_sale_value': sum(item['total_sale_value'] for item in product_data),
+        'total_purchase_return_qty': sum(item['total_purchase_return_qty'] for item in product_data),
+        'total_purchase_return_value': sum(item['total_purchase_return_value'] for item in product_data),
+        'total_sale_return_qty': sum(item['total_sale_return_qty'] for item in product_data),
+        'total_sale_return_value': sum(item['total_sale_return_value'] for item in product_data),
+        'net_quantity': sum(item['net_quantity'] for item in product_data),
+        'net_purchase_value': sum(item['net_purchase_value'] for item in product_data),
+        'net_sale_value': sum(item['net_sale_value'] for item in product_data),
+        'profit': sum(item['profit'] for item in product_data),
+    }
+    
+    context = {
+        'title': 'Product-wise Transaction Report',
+        'product_data': product_data,
+        'grand_total': grand_total,
+        'search_query': search_query,
+    }
+    return render(request, 'reports/product_wise_report.html', context)
+
 # Report views
 @login_required
 def inventory_report(request):
