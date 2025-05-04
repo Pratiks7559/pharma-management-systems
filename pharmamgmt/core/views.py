@@ -1308,17 +1308,17 @@ def add_sale(request, invoice_id):
                 if batch_specific_rate:
                     sale.sale_rate = batch_specific_rate.rate_A
                 else:
-                    sale.sale_rate = product.rate_A
+                    sale.sale_rate = purchase.product_MRP  # Fallback to MRP
             elif sale.rate_applied == 'B':
                 if batch_specific_rate:
                     sale.sale_rate = batch_specific_rate.rate_B
                 else:
-                    sale.sale_rate = product.rate_B
+                    sale.sale_rate = purchase.product_MRP  # Fallback to MRP
             elif sale.rate_applied == 'C':
                 if batch_specific_rate:
                     sale.sale_rate = batch_specific_rate.rate_C
                 else:
-                    sale.sale_rate = product.rate_C
+                    sale.sale_rate = purchase.product_MRP  # Fallback to MRP
             
             # Calculate base price for all units
             base_price = sale.sale_rate * sale.sale_quantity
@@ -1422,7 +1422,7 @@ def edit_sale(request, invoice_id, sale_id):
                 if batch_specific_rate:
                     sale.sale_rate = batch_specific_rate.rate_A
                 else:
-                    sale.sale_rate = product.rate_A
+                    sale.sale_rate = purchase.product_MRP  # Fallback to MRP
             elif sale.rate_applied == 'B':
                 if batch_specific_rate:
                     sale.sale_rate = batch_specific_rate.rate_B
