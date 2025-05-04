@@ -404,14 +404,14 @@ def bulk_upload_products(request):
         writer.writerow([
             'product_name', 'product_company', 'product_packing', 
             'product_salt', 'product_category', 'product_hsn', 
-            'product_hsn_percent', 'rate_A', 'rate_B', 'rate_C'
+            'product_hsn_percent'
         ])
         
         # Add sample row
         writer.writerow([
             'Paracetamol 500mg', 'ABC Pharma', '10x10',
             'Paracetamol', 'Analgesic', '30049099',
-            '12', '5.0', '4.5', '4.0'
+            '12'
         ])
         
         return response
