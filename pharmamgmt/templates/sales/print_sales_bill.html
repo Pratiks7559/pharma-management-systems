@@ -171,41 +171,41 @@
                             </td>
                             <td>{{ sale.product_batch_no }}</td>
                             <td>{{ sale.product_expiry|date:"m/Y" }}</td>
-                            <td>{{ sale.product_MRP }}</td>
-                            <td>{{ sale.sale_rate }}</td>
-                            <td>{{ sale.sale_quantity }}</td>
+                            <td>{{ sale.product_MRP|round_value }}</td>
+                            <td>{{ sale.sale_rate|round_value }}</td>
+                            <td>{{ sale.sale_quantity|round_value }}</td>
                             <td>
                                 {% if sale.sale_calculation_mode == 'flat' %}
-                                    {{ sale.sale_discount }}
+                                    {{ sale.sale_discount|round_value }}
                                 {% else %}
-                                    {{ sale.sale_discount }}%
+                                    {{ sale.sale_discount|round_value }}%
                                 {% endif %}
                             </td>
-                            <td>{{ sale.sale_igst }}%</td>
-                            <td class="text-end">{{ sale.sale_total_amount }}</td>
+                            <td>{{ sale.sale_igst|round_value }}%</td>
+                            <td class="text-end">{{ sale.sale_total_amount|round_value }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                     <tfoot>
                         <tr>
                             <td colspan="8" class="text-end"><strong>Sub Total:</strong></td>
-                            <td colspan="2" class="text-end">{{ subtotal }}</td>
+                            <td colspan="2" class="text-end">{{ subtotal|round_value }}</td>
                         </tr>
                         <tr>
                             <td colspan="8" class="text-end"><strong>Tax Amount:</strong></td>
-                            <td colspan="2" class="text-end">{{ total_tax }}</td>
+                            <td colspan="2" class="text-end">{{ total_tax|round_value }}</td>
                         </tr>
                         <tr class="bill-total">
                             <td colspan="8" class="text-end"><strong>Grand Total:</strong></td>
-                            <td colspan="2" class="text-end">{{ total }}</td>
+                            <td colspan="2" class="text-end">{{ total|round_value }}</td>
                         </tr>
                         <tr>
                             <td colspan="8" class="text-end"><strong>Amount Paid:</strong></td>
-                            <td colspan="2" class="text-end">{{ invoice.sales_invoice_paid }}</td>
+                            <td colspan="2" class="text-end">{{ invoice.sales_invoice_paid|round_value }}</td>
                         </tr>
                         <tr>
                             <td colspan="8" class="text-end"><strong>Balance Due:</strong></td>
-                            <td colspan="2" class="text-end">{{ balance }}</td>
+                            <td colspan="2" class="text-end">{{ balance|round_value }}</td>
                         </tr>
                     </tfoot>
                 </table>

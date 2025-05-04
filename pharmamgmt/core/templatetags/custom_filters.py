@@ -24,11 +24,13 @@ def sub(value, arg):
 
 @register.filter
 def currency(value):
-    """Formats a value as a currency (₹)."""
+    """Formats a value as a currency (₹) with rounded values."""
     try:
-        return f"₹ {float(value):,.2f}"
+        # Round to nearest integer
+        rounded_value = round(float(value))
+        return f"₹ {rounded_value:,}"
     except (ValueError, TypeError):
-        return f"₹ 0.00"
+        return f"₹ 0"
 
 @register.filter
 def subtract(value, arg):
@@ -120,15 +122,15 @@ def sum_field(value, field_name):
 @register.filter
 def inr_format(value):
     """
-    Format a number as Indian Rupees (INR).
+    Format a number as Indian Rupees (INR) with rounded values.
     
     Examples:
-        1234.56 -> ₹ 1,234.56
-        1234567.89 -> ₹ 12,34,567.89
+        1234.56 -> ₹ 1,235
+        1234567.89 -> ₹ 12,34,568
     """
     try:
-        # Convert to float first
-        value = float(value)
+        # Convert to float first and round to nearest integer
+        value = round(float(value))
         
         # Format with commas using Indian numbering system
         if value < 0:
@@ -138,11 +140,10 @@ def inr_format(value):
             sign = ""
             
         # First format with conventional commas
-        formatted = f"{value:,.2f}"
+        formatted = f"{value:,}"
         
         # Handle special case for Indian format
-        parts = formatted.split('.')
-        integer_part = parts[0]
+        integer_part = formatted
         
         # Don't format small numbers
         if len(integer_part.replace(',', '')) <= 3:
@@ -161,10 +162,16 @@ def inr_format(value):
             result = integer_part[-2:] + ',' + result if integer_part[-2:] else integer_part + ',' + result
             integer_part = integer_part[:-2]
         
-        # Re-combine with decimal part
-        if len(parts) > 1:
-            return f"₹ {sign}{result}.{parts[1]}"
-        else:
-            return f"₹ {sign}{result}"
+        return f"₹ {sign}{result}"
     except (ValueError, TypeError):
-        return "₹ 0.00"
+        return "₹ 0"
+
+@register.filter
+def round_value(value):
+    """
+    Rounds a floating point value to the nearest integer.
+    """
+    try:
+        return round(float(value))
+    except (ValueError, TypeError):
+        return 0
