@@ -372,9 +372,6 @@ def bulk_upload_products(request):
                             'product_category': row.get('product_category', '').strip(),
                             'product_hsn': row.get('product_hsn', '').strip(),
                             'product_hsn_percent': row.get('product_hsn_percent', '').strip(),
-                            'rate_A': float(row.get('rate_A', 0) or 0),
-                            'rate_B': float(row.get('rate_B', 0) or 0),
-                            'rate_C': float(row.get('rate_C', 0) or 0),
                         }
                     )
                     success_count += 1
