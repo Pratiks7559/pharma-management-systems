@@ -2151,13 +2151,22 @@ def add_sales_return_item(request, return_id):
             if sales_data:
                 print(f"*** Found Sales Data: Expiry: {sales_data.product_expiry}, Rate: {sales_data.sale_rate}, Quantity: {sales_data.sale_quantity} ***")
                 
+                # Get MRP from PurchaseMaster instead of sales data
+                purchase_data = PurchaseMaster.objects.filter(
+                    productid_id=product_id,
+                    product_batch_no=batch_no
+                ).first()
+                
+                # Use MRP from purchase data if available, otherwise fallback to sales data
+                mrp = purchase_data.product_MRP if purchase_data else sales_data.product_MRP
+                
                 # Return product details including expiry, MRP, discount, and GST
                 response_data = {
                     'exists': True,
                     'expiry': sales_data.product_expiry.strftime('%Y-%m-%d'),
                     'rate': sales_data.sale_rate,
                     'quantity': sales_data.sale_quantity,
-                    'mrp': sales_data.product_MRP,
+                    'mrp': mrp,
                     'discount_type': sales_data.sale_calculation_mode or 'percentage',
                     'discount': sales_data.sale_discount or 0,
                     'igst': sales_data.sale_igst or 0,
@@ -2179,6 +2188,7 @@ def add_sales_return_item(request, return_id):
                     response_data = {
                         'exists': False,
                         'expiry': purchase_data.product_expiry.strftime('%Y-%m-%d'),
+                        'mrp': purchase_data.product_MRP,
                         'message': 'Warning: This product with this batch was not sold to this customer!'
                     }
                     print(f"*** Sending Response: {response_data} ***")

@@ -57,13 +57,28 @@
                             // Update total after setting values
                             calculateSalesReturnTotal();
                         } else {
-                            // Clear fields if batch not found
-                            $('#id_return_product_expiry').val('');
-                            $('#id_return_sale_rate').val('');
-                            $('#id_return_product_MRP').val('');
+                            // Initialize with default values
                             $('#id_return_sale_discount').val('0');
                             $('#id_return_sale_igst').val('0');
                             $('#id_return_sale_calculation_mode').val('percentage');
+                            
+                            // If product exists in inventory but not in sales
+                            if (data.expiry) {
+                                $('#id_return_product_expiry').val(data.expiry);
+                                // Set MRP from purchase data if available
+                                if (data.mrp !== undefined) {
+                                    $('#id_return_product_MRP').val(data.mrp);
+                                } else {
+                                    $('#id_return_product_MRP').val('');
+                                }
+                                $('#id_return_sale_rate').val('');
+                            } else {
+                                // Clear all fields if batch not found
+                                $('#id_return_product_expiry').val('');
+                                $('#id_return_sale_rate').val('');
+                                $('#id_return_product_MRP').val('');
+                            }
+                            
                             $('#batch_info').html('<div class="alert alert-warning">' + data.message + '</div>');
                             calculateSalesReturnTotal();
                         }
