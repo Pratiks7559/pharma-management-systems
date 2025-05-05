@@ -776,10 +776,6 @@ def add_purchase(request, invoice_id):
             purchase.product_company = product.product_company
             purchase.product_packing = product.product_packing
             
-            # Transport charges are not included in product calculations
-            # They are additional charges separate from the invoice total
-            purchase.product_transportation_charges = 0
-            
             # Calculate actual rate based on discount and quantity
             if purchase.purchase_calculation_mode == 'flat':
                 # Flat discount amount
@@ -790,8 +786,58 @@ def add_purchase(request, invoice_id):
             
             purchase.product_actual_rate = purchase.actual_rate_per_qty
             
-            # Calculate total amount
+            # Calculate total amount before transport charges
             purchase.total_amount = purchase.product_actual_rate * purchase.product_quantity
+            
+            # Check if adding this product would exceed the invoice total
+            existing_purchases_total = PurchaseMaster.objects.filter(
+                product_invoiceid=invoice
+            ).aggregate(total=Sum('total_amount'))['total'] or 0
+            
+            new_total = existing_purchases_total + purchase.total_amount
+            
+            if new_total > invoice.invoice_total:
+                messages.error(
+                    request, 
+                    f"Adding this product would exceed the invoice total amount of ₹{invoice.invoice_total}. "
+                    f"Current total: ₹{existing_purchases_total:.2f}, This product: ₹{purchase.total_amount:.2f}, "
+                    f"New total would be: ₹{new_total:.2f}"
+                )
+                context = {
+                    'form': form,
+                    'invoice': invoice,
+                    'title': 'Add Purchase'
+                }
+                return render(request, 'purchases/purchase_form.html', context)
+            
+            # Calculate and distribute transport charges
+            if invoice.transport_charges > 0:
+                # Count existing products plus this new one
+                existing_purchases = list(PurchaseMaster.objects.filter(product_invoiceid=invoice))
+                total_products = len(existing_purchases) + 1
+                
+                # Calculate transport share per product
+                transport_share_per_product = invoice.transport_charges / total_products
+                
+                # Update this product's transport charges
+                purchase.product_transportation_charges = transport_share_per_product
+                
+                # Add the transport share to the actual rate
+                transport_per_unit = transport_share_per_product / purchase.product_quantity
+                purchase.product_actual_rate = purchase.actual_rate_per_qty + transport_per_unit
+                
+                # Recalculate total amount with transport charges included
+                purchase.total_amount = purchase.product_actual_rate * purchase.product_quantity
+                
+                # Update existing products to redistribute transport charges
+                for prev_purchase in existing_purchases:
+                    prev_purchase.product_transportation_charges = transport_share_per_product
+                    transport_per_unit = transport_share_per_product / prev_purchase.product_quantity
+                    prev_purchase.product_actual_rate = prev_purchase.actual_rate_per_qty + transport_per_unit
+                    prev_purchase.total_amount = prev_purchase.product_actual_rate * prev_purchase.product_quantity
+                    prev_purchase.save()
+            else:
+                purchase.product_transportation_charges = 0
             
             purchase.save()
             
@@ -857,8 +903,9 @@ def edit_purchase(request, invoice_id, purchase_id):
             purchase.product_company = product.product_company
             purchase.product_packing = product.product_packing
             
-            # Transport charges are not included in product calculations
-            purchase.product_transportation_charges = 0
+            # Store old quantity for comparison
+            old_purchase = PurchaseMaster.objects.get(purchaseid=purchase_id)
+            old_total = old_purchase.total_amount
             
             # Calculate actual rate based on discount and quantity
             if purchase.purchase_calculation_mode == 'flat':
@@ -870,8 +917,83 @@ def edit_purchase(request, invoice_id, purchase_id):
             
             purchase.product_actual_rate = purchase.actual_rate_per_qty
             
-            # Calculate total amount
-            purchase.total_amount = purchase.product_actual_rate * purchase.product_quantity
+            # Calculate total amount without transport charges
+            base_total = purchase.product_actual_rate * purchase.product_quantity
+            
+            # Check if updating this product would exceed the invoice total
+            # Get the sum of all purchases for this invoice excluding the current one
+            other_purchases_total = PurchaseMaster.objects.filter(
+                product_invoiceid=invoice
+            ).exclude(
+                purchaseid=purchase_id
+            ).aggregate(total=Sum('total_amount'))['total'] or 0
+            
+            new_total = other_purchases_total + base_total
+            
+            if new_total > invoice.invoice_total:
+                messages.error(
+                    request, 
+                    f"Updating this product would exceed the invoice total amount of ₹{invoice.invoice_total}. "
+                    f"Other products total: ₹{other_purchases_total:.2f}, This product: ₹{base_total:.2f}, "
+                    f"New total would be: ₹{new_total:.2f}"
+                )
+                # Restore form with current values
+                try:
+                    batch_rate = SaleRateMaster.objects.get(
+                        productid=old_purchase.productid,
+                        product_batch_no=old_purchase.product_batch_no
+                    )
+                    form = PurchaseForm(instance=old_purchase, initial={
+                        'rate_A': batch_rate.rate_A,
+                        'rate_B': batch_rate.rate_B,
+                        'rate_C': batch_rate.rate_C
+                    })
+                except SaleRateMaster.DoesNotExist:
+                    form = PurchaseForm(instance=old_purchase)
+                
+                context = {
+                    'form': form,
+                    'invoice': invoice,
+                    'purchase': old_purchase,
+                    'title': 'Edit Purchase',
+                    'is_edit': True
+                }
+                return render(request, 'purchases/purchase_form.html', context)
+            
+            # Calculate and distribute transport charges
+            if invoice.transport_charges > 0:
+                # Get all purchases for this invoice excluding the current one
+                other_purchases = list(PurchaseMaster.objects.filter(
+                    product_invoiceid=invoice
+                ).exclude(
+                    purchaseid=purchase_id
+                ))
+                
+                total_products = len(other_purchases) + 1
+                
+                # Calculate transport share per product
+                transport_share_per_product = invoice.transport_charges / total_products
+                
+                # Update this product's transport charges
+                purchase.product_transportation_charges = transport_share_per_product
+                
+                # Add transport share to actual rate
+                transport_per_unit = transport_share_per_product / purchase.product_quantity
+                purchase.product_actual_rate = purchase.actual_rate_per_qty + transport_per_unit
+                
+                # Recalculate total amount with transport charges included
+                purchase.total_amount = purchase.product_actual_rate * purchase.product_quantity
+                
+                # Update other products to redistribute transport charges
+                for other_purchase in other_purchases:
+                    other_purchase.product_transportation_charges = transport_share_per_product
+                    other_transport_per_unit = transport_share_per_product / other_purchase.product_quantity
+                    other_purchase.product_actual_rate = other_purchase.actual_rate_per_qty + other_transport_per_unit
+                    other_purchase.total_amount = other_purchase.product_actual_rate * other_purchase.product_quantity
+                    other_purchase.save()
+            else:
+                purchase.product_transportation_charges = 0
+                purchase.total_amount = base_total
             
             purchase.save()
             
@@ -957,6 +1079,29 @@ def delete_purchase(request, invoice_id, purchase_id):
     if request.method == 'POST':
         product_name = purchase.product_name
         try:
+            # Before deleting, check if we need to redistribute transport charges
+            if invoice.transport_charges > 0:
+                # Get all other purchases for this invoice
+                other_purchases = list(PurchaseMaster.objects.filter(
+                    product_invoiceid=invoice
+                ).exclude(
+                    purchaseid=purchase_id
+                ))
+                
+                # If there are other purchases, redistribute transport charges
+                if other_purchases:
+                    # Calculate new transport share per product
+                    transport_share_per_product = invoice.transport_charges / len(other_purchases)
+                    
+                    # Update all other products with new transport charges
+                    for other_purchase in other_purchases:
+                        other_purchase.product_transportation_charges = transport_share_per_product
+                        transport_per_unit = transport_share_per_product / other_purchase.product_quantity
+                        other_purchase.product_actual_rate = other_purchase.actual_rate_per_qty + transport_per_unit
+                        other_purchase.total_amount = other_purchase.product_actual_rate * other_purchase.product_quantity
+                        other_purchase.save()
+            
+            # Now delete the purchase
             purchase.delete()
             messages.success(request, f"Purchase for {product_name} deleted successfully!")
         except Exception as e:
