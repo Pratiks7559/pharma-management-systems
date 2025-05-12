@@ -2813,13 +2813,38 @@ def financial_report(request):
     end_month = timezone.now().date().replace(day=1)
     start_month = (end_month - timedelta(days=365)).replace(day=1)
     
-    monthly_sales = SalesInvoiceMaster.objects.filter(
-        sales_invoice_date__range=[start_month, end_month]
-    ).annotate(
-        month=TruncMonth('sales_invoice_date')
-    ).values('month').annotate(
-        total=Sum('sales_invoice_total')
-    ).order_by('month')
+    # Since sales_invoice_total is a property, we need to calculate monthly totals differently
+    # First, get a list of all months in the period
+    monthly_dates = []
+    current = start_month
+    while current <= end_month:
+        monthly_dates.append((current, (current.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)))
+        current = (current.replace(day=28) + timedelta(days=4)).replace(day=1)
+    
+    # Initialize the monthly sales data structure
+    monthly_sales = []
+    
+    # For each month, calculate the total sales
+    for month_start, month_end in monthly_dates:
+        # Get all sales invoices for this month
+        month_invoices = SalesInvoiceMaster.objects.filter(
+            sales_invoice_date__range=[month_start, month_end]
+        )
+        
+        # Get all sales invoice numbers for this month
+        month_invoice_nos = month_invoices.values_list('sales_invoice_no', flat=True)
+        
+        # Calculate total sales for this month from SalesMaster
+        month_total = SalesMaster.objects.filter(
+            sales_invoice_no__in=month_invoice_nos
+        ).aggregate(total=Sum('sale_total_amount'))['total'] or 0
+        
+        # Add to monthly_sales with the first day of the month
+        if month_total > 0:  # Only add months with sales
+            monthly_sales.append({
+                'month': month_start,
+                'total': month_total
+            })
     
     monthly_purchases = InvoiceMaster.objects.filter(
         invoice_date__range=[start_month, end_month]
