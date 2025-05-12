@@ -2883,9 +2883,21 @@ def financial_report(request):
             current_month = current_month.replace(month=current_month.month + 1)
     
     # Calculate outstanding amounts
-    customer_outstanding = SalesInvoiceMaster.objects.aggregate(
-        total=Sum(F('sales_invoice_total') - F('sales_invoice_paid'))
-    )['total'] or 0
+    # We need to calculate customer outstanding differently as sales_invoice_total is a property
+    customer_outstanding = 0
+    
+    # Get all sales invoices
+    all_sales_invoices = SalesInvoiceMaster.objects.all()
+    
+    # Calculate total outstanding by looping through each invoice
+    for invoice in all_sales_invoices:
+        # Calculate sales_invoice_total by querying SalesMaster
+        invoice_total = SalesMaster.objects.filter(
+            sales_invoice_no=invoice.sales_invoice_no
+        ).aggregate(total=Sum('sale_total_amount'))['total'] or 0
+        
+        # Add the outstanding amount to the total
+        customer_outstanding += (invoice_total - invoice.sales_invoice_paid)
     
     supplier_outstanding = InvoiceMaster.objects.aggregate(
         total=Sum(F('invoice_total') - F('invoice_paid'))
