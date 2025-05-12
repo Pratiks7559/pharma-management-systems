@@ -632,8 +632,22 @@ def customer_detail(request, pk):
     invoices = SalesInvoiceMaster.objects.filter(customerid=pk).order_by('-sales_invoice_date')
     
     # Calculate total sales and payment amounts
-    total_sales = invoices.aggregate(Sum('sales_invoice_total'))['sales_invoice_total__sum'] or 0
-    total_paid = invoices.aggregate(Sum('sales_invoice_paid'))['sales_invoice_paid__sum'] or 0
+    # We need to calculate sales total through SalesMaster since sales_invoice_total is a property
+    total_sales = 0
+    total_paid = 0
+    
+    # Get all invoice numbers
+    invoice_numbers = invoices.values_list('sales_invoice_no', flat=True)
+    
+    # Calculate total sales from SalesMaster
+    total_sales = SalesMaster.objects.filter(
+        sales_invoice_no__in=invoice_numbers
+    ).aggregate(total=Sum('sale_total_amount'))['total'] or 0
+    
+    # Calculate total paid directly from SalesInvoiceMaster
+    total_paid = invoices.aggregate(total=Sum('sales_invoice_paid'))['total'] or 0
+    
+    # Calculate balance
     balance = total_sales - total_paid
     
     context = {
