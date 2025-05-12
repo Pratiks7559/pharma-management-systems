@@ -2774,9 +2774,18 @@ def financial_report(request):
             messages.error(request, "Invalid date format. Please use YYYY-MM-DD.")
     
     # Get sales for the selected period
-    sales = SalesInvoiceMaster.objects.filter(
+    # We need to calculate the sales total from SalesMaster since sales_invoice_total is a property
+    sales_invoices = SalesInvoiceMaster.objects.filter(
         sales_invoice_date__range=[start_date, end_date]
-    ).aggregate(total=Sum('sales_invoice_total'))['total'] or 0
+    )
+    
+    # Get all sales invoice numbers for the filtered period
+    sales_invoice_nos = sales_invoices.values_list('sales_invoice_no', flat=True)
+    
+    # Calculate total sales from SalesMaster
+    sales = SalesMaster.objects.filter(
+        sales_invoice_no__in=sales_invoice_nos
+    ).aggregate(total=Sum('sale_total_amount'))['total'] or 0
     
     # Get purchases for the selected period
     purchases = InvoiceMaster.objects.filter(
