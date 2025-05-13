@@ -30,8 +30,31 @@
                     <form method="post" id="salesForm">
                         {% csrf_token %}
                         
+                        <!-- Barcode Scanner Section -->
+                        <div class="card mb-3 border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <i class="fas fa-barcode"></i> Barcode Scanner
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="barcodeInput"><strong>Scan Product Barcode</strong></label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="barcodeInput" 
+                                               placeholder="Scan or enter barcode..." autocomplete="off">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary" type="button" id="clearBarcodeBtn">
+                                                <i class="fas fa-times"></i> Clear
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted">Focus will automatically return to this field after scan</small>
+                                </div>
+                                <div id="barcodeScanStatus" class="mt-2"></div>
+                            </div>
+                        </div>
+                        
                         <div class="form-group mb-3">
-                            <label for="{{ form.productid.id_for_label }}">Product*</label>
+                            <label for="{{ form.productid.id_for_label }}">Product* (or use barcode scanner above)</label>
                             {{ form.productid }}
                             {% if form.productid.errors %}
                                 <div class="text-danger">{{ form.productid.errors }}</div>
@@ -385,6 +408,147 @@
             input.addEventListener('input', calculateValues);
             input.addEventListener('change', calculateValues);
         });
+        
+        // Barcode Scanner Functionality
+        const barcodeInput = document.getElementById('barcodeInput');
+        const clearBarcodeBtn = document.getElementById('clearBarcodeBtn');
+        const barcodeScanStatus = document.getElementById('barcodeScanStatus');
+        const productSelect = document.getElementById('{{ form.productid.id_for_label }}');
+        const batchNoSelect = document.getElementById('{{ form.product_batch_no.id_for_label }}');
+        const expiryInput = document.getElementById('{{ form.product_expiry.id_for_label }}');
+        const mrpInput = document.getElementById('{{ form.product_MRP.id_for_label }}');
+        const rateInput = document.getElementById('{{ form.sale_rate.id_for_label }}');
+        
+        // Set focus to barcode input on page load
+        window.addEventListener('load', () => {
+            barcodeInput.focus();
+        });
+        
+        // Clear barcode button handler
+        clearBarcodeBtn.addEventListener('click', () => {
+            barcodeInput.value = '';
+            barcodeScanStatus.innerHTML = '';
+            barcodeInput.focus();
+        });
+        
+        // Automatically return focus to barcode input field when clicked elsewhere
+        document.addEventListener('click', () => {
+            // Small delay to allow other click actions to complete
+            setTimeout(() => {
+                if (document.activeElement !== barcodeInput) {
+                    barcodeInput.focus();
+                }
+            }, 100);
+        });
+        
+        // Process barcode input
+        barcodeInput.addEventListener('keydown', (e) => {
+            // Process the barcode when Enter key is pressed
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Prevent form submission
+                
+                const barcode = barcodeInput.value.trim();
+                if (barcode) {
+                    processBarcode(barcode);
+                }
+            }
+        });
+        
+        // Process the scanned barcode
+        function processBarcode(barcode) {
+            barcodeScanStatus.innerHTML = '<div class="alert alert-info">Processing barcode...</div>';
+            
+            // Call the API to get product information by barcode
+            fetch(`/api/product-by-barcode/?barcode=${encodeURIComponent(barcode)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        barcodeScanStatus.innerHTML = 
+                            `<div class="alert alert-success">
+                                <strong>Product found!</strong> ${data.product_name} (${data.product_company})
+                            </div>`;
+                        
+                        // Set the product in the dropdown
+                        if (productSelect) {
+                            // Find and select the option with the product ID
+                            const option = Array.from(productSelect.options).find(opt => 
+                                opt.value == data.product_id);
+                            
+                            if (option) {
+                                productSelect.value = data.product_id;
+                                // Trigger change event to update batch numbers
+                                const changeEvent = new Event('change', { bubbles: true });
+                                productSelect.dispatchEvent(changeEvent);
+                                
+                                // Wait for batch options to load, then select the correct batch
+                                setTimeout(() => {
+                                    if (batchNoSelect && data.batch_no) {
+                                        // Find and select the batch option
+                                        const batchOption = Array.from(batchNoSelect.options).find(opt => 
+                                            opt.text == data.batch_no);
+                                        
+                                        if (batchOption) {
+                                            batchNoSelect.value = batchOption.value;
+                                            // Trigger change event to update other fields
+                                            batchNoSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                                        }
+                                    }
+                                    
+                                    // Set customer rate based on customer type
+                                    const customerType = '{{ invoice.customerid.customer_type }}';
+                                    if (rateInput) {
+                                        if (customerType === 'TYPE-A') {
+                                            rateInput.value = data.rate_a;
+                                        } else if (customerType === 'TYPE-B') {
+                                            rateInput.value = data.rate_b;
+                                        } else if (customerType === 'TYPE-C') {
+                                            rateInput.value = data.rate_c;
+                                        } else {
+                                            rateInput.value = data.mrp;
+                                        }
+                                        
+                                        // Trigger change event to update calculations
+                                        rateInput.dispatchEvent(new Event('change', { bubbles: true }));
+                                    }
+                                    
+                                    // Focus quantity field for easy data entry
+                                    if (quantityInput) {
+                                        quantityInput.focus();
+                                        quantityInput.select();
+                                    }
+                                }, 300); // Short delay to allow batch dropdown to update
+                            } else {
+                                barcodeScanStatus.innerHTML = 
+                                    `<div class="alert alert-warning">
+                                        Product found in database but not in the dropdown. Please check if the product is active.
+                                    </div>`;
+                            }
+                        }
+                    } else {
+                        // Show error message
+                        barcodeScanStatus.innerHTML = 
+                            `<div class="alert alert-danger">
+                                ${data.error || 'Error processing barcode'}
+                            </div>`;
+                    }
+                    
+                    // Clear barcode input and return focus
+                    barcodeInput.value = '';
+                    barcodeInput.focus();
+                })
+                .catch(error => {
+                    console.error('Error processing barcode:', error);
+                    barcodeScanStatus.innerHTML = 
+                        `<div class="alert alert-danger">
+                            Error communicating with server. Please try again.
+                        </div>`;
+                    
+                    // Clear barcode input and return focus
+                    barcodeInput.value = '';
+                    barcodeInput.focus();
+                });
+        }
     });
 </script>
 {% endblock %}
