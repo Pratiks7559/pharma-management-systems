@@ -255,7 +255,8 @@ def product_list(request):
         products = products.filter(
             Q(product_name__icontains=search_query) | 
             Q(product_company__icontains=search_query) |
-            Q(product_salt__icontains=search_query)
+            Q(product_salt__icontains=search_query) |
+            Q(product_barcode__icontains=search_query)
         )
     
     # Get products with stock data for display
