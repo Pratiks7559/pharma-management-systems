@@ -36,6 +36,7 @@
                         <th>Product Name</th>
                         <th>Company</th>
                         <th>Packing</th>
+                        <th>Barcode</th>
                         <th>Category</th>
                         <th>Stock</th>
                         <th>Actions</th>
@@ -48,6 +49,14 @@
                         <td>{{ product.product_name }}</td>
                         <td>{{ product.product_company }}</td>
                         <td>{{ product.product_packing }}</td>
+                        <td>{% if product.product_barcode %}
+                            <span class="badge bg-dark">
+                                <i class="fas fa-barcode me-1"></i>{{ product.product_barcode }}
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary">No barcode</span>
+                            {% endif %}
+                        </td>
                         <td>{{ product.product_category }}</td>
                         <td>{{ product.stock_level|default:"Not available" }}</td>
                         <td>

@@ -85,6 +85,28 @@
                                     {% endif %}
                                 </div>
                             </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.product_barcode.id_for_label }}">
+                                        <i class="fas fa-barcode"></i> Product Barcode
+                                    </label>
+                                    <div class="input-group">
+                                        {{ form.product_barcode }}
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary" type="button" id="generateBarcodeBtn">
+                                                Generate
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted">Scan barcode or generate a unique barcode for this product</small>
+                                    {% if form.product_barcode.errors %}
+                                        <div class="text-danger">{{ form.product_barcode.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label for="{{ form.product_image.id_for_label }}">Product Image</label>
@@ -153,4 +175,47 @@
         </div>
     </div>
 </div>
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get the barcode field and generate button
+        const barcodeInput = document.getElementById('{{ form.product_barcode.id_for_label }}');
+        const generateBarcodeBtn = document.getElementById('generateBarcodeBtn');
+        
+        // Function to generate a random barcode
+        function generateBarcode() {
+            // Format: PRD-YYYYMMDD-XXXXX (where XXXXX is a random 5-digit number)
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const dateString = `${year}${month}${day}`;
+            
+            // Generate a random 5-digit number
+            const randomNum = Math.floor(10000 + Math.random() * 90000);
+            
+            // Combine to create the barcode
+            return `PRD-${dateString}-${randomNum}`;
+        }
+        
+        // Add click event to generate button
+        if (generateBarcodeBtn) {
+            generateBarcodeBtn.addEventListener('click', function() {
+                barcodeInput.value = generateBarcode();
+                barcodeInput.focus();
+            });
+        }
+        
+        // Generate barcode automatically if field is empty
+        if (barcodeInput && barcodeInput.value === '') {
+            const productIdField = document.querySelector('input[name="productid"]');
+            // Only auto-generate for new products (when no product ID exists)
+            if (!productIdField || !productIdField.value) {
+                barcodeInput.placeholder = 'Click "Generate" or scan a barcode';
+            }
+        }
+    });
+</script>
+{% endblock %}
 {% endblock %}
