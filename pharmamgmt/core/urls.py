@@ -94,6 +94,7 @@ urlpatterns = [
     
     # API endpoints for AJAX calls
     path('api/product-info/', views.get_product_info, name='get_product_info'),
+    path('api/product-by-barcode/', views.get_product_by_barcode, name='get_product_by_barcode'),
     path('api/export-inventory/', views.export_inventory_csv, name='export_inventory_csv'),
     
     # Sale Rate Management

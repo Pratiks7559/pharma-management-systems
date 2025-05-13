@@ -2938,6 +2938,58 @@ def financial_report(request):
 
 # API views for AJAX requests
 @login_required
+def get_product_by_barcode(request):
+    """API endpoint to fetch product details by barcode"""
+    if request.method == 'GET' and 'barcode' in request.GET:
+        barcode = request.GET.get('barcode')
+        
+        try:
+            # Try to find the product by barcode
+            product = ProductMaster.objects.get(product_barcode=barcode)
+            stock_info = get_stock_status(product.productid)
+            
+            # Get the batch with the nearest expiry date that has stock
+            batch_info = PurchaseMaster.objects.filter(
+                productid=product.productid,
+                product_quantity__gt=0
+            ).order_by('product_expiry').first()
+            
+            # Get rate information
+            try:
+                rate_info = SaleRateMaster.objects.get(
+                    productid=product.productid, 
+                    product_batch_no=batch_info.product_batch_no if batch_info else ''
+                )
+                rate_a = rate_info.rate_A
+                rate_b = rate_info.rate_B
+                rate_c = rate_info.rate_C
+            except (SaleRateMaster.DoesNotExist, AttributeError):
+                rate_a = batch_info.product_MRP if batch_info else 0
+                rate_b = batch_info.product_MRP if batch_info else 0
+                rate_c = batch_info.product_MRP if batch_info else 0
+            
+            data = {
+                'success': True,
+                'product_id': product.productid,
+                'product_name': product.product_name,
+                'product_company': product.product_company,
+                'product_packing': product.product_packing,
+                'product_hsn_percent': product.product_hsn_percent,
+                'stock_quantity': stock_info['current_stock'],
+                'batch_no': batch_info.product_batch_no if batch_info else '',
+                'product_expiry': batch_info.product_expiry.strftime('%Y-%m-%d') if batch_info and batch_info.product_expiry else None,
+                'mrp': batch_info.product_MRP if batch_info else 0,
+                'rate_a': rate_a,
+                'rate_b': rate_b,
+                'rate_c': rate_c,
+            }
+            return JsonResponse(data)
+        except ProductMaster.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Product not found with the given barcode'})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+@login_required
 def get_product_info(request):
     if request.method == 'GET' and 'product_id' in request.GET:
         product_id = request.GET.get('product_id')

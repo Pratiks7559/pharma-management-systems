@@ -22,8 +22,8 @@ class PharmacyDetailsAdmin(admin.ModelAdmin):
     list_display = ('pharmaname', 'proprietorname', 'proprietorcontact', 'proprietoremail')
 
 class ProductMasterAdmin(admin.ModelAdmin):
-    list_display = ('productid', 'product_name', 'product_company', 'product_packing', 'product_category')
-    search_fields = ('product_name', 'product_company', 'product_salt')
+    list_display = ('productid', 'product_name', 'product_company', 'product_packing', 'product_category', 'product_barcode')
+    search_fields = ('product_name', 'product_company', 'product_salt', 'product_barcode')
     list_filter = ('product_category',)
 
 class SupplierMasterAdmin(admin.ModelAdmin):

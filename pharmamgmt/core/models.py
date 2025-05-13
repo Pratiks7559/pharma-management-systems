@@ -39,6 +39,7 @@ class ProductMaster(models.Model):
     product_category=models.CharField(max_length=30, default=None)
     product_hsn=models.CharField(max_length=20, default=None)
     product_hsn_percent=models.CharField(max_length=20, default=None)
+    product_barcode=models.CharField(max_length=50, blank=True, null=True, unique=True, help_text="Product barcode for scanning")
     
     def __str__(self):
         return f"{self.product_name} ({self.product_company})"
