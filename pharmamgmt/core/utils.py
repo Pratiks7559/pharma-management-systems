@@ -72,13 +72,13 @@ def get_batch_stock_status(product_id, batch_no):
     
     # Get total purchased returns quantity for this batch
     purchase_returns = ReturnPurchaseMaster.objects.filter(
-        returnproductid=product_id, 
+        returnproductid_id=product_id, 
         returnproduct_batch_no=batch_no
     ).aggregate(total=Sum('returnproduct_quantity'))['total'] or 0
     
     # Get total sales returns quantity for this batch
     sales_returns = ReturnSalesMaster.objects.filter(
-        return_productid=product_id, 
+        return_productid_id=product_id, 
         return_product_batch_no=batch_no
     ).aggregate(total=Sum('return_sale_quantity'))['total'] or 0
     
@@ -93,22 +93,22 @@ def get_stock_status(product_id):
     Calculate current stock for a product based on purchases, sales, and returns
     """
     # Get total purchased quantity
-    purchased = PurchaseMaster.objects.filter(productid=product_id).aggregate(
+    purchased = PurchaseMaster.objects.filter(productid_id=product_id).aggregate(
         total=Sum('product_quantity')
     )['total'] or 0
     
     # Get total sold quantity
-    sold = SalesMaster.objects.filter(productid=product_id).aggregate(
+    sold = SalesMaster.objects.filter(productid_id=product_id).aggregate(
         total=Sum('sale_quantity')
     )['total'] or 0
     
     # Get total purchased returns quantity
-    purchase_returns = ReturnPurchaseMaster.objects.filter(returnproductid=product_id).aggregate(
+    purchase_returns = ReturnPurchaseMaster.objects.filter(returnproductid_id=product_id).aggregate(
         total=Sum('returnproduct_quantity')
     )['total'] or 0
     
     # Get total sales returns quantity
-    sales_returns = ReturnSalesMaster.objects.filter(return_productid=product_id).aggregate(
+    sales_returns = ReturnSalesMaster.objects.filter(return_productid_id=product_id).aggregate(
         total=Sum('return_sale_quantity')
     )['total'] or 0
     
@@ -118,23 +118,23 @@ def get_stock_status(product_id):
     # Get expiry-wise stock quantity
     expiry_stock = []
     
-    purchases = PurchaseMaster.objects.filter(productid=product_id)
+    purchases = PurchaseMaster.objects.filter(productid_id=product_id)
     for purchase in purchases:
         # Look for sales of this batch
         batch_sold = SalesMaster.objects.filter(
-            productid=product_id, 
+            productid_id=product_id, 
             product_batch_no=purchase.product_batch_no
         ).aggregate(total=Sum('sale_quantity'))['total'] or 0
         
         # Look for returns of this batch
         batch_returned = ReturnPurchaseMaster.objects.filter(
-            returnproductid=product_id, 
+            returnproductid_id=product_id, 
             returnproduct_batch_no=purchase.product_batch_no
         ).aggregate(total=Sum('returnproduct_quantity'))['total'] or 0
         
         # Look for sales returns of this batch
         batch_sales_returned = ReturnSalesMaster.objects.filter(
-            return_productid=product_id, 
+            return_productid_id=product_id, 
             return_product_batch_no=purchase.product_batch_no
         ).aggregate(total=Sum('return_sale_quantity'))['total'] or 0
         
