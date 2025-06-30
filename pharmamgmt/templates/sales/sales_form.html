@@ -214,6 +214,10 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- jQuery (required for Select2) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const productSelect = document.getElementById('{{ form.productid.id_for_label }}');
@@ -224,6 +228,14 @@
         const calcModeSelect = document.getElementById('{{ form.sale_calculation_mode.id_for_label }}');
         const gstInput = document.getElementById('{{ form.sale_igst.id_for_label }}');
         const batchNoInput = document.getElementById('{{ form.product_batch_no.id_for_label }}');
+        
+        // Initialize Select2 for product dropdown
+        $(productSelect).select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Select or search product...',
+            allowClear: true,
+            width: '100%'
+        });
         
         // Display elements
         const actualRateDisplay = document.getElementById('actualRate');
@@ -607,10 +619,10 @@
         const mrpInput = document.getElementById('{{ form.product_MRP.id_for_label }}');
         const rateInput = document.getElementById('{{ form.sale_rate.id_for_label }}');
         
-        // Set focus to product select on page load
-        window.addEventListener('load', () => {
-            productSelect.focus();
-        });
+        // Set focus to product select on page load (after Select2 initialization)
+        setTimeout(() => {
+            $(productSelect).select2('open');
+        }, 500);
         
         // Clear barcode button handler
         clearBarcodeBtn.addEventListener('click', () => {
