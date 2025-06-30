@@ -3303,3 +3303,112 @@ def delete_user(request, pk):
         'title': 'Delete User'
     }
     return render(request, 'user_confirm_delete.html', context)
+
+@login_required
+def get_product_batches(request):
+    """API endpoint to get available batches for a product"""
+    product_id = request.GET.get('product_id')
+    
+    if not product_id:
+        return JsonResponse({
+            'success': False,
+            'error': 'Product ID is required'
+        })
+    
+    try:
+        # Get all purchase records for this product with available stock
+        purchases = PurchaseMaster.objects.filter(
+            productid=product_id
+        ).exclude(product_batch_no__isnull=True).exclude(product_batch_no='')
+        
+        # Group by batch number and calculate available stock
+        batch_data = {}
+        for purchase in purchases:
+            batch_no = purchase.product_batch_no
+            if batch_no not in batch_data:
+                # Calculate available stock for this batch
+                stock_info = get_batch_stock_status(product_id, batch_no)
+                if stock_info['available_quantity'] > 0:  # Only include batches with stock
+                    batch_data[batch_no] = {
+                        'batch_no': batch_no,
+                        'expiry': purchase.product_expiry.strftime('%m/%Y') if purchase.product_expiry else '',
+                        'stock': stock_info['available_quantity'],
+                        'mrp': float(purchase.product_MRP or 0)
+                    }
+        
+        # Convert to list and sort by expiry date
+        batches = list(batch_data.values())
+        batches.sort(key=lambda x: x['expiry'])
+        
+        return JsonResponse({
+            'success': True,
+            'batches': batches
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+@login_required
+def get_batch_details(request):
+    """API endpoint to get detailed information for a specific batch"""
+    product_id = request.GET.get('product_id')
+    batch_no = request.GET.get('batch_no')
+    
+    if not product_id or not batch_no:
+        return JsonResponse({
+            'success': False,
+            'error': 'Product ID and batch number are required'
+        })
+    
+    try:
+        # Get purchase record for this product and batch
+        purchase = PurchaseMaster.objects.filter(
+            productid=product_id,
+            product_batch_no=batch_no
+        ).first()
+        
+        if not purchase:
+            return JsonResponse({
+                'success': False,
+                'error': 'Batch not found'
+            })
+        
+        # Get stock information
+        stock_info = get_batch_stock_status(product_id, batch_no)
+        
+        # Get sale rates for this product and batch
+        try:
+            sale_rate = SaleRateMaster.objects.get(
+                productid=product_id,
+                product_batch_no=batch_no
+            )
+            rate_a = float(sale_rate.product_sale_rate_A or 0)
+            rate_b = float(sale_rate.product_sale_rate_B or 0)
+            rate_c = float(sale_rate.product_sale_rate_C or 0)
+        except SaleRateMaster.DoesNotExist:
+            # Use purchase rates if sale rates not set
+            rate_a = float(purchase.product_sale_rate_A or 0)
+            rate_b = float(purchase.product_sale_rate_B or 0)
+            rate_c = float(purchase.product_sale_rate_C or 0)
+        
+        return JsonResponse({
+            'success': True,
+            'batch_details': {
+                'batch_no': batch_no,
+                'expiry': purchase.product_expiry.strftime('%m/%Y') if purchase.product_expiry else '',
+                'stock': stock_info['available_quantity'],
+                'mrp': float(purchase.product_MRP or 0),
+                'rate_a': rate_a,
+                'rate_b': rate_b,
+                'rate_c': rate_c
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
