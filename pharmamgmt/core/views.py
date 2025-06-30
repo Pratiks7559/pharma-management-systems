@@ -2952,7 +2952,7 @@ def get_product_batches(request):
         try:
             # Get all available batches for this product with current stock
             batches = []
-            purchases = PurchaseMaster.objects.filter(productid=product_id).distinct('product_batch_no')
+            purchases = PurchaseMaster.objects.filter(productid_id=product_id).distinct('product_batch_no')
             
             for purchase in purchases:
                 # Check if this batch has available stock

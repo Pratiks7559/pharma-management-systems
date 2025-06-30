@@ -60,13 +60,13 @@ def get_batch_stock_status(product_id, batch_no):
     """
     # Get total purchased quantity for this batch
     purchased = PurchaseMaster.objects.filter(
-        productid=product_id, 
+        productid_id=product_id, 
         product_batch_no=batch_no
     ).aggregate(total=Sum('product_quantity'))['total'] or 0
     
     # Get total sold quantity for this batch
     sold = SalesMaster.objects.filter(
-        productid=product_id, 
+        productid_id=product_id, 
         product_batch_no=batch_no
     ).aggregate(total=Sum('sale_quantity'))['total'] or 0
     
