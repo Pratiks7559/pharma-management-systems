@@ -161,7 +161,15 @@ class InvoicePaymentForm(forms.ModelForm):
 
 class PurchaseForm(forms.ModelForm):
     product_batch_no = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    product_expiry = forms.DateField(widget=DateInput(attrs={'class': 'form-control'}))
+    product_expiry = forms.CharField(
+        max_length=7, 
+        widget=forms.TextInput(attrs={
+            'class': 'form-control', 
+            'placeholder': 'MM-YYYY',
+            'pattern': '[0-1][0-9]-[0-9]{4}',
+            'title': 'Enter expiry date in MM-YYYY format'
+        })
+    )
     product_MRP = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     product_purchase_rate = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     product_quantity = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
@@ -206,8 +214,18 @@ class SalesInvoiceForm(forms.ModelForm):
         fields = ['sales_invoice_date', 'customerid', 'sales_transport_charges']
 
 class SalesForm(forms.ModelForm):
-    product_batch_no = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    product_expiry = forms.DateField(widget=DateInput(attrs={'class': 'form-control'}))
+    product_batch_no = forms.CharField(widget=forms.TextInput(attrs={
+        'class': 'form-control',
+        'id': 'batch_no_field'
+    }))
+    product_expiry = forms.CharField(
+        max_length=7, 
+        widget=forms.TextInput(attrs={
+            'class': 'form-control', 
+            'placeholder': 'MM-YYYY',
+            'readonly': 'readonly'
+        })
+    )
     sale_rate = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'readonly': 'readonly'}))
     sale_quantity = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     sale_scheme = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))

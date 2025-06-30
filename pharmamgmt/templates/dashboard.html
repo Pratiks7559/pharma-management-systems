@@ -249,24 +249,16 @@
                             </thead>
                             <tbody>
                                 {% for product in expired_products %}
-                                {% with days_left=product.product_expiry|timeuntil %}
                                 <tr>
                                     <td>{{ product.product_name }}</td>
                                     <td>{{ product.product_batch_no }}</td>
                                     <td>{{ product.product_expiry }}</td>
                                     <td>{{ product.product_quantity }}</td>
-                                    <td>{{ days_left }}</td>
+                                    <td>{{ product.product_expiry }}</td>
                                     <td>
-                                        {% if product.product_expiry < today %}
-                                            <span class="badge bg-danger">Expired</span>
-                                        {% elif days_left and '30 days' in days_left %}
-                                            <span class="badge bg-warning text-dark">Expiring Soon</span>
-                                        {% else %}
-                                            <span class="badge bg-success">Valid</span>
-                                        {% endif %}
+                                        <span class="badge bg-warning text-dark">Check Expiry</span>
                                     </td>
                                 </tr>
-                                {% endwith %}
                                 {% empty %}
                                 <tr>
                                     <td colspan="6" class="text-center">No expiring products</td>

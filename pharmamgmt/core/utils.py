@@ -1,11 +1,56 @@
 from django.db.models import Sum, F
 from django.utils import timezone
 from io import BytesIO
-from datetime import datetime
+from datetime import datetime, date
 import tempfile
 import os
 
 from .models import PurchaseMaster, SalesMaster, ReturnPurchaseMaster, ReturnSalesMaster
+
+
+def parse_expiry_date(expiry_str):
+    """
+    Convert MM-YYYY string to datetime object for the last day of that month
+    """
+    if not expiry_str or expiry_str == 'NA':
+        return None
+    try:
+        # Parse MM-YYYY format
+        month, year = map(int, expiry_str.split('-'))
+        # Return last day of the month
+        if month == 12:
+            return date(year + 1, 1, 1) - timezone.timedelta(days=1)
+        else:
+            return date(year, month + 1, 1) - timezone.timedelta(days=1)
+    except (ValueError, AttributeError):
+        return None
+
+
+def format_expiry_date(date_obj):
+    """
+    Convert datetime object to MM-YYYY string format
+    """
+    if not date_obj:
+        return ""
+    if isinstance(date_obj, str):
+        return date_obj
+    return date_obj.strftime("%m-%Y")
+
+
+def validate_expiry_format(expiry_str):
+    """
+    Validate MM-YYYY format
+    """
+    if not expiry_str:
+        return False
+    try:
+        parts = expiry_str.split('-')
+        if len(parts) != 2:
+            return False
+        month, year = map(int, parts)
+        return 1 <= month <= 12 and 2000 <= year <= 2050
+    except (ValueError, AttributeError):
+        return False
 
 
 def get_batch_stock_status(product_id, batch_no):
