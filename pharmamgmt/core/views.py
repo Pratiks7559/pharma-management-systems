@@ -2954,9 +2954,13 @@ def get_product_batches(request):
             batches = []
             purchases = PurchaseMaster.objects.filter(productid_id=product_id).distinct('product_batch_no')
             
+            print(f"DEBUG: Product ID {product_id}, Found {purchases.count()} purchases")
+            
             for purchase in purchases:
+                print(f"DEBUG: Processing batch {purchase.product_batch_no}")
                 # Check if this batch has available stock
                 batch_stock, is_available = get_batch_stock_status(product_id, purchase.product_batch_no)
+                print(f"DEBUG: Batch {purchase.product_batch_no} has stock: {batch_stock}")
                 
                 if batch_stock > 0:  # Only include batches with available stock
                     batches.append({
@@ -2967,10 +2971,12 @@ def get_product_batches(request):
                         'purchase_rate': float(purchase.product_purchase_rate or 0)
                     })
             
+            print(f"DEBUG: Returning {len(batches)} batches")
             return JsonResponse({
                 'success': True,
                 'batches': batches,
-                'total_batches': len(batches)
+                'total_batches': len(batches),
+                'debug_info': f"Found {purchases.count()} purchases, returning {len(batches)} batches"
             })
             
         except Exception as e:
