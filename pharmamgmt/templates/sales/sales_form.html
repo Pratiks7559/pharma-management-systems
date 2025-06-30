@@ -30,31 +30,10 @@
                     <form method="post" id="salesForm">
                         {% csrf_token %}
                         
-                        <!-- Barcode Scanner Section -->
-                        <div class="card mb-3 border-primary">
-                            <div class="card-header bg-primary text-white">
-                                <i class="fas fa-barcode"></i> Barcode Scanner
-                            </div>
-                            <div class="card-body">
-                                <div class="form-group">
-                                    <label for="barcodeInput"><strong>Scan Product Barcode</strong></label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" id="barcodeInput" 
-                                               placeholder="Scan or enter barcode..." autocomplete="off">
-                                        <div class="input-group-append">
-                                            <button class="btn btn-outline-secondary" type="button" id="clearBarcodeBtn">
-                                                <i class="fas fa-times"></i> Clear
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <small class="form-text text-muted">Focus will automatically return to this field after scan</small>
-                                </div>
-                                <div id="barcodeScanStatus" class="mt-2"></div>
-                            </div>
-                        </div>
+
                         
                         <div class="form-group mb-3">
-                            <label for="{{ form.productid.id_for_label }}">Product* (or use barcode scanner above)</label>
+                            <label for="{{ form.productid.id_for_label }}">Product*</label>
                             {{ form.productid }}
                             {% if form.productid.errors %}
                                 <div class="text-danger">{{ form.productid.errors }}</div>
@@ -198,6 +177,29 @@
                             </a>
                         </div>
                     </form>
+                    
+                    <!-- Barcode Scanner Section -->
+                    <div class="card mt-4 border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <i class="fas fa-barcode"></i> Barcode Scanner
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="barcodeInput"><strong>Scan Product Barcode</strong></label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="barcodeInput" 
+                                           placeholder="Scan or enter barcode..." autocomplete="off">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="button" id="clearBarcodeBtn">
+                                            <i class="fas fa-times"></i> Clear
+                                        </button>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">Focus will automatically return to this field after scan</small>
+                            </div>
+                            <div id="barcodeScanStatus" class="mt-2"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
