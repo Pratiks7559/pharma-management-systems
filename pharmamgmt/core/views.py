@@ -2982,7 +2982,13 @@ def get_product_batches(request):
             })
             
         except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)})
+            import traceback
+            return JsonResponse({
+                'success': False, 
+                'error': str(e),
+                'traceback': traceback.format_exc(),
+                'product_id': product_id
+            })
     
     return JsonResponse({'success': False, 'message': 'Invalid request method'})
 
