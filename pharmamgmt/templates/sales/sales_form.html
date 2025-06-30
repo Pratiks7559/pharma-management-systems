@@ -1,6 +1,12 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
 
+{% block extra_css %}
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <div class="row justify-content-center">
@@ -601,9 +607,9 @@
         const mrpInput = document.getElementById('{{ form.product_MRP.id_for_label }}');
         const rateInput = document.getElementById('{{ form.sale_rate.id_for_label }}');
         
-        // Set focus to barcode input on page load
+        // Set focus to product select on page load
         window.addEventListener('load', () => {
-            barcodeInput.focus();
+            productSelect.focus();
         });
         
         // Clear barcode button handler
@@ -613,15 +619,7 @@
             barcodeInput.focus();
         });
         
-        // Automatically return focus to barcode input field when clicked elsewhere
-        document.addEventListener('click', () => {
-            // Small delay to allow other click actions to complete
-            setTimeout(() => {
-                if (document.activeElement !== barcodeInput) {
-                    barcodeInput.focus();
-                }
-            }, 100);
-        });
+        // Barcode scanner is now inactive - no automatic focus return
         
         // Process barcode input
         barcodeInput.addEventListener('keydown', (e) => {
