@@ -482,7 +482,7 @@
             batchPopupModal.show();
             
             // Fetch available batches
-            fetch(\`/api/product-batches/?product_id=\${productId}\`)
+            fetch(`/api/product-batches/?product_id=${productId}`)
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('batchLoadingSpinner').style.display = 'none';
@@ -493,19 +493,19 @@
                         tableBody.innerHTML = '';
                         
                         data.batches.forEach(batch => {
-                            const row = \`
-                                <tr style="cursor: pointer;" onclick="selectBatch('\${batch.batch_no}', '\${batch.expiry}', \${batch.stock}, \${batch.mrp})">
-                                    <td><strong>\${batch.batch_no}</strong></td>
-                                    <td>\${batch.expiry}</td>
-                                    <td>\${batch.stock}</td>
-                                    <td>₹\${batch.mrp}</td>
+                            const row = `
+                                <tr style="cursor: pointer;" onclick="selectBatch('${batch.batch_no}', '${batch.expiry}', ${batch.stock}, ${batch.mrp})">
+                                    <td><strong>${batch.batch_no}</strong></td>
+                                    <td>${batch.expiry}</td>
+                                    <td>${batch.stock}</td>
+                                    <td>₹${batch.mrp}</td>
                                     <td>
-                                        <button class="btn btn-sm btn-primary" onclick="selectBatch('\${batch.batch_no}', '\${batch.expiry}', \${batch.stock}, \${batch.mrp})">
+                                        <button class="btn btn-sm btn-primary" onclick="selectBatch('${batch.batch_no}', '${batch.expiry}', ${batch.stock}, ${batch.mrp})">
                                             Select
                                         </button>
                                     </td>
                                 </tr>
-                            \`;
+                            `;
                             tableBody.insertAdjacentHTML('beforeend', row);
                         });
                         
@@ -529,7 +529,7 @@
             batchNoInput.value = batchNo;
             
             // Fetch detailed batch information
-            fetch(\`/api/batch-details/?product_id=\${productId}&batch_no=\${batchNo}\`)
+            fetch(`/api/batch-details/?product_id=${productId}&batch_no=${batchNo}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -550,10 +550,10 @@
                         const stockStatusDiv = document.getElementById('stock-status');
                         if (stockStatusDiv) {
                             if (details.stock > 0) {
-                                stockStatusDiv.innerHTML = \`<div class="alert alert-success">Stock Available: \${details.stock} units</div>\`;
+                                stockStatusDiv.innerHTML = `<div class="alert alert-success">Stock Available: ${details.stock} units</div>`;
                                 document.getElementById('submit-btn').disabled = false;
                             } else {
-                                stockStatusDiv.innerHTML = \`<div class="alert alert-danger">Out of Stock!</div>\`;
+                                stockStatusDiv.innerHTML = `<div class="alert alert-danger">Out of Stock!</div>`;
                                 document.getElementById('submit-btn').disabled = true;
                             }
                         }
