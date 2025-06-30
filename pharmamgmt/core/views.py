@@ -2950,41 +2950,42 @@ def get_product_batches(request):
             return JsonResponse({'success': False, 'message': 'Product ID is required'})
         
         try:
-            # Get all available batches for this product with current stock
             batches = []
-            purchases = PurchaseMaster.objects.filter(productid_id=product_id).values('product_batch_no').distinct()
+            # Get distinct batch numbers for this product
+            batch_list = PurchaseMaster.objects.filter(productid_id=product_id).values_list('product_batch_no', flat=True).distinct()
             
-            for purchase_data in purchases:
-                batch_no = purchase_data['product_batch_no']
-                if not batch_no:
-                    continue
-                    
-                # Get the first purchase record for this batch to get details
-                purchase = PurchaseMaster.objects.filter(
-                    productid_id=product_id, 
-                    product_batch_no=batch_no
-                ).first()
-                
-                if purchase:
-                    # Calculate stock directly without using the utility function
-                    purchased_qty = PurchaseMaster.objects.filter(
-                        productid_id=product_id, 
-                        product_batch_no=batch_no
-                    ).count() * 1000  # Temporary: assume 1000 units per purchase for testing
-                    
-                    # For now, assume no sales to test if basic functionality works
-                    sold_qty = 0
-                    
-                    batch_stock = purchased_qty - sold_qty
-                    
-                    if batch_stock > 0:
-                        batches.append({
-                            'batch_no': batch_no,
-                            'expiry': purchase.product_expiry.strftime('%m-%Y') if purchase.product_expiry else '',
-                            'stock': batch_stock,
-                            'mrp': float(purchase.product_MRP or 0),
-                            'purchase_rate': float(purchase.product_purchase_rate or 0)
-                        })
+            for batch_no in batch_list:
+                if batch_no:  # Skip empty batch numbers
+                    # Get purchase details for this batch
+                    purchase = PurchaseMaster.objects.filter(productid_id=product_id, product_batch_no=batch_no).first()
+                    if purchase:
+                        # Calculate total purchased quantity for this batch
+                        total_purchased = 0
+                        for p in PurchaseMaster.objects.filter(productid_id=product_id, product_batch_no=batch_no):
+                            total_purchased += float(p.product_quantity or 0)
+                        
+                        # Calculate total sold quantity for this batch  
+                        total_sold = 0
+                        for s in SalesMaster.objects.filter(productid_id=product_id, product_batch_no=batch_no):
+                            total_sold += float(s.sale_quantity or 0)
+                        
+                        stock = total_purchased - total_sold
+                        
+                        if stock > 0:
+                            expiry_str = ''
+                            if purchase.product_expiry:
+                                try:
+                                    expiry_str = purchase.product_expiry.strftime('%m-%Y')
+                                except:
+                                    expiry_str = str(purchase.product_expiry)
+                            
+                            batches.append({
+                                'batch_no': batch_no,
+                                'expiry': expiry_str,
+                                'stock': int(stock),
+                                'mrp': float(purchase.product_MRP or 0),
+                                'purchase_rate': float(purchase.product_purchase_rate or 0)
+                            })
             
             return JsonResponse({
                 'success': True,
@@ -2997,8 +2998,7 @@ def get_product_batches(request):
             return JsonResponse({
                 'success': False, 
                 'error': str(e),
-                'traceback': traceback.format_exc(),
-                'product_id': product_id
+                'traceback': traceback.format_exc()
             })
     
     return JsonResponse({'success': False, 'message': 'Invalid request method'})
