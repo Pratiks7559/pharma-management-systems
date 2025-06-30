@@ -102,4 +102,8 @@ urlpatterns = [
     path('rates/add/', views.add_sale_rate, name='add_sale_rate'),
     path('rates/<int:pk>/update/', views.update_sale_rate, name='update_sale_rate'),
     path('rates/<int:pk>/delete/', views.delete_sale_rate, name='delete_sale_rate'),
+    
+    # API endpoints for batch functionality
+    path('api/product-batches/', views.get_product_batches, name='get_product_batches'),
+    path('api/batch-details/', views.get_batch_details, name='get_batch_details'),
 ]

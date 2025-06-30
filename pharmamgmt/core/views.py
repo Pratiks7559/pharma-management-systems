@@ -25,7 +25,7 @@ from .forms import (
     SalesInvoiceForm, SalesForm, SalesPaymentForm, ProductRateForm,
     PurchaseReturnInvoiceForm, PurchaseReturnForm, SalesReturnInvoiceForm, SalesReturnForm
 )
-from .utils import get_stock_status, get_batch_stock_status, generate_invoice_pdf, generate_sales_invoice_pdf, get_avg_mrp
+from .utils import get_stock_status, get_batch_stock_status, generate_invoice_pdf, generate_sales_invoice_pdf, get_avg_mrp, parse_expiry_date
 
 # Authentication views
 def login_view(request):
@@ -2936,6 +2936,103 @@ def financial_report(request):
         'title': 'Financial Report'
     }
     return render(request, 'reports/financial_report.html', context)
+
+
+@login_required
+def get_product_batches(request):
+    """
+    API endpoint to get available batch numbers for a product
+    """
+    if request.method == 'GET':
+        product_id = request.GET.get('product_id')
+        
+        if not product_id:
+            return JsonResponse({'success': False, 'message': 'Product ID is required'})
+        
+        try:
+            # Get all available batches for this product with current stock
+            batches = []
+            purchases = PurchaseMaster.objects.filter(productid=product_id).distinct('product_batch_no')
+            
+            for purchase in purchases:
+                # Check if this batch has available stock
+                batch_stock, is_available = get_batch_stock_status(product_id, purchase.product_batch_no)
+                
+                if batch_stock > 0:  # Only include batches with available stock
+                    batches.append({
+                        'batch_no': purchase.product_batch_no,
+                        'expiry': purchase.product_expiry,
+                        'stock': batch_stock,
+                        'mrp': purchase.product_MRP,
+                        'purchase_rate': purchase.product_purchase_rate
+                    })
+            
+            return JsonResponse({
+                'success': True,
+                'batches': batches,
+                'total_batches': len(batches)
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+
+@login_required
+def get_batch_details(request):
+    """
+    API endpoint to get detailed information for a specific batch
+    """
+    if request.method == 'GET':
+        product_id = request.GET.get('product_id')
+        batch_no = request.GET.get('batch_no')
+        
+        if not product_id or not batch_no:
+            return JsonResponse({'success': False, 'message': 'Product ID and Batch Number are required'})
+        
+        try:
+            # Get batch details from purchase records
+            purchase = PurchaseMaster.objects.filter(
+                productid=product_id,
+                product_batch_no=batch_no
+            ).first()
+            
+            if not purchase:
+                return JsonResponse({'success': False, 'message': 'Batch not found'})
+            
+            # Get current stock for this batch
+            batch_stock, is_available = get_batch_stock_status(product_id, batch_no)
+            
+            # Get sale rates for this batch
+            sale_rates = SaleRateMaster.objects.filter(
+                productid=product_id,
+                product_batch_no=batch_no
+            ).first()
+            
+            batch_details = {
+                'batch_no': purchase.product_batch_no,
+                'expiry': purchase.product_expiry,
+                'stock': batch_stock,
+                'mrp': purchase.product_MRP,
+                'purchase_rate': purchase.product_purchase_rate,
+                'rate_a': sale_rates.rate_A if sale_rates else purchase.product_MRP,
+                'rate_b': sale_rates.rate_B if sale_rates else purchase.product_MRP,
+                'rate_c': sale_rates.rate_C if sale_rates else purchase.product_MRP,
+                'product_name': purchase.product_name,
+                'product_company': purchase.product_company,
+                'product_packing': purchase.product_packing
+            }
+            
+            return JsonResponse({
+                'success': True,
+                'batch_details': batch_details
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
 
 # API views for AJAX requests
 @login_required

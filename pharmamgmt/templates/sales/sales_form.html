@@ -408,6 +408,187 @@
             input.addEventListener('input', calculateValues);
             input.addEventListener('change', calculateValues);
         });
+
+        // Batch Number Popup Functionality (Alt+S shortcut)
+        let batchPopupModal = null;
+        
+        // Create batch popup modal
+        function createBatchPopupModal() {
+            const modalHTML = `
+                <div class="modal fade" id="batchPopupModal" tabindex="-1" aria-labelledby="batchPopupModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="batchPopupModalLabel">Select Batch Number</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div id="batchLoadingSpinner" class="text-center">
+                                    <div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p>Loading available batches...</p>
+                                </div>
+                                <div id="batchListContainer" style="display: none;">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Batch No</th>
+                                                    <th>Expiry</th>
+                                                    <th>Stock</th>
+                                                    <th>MRP</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="batchTableBody">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div id="noBatchesMessage" class="alert alert-warning" style="display: none;">
+                                    No batches available for the selected product.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add modal to the page
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            batchPopupModal = new bootstrap.Modal(document.getElementById('batchPopupModal'));
+        }
+        
+        // Function to show batch popup
+        function showBatchPopup() {
+            const productId = productSelect.value;
+            
+            if (!productId) {
+                alert('Please select a product first!');
+                return;
+            }
+            
+            if (!batchPopupModal) {
+                createBatchPopupModal();
+            }
+            
+            // Show loading state
+            document.getElementById('batchLoadingSpinner').style.display = 'block';
+            document.getElementById('batchListContainer').style.display = 'none';
+            document.getElementById('noBatchesMessage').style.display = 'none';
+            
+            // Show modal
+            batchPopupModal.show();
+            
+            // Fetch available batches
+            fetch(\`/api/product-batches/?product_id=\${productId}\`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('batchLoadingSpinner').style.display = 'none';
+                    
+                    if (data.success && data.batches.length > 0) {
+                        // Populate batch table
+                        const tableBody = document.getElementById('batchTableBody');
+                        tableBody.innerHTML = '';
+                        
+                        data.batches.forEach(batch => {
+                            const row = \`
+                                <tr style="cursor: pointer;" onclick="selectBatch('\${batch.batch_no}', '\${batch.expiry}', \${batch.stock}, \${batch.mrp})">
+                                    <td><strong>\${batch.batch_no}</strong></td>
+                                    <td>\${batch.expiry}</td>
+                                    <td>\${batch.stock}</td>
+                                    <td>₹\${batch.mrp}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" onclick="selectBatch('\${batch.batch_no}', '\${batch.expiry}', \${batch.stock}, \${batch.mrp})">
+                                            Select
+                                        </button>
+                                    </td>
+                                </tr>
+                            \`;
+                            tableBody.insertAdjacentHTML('beforeend', row);
+                        });
+                        
+                        document.getElementById('batchListContainer').style.display = 'block';
+                    } else {
+                        document.getElementById('noBatchesMessage').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching batches:', error);
+                    document.getElementById('batchLoadingSpinner').style.display = 'none';
+                    document.getElementById('noBatchesMessage').style.display = 'block';
+                });
+        }
+        
+        // Function to select a batch and auto-fill details
+        window.selectBatch = function(batchNo, expiry, stock, mrp) {
+            const productId = productSelect.value;
+            
+            // Set batch number
+            batchNoInput.value = batchNo;
+            
+            // Fetch detailed batch information
+            fetch(\`/api/batch-details/?product_id=\${productId}&batch_no=\${batchNo}\`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const details = data.batch_details;
+                        
+                        // Auto-fill form fields
+                        document.getElementById('{{ form.product_expiry.id_for_label }}').value = details.expiry;
+                        
+                        // Update product rates
+                        productRates.A = parseFloat(details.rate_a) || 0;
+                        productRates.B = parseFloat(details.rate_b) || 0;
+                        productRates.C = parseFloat(details.rate_c) || 0;
+                        
+                        // Update sale rate based on current rate type
+                        updateSaleRateField();
+                        
+                        // Update stock status
+                        const stockStatusDiv = document.getElementById('stock-status');
+                        if (stockStatusDiv) {
+                            if (details.stock > 0) {
+                                stockStatusDiv.innerHTML = \`<div class="alert alert-success">Stock Available: \${details.stock} units</div>\`;
+                                document.getElementById('submit-btn').disabled = false;
+                            } else {
+                                stockStatusDiv.innerHTML = \`<div class="alert alert-danger">Out of Stock!</div>\`;
+                                document.getElementById('submit-btn').disabled = true;
+                            }
+                        }
+                        
+                        // Recalculate values
+                        calculateValues();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching batch details:', error);
+                });
+            
+            // Close modal
+            batchPopupModal.hide();
+        };
+        
+        // Add keyboard shortcut listener for Alt+S
+        document.addEventListener('keydown', function(e) {
+            // Check for Alt+S (Alt key + S key)
+            if (e.altKey && e.key.toLowerCase() === 's') {
+                e.preventDefault(); // Prevent default browser behavior
+                showBatchPopup();
+            }
+        });
+        
+        // Add click event listener to batch number field for popup
+        batchNoInput.addEventListener('focus', function() {
+            // Show a tooltip or hint about Alt+S shortcut
+            this.setAttribute('title', 'Press Alt+S to open batch selection popup');
+        });
+        
+        // Add double-click event to batch number field
+        batchNoInput.addEventListener('dblclick', function() {
+            showBatchPopup();
+        });
         
         // Barcode Scanner Functionality
         const barcodeInput = document.getElementById('barcodeInput');
