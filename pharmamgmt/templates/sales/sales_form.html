@@ -505,6 +505,7 @@
             fetch(`/api/product-batches/?product_id=${productId}`)
                 .then(response => response.json())
                 .then(data => {
+                    console.log('DEBUG: Batch API Response:', data);
                     document.getElementById('batchLoadingSpinner').style.display = 'none';
                     
                     if (data.success && data.batches.length > 0) {

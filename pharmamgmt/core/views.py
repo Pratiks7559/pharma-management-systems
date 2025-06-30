@@ -2971,12 +2971,14 @@ def get_product_batches(request):
                         'purchase_rate': float(purchase.product_purchase_rate or 0)
                     })
             
-            print(f"DEBUG: Returning {len(batches)} batches")
+            # Always return debug info even if no batches found
             return JsonResponse({
                 'success': True,
                 'batches': batches,
                 'total_batches': len(batches),
-                'debug_info': f"Found {purchases.count()} purchases, returning {len(batches)} batches"
+                'debug_purchases_found': purchases.count(),
+                'debug_batches_returned': len(batches),
+                'debug_product_id': product_id
             })
             
         except Exception as e:
