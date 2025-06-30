@@ -2961,10 +2961,10 @@ def get_product_batches(request):
                 if batch_stock > 0:  # Only include batches with available stock
                     batches.append({
                         'batch_no': purchase.product_batch_no,
-                        'expiry': purchase.product_expiry,
+                        'expiry': purchase.product_expiry.strftime('%m-%Y') if purchase.product_expiry else '',
                         'stock': batch_stock,
-                        'mrp': purchase.product_MRP,
-                        'purchase_rate': purchase.product_purchase_rate
+                        'mrp': float(purchase.product_MRP or 0),
+                        'purchase_rate': float(purchase.product_purchase_rate or 0)
                     })
             
             return JsonResponse({
