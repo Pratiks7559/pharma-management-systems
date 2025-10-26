@@ -5,11 +5,24 @@ from .models import (
     InvoiceMaster, InvoicePaid, PurchaseMaster, SalesInvoiceMaster, SalesMaster,
     SalesInvoicePaid, ProductRateMaster, ReturnInvoiceMaster, PurchaseReturnInvoicePaid,
     ReturnPurchaseMaster, ReturnSalesInvoiceMaster, ReturnSalesInvoicePaid, ReturnSalesMaster,
-    SaleRateMaster
+    SaleRateMaster, PaymentMaster, ReceiptMaster
 )
+# PaymentMaster and ReceiptMaster are now in models.py
 
-class DateInput(forms.DateInput):
-    input_type = 'date'
+class DateInput(forms.TextInput):
+    input_type = 'text'
+    
+    def __init__(self, attrs=None, format=None):
+        default_attrs = {
+            'class': 'form-control date-input-ddmmyyyy',
+            'placeholder': 'DDMMYYYY',
+            'maxlength': '8',
+            'title': 'Enter date in DDMMYYYY format',
+            'data-date-format': 'ddmmyyyy'
+        }
+        if attrs:
+            default_attrs.update(attrs)
+        super().__init__(attrs=default_attrs)
 
 class LoginForm(AuthenticationForm):
     username = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Username'}))
@@ -87,6 +100,19 @@ class ProductForm(forms.ModelForm):
     product_barcode = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Scan or enter product barcode'}))
     product_image = forms.ImageField(required=False, widget=forms.FileInput(attrs={'class': 'form-control'}))
     
+    def clean_product_barcode(self):
+        barcode = self.cleaned_data.get('product_barcode')
+        # Convert empty string to None
+        if not barcode or barcode.strip() == '':
+            return None
+        # Only check for duplicates if barcode is provided and not empty
+        existing = ProductMaster.objects.filter(product_barcode=barcode)
+        if self.instance.pk:
+            existing = existing.exclude(pk=self.instance.pk)
+        if existing.exists():
+            raise forms.ValidationError("Product with this barcode already exists.")
+        return barcode
+    
     class Meta:
         model = ProductMaster
         fields = ['product_name', 'product_company', 'product_packing', 'product_salt', 
@@ -127,6 +153,7 @@ class CustomerForm(forms.ModelForm):
     customer_spoc = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
     customer_dlno = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
     customer_gstno = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+    customer_food_license_no = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
     customer_bank = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
     customer_bankaccountno = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
     customer_bankifsc = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
@@ -135,24 +162,63 @@ class CustomerForm(forms.ModelForm):
     
     class Meta:
         model = CustomerMaster
-        fields = '__all__'
+        fields = ['customer_name', 'customer_type', 'customer_address', 'customer_mobile', 'customer_whatsapp', 'customer_emailid', 'customer_spoc', 'customer_dlno', 'customer_gstno', 'customer_food_license_no', 'customer_bank', 'customer_bankaccountno', 'customer_bankifsc', 'customer_upi', 'customer_credit_days']
 
 class InvoiceForm(forms.ModelForm):
     invoice_no = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    invoice_date = forms.DateField(widget=DateInput(attrs={'class': 'form-control'}))
+    invoice_date = forms.CharField(widget=DateInput())
     supplierid = forms.ModelChoiceField(queryset=SupplierMaster.objects.all(), widget=forms.Select(attrs={'class': 'form-control'}))
-    transport_charges = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    scroll_no = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter scroll number'}))
+    transport_charges = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), initial=0)
     invoice_total = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    
+    def clean_invoice_date(self):
+        from datetime import datetime
+        date_str = self.cleaned_data['invoice_date']
+        
+        # Handle YYYY-MM-DD format (from backend)
+        if len(date_str) == 10 and '-' in date_str:
+            try:
+                return datetime.strptime(date_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+        
+        # Handle DDMMYYYY format
+        if len(date_str) == 8 and date_str.isdigit():
+            day = int(date_str[:2])
+            month = int(date_str[2:4])
+            year = int(date_str[4:8])
+            try:
+                return datetime(year, month, day).date()
+            except ValueError:
+                raise forms.ValidationError("Invalid date")
+        
+        raise forms.ValidationError("Enter date in DDMMYYYY format")
     
     class Meta:
         model = InvoiceMaster
-        fields = ['invoice_no', 'invoice_date', 'supplierid', 'transport_charges', 'invoice_total']
+        fields = ['invoice_no', 'invoice_date', 'supplierid', 'scroll_no', 'transport_charges', 'invoice_total']
 
 class InvoicePaymentForm(forms.ModelForm):
     payment_date = forms.DateField(widget=DateInput(attrs={'class': 'form-control'}))
     payment_amount = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     payment_mode = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
     payment_ref_no = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    
+    def clean_payment_date(self):
+        from django.utils import timezone
+        from datetime import datetime
+        
+        payment_date = self.cleaned_data.get('payment_date')
+        
+        if payment_date and hasattr(payment_date, 'date'):
+            # Convert date to timezone-aware datetime
+            current_time = timezone.now().time()
+            payment_date = timezone.make_aware(
+                datetime.combine(payment_date, current_time)
+            )
+        
+        return payment_date
     
     class Meta:
         model = InvoicePaid
@@ -164,10 +230,10 @@ class PurchaseForm(forms.ModelForm):
     product_expiry = forms.CharField(
         max_length=7, 
         widget=forms.TextInput(attrs={
-            'class': 'form-control', 
+            'class': 'form-control',
             'placeholder': 'MM-YYYY',
-            'pattern': '[0-1][0-9]-[0-9]{4}',
-            'title': 'Enter expiry date in MM-YYYY format'
+            'title': 'Enter expiry date in MM-YYYY format (e.g., 12-2025)',
+            'pattern': r'^(0[1-9]|1[0-2])-\d{4}$'
         })
     )
     product_MRP = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
@@ -187,6 +253,30 @@ class PurchaseForm(forms.ModelForm):
     rate_B = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), required=False)
     rate_C = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), required=False)
     
+    def clean_product_expiry(self):
+        expiry = self.cleaned_data.get('product_expiry')
+        if expiry:
+            # Validate MM-YYYY format
+            import re
+            if not re.match(r'^(0[1-9]|1[0-2])-\d{4}$', expiry):
+                raise forms.ValidationError('Enter expiry date in MM-YYYY format (e.g., 12-2025)')
+            
+            # Validate month and year values
+            try:
+                month, year = expiry.split('-')
+                month = int(month)
+                year = int(year)
+                
+                if month < 1 or month > 12:
+                    raise forms.ValidationError('Invalid month. Use 01-12.')
+                if year < 2020 or year > 2050:
+                    raise forms.ValidationError('Invalid year. Use a year between 2020-2050.')
+                    
+            except ValueError:
+                raise forms.ValidationError('Enter expiry date in MM-YYYY format (e.g., 12-2025)')
+        
+        return expiry
+    
     class Meta:
         model = PurchaseMaster
         fields = ['productid', 'product_batch_no', 'product_expiry', 'product_MRP',
@@ -205,9 +295,32 @@ class PurchaseForm(forms.ModelForm):
         self.fields['productid'].label = 'Product'
 
 class SalesInvoiceForm(forms.ModelForm):
-    sales_invoice_date = forms.DateField(widget=DateInput(attrs={'class': 'form-control'}))
+    sales_invoice_date = forms.CharField(widget=DateInput())
     customerid = forms.ModelChoiceField(queryset=CustomerMaster.objects.all(), widget=forms.Select(attrs={'class': 'form-control'}))
     sales_transport_charges = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), initial=0)
+    
+    def clean_sales_invoice_date(self):
+        from datetime import datetime
+        date_str = self.cleaned_data['sales_invoice_date']
+        
+        # Handle YYYY-MM-DD format (from backend)
+        if len(date_str) == 10 and '-' in date_str:
+            try:
+                return datetime.strptime(date_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+        
+        # Handle DDMMYYYY format
+        if len(date_str) == 8 and date_str.isdigit():
+            day = int(date_str[:2])
+            month = int(date_str[2:4])
+            year = int(date_str[4:8])
+            try:
+                return datetime(year, month, day).date()
+            except ValueError:
+                raise forms.ValidationError("Invalid date. Please check day, month and year values.")
+        
+        raise forms.ValidationError("Enter date in DDMMYYYY format")
     
     class Meta:
         model = SalesInvoiceMaster
@@ -221,9 +334,10 @@ class SalesForm(forms.ModelForm):
     product_expiry = forms.CharField(
         max_length=7, 
         widget=forms.TextInput(attrs={
-            'class': 'form-control', 
+            'class': 'form-control',
+            'readonly': 'readonly',
             'placeholder': 'MM-YYYY',
-            'readonly': 'readonly'
+            'title': 'Expiry date in MM-YYYY format'
         })
     )
     sale_rate = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'readonly': 'readonly'}))
@@ -250,8 +364,6 @@ class SalesForm(forms.ModelForm):
         fields = ['productid', 'product_batch_no', 'product_expiry', 
                  'sale_rate', 'sale_quantity', 'sale_scheme',
                  'sale_discount', 'sale_igst', 'custom_rate', 'rate_applied', 'sale_calculation_mode']
-        exclude = ['sales_invoice_no', 'customerid', 'product_name', 'product_company', 
-                  'product_packing', 'product_MRP', 'sale_total_amount', 'sale_entry_date']
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -260,7 +372,12 @@ class SalesForm(forms.ModelForm):
         self.fields['productid'].label = 'Product'
 
 class SalesPaymentForm(forms.ModelForm):
-    sales_payment_date = forms.DateTimeField(widget=DateInput(attrs={'class': 'form-control'}))
+    sales_payment_date = forms.DateField(
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date'
+        })
+    )
     sales_payment_amount = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     PAYMENT_MODE_CHOICES = [
         ('cash', 'Cash'),
@@ -270,6 +387,8 @@ class SalesPaymentForm(forms.ModelForm):
     ]
     sales_payment_mode = forms.ChoiceField(choices=PAYMENT_MODE_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}))
     sales_payment_ref_no = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    
+
     
     class Meta:
         model = SalesInvoicePaid
@@ -294,10 +413,20 @@ class ProductRateForm(forms.ModelForm):
 
 class PurchaseReturnInvoiceForm(forms.ModelForm):
     returninvoiceid = forms.CharField(required=False, widget=forms.HiddenInput())
-    returninvoice_date = forms.DateField(widget=DateInput(attrs={'class': 'form-control'}))
+    returninvoice_date = forms.CharField(widget=DateInput())
     returnsupplierid = forms.ModelChoiceField(queryset=SupplierMaster.objects.all(), widget=forms.Select(attrs={'class': 'form-control'}))
     return_charges = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), initial=0.0)
     returninvoice_total = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), initial=0.0)
+    
+    def clean_returninvoice_date(self):
+        from .date_utils import parse_ddmmyyyy_date
+        from django.core.exceptions import ValidationError
+        
+        date_str = self.cleaned_data['returninvoice_date']
+        try:
+            return parse_ddmmyyyy_date(date_str)
+        except ValidationError:
+            raise forms.ValidationError("Enter date in DDMMYYYY format")
     
     class Meta:
         model = ReturnInvoiceMaster
@@ -305,7 +434,38 @@ class PurchaseReturnInvoiceForm(forms.ModelForm):
 
 class PurchaseReturnForm(forms.ModelForm):
     returnproduct_batch_no = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    returnproduct_expiry = forms.DateField(widget=DateInput(attrs={'class': 'form-control'}))
+    returnproduct_expiry = forms.CharField(
+        max_length=10, 
+        widget=forms.TextInput(attrs={
+            'class': 'form-control date-input', 
+            'placeholder': 'DDMM',
+            'maxlength': '4',
+            'title': 'Enter expiry date in DDMM format. Year will be auto-completed.'
+        })
+    )
+    
+    def clean_returnproduct_expiry(self):
+        from datetime import datetime
+        date_str = self.cleaned_data.get('returnproduct_expiry', '')
+        
+        # Handle YYYY-MM-DD format from date picker
+        if len(date_str) == 10 and '-' in date_str:
+            try:
+                return datetime.strptime(date_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+        
+        # Handle DDMM format
+        if len(date_str) == 4 and date_str.isdigit():
+            day = int(date_str[:2])
+            month = int(date_str[2:4])
+            year = datetime.now().year
+            try:
+                return datetime(year, month, day).date()
+            except ValueError:
+                raise forms.ValidationError("Invalid date")
+        
+        raise forms.ValidationError("Enter date in DDMM format")
     returnproduct_MRP = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     returnproduct_purchase_rate = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     returnproduct_quantity = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
@@ -329,19 +489,70 @@ class PurchaseReturnForm(forms.ModelForm):
 
 class SalesReturnInvoiceForm(forms.ModelForm):
     return_sales_invoice_no = forms.CharField(required=False, widget=forms.HiddenInput())
-    return_sales_invoice_date = forms.DateField(widget=DateInput(attrs={'class': 'form-control'}))
-    return_sales_customerid = forms.ModelChoiceField(queryset=CustomerMaster.objects.all(), widget=forms.Select(attrs={'class': 'form-control'}))
-    return_sales_charges = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), initial=0.0)
-    return_sales_invoice_total = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), initial=0.0)
+    return_sales_invoice_date = forms.DateField(
+        widget=DateInput(attrs={
+            'class': 'form-control',
+            'required': 'required',
+            'placeholder': 'Select Date'
+        }),
+        required=True
+    )
+    return_sales_customerid = forms.ModelChoiceField(
+        queryset=CustomerMaster.objects.all().order_by('customer_name'),
+        widget=forms.Select(attrs={
+            'class': 'form-control select2',
+            'required': 'required',
+            'placeholder': 'Select Customer'
+        }),
+        required=True,
+        empty_label="Select Customer"
+    )
+    return_sales_charges = forms.FloatField(
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'step': '0.01',
+            'min': '0',
+            'placeholder': 'Enter Charges'
+        }),
+        initial=0.0,
+        required=False
+    )
+    return_sales_invoice_total = forms.FloatField(
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'step': '0.01',
+            'min': '0',
+            'required': 'required',
+            'placeholder': 'Total Amount'
+        }),
+        initial=0.0,
+        required=True
+    )
     
     class Meta:
         model = ReturnSalesInvoiceMaster
         fields = ['return_sales_invoice_no', 'return_sales_invoice_date', 'return_sales_customerid', 
                  'return_sales_charges', 'return_sales_invoice_total']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add labels and help text
+        self.fields['return_sales_invoice_date'].label = 'Return Date'
+        self.fields['return_sales_customerid'].label = 'Customer'
+        self.fields['return_sales_charges'].label = 'Additional Charges'
+        self.fields['return_sales_invoice_total'].label = 'Total Amount'
 
 class SalesReturnForm(forms.ModelForm):
     return_product_batch_no = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    return_product_expiry = forms.DateField(widget=DateInput(attrs={'class': 'form-control'}))
+    return_product_expiry = forms.CharField(
+        max_length=7, 
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'MM-YYYY',
+            'title': 'Enter expiry date in MM-YYYY format (e.g., 12-2025)',
+            'pattern': r'^(0[1-9]|1[0-2])-\d{4}$'
+        })
+    )
     return_product_MRP = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     return_sale_rate = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     return_sale_quantity = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
@@ -354,6 +565,30 @@ class SalesReturnForm(forms.ModelForm):
         widget=forms.Select(attrs={'class': 'form-control'}),
         initial='percentage'
     )
+    
+    def clean_return_product_expiry(self):
+        expiry = self.cleaned_data.get('return_product_expiry')
+        if expiry:
+            # Validate MM-YYYY format
+            import re
+            if not re.match(r'^(0[1-9]|1[0-2])-\d{4}$', expiry):
+                raise forms.ValidationError('Enter expiry date in MM-YYYY format (e.g., 12-2025)')
+            
+            # Validate month and year values
+            try:
+                month, year = expiry.split('-')
+                month = int(month)
+                year = int(year)
+                
+                if month < 1 or month > 12:
+                    raise forms.ValidationError('Invalid month. Use 01-12.')
+                if year < 2020 or year > 2050:
+                    raise forms.ValidationError('Invalid year. Use a year between 2020-2050.')
+                    
+            except ValueError:
+                raise forms.ValidationError('Enter expiry date in MM-YYYY format (e.g., 12-2025)')
+        
+        return expiry
     
     class Meta:
         model = ReturnSalesMaster
@@ -370,6 +605,33 @@ class SalesReturnForm(forms.ModelForm):
         self.fields['return_productid'].queryset = ProductMaster.objects.all()
         self.fields['return_productid'].widget.attrs.update({'class': 'form-control'})
         self.fields['return_productid'].label = 'Product'
+
+SalesReturnItemFormSet = forms.formset_factory(SalesReturnForm, extra=1)
+
+class SalesReturnPaymentForm(forms.ModelForm):
+    return_sales_payment_date = forms.DateField(
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date'
+        })
+    )
+    return_sales_payment_amount = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    PAYMENT_MODE_CHOICES = [
+        ('cash', 'Cash'),
+        ('cheque', 'Cheque'),
+        ('online', 'Online Transfer'),
+        ('upi', 'UPI'),
+    ]
+    return_sales_payment_mode = forms.ChoiceField(choices=PAYMENT_MODE_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}))
+    return_sales_payment_ref_no = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    
+
+    
+    class Meta:
+        model = ReturnSalesInvoicePaid
+        fields = ['return_sales_payment_date', 'return_sales_payment_amount', 'return_sales_payment_mode', 'return_sales_payment_ref_no']
+        exclude = ['return_sales_ip_invoice_no']
+
         
 class SaleRateForm(forms.ModelForm):
     productid = forms.ModelChoiceField(
@@ -384,3 +646,61 @@ class SaleRateForm(forms.ModelForm):
     class Meta:
         model = SaleRateMaster
         fields = ['productid', 'product_batch_no', 'rate_A', 'rate_B', 'rate_C']
+
+class PaymentForm(forms.ModelForm):
+    payment_date = forms.DateField(widget=DateInput(attrs={'class': 'form-control'}))
+    payment_amount = forms.DecimalField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    payment_method = forms.ChoiceField(
+        choices=PaymentMaster._meta.get_field('payment_method').choices,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    payment_description = forms.CharField(required=False, widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
+    payment_reference = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    
+    def clean_payment_date(self):
+        from django.utils import timezone
+        from datetime import datetime
+        
+        payment_date = self.cleaned_data.get('payment_date')
+        
+        if payment_date and hasattr(payment_date, 'date'):
+            # Convert date to timezone-aware datetime
+            current_time = timezone.now().time()
+            payment_date = timezone.make_aware(
+                datetime.combine(payment_date, current_time)
+            )
+        
+        return payment_date
+    
+    class Meta:
+        model = PaymentMaster
+        fields = ['payment_date', 'payment_amount', 'payment_method', 'payment_description', 'payment_reference']
+
+class ReceiptForm(forms.ModelForm):
+    receipt_date = forms.DateField(widget=DateInput(attrs={'class': 'form-control'}))
+    receipt_amount = forms.DecimalField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    receipt_method = forms.ChoiceField(
+        choices=ReceiptMaster._meta.get_field('receipt_method').choices,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    receipt_description = forms.CharField(required=False, widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
+    receipt_reference = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    
+    def clean_receipt_date(self):
+        from django.utils import timezone
+        from datetime import datetime
+        
+        receipt_date = self.cleaned_data.get('receipt_date')
+        
+        if receipt_date and hasattr(receipt_date, 'date'):
+            # Convert date to timezone-aware datetime
+            current_time = timezone.now().time()
+            receipt_date = timezone.make_aware(
+                datetime.combine(receipt_date, current_time)
+            )
+        
+        return receipt_date
+    
+    class Meta:
+        model = ReceiptMaster
+        fields = ['receipt_date', 'receipt_amount', 'receipt_method', 'receipt_description', 'receipt_reference']

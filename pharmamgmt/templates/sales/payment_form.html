@@ -1,15 +1,20 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
+{% load static %}
 
 {% block title %}{{ title }}{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/payment_form3.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
+<div class="payment-form-container">
+    <div class="payment-wrapper">
+        <div class="payment-card">
+            <div class="payment-header">
+                <div class="header-content">
+                    <h5 class="payment-title">
                         {% if is_edit %}
                             Edit Payment for Sales Invoice #{{ invoice.sales_invoice_no }}
                         {% else %}
@@ -17,82 +22,83 @@
                         {% endif %}
                     </h5>
                 </div>
-                <div class="card-body">
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Invoice Details</h6>
-                            <ul class="list-unstyled">
-                                <li><strong>Invoice No:</strong> {{ invoice.sales_invoice_no }}</li>
-                                <li><strong>Date:</strong> {{ invoice.sales_invoice_date }}</li>
-                                <li><strong>Customer:</strong> {{ invoice.customerid.customer_name }}</li>
+                <div class="payment-body">
+                    <div class="invoice-summary-section">
+                        <div class="invoice-details-card">
+                            <h6 class="section-title">Invoice Details</h6>
+                            <ul class="details-list">
+                                <li class="detail-item"><strong class="detail-label">Invoice No:</strong> <span class="detail-value">{{ invoice.sales_invoice_no }}</span></li>
+                                <li class="detail-item"><strong class="detail-label">Date:</strong> <span class="detail-value">{{ invoice.sales_invoice_date }}</span></li>
+                                <li class="detail-item"><strong class="detail-label">Customer:</strong> <span class="detail-value">{{ invoice.customerid.customer_name }}</span></li>
                             </ul>
                         </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Payment Details</h6>
-                            <ul class="list-unstyled">
-                                <li><strong>Total Amount:</strong> ₹{{ invoice.sales_invoice_total|floatformat:2 }}</li>
-                                <li><strong>Amount Paid:</strong> ₹{{ invoice.sales_invoice_paid|floatformat:2 }}</li>
-                                <li><strong>Balance Due:</strong> <span class="text-danger">₹{{ balance|floatformat:2 }}</span></li>
+                        <div class="payment-details-card">
+                            <h6 class="section-title">Payment Details</h6>
+                            <ul class="details-list">
+                                <li class="detail-item"><strong class="detail-label">Total Amount:</strong> <span class="detail-value amount-total">₹{{ invoice.sales_invoice_total|floatformat:2 }}</span></li>
+                                <li class="detail-item"><strong class="detail-label">Amount Paid:</strong> <span class="detail-value amount-paid">₹{{ invoice.sales_invoice_paid|floatformat:2 }}</span></li>
+                                <li class="detail-item"><strong class="detail-label">Balance Due:</strong> <span class="detail-value balance-due">₹{{ balance|floatformat:2 }}</span></li>
                             </ul>
                         </div>
                     </div>
                     
-                    <form method="post">
+                    <form method="post" class="payment-form">
                         {% csrf_token %}
                         
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.sales_payment_date.id_for_label }}">Payment Date*</label>
+                        <div class="form-section payment-info-section">
+                            <div class="form-row">
+                                <div class="form-group required">
+                                    <label for="{{ form.sales_payment_date.id_for_label }}" class="field-label">Payment Date & Time</label>
                                     {{ form.sales_payment_date }}
                                     {% if form.sales_payment_date.errors %}
-                                        <div class="text-danger">{{ form.sales_payment_date.errors }}</div>
+                                        <div class="error-message">{{ form.sales_payment_date.errors }}</div>
                                     {% endif %}
+                                    <small class="form-text text-muted">Select the exact date and time of payment</small>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.sales_payment_amount.id_for_label }}">Payment Amount*</label>
+                            <div class="form-row">
+                                <div class="form-group required">
+                                    <label for="{{ form.sales_payment_amount.id_for_label }}" class="field-label">Payment Amount</label>
                                     {{ form.sales_payment_amount }}
                                     {% if form.sales_payment_amount.errors %}
-                                        <div class="text-danger">{{ form.sales_payment_amount.errors }}</div>
+                                        <div class="error-message">{{ form.sales_payment_amount.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.sales_payment_mode.id_for_label }}">Payment Mode*</label>
+                        <div class="form-section payment-method-section">
+                            <div class="form-row">
+                                <div class="form-group required">
+                                    <label for="{{ form.sales_payment_mode.id_for_label }}" class="field-label">Payment Mode</label>
                                     {{ form.sales_payment_mode }}
                                     {% if form.sales_payment_mode.errors %}
-                                        <div class="text-danger">{{ form.sales_payment_mode.errors }}</div>
+                                        <div class="error-message">{{ form.sales_payment_mode.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.sales_payment_ref_no.id_for_label }}">Reference No.</label>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="{{ form.sales_payment_ref_no.id_for_label }}" class="field-label">Reference No.</label>
                                     {{ form.sales_payment_ref_no }}
                                     {% if form.sales_payment_ref_no.errors %}
-                                        <div class="text-danger">{{ form.sales_payment_ref_no.errors }}</div>
+                                        <div class="error-message">{{ form.sales_payment_ref_no.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="form-group mt-4">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary submit-btn">
+                                <i class="fas fa-save"></i>
                                 {% if is_edit %}
                                     Update Payment
                                 {% else %}
                                     Add Payment
                                 {% endif %}
                             </button>
-                            <a href="{% url 'sales_invoice_detail' pk=invoice.sales_invoice_no %}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left me-2"></i>Back to Invoice
+                            <a href="{% url 'sales_invoice_detail' pk=invoice.sales_invoice_no %}" class="btn btn-secondary back-btn">
+                                <i class="fas fa-arrow-left"></i>Back to Invoice
                             </a>
                         </div>
                     </form>
@@ -107,11 +113,25 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const paymentAmountInput = document.getElementById('{{ form.sales_payment_amount.id_for_label }}');
+        const paymentDateInput = document.getElementById('{{ form.sales_payment_date.id_for_label }}');
         const balanceDue = {{ balance }};
         
         {% if not is_edit %}
         // Only set default amount for new payments
         paymentAmountInput.value = balanceDue.toFixed(2);
+        
+        // Set current datetime if not already set
+        if (paymentDateInput && !paymentDateInput.value) {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            paymentDateInput.value = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+        }
         {% endif %}
         
         // Add validation to prevent payment amount from exceeding balance due
@@ -138,3 +158,10 @@
     });
 </script>
 {% endblock %}
+
+
+
+
+
+
+

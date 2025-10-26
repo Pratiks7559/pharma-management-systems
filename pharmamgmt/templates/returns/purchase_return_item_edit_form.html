@@ -1,173 +1,201 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
+{% load static %}
 
 {% block title %}{{ title }}{% endblock %}
 
-{% block extra_js %}
-<script>
-    $(document).ready(function() {
-        console.log("Document ready - initializing purchase return edit form");
-        
-        // Auto-fill batch details from AJAX call
-        $('#id_returnproduct_batch_no').on('change', function() {
-            const batch_no = $(this).val();
-            const product_id = $('#id_returnproductid').val();
-            
-            if (batch_no && product_id) {
-                $.ajax({
-                    url: '{% url "add_purchase_return_item" return_id=return_invoice.returninvoiceid %}',
-                    data: {
-                        'product_id': product_id,
-                        'batch_no': batch_no
-                    },
-                    dataType: 'json',
-                    success: function(data) {
-                        if (data.exists) {
-                            $('#id_returnproduct_expiry').val(data.expiry);
-                            $('#id_returnproduct_purchase_rate').val(data.rate);
-                            $('#id_returnproduct_MRP').val(data.mrp);
-                            
-                            // Show stock info
-                            if (data.available_qty <= 0) {
-                                $('#stock_info').html('<div class="alert alert-danger">' + data.message + '</div>');
-                            } else {
-                                $('#stock_info').html('<div class="alert alert-info">' + data.message + '</div>');
-                            }
-                            
-                            // Update max quantity
-                            $('#id_returnproduct_quantity').attr('max', data.available_qty);
-                            
-                            // Recalculate total
-                            calculateTotal();
-                        } else {
-                            $('#stock_info').html('<div class="alert alert-danger">' + data.message + '</div>');
-                        }
-                    }
-                });
-            }
-        });
-        
-        // Calculate total on change of quantity, rate or charges
-        function calculateTotal() {
-            const qty = parseFloat($('#id_returnproduct_quantity').val() || 0);
-            const rate = parseFloat($('#id_returnproduct_purchase_rate').val() || 0);
-            const charges = parseFloat($('#id_returnproduct_charges').val() || 0);
-            
-            // Calculate total (quantity * rate + charges)
-            const total = (qty * rate) + charges;
-            
-            console.log(`Calculation: ${qty} * ${rate} + ${charges} = ${total}`);
-            
-            if (!isNaN(total)) {
-                $('#total_preview').text(total.toFixed(2));
-            } else {
-                $('#total_preview').text('0.00');
-            }
-        }
-        
-        // Bind calculation to all relevant fields
-        $('#id_returnproduct_quantity, #id_returnproduct_purchase_rate, #id_returnproduct_charges').on('input change keyup', function() {
-            console.log(`Field changed: ${this.id} with value ${this.value}`);
-            calculateTotal();
-        });
-        
-        // Initial calculation and periodic update
-        calculateTotal();
-        setInterval(calculateTotal, 2000);
-    });
-</script>
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/purchase_return_item_form.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">{{ title }}</h6>
-                    <a href="{% url 'purchase_return_detail' pk=return_invoice.returninvoiceid %}" class="btn btn-outline-secondary btn-sm">
-                        <i class="fas fa-arrow-left me-1"></i>Back to Return
-                    </a>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Return Details</h6>
-                            <p>
-                                <strong>Return No:</strong> {{ return_invoice.returninvoiceid }}<br>
-                                <strong>Date:</strong> {{ return_invoice.returninvoice_date }}<br>
-                                <strong>Supplier:</strong> {{ return_invoice.returnsupplierid.supplier_name }}
-                            </p>
+<div class="purchase-return-item-form-container">
+    <div class="purchase-return-item-form-header">
+        <h4 class="purchase-return-item-form-title">
+            <i class="fas fa-edit text-primary"></i> Edit Return Item
+        </h4>
+        <a href="{% url 'purchase_return_detail' pk=return_invoice.returninvoiceid %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Return
+        </a>
+    </div>
+    
+    <div class="return-context-info">
+        <div class="return-context-card">
+            <div class="return-context-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="context-item">
+                            <label>Return ID:</label>
+                            <span class="return-id">{{ return_invoice.returninvoiceid }}</span>
                         </div>
                     </div>
-                    
-                    <div id="stock_info"></div>
-                    
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label for="id_returnproductid">Product</label>
-                                {{ form.returnproductid }}
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="id_returnproduct_batch_no">Batch No</label>
-                                {{ form.returnproduct_batch_no }}
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="id_returnproduct_expiry">Expiry Date</label>
-                                {{ form.returnproduct_expiry }}
-                            </div>
+                    <div class="col-md-4">
+                        <div class="context-item">
+                            <label>Supplier:</label>
+                            <span>{{ return_invoice.returnsupplierid.supplier_name }}</span>
                         </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-3 mb-3">
-                                <label for="id_returnproduct_purchase_rate">Purchase Rate</label>
-                                {{ form.returnproduct_purchase_rate }}
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <label for="id_returnproduct_MRP">MRP</label>
-                                {{ form.returnproduct_MRP }}
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <label for="id_returnproduct_quantity">Quantity</label>
-                                {{ form.returnproduct_quantity }}
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <label for="id_returnproduct_scheme">Scheme</label>
-                                {{ form.returnproduct_scheme }}
-                            </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="context-item">
+                            <label>Return Date:</label>
+                            <span>{{ return_invoice.returninvoice_date|date:"d-m-Y" }}</span>
                         </div>
-                        
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label for="id_returnproduct_charges">Charges</label>
-                                {{ form.returnproduct_charges }}
-                            </div>
-                            <div class="col-md-8 mb-3">
-                                <label>Total Amount</label>
-                                <div class="form-control bg-light">₹ <span id="total_preview">{{ return_item.returntotal_amount }}</span></div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-12 mb-3">
-                                <label for="id_return_reason">Return Reason</label>
-                                {{ form.return_reason }}
-                            </div>
-                        </div>
-                        
-                        <div class="mt-3">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-1"></i>Update Return Item
-                            </button>
-                            <a href="{% url 'purchase_return_detail' pk=return_invoice.returninvoiceid %}" class="btn btn-outline-secondary">
-                                <i class="fas fa-times me-1"></i>Cancel
-                            </a>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+    
+    <div class="purchase-return-item-form-card">
+        <div class="purchase-return-item-form-body">
+            <form method="post" class="purchase-return-item-form">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.returnproductid.id_for_label }}" class="form-label required">Product</label>
+                            {{ form.returnproductid }}
+                            {% if form.returnproductid.errors %}
+                                <div class="invalid-feedback d-block">{{ form.returnproductid.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.returnproduct_batch_no.id_for_label }}" class="form-label required">Batch Number</label>
+                            {{ form.returnproduct_batch_no }}
+                            {% if form.returnproduct_batch_no.errors %}
+                                <div class="invalid-feedback d-block">{{ form.returnproduct_batch_no.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="{{ form.returnproduct_expiry.id_for_label }}" class="form-label required">Expiry Date</label>
+                            {{ form.returnproduct_expiry }}
+                            {% if form.returnproduct_expiry.errors %}
+                                <div class="invalid-feedback d-block">{{ form.returnproduct_expiry.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="{{ form.returnproduct_MRP.id_for_label }}" class="form-label required">MRP</label>
+                            {{ form.returnproduct_MRP }}
+                            {% if form.returnproduct_MRP.errors %}
+                                <div class="invalid-feedback d-block">{{ form.returnproduct_MRP.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="{{ form.returnproduct_purchase_rate.id_for_label }}" class="form-label required">Purchase Rate</label>
+                            {{ form.returnproduct_purchase_rate }}
+                            {% if form.returnproduct_purchase_rate.errors %}
+                                <div class="invalid-feedback d-block">{{ form.returnproduct_purchase_rate.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="{{ form.returnproduct_quantity.id_for_label }}" class="form-label required">Quantity</label>
+                            {{ form.returnproduct_quantity }}
+                            {% if form.returnproduct_quantity.errors %}
+                                <div class="invalid-feedback d-block">{{ form.returnproduct_quantity.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="{{ form.returnproduct_scheme.id_for_label }}" class="form-label">Scheme</label>
+                            {{ form.returnproduct_scheme }}
+                            {% if form.returnproduct_scheme.errors %}
+                                <div class="invalid-feedback d-block">{{ form.returnproduct_scheme.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="{{ form.returnproduct_charges.id_for_label }}" class="form-label">Additional Charges</label>
+                            {{ form.returnproduct_charges }}
+                            {% if form.returnproduct_charges.errors %}
+                                <div class="invalid-feedback d-block">{{ form.returnproduct_charges.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.return_reason.id_for_label }}" class="form-label">Return Reason</label>
+                    {{ form.return_reason }}
+                    <small class="form-text text-muted">Explain why this product is being returned</small>
+                    {% if form.return_reason.errors %}
+                        <div class="invalid-feedback d-block">{{ form.return_reason.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="calculation-preview">
+                    <div class="calculation-card">
+                        <h6><i class="fas fa-calculator text-info"></i> Calculation Preview</h6>
+                        <div class="calculation-details">
+                            <div class="calc-row">
+                                <span>Rate × Quantity:</span>
+                                <span id="subtotal">₹{{ return_item.returnproduct_purchase_rate|mul:return_item.returnproduct_quantity|floatformat:2 }}</span>
+                            </div>
+                            <div class="calc-row">
+                                <span>Additional Charges:</span>
+                                <span id="charges">₹{{ return_item.returnproduct_charges|floatformat:2 }}</span>
+                            </div>
+                            <div class="calc-row total-calc">
+                                <span><strong>Total Amount:</strong></span>
+                                <span id="total"><strong>₹{{ return_item.returntotal_amount|floatformat:2 }}</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> Update Return Item
+                    </button>
+                    <a href="{% url 'purchase_return_detail' pk=return_invoice.returninvoiceid %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const rateField = document.getElementById('{{ form.returnproduct_purchase_rate.id_for_label }}');
+    const quantityField = document.getElementById('{{ form.returnproduct_quantity.id_for_label }}');
+    const chargesField = document.getElementById('{{ form.returnproduct_charges.id_for_label }}');
+    
+    function updateCalculation() {
+        const rate = parseFloat(rateField.value) || 0;
+        const quantity = parseFloat(quantityField.value) || 0;
+        const charges = parseFloat(chargesField.value) || 0;
+        
+        const subtotal = rate * quantity;
+        const total = subtotal + charges;
+        
+        document.getElementById('subtotal').textContent = '₹' + subtotal.toFixed(2);
+        document.getElementById('charges').textContent = '₹' + charges.toFixed(2);
+        document.getElementById('total').textContent = '₹' + total.toFixed(2);
+    }
+    
+    rateField.addEventListener('input', updateCalculation);
+    quantityField.addEventListener('input', updateCalculation);
+    chargesField.addEventListener('input', updateCalculation);
+});
+</script>
 {% endblock %}

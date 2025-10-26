@@ -1,0 +1,2438 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/combined_sales_invoice.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="combined-invoice-container">
+    <div class="invoice-wrapper">
+        <div class="invoice-card">
+            <div class="invoice-header">
+                <div class="header-content">
+                    <h5 class="invoice-title">Add Sales Invoice with Products</h5>
+                    <small class="invoice-number">Invoice Number: {{ preview_invoice_no }}</small>
+                </div>
+                <div class="invoice-body">
+                    <form method="post" id="combinedSalesInvoiceForm" class="combined-invoice-form">
+                        {% csrf_token %}
+                        
+                        <!-- Invoice Details Section -->
+                        <div class="invoice-details-section">
+                            <div class="form-row">
+                                <div class="form-group required">
+                                    <label for="{{ invoice_form.sales_invoice_date.id_for_label }}" class="field-label">Invoice Date</label>
+                                    {{ invoice_form.sales_invoice_date }}
+                                    <!-- <small class="text-muted">📅 Enter in DDMMYYYY format (e.g., 15122024 for 15th Dec 2024) or use date picker</small> -->
+                                </div>
+                                <div class="form-group required">
+                                    <div class="customer-field-header">
+                                        <label for="{{ invoice_form.customerid.id_for_label }}" class="field-label">Customer</label>
+                                        <button type="button" class="btn btn-sm btn-outline-primary add-customer-btn" onclick="openCustomerDialog()">
+                                            <i class="fas fa-plus"></i> Add Customer
+                                        </button>
+                                    </div>
+                                    {{ invoice_form.customerid }}
+                                    <div id="customerRateInfo" class="customer-rate-info" style="display: none;">
+                                        <small class="customer-rate-text"></small>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="{{ invoice_form.sales_transport_charges.id_for_label }}" class="field-label">Transport Charges</label>
+                                    {{ invoice_form.sales_transport_charges }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Products Section -->
+                        <div class="products-section">
+                            <div class="products-header">
+                                <div class="products-title-section">
+                                    <h6 class="section-title">Products</h6>
+                                    <small class="keyboard-shortcuts">⚡ F2 (Quick Search), Ctrl+Enter (Add Row), Alt+P (Focus Product), Ctrl+S (Save)</small>
+                                </div>
+                                <button type="button" class="add-product-btn" onclick="addProductRow()">
+                                    <i class="fas fa-plus"></i> Add More Products
+                                </button>
+                                <button type="button" class="show-fields" onclick="showProductFields()" title="Show Product Fields">
+                                    <i class="fas fa-eye"></i> Show Fields
+                                </button>
+                            </div>
+                            <div class="products-table-container">
+                                <div class="table-wrapper">
+                                    <table id="productsTable" class="products-table">
+                                        <thead class="table-header">
+                                            <tr class="header-row">
+                                                <th class="product-col">Product</th>
+                                                <th class="batch-col">Batch No</th>
+                                                <th class="expiry-col">Expiry</th>
+                                                <th class="mrp-col">MRP</th>
+                                                <th class="rate-col">Rate</th>
+                                                <th class="qty-col">Qty</th>
+                                                <th class="discount-col">Discount</th>
+                                                <th class="igst-col">IGST%</th>
+                                                <th class="total-col">Total</th>
+                                                <th class="action-col">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="productRows" class="table-body">
+                                            <!-- Single product row will be added here by default -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="total-section">
+                                    <div class="total-wrapper">
+                                        <div class="grand-total">
+                                            <strong class="total-label">Grand Total: ₹<span id="grandTotal" class="total-amount">0.00</span></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hidden field for products data -->
+                        <input type="hidden" name="products_data" id="productsData">
+
+                        <!-- Submit Button -->
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary save-btn">
+                                <i class="fas fa-save"></i> Save Sales Invoice
+                            </button>
+                            <a href="{% url 'sales_invoice_list' %}" class="btn btn-secondary back-btn">
+                                <i class="fas fa-arrow-left"></i> Back to Sales Invoices
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Dialog Modal -->
+<div id="customerDialog" class="customer-dialog-overlay" style="display: none;">
+    <div class="customer-dialog-content">
+        <div class="customer-dialog-header">
+            <h3><i class="fas fa-user-plus"></i> Add New Customer</h3>
+            <button type="button" class="customer-dialog-close" onclick="closeCustomerDialog()">&times;</button>
+        </div>
+        <div class="customer-dialog-body">
+            <form id="customerDialogForm" class="customer-dialog-form">
+                {% csrf_token %}
+                <div class="customer-form-row">
+                    <div class="customer-form-col">
+                        <label class="customer-form-label">Customer Name*</label>
+                        <input type="text" name="customer_name" class="customer-form-input" required>
+                    </div>
+                    <div class="customer-form-col">
+                        <label class="customer-form-label">Customer Type*</label>
+                        <input type="text" name="customer_type" class="customer-form-input" placeholder="e.g. Type-A, Type-B, Type-C" required>
+                    </div>
+                    <div class="customer-form-col">
+                        <label class="customer-form-label">Mobile Number</label>
+                        <input type="text" name="customer_mobile" class="customer-form-input">
+                    </div>
+                </div>
+                
+                <div class="customer-form-row">
+                    <div class="customer-form-col">
+                        <label class="customer-form-label">WhatsApp Number</label>
+                        <input type="text" name="customer_whatsapp" class="customer-form-input">
+                    </div>
+                    <div class="customer-form-col">
+                        <label class="customer-form-label">Email Address</label>
+                        <input type="email" name="customer_emailid" class="customer-form-input">
+                    </div>
+                    <div class="customer-form-col">
+                        <label class="customer-form-label">Contact Person</label>
+                        <input type="text" name="customer_spoc" class="customer-form-input">
+                    </div>
+                </div>
+                
+                <div class="customer-form-row">
+                    <div class="customer-form-col">
+                        <label class="customer-form-label">Address</label>
+                        <textarea name="customer_address" class="customer-form-input" rows="2"></textarea>
+                    </div>
+                    <div class="customer-form-col">
+                        <label class="customer-form-label">Drug License</label>
+                        <input type="text" name="customer_dlno" class="customer-form-input">
+                    </div>
+                    <div class="customer-form-col">
+                        <label class="customer-form-label">GST Number</label>
+                        <input type="text" name="customer_gstno" class="customer-form-input">
+                    </div>
+                </div>
+                
+                <div class="customer-form-row">
+                    <div class="customer-form-col">
+                        <label class="customer-form-label">Food License</label>
+                        <input type="text" name="customer_food_license_no" class="customer-form-input">
+                    </div>
+                    <div class="customer-form-col">
+                        <label class="customer-form-label">Credit Days*</label>
+                        <input type="number" name="customer_credit_days" class="customer-form-input" value="0" required>
+                    </div>
+                    <div class="customer-form-col">
+                        <label class="customer-form-label">Bank Name</label>
+                        <input type="text" name="customer_bank" class="customer-form-input">
+                    </div>
+                </div>
+                
+                <div class="customer-form-row">
+                    <div class="customer-form-col">
+                        <label class="customer-form-label">Account Number</label>
+                        <input type="text" name="customer_bankaccountno" class="customer-form-input">
+                    </div>
+                    <div class="customer-form-col">
+                        <label class="customer-form-label">IFSC Code</label>
+                        <input type="text" name="customer_bankifsc" class="customer-form-input">
+                    </div>
+                    <div class="customer-form-col">
+                        <label class="customer-form-label">UPI ID</label>
+                        <input type="text" name="customer_upi" class="customer-form-input">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="customer-dialog-footer">
+            <button type="button" class="customer-dialog-btn customer-dialog-btn-secondary" onclick="closeCustomerDialog()">Cancel</button>
+            <button type="button" class="customer-dialog-btn customer-dialog-btn-primary" onclick="saveCustomer()">Save Customer</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.customer-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.customer-dialog-content {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.customer-dialog-header {
+    padding: 20px;
+    border-bottom: 1px solid #e5e5e5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+}
+
+.customer-dialog-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 18px;
+}
+
+.customer-dialog-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.customer-dialog-close:hover {
+    color: #000;
+}
+
+.customer-dialog-body {
+    padding: 20px;
+}
+
+.customer-form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.customer-form-col {
+    flex: 1;
+}
+
+.customer-form-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333;
+    font-size: 14px;
+}
+
+.customer-form-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.customer-form-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.customer-dialog-footer {
+    padding: 20px;
+    border-top: 1px solid #e5e5e5;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    background: #f8f9fa;
+    border-radius: 0 0 8px 8px;
+}
+
+.customer-dialog-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.customer-dialog-btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.customer-dialog-btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.customer-dialog-btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.customer-dialog-btn-secondary:hover {
+    background-color: #545b62;
+}
+
+@media (max-width: 768px) {
+    .customer-form-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .customer-dialog-content {
+        width: 95%;
+        margin: 10px;
+    }
+}
+</style>
+
+<script>
+let productRowIndex = 0;
+let selectedCustomerRateType = 'A'; // Default rate type
+
+// Function to normalize expiry date format for display
+function normalizeExpiryDate(expiryInput) {
+    if (!expiryInput) return '';
+    return convertToMMYYYY(expiryInput);
+}
+
+// Convert any date format to MM-YYYY
+function convertToMMYYYY(expiryInput) {
+    if (!expiryInput) return '';
+    
+    const expiryStr = String(expiryInput).trim();
+    console.log('Converting expiry:', expiryStr);
+    
+    // Handle MMYY format (4 digits)
+    if (expiryStr.length === 4 && /^\d{4}$/.test(expiryStr)) {
+        const month = expiryStr.substring(0, 2);
+        const year = '20' + expiryStr.substring(2, 4);
+        return `${month}-${year}`;
+    }
+    
+    // Handle YYYY-MM-DD format
+    if (expiryStr.length === 10 && expiryStr.includes('-')) {
+        const parts = expiryStr.split('-');
+        if (parts.length === 3 && parts[0].length === 4) {
+            return `${parts[1]}-${parts[0]}`; // Convert to MM-YYYY
+        }
+    }
+    
+    // Handle DD/MM/YYYY format
+    if (expiryStr.includes('/')) {
+        const parts = expiryStr.split('/');
+        if (parts.length === 3) {
+            // Assume DD/MM/YYYY format
+            return `${parts[1].padStart(2, '0')}-${parts[2]}`;
+        }
+    }
+    
+    // Handle MM-YYYY format (already correct)
+    if (expiryStr.includes('-') && expiryStr.split('-').length === 2) {
+        const parts = expiryStr.split('-');
+        const month = parts[0].padStart(2, '0');
+        let year = parts[1];
+        if (year.length === 2) {
+            year = '20' + year;
+        }
+        return `${month}-${year}`;
+    }
+    
+    // Handle MM/YYYY format
+    if (expiryStr.includes('/') && expiryStr.split('/').length === 2) {
+        const parts = expiryStr.split('/');
+        const month = parts[0].padStart(2, '0');
+        let year = parts[1];
+        if (year.length === 2) {
+            year = '20' + year;
+        }
+        return `${month}-${year}`;
+    }
+    
+    return expiryStr;
+}
+
+function addProductRow() {
+    const tbody = document.getElementById('productRows');
+    const row = document.createElement('tr');
+    row.id = `productRow_${productRowIndex}`;
+    
+    row.innerHTML = `
+        <td class="product-cell">
+            <select class="product-select form-control" onchange="loadProductDetails(this, ${productRowIndex})" required>
+                <option value="">Select Product</option>
+                {% for product in products %}
+                <option value="{{ product.productid }}">{{ product.product_name }} - {{ product.product_company }}</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td class="batch-cell"><input type="text" class="batch-no form-control" placeholder="Enter Batch Number" required></td>
+        <td class="expiry-cell"><input type="text" class="expiry form-control" placeholder="MM-YYYY" title="Expiry in MM-YYYY format" required></td>
+        <td class="mrp-cell"><input type="number" class="mrp form-control" step="0.01" placeholder="0.00" min="0" required></td>
+        <td class="rate-cell"><input type="number" class="rate form-control" step="0.01" placeholder="0.00" min="0" onchange="calculateRowTotal(${productRowIndex})" required></td>
+        <td class="qty-cell">
+            <input type="number" class="quantity form-control" step="0.01" placeholder="0" min="0.01" 
+                   oninput="validateStockAndCalculate(${productRowIndex})" 
+                   onchange="validateStockAndCalculate(${productRowIndex})" 
+                   onblur="validateStockAndCalculate(${productRowIndex})" required>
+            <div class="stock-error" style="display: none; color: #dc3545; font-size: 0.75rem; margin-top: 4px; padding: 2px 4px; background: #f8d7da; border-radius: 3px; border-left: 3px solid #dc3545;"></div>
+        </td>
+        <td class="discount-cell"><input type="number" class="discount form-control" step="0.01" placeholder="0.00" min="0" onchange="calculateRowTotal(${productRowIndex})" value="0"></td>
+        <td class="igst-cell"><input type="number" class="igst form-control" step="0.01" placeholder="0.00" min="0" max="100" onchange="calculateRowTotal(${productRowIndex})" value="0"></td>
+        <td class="total-cell"><strong class="row-total">₹0.00</strong></td>
+        <td class="action-cell"><button type="button" class="remove-btn btn btn-sm btn-danger" onclick="removeProductRow(${productRowIndex})" title="Remove Product"><i class="fas fa-trash"></i></button></td>
+    `;
+    
+    tbody.appendChild(row);
+    productRowIndex++;
+    
+    // Don't auto-focus on product select during initial load
+    // Only focus when user manually adds a row
+    if (productRowIndex > 1) {
+        setTimeout(() => {
+            const productSelect = row.querySelector('.product-select');
+            if (productSelect) {
+                productSelect.focus();
+            }
+        }, 100);
+    }
+    
+    // Update button text based on number of rows
+    updateAddProductButtonText();
+}
+
+function removeProductRow(index) {
+    const row = document.getElementById(`productRow_${index}`);
+    if (row) {
+        row.remove();
+        calculateGrandTotal();
+        updateAddProductButtonText();
+    }
+}
+
+// Update button text based on number of product rows
+function updateAddProductButtonText() {
+    const addBtn = document.querySelector('.add-product-btn');
+    const rowCount = document.querySelectorAll('#productRows tr').length;
+    
+    if (addBtn) {
+        if (rowCount === 0) {
+            addBtn.innerHTML = '<i class="fas fa-plus"></i> Add Product';
+        } else if (rowCount === 1) {
+            addBtn.innerHTML = '<i class="fas fa-plus"></i> Add More Products';
+        } else {
+            addBtn.innerHTML = '<i class="fas fa-plus"></i> Add Another Product';
+        }
+    }
+}
+
+// Comprehensive stock validation and calculation function for ALL batches
+function validateStockAndCalculate(index) {
+    const row = document.getElementById(`productRow_${index}`);
+    if (!row) return;
+    
+    const quantityInput = row.querySelector('.quantity');
+    const stockError = row.querySelector('.stock-error');
+    const stockInfo = row.querySelector('.stock-info');
+    const quantity = parseFloat(quantityInput.value) || 0;
+    
+    // Get available stock from stock info - works for all batches
+    let availableStock = 0;
+    if (stockInfo && stockInfo.textContent) {
+        const stockMatch = stockInfo.textContent.match(/Stock: (\d+(?:\.\d+)?)/i);
+        if (stockMatch) {
+            availableStock = parseFloat(stockMatch[1]);
+        }
+    }
+    
+    console.log(`🔍 Stock Validation - Row ${index}: Quantity=${quantity}, Available=${availableStock}`);
+    
+    // Validate stock for ANY batch - not just first one
+    if (availableStock >= 0 && quantity > availableStock) {
+        // Show error message
+        const errorMsg = availableStock === 0 
+            ? 'Out of stock! This batch is not available' 
+            : `Insufficient stock! Available: ${availableStock} units`;
+        
+        console.log(`❌ Stock Error - Row ${index}: ${errorMsg}`);
+        
+        stockError.textContent = errorMsg;
+        stockError.style.display = 'block';
+        stockError.style.color = '#dc3545';
+        stockError.style.fontWeight = 'bold';
+        stockError.style.fontSize = '0.75rem';
+        stockError.style.marginTop = '4px';
+        
+        // Style the input with error state
+        quantityInput.style.borderColor = '#dc3545';
+        quantityInput.style.backgroundColor = '#f8d7da';
+        quantityInput.style.boxShadow = '0 0 0 0.2rem rgba(220, 53, 69, 0.25)';
+        
+        // Mark input as having stock error
+        quantityInput.setAttribute('data-stock-error', 'true');
+        quantityInput.setAttribute('data-max-stock', availableStock);
+        
+        // Lock the input and prevent further changes
+        quantityInput.focus();
+        quantityInput.select();
+        
+        // Disable form submission and other inputs
+        lockFormInputs(true);
+        
+        // Add visual indicator to the row
+        row.classList.add('stock-error-row');
+        
+        return false; // Indicate validation failed
+    } else {
+        console.log(`✅ Stock Valid - Row ${index}: Quantity within limits`);
+        
+        // Clear error state
+        stockError.style.display = 'none';
+        quantityInput.style.borderColor = '';
+        quantityInput.style.backgroundColor = '';
+        quantityInput.style.boxShadow = '';
+        quantityInput.removeAttribute('data-stock-error');
+        quantityInput.removeAttribute('data-max-stock');
+        
+        // Remove error styling from row
+        row.classList.remove('stock-error-row');
+        
+        // Clear any tooltips
+        hideStockErrorTooltip();
+        
+        // Unlock form if no other stock errors exist
+        if (!document.querySelector('input[data-stock-error="true"]')) {
+            lockFormInputs(false);
+        }
+    }
+    
+    calculateRowTotal(index);
+    return true; // Indicate validation passed
+}
+
+// Enhanced function to lock/unlock form inputs with comprehensive validation
+function lockFormInputs(lock) {
+    const form = document.getElementById('combinedSalesInvoiceForm');
+    // Lock all inputs except quantity fields with stock errors
+    const inputs = form.querySelectorAll('input:not(.quantity[data-stock-error="true"]), select, button[type="submit"], .add-product-btn, .remove-btn');
+    
+    inputs.forEach(input => {
+        if (lock) {
+            input.disabled = true;
+            input.style.opacity = '0.5';
+            input.style.pointerEvents = 'none';
+            input.setAttribute('data-locked', 'true');
+        } else {
+            input.disabled = false;
+            input.style.opacity = '1';
+            input.style.pointerEvents = 'auto';
+            input.removeAttribute('data-locked');
+        }
+    });
+    
+    // Store lock state globally for Ctrl+S prevention
+    window.formLocked = lock;
+    
+    // Enhanced overlay with better styling and instructions
+    let overlay = document.getElementById('stockErrorOverlay');
+    if (lock && !overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'stockErrorOverlay';
+        overlay.innerHTML = `
+            <div style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); 
+                        background: linear-gradient(135deg, #dc3545, #c82333); color: white; 
+                        padding: 20px 30px; border-radius: 12px; z-index: 10000; 
+                        font-weight: bold; box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+                        border: 2px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 1.2rem;"></i>
+                    <div>
+                        <div style="font-size: 1.1rem; margin-bottom: 5px;">Stock Validation Error</div>
+                        <div style="font-size: 0.9rem; opacity: 0.9;">Correct the quantity to continue</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        
+        // Auto-hide overlay after 5 seconds
+        setTimeout(() => {
+            if (overlay && overlay.parentNode) {
+                overlay.style.opacity = '0';
+                overlay.style.transform = 'translateX(-50%) translateY(-20px)';
+                setTimeout(() => overlay.remove(), 300);
+            }
+        }, 5000);
+    } else if (!lock && overlay) {
+        overlay.style.opacity = '0';
+        overlay.style.transform = 'translateX(-50%) translateY(-20px)';
+        setTimeout(() => overlay.remove(), 300);
+    }
+    
+    // Update form submission button state
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        if (lock) {
+            submitBtn.innerHTML = '<i class="fas fa-ban"></i> Fix Stock Errors First';
+            submitBtn.classList.add('btn-danger');
+            submitBtn.classList.remove('btn-primary');
+        } else {
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Sales Invoice';
+            submitBtn.classList.add('btn-primary');
+            submitBtn.classList.remove('btn-danger');
+        }
+    }
+}
+
+// Debounced row calculation to prevent excessive calculations
+let calculationTimeout;
+function calculateRowTotal(index) {
+    clearTimeout(calculationTimeout);
+    calculationTimeout = setTimeout(() => {
+        const row = document.getElementById(`productRow_${index}`);
+        if (!row) return;
+        
+        const rate = parseFloat(row.querySelector('.rate').value) || 0;
+        const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
+        const discount = parseFloat(row.querySelector('.discount').value) || 0;
+        const igst = parseFloat(row.querySelector('.igst').value) || 0;
+        
+        const baseAmount = rate * quantity;
+        const discountedAmount = baseAmount - discount;
+        const totalAmount = discountedAmount * (1 + (igst / 100));
+        
+        row.querySelector('.row-total').textContent = '₹' + totalAmount.toFixed(2);
+        calculateGrandTotal();
+        
+        // Add visual feedback for completed rows
+        if (rate > 0 && quantity > 0) {
+            row.classList.add('table-success');
+        } else {
+            row.classList.remove('table-success');
+        }
+    }, 200);
+}
+
+function calculateGrandTotal() {
+    let grandTotal = 0;
+    document.querySelectorAll('.row-total').forEach(span => {
+        const amount = parseFloat(span.textContent.replace('₹', '')) || 0;
+        grandTotal += amount;
+    });
+    document.getElementById('grandTotal').textContent = grandTotal.toFixed(2);
+}
+
+function validateExpiryDate(dateString) {
+    if (!dateString) return '';
+    
+    // If already in YYYY-MM-DD format, return as is
+    if (dateString.length === 10 && dateString.includes('-')) {
+        return dateString;
+    }
+    
+    // Convert DDMM format to YYYY-MM-DD if needed
+    const convertedDate = convertDateFormat(dateString);
+    
+    const date = new Date(convertedDate);
+    if (isNaN(date.getTime())) return '';
+    return convertedDate;
+}
+
+document.getElementById('combinedSalesInvoiceForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    console.log('Form submission started');
+    
+    const products = [];
+    const rows = document.querySelectorAll('#productRows tr');
+    
+    console.log(`Found ${rows.length} product rows`);
+    
+    let hasValidProducts = false;
+    
+    rows.forEach((row, index) => {
+        const productSelect = row.querySelector('.product-select');
+        const batchInput = row.querySelector('.batch-no');
+        const expiryInput = row.querySelector('.expiry');
+        const mrpInput = row.querySelector('.mrp');
+        const rateInput = row.querySelector('.rate');
+        const quantityInput = row.querySelector('.quantity');
+        const discountInput = row.querySelector('.discount');
+        const igstInput = row.querySelector('.igst');
+        
+        console.log(`Row ${index + 1}:`, {
+            productSelected: productSelect ? productSelect.value : 'No select',
+            batch: batchInput ? batchInput.value : 'No batch',
+            expiry: expiryInput ? expiryInput.value : 'No expiry',
+            quantity: quantityInput ? quantityInput.value : 'No quantity'
+        });
+        
+        if (productSelect && productSelect.value && 
+            batchInput && batchInput.value && 
+            quantityInput && quantityInput.value && 
+            parseFloat(quantityInput.value) > 0) {
+            
+            const expiryValue = expiryInput ? expiryInput.value : '';
+            
+            const productData = {
+                productid: productSelect.value,
+                batch_no: batchInput.value,
+                expiry: expiryValue,
+                mrp: parseFloat(mrpInput ? mrpInput.value : 0) || 0,
+                sale_rate: parseFloat(rateInput ? rateInput.value : 0) || 0,
+                quantity: parseFloat(quantityInput.value) || 0,
+                discount: parseFloat(discountInput ? discountInput.value : 0) || 0,
+                igst: parseFloat(igstInput ? igstInput.value : 0) || 0,
+                calculation_mode: 'flat',
+                rate_applied: 'A'
+            };
+            
+            products.push(productData);
+            hasValidProducts = true;
+            
+            console.log(`Added product ${index + 1}:`, productData);
+        } else {
+            console.log(`Skipped row ${index + 1}: Missing required fields`);
+        }
+    });
+    
+    console.log(`Total valid products: ${products.length}`);
+    
+    if (!hasValidProducts) {
+        alert('Please add at least one product with all required fields (Product, Batch, Quantity).');
+        return;
+    }
+    
+    // Set products data
+    const productsDataField = document.getElementById('productsData');
+    if (productsDataField) {
+        productsDataField.value = JSON.stringify(products);
+        console.log('Products data set:', productsDataField.value);
+    } else {
+        console.error('Products data field not found!');
+        return;
+    }
+    
+    // Convert date format before submission
+    const dateField = document.querySelector('[name="sales_invoice_date"]');
+    if (dateField && dateField.value) {
+        const convertedDate = convertDateFormat(dateField.value);
+        dateField.value = convertedDate;
+        console.log('Date converted:', convertedDate);
+    }
+    
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        submitBtn.disabled = true;
+    }
+    
+    console.log('Submitting form...');
+    this.submit();
+});
+
+
+
+function calculateGrandTotal() {
+    let grandTotal = 0;
+    document.querySelectorAll('.row-total').forEach(span => {
+        const value = span.textContent.replace('₹', '');
+        grandTotal += parseFloat(value) || 0;
+    });
+    document.getElementById('grandTotal').textContent = grandTotal.toFixed(2);
+    
+    // Update transport charges if any
+    const transportCharges = parseFloat(document.querySelector('[name="sales_transport_charges"]').value) || 0;
+    const finalTotal = grandTotal + transportCharges;
+    
+    // Show final total if transport charges exist
+    if (transportCharges > 0) {
+        document.getElementById('grandTotal').innerHTML = `${grandTotal.toFixed(2)} + ${transportCharges.toFixed(2)} = <strong>${finalTotal.toFixed(2)}</strong>`;
+    }
+}
+
+function collectProductsData() {
+    const products = [];
+    document.querySelectorAll('#productRows tr').forEach(row => {
+        const productSelect = row.querySelector('.product-select');
+        if (productSelect && productSelect.value) {
+            products.push({
+                productid: productSelect.value,
+                batch_no: row.querySelector('.batch-no').value,
+                expiry: row.querySelector('.expiry').value,
+                mrp: row.querySelector('.mrp').value,
+                sale_rate: row.querySelector('.rate').value,
+                quantity: row.querySelector('.quantity').value,
+                discount: row.querySelector('.discount').value,
+                igst: row.querySelector('.igst').value,
+                calculation_mode: 'flat',
+                rate_applied: 'A'
+            });
+        }
+    });
+    return products;
+}
+
+document.getElementById('combinedSalesInvoiceForm').addEventListener('submit', function(e) {
+    const productsData = collectProductsData();
+    if (productsData.length === 0) {
+        e.preventDefault();
+        alert('Please add at least one product to the invoice.');
+        return;
+    }
+    
+    // Comprehensive stock validation before submission
+    const stockErrors = document.querySelectorAll('input[data-stock-error="true"]');
+    if (stockErrors.length > 0) {
+        e.preventDefault();
+        
+        // Count total errors and show detailed message
+        const errorCount = stockErrors.length;
+        const errorDetails = Array.from(stockErrors).map((input, index) => {
+            const row = input.closest('tr');
+            const productName = row.querySelector('.product-select option:checked')?.textContent || 'Unknown Product';
+            const maxStock = input.getAttribute('data-max-stock') || '0';
+            const currentQty = input.value || '0';
+            return `${index + 1}. ${productName}: Entered ${currentQty}, Available ${maxStock}`;
+        }).join('\n');
+        
+        alert(`Cannot save invoice! Found ${errorCount} stock validation error(s):\n\n${errorDetails}\n\nPlease correct these quantities before saving.`);
+        
+        // Focus on first error and highlight all error rows
+        stockErrors[0].focus();
+        stockErrors[0].select();
+        
+        // Highlight all error rows
+        stockErrors.forEach(input => {
+            const row = input.closest('tr');
+            row.style.backgroundColor = '#f8d7da';
+            row.style.border = '2px solid #dc3545';
+            setTimeout(() => {
+                row.style.backgroundColor = '';
+                row.style.border = '';
+            }, 3000);
+        });
+        
+        return;
+    }
+    
+    // Additional validation: Check if any quantity exceeds available stock
+    let hasStockIssues = false;
+    const rows = document.querySelectorAll('#productRows tr');
+    
+    rows.forEach((row, index) => {
+        const quantityInput = row.querySelector('.quantity');
+        const stockInfo = row.querySelector('.stock-info');
+        
+        if (quantityInput && quantityInput.value && stockInfo) {
+            const quantity = parseFloat(quantityInput.value) || 0;
+            const stockMatch = stockInfo.textContent.match(/Stock: (\d+(?:\.\d+)?)/i);
+            
+            if (stockMatch) {
+                const availableStock = parseFloat(stockMatch[1]);
+                // Only flag as issue if stock is available but quantity exceeds it
+                if (availableStock > 0 && quantity > availableStock) {
+                    hasStockIssues = true;
+                    quantityInput.style.borderColor = '#dc3545';
+                    quantityInput.style.backgroundColor = '#f8d7da';
+                }
+            }
+        }
+    });
+    
+    if (hasStockIssues) {
+        e.preventDefault();
+        alert('Stock validation failed! Some quantities exceed available stock. Please review and correct.');
+        return;
+    }
+    
+    // Convert invoice date format before submission
+    const dateField = document.querySelector('[name="sales_invoice_date"]');
+    if (dateField && dateField.value) {
+        const convertedDate = convertDateFormat(dateField.value);
+        dateField.value = convertedDate;
+    }
+    
+    // Validate all required fields
+    let hasErrors = false;
+    document.querySelectorAll('#productRows tr').forEach((row, index) => {
+        const requiredFields = row.querySelectorAll('input[required], select[required]');
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                hasErrors = true;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+    });
+    
+    if (hasErrors) {
+        e.preventDefault();
+        alert('Please fill all required fields for all products.');
+        return;
+    }
+    
+    document.getElementById('productsData').value = JSON.stringify(productsData);
+    
+    // Show loading state
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    submitBtn.disabled = true;
+});
+
+    
+    // Customer selection change handler
+    const customerSelect = document.querySelector('[name="customerid"]');
+    if (customerSelect) {
+        customerSelect.addEventListener('change', function() {
+            const customerId = this.value;
+            if (customerId) {
+                fetchCustomerRateInfo(customerId);
+            } else {
+                hideCustomerRateInfo();
+            }
+        });
+    }
+    
+    // Enhanced keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl + Enter to add new product row
+        if (e.ctrlKey && e.key === 'Enter') {
+            e.preventDefault();
+            addProductRow();
+        }
+        
+        // Ctrl + S to save form (prevent if form is locked due to stock errors)
+        if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            if (window.formLocked) {
+                alert('Cannot save! Please fix stock quantity errors first.');
+                // Focus on first stock error input
+                const firstError = document.querySelector('input[data-stock-error="true"]');
+                if (firstError) {
+                    firstError.focus();
+                    firstError.select();
+                }
+                return;
+            }
+            document.getElementById('combinedSalesInvoiceForm').submit();
+        }
+        
+        // F2 to open quick product search
+        if (e.key === 'F2') {
+            e.preventDefault();
+            openQuickProductSearch();
+        }
+        
+        // Alt + P to focus on last product row
+        if (e.altKey && e.key.toLowerCase() === 'p') {
+            e.preventDefault();
+            focusLastProductRow();
+        }
+    });
+    
+    // Debounced transport charges calculation
+    const transportField = document.querySelector('[name="sales_transport_charges"]');
+    if (transportField) {
+        let transportTimeout;
+        transportField.addEventListener('input', function() {
+            clearTimeout(transportTimeout);
+            transportTimeout = setTimeout(calculateGrandTotal, 300);
+        });
+    }
+
+// Auto-load product details when product is selected
+function loadProductDetails(productSelect, rowIndex) {
+    if (!productSelect.value) return;
+    
+    // Fetch available batches for the selected product
+    fetch(`/api/product-batch-selector/?product_id=${productSelect.value}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.batches.length > 0) {
+                const row = document.getElementById(`productRow_${rowIndex}`);
+                const firstBatch = data.batches[0]; // Use first available batch
+                
+                // Auto-fill all fields with MM-YYYY expiry format
+                row.querySelector('.batch-no').value = firstBatch.batch_no;
+                row.querySelector('.expiry').value = firstBatch.expiry; // Already in MM-YYYY format from backend
+                row.querySelector('.mrp').value = firstBatch.mrp;
+                
+                // Set rate based on customer type
+                let selectedRate = firstBatch.mrp; // Default fallback
+                if (firstBatch.rates && selectedCustomerRateType === 'A' && firstBatch.rates.rate_A > 0) {
+                    selectedRate = firstBatch.rates.rate_A;
+                } else if (firstBatch.rates && selectedCustomerRateType === 'B' && firstBatch.rates.rate_B > 0) {
+                    selectedRate = firstBatch.rates.rate_B;
+                } else if (firstBatch.rates && selectedCustomerRateType === 'C' && firstBatch.rates.rate_C > 0) {
+                    selectedRate = firstBatch.rates.rate_C;
+                }
+                
+                row.querySelector('.rate').value = selectedRate;
+                row.querySelector('.quantity').value = '1';
+                row.querySelector('.discount').value = '0';
+                row.querySelector('.igst').value = '12';
+                
+                // Show stock info
+                const stockInfo = document.createElement('small');
+                stockInfo.className = 'text-success stock-info';
+                stockInfo.innerHTML = `<i class="fas fa-info-circle"></i> Stock: ${firstBatch.stock} | Rate ${selectedCustomerRateType}: ₹${selectedRate}`;
+                
+                const existingInfo = row.querySelector('.stock-info');
+                if (existingInfo) existingInfo.remove();
+                
+                row.querySelector('.quantity').parentNode.appendChild(stockInfo);
+                
+                // Trigger calculation and stock validation
+                calculateRowTotal(rowIndex);
+                
+                // Auto-focus on quantity field after batch is loaded
+                setTimeout(() => {
+                    const quantityField = row.querySelector('.quantity');
+                    if (quantityField) {
+                        quantityField.focus();
+                        quantityField.select();
+                    }
+                    validateStockAndCalculate(rowIndex);
+                }, 200);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching product batches:', error);
+        });
+}
+
+// Debounced batch input handler to prevent excessive API calls
+let batchInputTimeout;
+document.addEventListener('input', function(e) {
+    if (e.target.classList.contains('batch-no')) {
+        clearTimeout(batchInputTimeout);
+        batchInputTimeout = setTimeout(() => {
+            const row = e.target.closest('tr');
+            const productSelect = row.querySelector('.product-select');
+            const rowIndex = row.id.split('_')[1];
+            
+            if (productSelect.value && e.target.value && e.target.value.length >= 2) {
+                fetchBatchDetails(productSelect.value, e.target.value, rowIndex);
+            }
+        }, 500); // 500ms delay
+    }
+});
+
+// Add Alt+W shortcut for batch selection with improved detection
+document.addEventListener('keydown', function(e) {
+    if (e.altKey && e.key.toLowerCase() === 'w') {
+        e.preventDefault();
+        const focusedElement = document.activeElement;
+        
+        console.log('🔥 Alt+W pressed. Focused element:', focusedElement);
+        console.log('🔍 Element classes:', focusedElement?.className);
+        
+        // Check if focused element is a batch number input
+        if (focusedElement && focusedElement.classList.contains('batch-no')) {
+            const row = focusedElement.closest('tr');
+            const productSelect = row.querySelector('.product-select');
+            const rowIndex = row.id.split('_')[1];
+            
+            console.log('🎯 Product selected:', productSelect?.value);
+            console.log('🔢 Row index:', rowIndex);
+            
+            if (productSelect && productSelect.value) {
+                console.log('🚀 Opening batch selection dialog...');
+                showBatchSelectionDialog(productSelect.value, rowIndex);
+            } else {
+                alert('Please select a product first!');
+            }
+        } else {
+            console.log('⚠️ Alt+W pressed but not on batch input. Focused element:', focusedElement);
+        }
+    }
+});
+
+// Cache for batch details to avoid repeated API calls
+const batchDetailsCache = new Map();
+
+function fetchBatchDetails(productId, batchNo, rowIndex) {
+    const cacheKey = `${productId}_${batchNo}`;
+    
+    // Check cache first
+    if (batchDetailsCache.has(cacheKey)) {
+        const data = batchDetailsCache.get(cacheKey);
+        fillBatchDetails(data, rowIndex);
+        return;
+    }
+    
+    // Show loading indicator
+    const row = document.getElementById(`productRow_${rowIndex}`);
+    const existingInfo = row.querySelector('.stock-info');
+    if (existingInfo) {
+        existingInfo.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    }
+    
+    fetch(`/api/batch-details/?product_id=${productId}&batch_no=${batchNo}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.warn('Batch details not found:', data.error);
+                return;
+            }
+            
+            // Cache the result
+            batchDetailsCache.set(cacheKey, data);
+            fillBatchDetails(data, rowIndex);
+        })
+        .catch(error => {
+            console.error('Error fetching batch details:', error);
+            const row = document.getElementById(`productRow_${rowIndex}`);
+            const existingInfo = row.querySelector('.stock-info');
+            if (existingInfo) existingInfo.remove();
+        });
+}
+
+function fillBatchDetails(data, rowIndex) {
+    const row = document.getElementById(`productRow_${rowIndex}`);
+    if (!row) return;
+    
+    // Auto-fill MRP
+    row.querySelector('.mrp').value = data.mrp || '';
+    
+    // Auto-fill expiry in MM-YYYY format (data.expiry should already be in MM-YYYY format from backend)
+    if (data.expiry) {
+        const expiryField = row.querySelector('.expiry');
+        console.log('✅ Expiry from API (should be MM-YYYY):', data.expiry);
+        expiryField.value = data.expiry; // Direct assignment since backend now returns MM-YYYY format
+    }
+    
+    row.querySelector('.quantity').value = '1';
+    row.querySelector('.discount').value = '0';
+    row.querySelector('.igst').value = '12';
+    
+    // Set rate based on customer rate type
+    let selectedRate = data.mrp || 0;
+    let rateSource = 'MRP';
+    
+    if (data.rates) {
+        if (selectedCustomerRateType === 'A' && data.rates.rate_A && data.rates.rate_A > 0) {
+            selectedRate = data.rates.rate_A;
+            rateSource = 'Rate A';
+        } else if (selectedCustomerRateType === 'B' && data.rates.rate_B && data.rates.rate_B > 0) {
+            selectedRate = data.rates.rate_B;
+            rateSource = 'Rate B';
+        } else if (selectedCustomerRateType === 'C' && data.rates.rate_C && data.rates.rate_C > 0) {
+            selectedRate = data.rates.rate_C;
+            rateSource = 'Rate C';
+        }
+    }
+    
+    row.querySelector('.rate').value = selectedRate;
+    
+    // Show detailed info with rate source (use available_stock or stock field)
+    const stockValue = data.available_stock !== undefined ? data.available_stock : (data.stock || 0);
+    const stockInfo = document.createElement('small');
+    stockInfo.className = 'text-success stock-info';
+    stockInfo.innerHTML = `<i class="fas fa-info-circle"></i> Stock: ${stockValue} | Applied: ${rateSource} = ₹${selectedRate}`;
+    
+    const existingInfo = row.querySelector('.stock-info');
+    if (existingInfo) existingInfo.remove();
+    
+    row.querySelector('.quantity').parentNode.appendChild(stockInfo);
+    
+    // Trigger calculation and stock validation
+    calculateRowTotal(rowIndex);
+    
+    // Auto-focus on quantity field and validate stock
+    setTimeout(() => {
+        const quantityField = row.querySelector('.quantity');
+        if (quantityField) {
+            quantityField.focus();
+            quantityField.select();
+        }
+        validateStockAndCalculate(rowIndex);
+    }, 200);
+}
+
+// Manual function to show product fields if they don't appear automatically
+function showProductFields() {
+    const tbody = document.getElementById('productRows');
+    if (!tbody) {
+        alert('Product table not found!');
+        return;
+    }
+    
+    // Only add a row if no rows exist
+    if (tbody.children.length === 0) {
+        addProductRow();
+        console.log('Product field added successfully!');
+    } else {
+        console.log('Product fields already visible!');
+    }
+}
+
+// Force show product table on button click
+function forceShowProductTable() {
+    const tableContainer = document.querySelector('.products-table-container');
+    const table = document.querySelector('.products-table');
+    const tbody = document.getElementById('productRows');
+    
+    if (tableContainer) tableContainer.style.display = 'block';
+    if (table) table.style.display = 'table';
+    if (tbody) tbody.style.display = 'table-row-group';
+    
+    // Add single product row if none exists
+    if (!tbody || tbody.children.length === 0) {
+        addProductRow();
+    }
+}
+
+// Batch selection dialog functionality with debugging
+function showBatchSelectionDialog(productId, rowIndex) {
+    console.log('📦 Fetching batches for product:', productId, 'row:', rowIndex);
+    
+    fetch(`/api/product-batch-selector/?product_id=${productId}`)
+        .then(response => {
+            console.log('📡 API Response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('📊 API Data received:', data);
+            
+            if (data.success && data.batches.length > 0) {
+                console.log('✅ Creating batch modal with', data.batches.length, 'batches');
+                createBatchSelectionModal(data.batches, rowIndex);
+            } else {
+                console.log('⚠️ No batches found');
+                alert('No batches found for this product.');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error fetching batches:', error);
+            alert('Error loading batch information.');
+        });
+}
+
+function createBatchSelectionModal(batches, rowIndex) {
+    // Remove existing modal if any
+    const existingModal = document.getElementById('batchSelectionModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Create modal HTML
+    const modalHTML = `
+        <div id="batchSelectionModal" class="batch-modal-overlay">
+            <div class="batch-modal-content">
+                <div class="batch-modal-header">
+                    <h3>Select Batch</h3>
+                    <button type="button" class="batch-modal-close" onclick="closeBatchModal()">&times;</button>
+                </div>
+                <div class="batch-modal-body">
+                    <div class="batch-search">
+                        <input type="text" id="batchSearch" placeholder="Search batch...">
+                    </div>
+                    <div class="batch-list" id="batchList" tabindex="0">
+                        ${batches.map((batch, index) => `
+                            <div class="batch-item ${index === 0 ? 'batch-selected' : ''} ${batch.is_available ? '' : 'batch-unavailable'}" 
+                                 data-batch-index="${index}" data-row-index="${rowIndex}" data-batch-data='${JSON.stringify(batch)}'>
+                                <div class="batch-info">
+                                    <div class="batch-no"><strong>${batch.batch_no}</strong></div>
+                                    <div class="batch-details">
+                                        <span class="batch-expiry">Exp: ${batch.expiry}</span>
+                                        <span class="batch-stock">Stock: ${batch.stock}</span>
+                                        <span class="batch-mrp">MRP: ₹${batch.mrp}</span>
+                                    </div>
+                                    <div class="batch-rates">
+                                        <span>A: ₹${batch.rates ? batch.rates.rate_A : 0}</span>
+                                        <span>B: ₹${batch.rates ? batch.rates.rate_B : 0}</span>
+                                        <span>C: ₹${batch.rates ? batch.rates.rate_C : 0}</span>
+                                    </div>
+                                </div>
+                                <div class="batch-status">
+                                    ${batch.is_available ? '<span class="status-available">Available</span>' : '<span class="status-unavailable">Out of Stock</span>'}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="batch-modal-footer">
+                    <div class="batch-shortcuts">
+                        <small>↑↓: Navigate | Enter: Select | Esc: Close</small>
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="closeBatchModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Initialize batch selection after modal is added
+    setTimeout(() => {
+        initializeBatchSelection();
+    }, 50);
+}
+
+// Separate function to handle batch selection initialization
+function initializeBatchSelection() {
+    const modal = document.getElementById('batchSelectionModal');
+    const searchInput = document.getElementById('batchSearch');
+    const batchList = document.getElementById('batchList');
+    
+    if (!modal || !searchInput || !batchList) {
+        console.error('Batch modal elements not found');
+        return;
+    }
+    
+    // Focus on search input first
+    searchInput.focus();
+    
+    // Global keydown handler for the entire modal
+    function handleModalKeydown(e) {
+        e.stopPropagation(); // Prevent event bubbling
+        
+        const visibleItems = batchList.querySelectorAll('.batch-item:not([style*="display: none"])');
+        let selectedIndex = Array.from(visibleItems).findIndex(item => item.classList.contains('batch-selected'));
+        
+        switch(e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                if (visibleItems.length > 0) {
+                    // Remove current selection
+                    visibleItems.forEach(item => item.classList.remove('batch-selected'));
+                    
+                    // Move to next item or wrap to first
+                    selectedIndex = selectedIndex < visibleItems.length - 1 ? selectedIndex + 1 : 0;
+                    visibleItems[selectedIndex].classList.add('batch-selected');
+                    visibleItems[selectedIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                }
+                break;
+                
+            case 'ArrowUp':
+                e.preventDefault();
+                if (visibleItems.length > 0) {
+                    // Remove current selection
+                    visibleItems.forEach(item => item.classList.remove('batch-selected'));
+                    
+                    // Move to previous item or wrap to last
+                    selectedIndex = selectedIndex > 0 ? selectedIndex - 1 : visibleItems.length - 1;
+                    visibleItems[selectedIndex].classList.add('batch-selected');
+                    visibleItems[selectedIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                }
+                break;
+                
+            case 'Enter':
+                e.preventDefault();
+                const selectedItem = batchList.querySelector('.batch-item.batch-selected');
+                if (selectedItem) {
+                    const batchData = JSON.parse(selectedItem.getAttribute('data-batch-data'));
+                    const rowIndex = selectedItem.getAttribute('data-row-index');
+                    selectBatch(batchData.batch_no, rowIndex, batchData);
+                }
+                break;
+                
+            case 'Escape':
+                e.preventDefault();
+                closeBatchModal();
+                break;
+        }
+    }
+    
+    // Attach keydown handler to modal
+    modal.addEventListener('keydown', handleModalKeydown);
+    
+    // Search input handler
+    searchInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const batchItems = batchList.querySelectorAll('.batch-item');
+        
+        // Remove previous selection
+        batchItems.forEach(item => item.classList.remove('batch-selected'));
+        
+        let firstVisible = null;
+        batchItems.forEach(item => {
+            const batchNo = item.querySelector('.batch-no').textContent.toLowerCase();
+            const batchDetails = item.querySelector('.batch-details').textContent.toLowerCase();
+            
+            if (batchNo.includes(searchTerm) || batchDetails.includes(searchTerm)) {
+                item.style.display = 'block';
+                if (!firstVisible) firstVisible = item;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // Auto-select first visible item
+        if (firstVisible) {
+            firstVisible.classList.add('batch-selected');
+        }
+    });
+    
+    // Click handlers for batch items
+    const batchItems = batchList.querySelectorAll('.batch-item');
+    batchItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const batchData = JSON.parse(this.getAttribute('data-batch-data'));
+            const rowIndex = this.getAttribute('data-row-index');
+            selectBatch(batchData.batch_no, rowIndex, batchData);
+        });
+    });
+    
+    console.log('✅ Batch selection initialized with', batchItems.length, 'items');
+    console.log('🎯 Modal focus set, keyboard navigation ready');
+    
+    // Test keyboard navigation immediately
+    setTimeout(() => {
+        console.log('🧪 Testing navigation - Current selected:', batchList.querySelector('.batch-selected')?.querySelector('.batch-no')?.textContent);
+    }, 100);
+}
+
+function selectBatch(batchNo, rowIndex, batchData) {
+    const row = document.getElementById(`productRow_${rowIndex}`);
+    if (row) {
+        // Fill batch details
+        row.querySelector('.batch-no').value = batchNo;
+        
+        // Auto-fill expiry in MM-YYYY format (batchData.expiry should already be in MM-YYYY format from backend)
+        const expiryField = row.querySelector('.expiry');
+        if (batchData.expiry) {
+            console.log('✅ Expiry from batch selection (should be MM-YYYY):', batchData.expiry);
+            expiryField.value = batchData.expiry; // Direct assignment since backend now returns MM-YYYY format
+        }
+        
+        // Auto-fill MRP
+        row.querySelector('.mrp').value = batchData.mrp;
+        
+        // Set rate based on customer type
+        let selectedRate = batchData.mrp; // Default fallback
+        if (batchData.rates && selectedCustomerRateType === 'A' && batchData.rates.rate_A > 0) {
+            selectedRate = batchData.rates.rate_A;
+        } else if (batchData.rates && selectedCustomerRateType === 'B' && batchData.rates.rate_B > 0) {
+            selectedRate = batchData.rates.rate_B;
+        } else if (batchData.rates && selectedCustomerRateType === 'C' && batchData.rates.rate_C > 0) {
+            selectedRate = batchData.rates.rate_C;
+        }
+        
+        row.querySelector('.rate').value = selectedRate;
+        row.querySelector('.quantity').value = '1';
+        row.querySelector('.discount').value = '0';
+        row.querySelector('.igst').value = '12';
+        
+        // Calculate total and validate stock
+        calculateRowTotal(rowIndex);
+        
+        // Auto-focus on quantity field and validate stock for selected batch
+        setTimeout(() => {
+            const quantityField = row.querySelector('.quantity');
+            if (quantityField) {
+                quantityField.focus();
+                quantityField.select();
+            }
+            validateStockAndCalculate(rowIndex);
+        }, 200);
+        
+        // Show stock info with rate info (use correct format for validation)
+        const stockInfo = document.createElement('small');
+        stockInfo.className = 'text-success stock-info';
+        stockInfo.innerHTML = `<i class="fas fa-info-circle"></i> Stock: ${batchData.stock} | Rate ${selectedCustomerRateType}: ₹${selectedRate}`;
+        
+        const existingInfo = row.querySelector('.stock-info');
+        if (existingInfo) existingInfo.remove();
+        
+        row.querySelector('.quantity').parentNode.appendChild(stockInfo);
+    }
+    
+    closeBatchModal();
+}
+
+function closeBatchModal() {
+    const modal = document.getElementById('batchSelectionModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// filterBatches function is now handled in initializeBatchSelection
+
+// Debug function to check if elements exist
+function debugProductTable() {
+    console.log('=== Product Table Debug ===');
+    console.log('productRows element:', document.getElementById('productRows'));
+    console.log('products-table element:', document.querySelector('.products-table'));
+    console.log('add-product-btn element:', document.querySelector('.add-product-btn'));
+    console.log('Current productRowIndex:', productRowIndex);
+    console.log('Number of existing rows:', document.querySelectorAll('#productRows tr').length);
+    console.log('Single product input mode: ACTIVE');
+}
+
+// Customer rate functions
+function fetchCustomerRateInfo(customerId) {
+    fetch(`/api/customer-rate-info/?customer_id=${customerId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showCustomerRateInfo(data.customer_type, data.rate_type);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching customer rate:', error);
+        });
+}
+
+function showCustomerRateInfo(customerType, rateType) {
+    const rateInfo = document.getElementById('customerRateInfo');
+    const rateText = rateInfo.querySelector('.customer-rate-text');
+    
+    // Store customer rate type globally (extract A, B, C from customer type)
+    if (customerType.includes('A') || customerType === 'Type-A') {
+        selectedCustomerRateType = 'A';
+    } else if (customerType.includes('B') || customerType === 'Type-B') {
+        selectedCustomerRateType = 'B';
+    } else if (customerType.includes('C') || customerType === 'Type-C') {
+        selectedCustomerRateType = 'C';
+    } else {
+        selectedCustomerRateType = 'A'; // Default
+    }
+    
+    rateText.innerHTML = `<i class="fas fa-user"></i> Customer Type: <strong>${customerType}</strong> | Rate: <strong>Rate ${selectedCustomerRateType}</strong>`;
+    rateInfo.style.display = 'block';
+}
+
+function hideCustomerRateInfo() {
+    const rateInfo = document.getElementById('customerRateInfo');
+    rateInfo.style.display = 'none';
+}
+
+// Auto-fill current date in invoice date field
+function setCurrentDate() {
+    const dateField = document.querySelector('[name="sales_invoice_date"]');
+    if (dateField && !dateField.value) {
+        const today = new Date();
+        const day = String(today.getDate()).padStart(2, '0');
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const year = today.getFullYear();
+        const ddmmyyyyFormat = day + month + year;
+        dateField.value = ddmmyyyyFormat;
+        console.log('✓ Invoice date auto-filled in DDMMYYYY format:', ddmmyyyyFormat);
+    }
+}
+
+// Debug function to check form state
+function debugFormState() {
+    console.log('=== Form Debug Info ===');
+    
+    const form = document.getElementById('combinedSalesInvoiceForm');
+    console.log('Form element:', form);
+    
+    const dateField = document.querySelector('[name="sales_invoice_date"]');
+    console.log('Date field value:', dateField ? dateField.value : 'Not found');
+    
+    const customerField = document.querySelector('[name="customerid"]');
+    console.log('Customer field value:', customerField ? customerField.value : 'Not found');
+    
+    const productsData = document.getElementById('productsData');
+    console.log('Products data field:', productsData ? productsData.value : 'Not found');
+    
+    const rows = document.querySelectorAll('#productRows tr');
+    console.log('Product rows count:', rows.length);
+    
+    rows.forEach((row, index) => {
+        const productSelect = row.querySelector('.product-select');
+        const quantity = row.querySelector('.quantity');
+        console.log(`Row ${index + 1}:`, {
+            product: productSelect ? productSelect.value : 'No select',
+            quantity: quantity ? quantity.value : 'No quantity'
+        });
+    });
+}
+
+// Convert DDMM or DDMMYYYY format to YYYY-MM-DD for form submission
+function convertDateFormat(dateStr) {
+    if (!dateStr) return '';
+    
+    // If already in YYYY-MM-DD format, return as is
+    if (dateStr.length === 10 && dateStr.includes('-')) {
+        return dateStr;
+    }
+    
+    // Handle DDMMYYYY format (8 digits)
+    if (dateStr.length === 8 && /^\d{8}$/.test(dateStr)) {
+        const day = dateStr.substring(0, 2);
+        const month = dateStr.substring(2, 4);
+        const year = dateStr.substring(4, 8);
+        
+        // Validate day and month
+        const dayNum = parseInt(day);
+        const monthNum = parseInt(month);
+        const yearNum = parseInt(year);
+        
+        if (dayNum >= 1 && dayNum <= 31 && monthNum >= 1 && monthNum <= 12 && yearNum >= 2000) {
+            return `${year}-${month}-${day}`;
+        }
+    }
+    
+    // Handle DDMM format (4 digits) - fallback to current year
+    if (dateStr.length === 4 && /^\d{4}$/.test(dateStr)) {
+        const day = dateStr.substring(0, 2);
+        const month = dateStr.substring(2, 4);
+        const year = new Date().getFullYear();
+        
+        // Validate day and month
+        const dayNum = parseInt(day);
+        const monthNum = parseInt(month);
+        
+        if (dayNum >= 1 && dayNum <= 31 && monthNum >= 1 && monthNum <= 12) {
+            return `${year}-${month}-${day}`;
+        }
+    }
+    
+    // Handle DD/MM/YYYY format
+    if (dateStr.includes('/')) {
+        const parts = dateStr.split('/');
+        if (parts.length === 3) {
+            const day = parts[0].padStart(2, '0');
+            const month = parts[1].padStart(2, '0');
+            const year = parts[2];
+            return `${year}-${month}-${day}`;
+        } else if (parts.length === 2) {
+            const day = parts[0].padStart(2, '0');
+            const month = parts[1].padStart(2, '0');
+            const year = new Date().getFullYear();
+            return `${year}-${month}-${day}`;
+        }
+    }
+    
+    return dateStr; // Return original if can't convert
+}
+
+// Quick product search with instant results
+function openQuickProductSearch() {
+    const existingModal = document.getElementById('quickProductModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    const modalHTML = `
+        <div id="quickProductModal" class="quick-search-overlay">
+            <div class="quick-search-content">
+                <div class="quick-search-header">
+                    <h4>🔍 Quick Product Search</h4>
+                    <small>Type product name and press Enter</small>
+                </div>
+                <div class="quick-search-input">
+                    <input type="text" id="quickProductInput" placeholder="Type product name..." onkeyup="quickSearchProducts(event)">
+                </div>
+                <div class="quick-search-results" id="quickResults"></div>
+                <div class="quick-search-footer">
+                    <small>↑↓: Navigate | Enter: Select | Home/End: First/Last | Esc: Close</small>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    setTimeout(() => {
+        const input = document.getElementById('quickProductInput');
+        input.focus();
+        
+        // Add comprehensive keyboard handling with throttling
+        let keyThrottle = false;
+        
+        input.addEventListener('keydown', function(e) {
+            const resultsDiv = document.getElementById('quickResults');
+            
+            switch(e.key) {
+                case 'Escape':
+                    closeQuickSearch();
+                    break;
+                    
+                case 'ArrowDown':
+                    e.preventDefault();
+                    if (!keyThrottle) {
+                        keyThrottle = true;
+                        navigateResults(1);
+                        setTimeout(() => { keyThrottle = false; }, 100);
+                    }
+                    break;
+                    
+                case 'ArrowUp':
+                    e.preventDefault();
+                    if (!keyThrottle) {
+                        keyThrottle = true;
+                        navigateResults(-1);
+                        setTimeout(() => { keyThrottle = false; }, 100);
+                    }
+                    break;
+                    
+                case 'Enter':
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Get selected item or first item if none selected
+                    let selected = resultsDiv.querySelector('.selected');
+                    if (!selected) {
+                        selected = resultsDiv.querySelector('.quick-result-item');
+                    }
+                    
+                    if (selected) {
+                        // Extract product info and call selection function directly
+                        const productName = selected.querySelector('.product-name').textContent;
+                        const productCompany = selected.querySelector('.product-company').textContent;
+                        
+                        // Find product ID from the products array
+                        const products = [{% for product in products %}{
+                            id: {{ product.productid }},
+                            name: '{{ product.product_name|escapejs }}',
+                            company: '{{ product.product_company|escapejs }}'
+                        },{% endfor %}];
+                        
+                        const matchedProduct = products.find(p => 
+                            p.name === productName && p.company === productCompany
+                        );
+                        
+                        if (matchedProduct) {
+                            quickSelectProduct(matchedProduct.id, matchedProduct.name, matchedProduct.company);
+                        }
+                    }
+                    break;
+                    
+                case 'Home':
+                    e.preventDefault();
+                    const firstItem = resultsDiv.querySelector('.quick-result-item');
+                    if (firstItem) {
+                        resultsDiv.querySelectorAll('.quick-result-item').forEach(item => 
+                            item.classList.remove('selected'));
+                        firstItem.classList.add('selected');
+                        firstItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                    break;
+                    
+                case 'End':
+                    e.preventDefault();
+                    const items = resultsDiv.querySelectorAll('.quick-result-item');
+                    if (items.length > 0) {
+                        items.forEach(item => item.classList.remove('selected'));
+                        const lastItem = items[items.length - 1];
+                        lastItem.classList.add('selected');
+                        lastItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                    break;
+            }
+        });
+    }, 100);
+}
+
+function quickSearchProducts(event) {
+    const searchTerm = event.target.value.toLowerCase();
+    const resultsDiv = document.getElementById('quickResults');
+    
+    // Skip navigation keys - handled in keydown event
+    if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape', 'Home', 'End'].includes(event.key)) {
+        return;
+    }
+    
+    // Handle search input
+    if (searchTerm.length < 2) {
+        resultsDiv.innerHTML = '<div class="quick-hint">Type at least 2 characters...</div>';
+        return;
+    }
+    
+    // Filter products from existing data
+    const products = [{% for product in products %}{
+        id: {{ product.productid }},
+        name: '{{ product.product_name|escapejs }}',
+        company: '{{ product.product_company|escapejs }}'
+    },{% endfor %}];
+    
+    // Case-sensitive search based on original input
+    const originalSearchTerm = event.target.value;
+    
+    const filtered = products.filter(p => {
+        // Check if search term matches case-sensitively
+        const nameMatch = p.name.includes(originalSearchTerm) || p.name.toLowerCase().includes(searchTerm);
+        const companyMatch = p.company.includes(originalSearchTerm) || p.company.toLowerCase().includes(searchTerm);
+        
+        // Prioritize exact case matches
+        const exactCaseMatch = p.name.includes(originalSearchTerm) || p.company.includes(originalSearchTerm);
+        
+        return nameMatch || companyMatch;
+    }).sort((a, b) => {
+        // Sort by exact case match first, then alphabetically
+        const aExactMatch = a.name.includes(originalSearchTerm) || a.company.includes(originalSearchTerm);
+        const bExactMatch = b.name.includes(originalSearchTerm) || b.company.includes(originalSearchTerm);
+        
+        if (aExactMatch && !bExactMatch) return -1;
+        if (!aExactMatch && bExactMatch) return 1;
+        
+        return a.name.localeCompare(b.name);
+    }).slice(0, 8); // Show more results
+    
+    if (filtered.length === 0) {
+        resultsDiv.innerHTML = '<div class="no-results">No products found</div>';
+        return;
+    }
+    
+    resultsDiv.innerHTML = filtered.map((product, index) => `
+        <div class="quick-result-item ${index === 0 ? 'selected' : ''}" 
+             onclick="quickSelectProduct(${product.id}, '${product.name}', '${product.company}')">
+            <div class="product-name">${product.name}</div>
+            <div class="product-company">${product.company}</div>
+        </div>
+    `).join('');
+}
+
+let navigationThrottle = false;
+
+function navigateResults(direction) {
+    // Throttle navigation to prevent too fast movement
+    if (navigationThrottle) return;
+    navigationThrottle = true;
+    
+    setTimeout(() => {
+        navigationThrottle = false;
+    }, 150); // 150ms delay between navigations
+    
+    const items = document.querySelectorAll('.quick-result-item');
+    if (items.length === 0) return;
+    
+    const current = document.querySelector('.quick-result-item.selected');
+    let newIndex = 0;
+    
+    if (current) {
+        const currentIndex = Array.from(items).indexOf(current);
+        newIndex = currentIndex + direction;
+        
+        // Wrap around navigation
+        if (newIndex < 0) {
+            newIndex = items.length - 1;
+        } else if (newIndex >= items.length) {
+            newIndex = 0;
+        }
+        
+        current.classList.remove('selected');
+    } else {
+        // If no item selected, select first or last based on direction
+        newIndex = direction > 0 ? 0 : items.length - 1;
+    }
+    
+    items[newIndex].classList.add('selected');
+    
+    // Scroll selected item into view
+    items[newIndex].scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest'
+    });
+}
+
+function quickSelectProduct(productId, productName, productCompany) {
+    const rows = document.querySelectorAll('#productRows tr');
+    let targetRow = null;
+    
+    // Find first empty row (check product select value)
+    for (let row of rows) {
+        const productSelect = row.querySelector('.product-select');
+        if (productSelect && !productSelect.value) {
+            targetRow = row;
+            break;
+        }
+    }
+    
+    if (!targetRow) {
+        addProductRow();
+        setTimeout(() => {
+            const newRows = document.querySelectorAll('#productRows tr');
+            targetRow = newRows[newRows.length - 1];
+            fillProductInRow(targetRow, productId, productName, productCompany);
+        }, 100);
+    } else {
+        fillProductInRow(targetRow, productId, productName, productCompany);
+    }
+    
+    closeQuickSearch();
+}
+
+function fillProductInRow(row, productId, productName, productCompany) {
+    // Set the product select dropdown value
+    const productSelect = row.querySelector('.product-select');
+    if (productSelect) {
+        productSelect.value = productId;
+        
+        // Trigger the change event to load product details
+        const rowIndex = row.id.split('_')[1];
+        loadProductDetails(productSelect, rowIndex);
+        
+        // Focus on batch no field after a short delay with special styling
+        setTimeout(() => {
+            const batchField = row.querySelector('.batch-no');
+            if (batchField) {
+                console.log('✅ Quick Search: Focusing on Batch Number field');
+                batchField.focus();
+                batchField.select();
+                batchField.classList.add('auto-focused');
+                
+                // Add visual indicator
+                const indicator = document.createElement('small');
+                indicator.className = 'batch-focus-indicator';
+                indicator.innerHTML = '📦 Enter Batch Number';
+                indicator.style.cssText = `
+                    position: absolute;
+                    top: -25px;
+                    left: 0;
+                    background: #28a745;
+                    color: white;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    z-index: 1000;
+                    animation: fadeInOut 2s ease-in-out;
+                `;
+                
+                const batchCell = batchField.closest('td');
+                batchCell.style.position = 'relative';
+                batchCell.appendChild(indicator);
+                
+                // Remove indicator and class after animation
+                setTimeout(() => {
+                    batchField.classList.remove('auto-focused');
+                    if (indicator.parentNode) {
+                        indicator.remove();
+                    }
+                }, 2000);
+            } else {
+                console.log('❌ Quick Search: Batch field not found');
+            }
+        }, 500);
+    }
+}
+
+function closeQuickSearch() {
+    const modal = document.getElementById('quickProductModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function focusLastProductRow() {
+    const rows = document.querySelectorAll('#productRows tr');
+    if (rows.length > 0) {
+        const lastRow = rows[rows.length - 1];
+        const productBtn = lastRow.querySelector('.product-select-btn');
+        if (productBtn) {
+            productBtn.click();
+        }
+    }
+}
+
+// Customer Dialog Functions
+function openCustomerDialog() {
+    document.getElementById('customerDialog').style.display = 'flex';
+    // Focus on first input
+    setTimeout(() => {
+        const firstInput = document.querySelector('#customerDialogForm input[type="text"]');
+        if (firstInput) {
+            firstInput.focus();
+        }
+    }, 100);
+}
+
+function closeCustomerDialog() {
+    document.getElementById('customerDialog').style.display = 'none';
+    // Clear form
+    document.getElementById('customerDialogForm').reset();
+}
+
+function saveCustomer() {
+    const form = document.getElementById('customerDialogForm');
+    const formData = new FormData(form);
+    
+    // Basic validation
+    const customerName = formData.get('customer_name');
+    const customerType = formData.get('customer_type');
+    const creditDays = formData.get('customer_credit_days');
+    
+    if (!customerName || !customerType || !creditDays) {
+        alert('Please fill in all required fields (Customer Name, Customer Type, and Credit Days).');
+        return;
+    }
+    
+    // Show loading state
+    const saveBtn = document.querySelector('.customer-dialog-btn-primary');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    saveBtn.disabled = true;
+    
+    // Send AJAX request
+    fetch('/add_customer/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Add customer to dropdown
+            const customerSelect = document.querySelector('[name="customerid"]');
+            const newOption = document.createElement('option');
+            newOption.value = data.customer_id;
+            newOption.textContent = data.customer_name;
+            newOption.selected = true;
+            customerSelect.appendChild(newOption);
+            
+            // Close dialog
+            closeCustomerDialog();
+            
+            // Show success message
+            alert(data.message);
+            
+            // Trigger customer selection change event
+            customerSelect.dispatchEvent(new Event('change'));
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while saving the customer.');
+    })
+    .finally(() => {
+        // Restore button state
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    });
+}
+
+// Helper function to show stock error tooltip
+function showStockErrorTooltip(input, message) {
+    // Remove existing tooltip
+    hideStockErrorTooltip();
+    
+    const tooltip = document.createElement('div');
+    tooltip.id = 'stockErrorTooltip';
+    tooltip.innerHTML = `
+        <div style="position: absolute; top: -45px; left: 0; right: 0;
+                    background: #dc3545; color: white; padding: 8px 12px;
+                    border-radius: 6px; font-size: 0.85rem; font-weight: 600;
+                    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+                    z-index: 1001; text-align: center;
+                    animation: tooltipBounce 0.3s ease-out;">
+            <i class="fas fa-exclamation-triangle"></i> ${message}
+            <div style="position: absolute; bottom: -6px; left: 50%;
+                        transform: translateX(-50%); width: 0; height: 0;
+                        border-left: 6px solid transparent;
+                        border-right: 6px solid transparent;
+                        border-top: 6px solid #dc3545;"></div>
+        </div>
+    `;
+    
+    const cell = input.closest('td');
+    cell.style.position = 'relative';
+    cell.appendChild(tooltip);
+}
+
+// Helper function to hide stock error tooltip
+function hideStockErrorTooltip() {
+    const tooltip = document.getElementById('stockErrorTooltip');
+    if (tooltip) {
+        tooltip.remove();
+    }
+}
+
+// Enhanced quantity input validation with real-time checking for ALL batches
+function setupQuantityValidation() {
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('quantity')) {
+            const input = e.target;
+            const row = input.closest('tr');
+            const rowIndex = row.id.split('_')[1];
+            
+            console.log(`📝 Quantity changed in row ${rowIndex}: ${input.value}`);
+            
+            // Immediate validation for better UX
+            clearTimeout(input.validationTimeout);
+            input.validationTimeout = setTimeout(() => {
+                validateStockAndCalculate(rowIndex);
+            }, 100); // Reduced delay for faster feedback
+        }
+    });
+    
+    // Also validate on change and blur events
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('quantity')) {
+            const input = e.target;
+            const row = input.closest('tr');
+            const rowIndex = row.id.split('_')[1];
+            validateStockAndCalculate(rowIndex);
+        }
+    });
+    
+    document.addEventListener('blur', function(e) {
+        if (e.target.classList.contains('quantity')) {
+            const input = e.target;
+            const row = input.closest('tr');
+            const rowIndex = row.id.split('_')[1];
+            validateStockAndCalculate(rowIndex);
+        }
+    });
+    
+    // Prevent invalid characters in quantity inputs
+    document.addEventListener('keydown', function(e) {
+        if (e.target.classList.contains('quantity')) {
+            const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+            const isNumber = /[0-9]/.test(e.key);
+            const isDecimal = e.key === '.' && !e.target.value.includes('.');
+            
+            if (!allowedKeys.includes(e.key) && !isNumber && !isDecimal && !(e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+            }
+        }
+    });
+    
+    // Paste validation for quantity inputs
+    document.addEventListener('paste', function(e) {
+        if (e.target.classList.contains('quantity')) {
+            setTimeout(() => {
+                const value = e.target.value;
+                if (!/^\d*\.?\d*$/.test(value)) {
+                    e.target.value = value.replace(/[^0-9.]/g, '');
+                }
+                
+                const row = e.target.closest('tr');
+                const rowIndex = row.id.split('_')[1];
+                validateStockAndCalculate(rowIndex);
+            }, 10);
+        }
+    });
+}
+
+// Initialize page with single product row and current date
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page loaded, initializing...');
+    
+    // Auto-fill current date
+    setCurrentDate();
+    
+    // Simple focus on invoice date field
+    function focusSalesInvoiceDate() {
+        const invoiceDateField = document.querySelector('[name="sales_invoice_date"]') ||
+                                document.querySelector('#id_sales_invoice_date') ||
+                                document.querySelector('input[type="date"]');
+        
+        if (invoiceDateField) {
+            invoiceDateField.focus();
+            console.log('✓ Sales invoice date field focused:', invoiceDateField.name || invoiceDateField.id);
+            return true;
+        } else {
+            console.error('❌ Sales invoice date field not found');
+            return false;
+        }
+    }
+    
+    // Try multiple times with increasing delays
+    setTimeout(focusSalesInvoiceDate, 100);
+    setTimeout(focusSalesInvoiceDate, 300);
+    setTimeout(focusSalesInvoiceDate, 500);
+    
+    // Single initialization point to avoid duplicates
+    setTimeout(() => {
+        const tbody = document.getElementById('productRows');
+        if (tbody && tbody.children.length === 0) {
+            addProductRow(); // Add only one product row by default
+            console.log('✓ Single product input initialized');
+        }
+        
+        // Debug form state after initialization
+        debugFormState();
+        
+        // Setup enhanced quantity validation
+        setupQuantityValidation();
+    }, 300);
+    
+    // Add debug button (remove in production)
+    
+    // Ensure page starts from top
+    window.scrollTo(0, 0);
+});
+
+</script>
+
+<style>
+/* Batch Modal Styles - Exact Copy from Purchase Section */
+.batch-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.batch-modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.batch-modal-header {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.batch-modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: background 0.3s ease;
+}
+
+.batch-modal-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.batch-modal-body {
+    padding: 1.5rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.batch-search input {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+.batch-item {
+    padding: 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.batch-item:hover,
+.batch-item.batch-selected {
+    border-color: #007bff;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+}
+
+.batch-item.batch-selected {
+    border-color: #28a745;
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.batch-info {
+    flex: 1;
+}
+
+.batch-no {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.batch-details {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.batch-modal-footer {
+    background: #f8f9fa;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.batch-shortcuts {
+    color: #6c757d;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+/* Enhanced Stock Validation Styles */
+.stock-error-row {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+    border-left: 4px solid #dc3545 !important;
+}
+
+.quantity.stock-error {
+    border-color: #dc3545 !important;
+    background-color: #f8d7da !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.stock-error {
+    animation: errorPulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes errorPulse {
+    from { opacity: 1; }
+    to { opacity: 0.7; }
+}
+
+@keyframes tooltipBounce {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.8);
+    }
+    50% {
+        transform: translateY(-2px) scale(1.05);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Form lock overlay animation */
+#stockErrorOverlay {
+    animation: slideInFromTop 0.4s ease-out;
+    transition: all 0.3s ease;
+}
+
+@keyframes slideInFromTop {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* Disabled input styling */
+input[data-locked="true"], 
+select[data-locked="true"], 
+button[data-locked="true"] {
+    cursor: not-allowed !important;
+    filter: grayscale(50%) !important;
+}
+
+/* Stock info styling */
+.stock-info {
+    display: block;
+    margin-top: 4px;
+    padding: 4px 8px;
+    background: rgba(40, 167, 69, 0.1);
+    border-radius: 4px;
+    border-left: 3px solid #28a745;
+}
+
+/* Enhanced quantity input focus */
+.quantity:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.quantity[data-stock-error="true"]:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+</style>
+
+{% endblock %}
+
+
+
+
+
+
+

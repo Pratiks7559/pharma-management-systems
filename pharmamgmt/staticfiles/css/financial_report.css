@@ -1,0 +1,582 @@
+/* Financial Report Specific Styles */
+
+.financial-report-container {
+    padding: 20px;
+    background-color: #f8f9fc;
+}
+
+.financial-report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.financial-report-title {
+    color: #5a5c69;
+    font-size: 1.75rem;
+    font-weight: 400;
+    margin: 0;
+}
+
+.financial-export-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.financial-export-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.financial-export-pdf {
+    background-color: #dc3545;
+    color: white;
+}
+
+.financial-export-excel {
+    background-color: #28a745;
+    color: white;
+}
+
+.financial-export-print {
+    background-color: #6c757d;
+    color: white;
+}
+
+.financial-export-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.financial-date-range-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    margin-bottom: 30px;
+}
+
+.financial-date-range-header {
+    padding: 20px 20px 0;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+.financial-date-range-title {
+    color: #5a5c69;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 20px 0;
+}
+
+.financial-date-range-body {
+    padding: 20px;
+}
+
+.financial-date-range-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.financial-date-inputs-row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.financial-form-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.financial-date-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #5a5c69;
+    font-weight: 600;
+}
+
+.financial-date-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #d1d3e2;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.financial-apply-btn {
+    padding: 10px 30px;
+    background-color: #4e73df;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    align-self: flex-start;
+}
+
+.financial-apply-btn:hover {
+    background-color: #2e59d9;
+}
+
+.financial-summary-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.financial-summary-col {
+    flex: 1;
+    min-width: 250px;
+}
+
+.financial-summary-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    border-left: 4px solid #4e73df;
+}
+
+.financial-summary-card-body {
+    padding: 20px;
+}
+
+.financial-summary-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.financial-summary-label {
+    color: #5a5c69;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.financial-summary-value {
+    color: #5a5c69;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.financial-summary-icon {
+    color: #dddfeb;
+}
+
+/* Returns Section Styles */
+.financial-returns-col {
+    flex: 1;
+    min-width: 250px;
+}
+
+.financial-sales-returns-card,
+.financial-purchase-returns-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    border-left: 4px solid #e74a3b;
+}
+
+.financial-sales-returns-body,
+.financial-purchase-returns-body {
+    padding: 20px;
+}
+
+.financial-sales-returns-content,
+.financial-purchase-returns-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.financial-sales-returns-label,
+.financial-purchase-returns-label {
+    color: #5a5c69;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.financial-sales-returns-value,
+.financial-purchase-returns-value {
+    color: #5a5c69;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.financial-sales-returns-icon,
+.financial-purchase-returns-icon {
+    color: #dddfeb;
+}
+
+/* Net Figures Section Styles */
+.financial-net-figures-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.financial-net-sales-col,
+.financial-net-purchases-col {
+    flex: 1;
+    min-width: 250px;
+}
+
+.financial-net-sales-card,
+.financial-net-purchases-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    border-left: 4px solid #1cc88a;
+}
+
+.financial-net-sales-body,
+.financial-net-purchases-body {
+    padding: 20px;
+}
+
+.financial-net-sales-content,
+.financial-net-purchases-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.financial-net-sales-label,
+.financial-net-purchases-label {
+    color: #5a5c69;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.financial-net-sales-value,
+.financial-net-purchases-value {
+    color: #5a5c69;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.financial-net-sales-icon,
+.financial-net-purchases-icon {
+    color: #dddfeb;
+}
+
+/* Gross Profit Section Styles */
+.financial-gross-profit-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.financial-gross-profit-col {
+    flex: 1;
+    min-width: 250px;
+}
+
+.financial-gross-profit-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    border-left: 4px solid #f6c23e;
+}
+
+.financial-gross-profit-body {
+    padding: 20px;
+}
+
+.financial-gross-profit-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.financial-gross-profit-label {
+    color: #5a5c69;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.financial-gross-profit-value {
+    color: #5a5c69;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.financial-gross-profit-icon {
+    color: #dddfeb;
+}
+
+/* Profit/Loss specific styles */
+.financial-profit {
+    color: #1cc88a !important;
+}
+
+.financial-loss {
+    color: #e74a3b !important;
+}
+
+.financial-profit-indicator {
+    color: #1cc88a;
+    font-size: 0.75rem;
+}
+
+.financial-loss-indicator {
+    color: #e74a3b;
+    font-size: 0.75rem;
+}
+
+/* Chart styles */
+.financial-chart-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    margin-bottom: 30px;
+}
+
+.financial-chart-header {
+    padding: 20px 20px 0;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+.financial-chart-title {
+    color: #5a5c69;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 20px 0;
+}
+
+.financial-chart-body {
+    padding: 20px;
+}
+
+.financial-chart-area {
+    position: relative;
+    height: 400px;
+}
+
+/* Outstanding Section Styles */
+.financial-outstanding-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.financial-outstanding-col {
+    flex: 1;
+    min-width: 400px;
+}
+
+.financial-outstanding-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.financial-outstanding-header {
+    padding: 20px 20px 0;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+.financial-outstanding-title {
+    color: #5a5c69;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 20px 0;
+}
+
+.financial-outstanding-body {
+    padding: 20px;
+}
+
+.financial-table-wrapper {
+    overflow-x: auto;
+}
+
+/* Receivables Table Styles */
+.financial-receivables-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.financial-receivables-thead {
+    background-color: #f8f9fc;
+}
+
+.financial-receivables-header-row {
+    border-bottom: 2px solid #e3e6f0;
+}
+
+.financial-receivables-customer-header,
+.financial-receivables-amount-header {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #5a5c69;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+.financial-receivables-tbody {
+    background-color: white;
+}
+
+.financial-receivables-row {
+    border-bottom: 1px solid #e3e6f0;
+}
+
+.financial-receivables-customer-cell,
+.financial-receivables-amount-cell {
+    padding: 12px;
+    text-align: left;
+    color: #5a5c69;
+}
+
+.financial-receivables-empty-row {
+    background-color: #f8f9fc;
+}
+
+.financial-receivables-no-data {
+    padding: 20px;
+    text-align: center;
+    color: #858796;
+    font-style: italic;
+}
+
+.financial-receivables-tfoot {
+    background-color: #f8f9fc;
+    font-weight: 600;
+}
+
+.financial-receivables-total-row {
+    border-top: 2px solid #e3e6f0;
+}
+
+.financial-receivables-total-label,
+.financial-receivables-total-value {
+    padding: 12px;
+    text-align: left;
+    font-weight: 700;
+    color: #5a5c69;
+}
+
+/* Payables Table Styles */
+.financial-payables-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.financial-payables-thead {
+    background-color: #f8f9fc;
+}
+
+.financial-payables-header-row {
+    border-bottom: 2px solid #e3e6f0;
+}
+
+.financial-payables-supplier-header,
+.financial-payables-amount-header {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #5a5c69;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+.financial-payables-tbody {
+    background-color: white;
+}
+
+.financial-payables-row {
+    border-bottom: 1px solid #e3e6f0;
+}
+
+.financial-payables-supplier-cell,
+.financial-payables-amount-cell {
+    padding: 12px;
+    text-align: left;
+    color: #5a5c69;
+}
+
+.financial-payables-empty-row {
+    background-color: #f8f9fc;
+}
+
+.financial-payables-no-data {
+    padding: 20px;
+    text-align: center;
+    color: #858796;
+    font-style: italic;
+}
+
+.financial-payables-tfoot {
+    background-color: #f8f9fc;
+    font-weight: 600;
+}
+
+.financial-payables-total-row {
+    border-top: 2px solid #e3e6f0;
+}
+
+.financial-payables-total-label,
+.financial-payables-total-value {
+    padding: 12px;
+    text-align: left;
+    font-weight: 700;
+    color: #5a5c69;
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .financial-report-container {
+        background: white;
+        padding: 0;
+    }
+    
+    .financial-summary-card,
+    .financial-sales-returns-card,
+    .financial-purchase-returns-card,
+    .financial-net-sales-card,
+    .financial-net-purchases-card,
+    .financial-gross-profit-card,
+    .financial-chart-card,
+    .financial-outstanding-card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    
+    .financial-outstanding-row {
+        flex-direction: column;
+    }
+    
+    .financial-outstanding-col {
+        min-width: 100%;
+        margin-bottom: 20px;
+    }
+}

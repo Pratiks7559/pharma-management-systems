@@ -1,28 +1,30 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-danger text-white">
-                    <h5 class="mb-0">Confirm Delete</h5>
+<link rel="stylesheet" type="text/css" href="{% static 'css/customer_confirm_delete.css' %}">
+<div class="customer-delete-container">
+    <div class="customer-delete-wrapper">
+        <div class="customer-delete-card">
+            <div class="customer-delete-inner">
+                <div class="customer-delete-header">
+                    <h5 class="customer-delete-title">Confirm Delete</h5>
                 </div>
-                <div class="card-body">
-                    <p class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        Are you sure you want to delete the customer <strong>{{ customer.customer_name }}</strong>?
+                <div class="customer-delete-body">
+                    <p class="customer-delete-warning">
+                        <i class="fas fa-exclamation-triangle me-2 customer-delete-icon"></i>
+                        Are you sure you want to delete the customer <strong class="customer-delete-name">{{ customer.customer_name }}</strong>?
                     </p>
-                    <p>This action cannot be undone. All data related to this customer will be permanently removed from the system.</p>
+                    <p class="customer-delete-description">This action cannot be undone. All data related to this customer will be permanently removed from the system.</p>
                     
-                    <form method="post">
+                    <form method="post" class="customer-delete-form">
                         {% csrf_token %}
-                        <div class="d-flex justify-content-end mt-3">
-                            <a href="{% url 'customer_detail' pk=customer.customerid %}" class="btn btn-secondary me-2">
-                                <i class="fas fa-times me-2"></i>Cancel
+                        <div class="customer-delete-actions">
+                            <a href="{% url 'customer_detail' pk=customer.customerid %}" class="customer-delete-cancel-btn">
+                                <i class="fas fa-times me-2 customer-delete-cancel-icon"></i>Cancel
                             </a>
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fas fa-trash me-2"></i>Delete
+                            <button type="submit" class="customer-delete-submit-btn">
+                                <i class="fas fa-trash me-2 customer-delete-trash-icon"></i>Delete
                             </button>
                         </div>
                     </form>

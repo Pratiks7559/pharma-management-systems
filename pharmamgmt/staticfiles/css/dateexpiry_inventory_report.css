@@ -1,0 +1,721 @@
+/* Date-wise Inventory Report Specific Styles */
+
+/* Main container */
+.date-report-container {
+    padding: 12px;
+    background-color: #f8f9fc;
+    overflow-x: hidden;
+}
+
+/* Header section */
+.date-report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.date-report-title {
+    color: #5a5c69;
+    font-weight: 700;
+    margin: 0;
+}
+
+.date-report-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.date-report-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.date-report-btn-primary {
+    background: #1cc88a;
+    color: white;
+    border: 1px solid #1cc88a;
+}
+
+.date-report-btn-primary:hover {
+    background: #17a673;
+    color: white;
+    text-decoration: none;
+}
+
+.date-report-btn-secondary {
+    background: #858796;
+    color: white;
+    border: 1px solid #858796;
+}
+
+.date-report-btn-secondary:hover {
+    background: #717384;
+    color: white;
+    text-decoration: none;
+}
+
+/* Card section */
+.date-report-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    border: 1px solid #e3e6f0;
+}
+
+.date-report-card-header {
+    padding: 20px;
+    border-bottom: 1px solid #e3e6f0;
+    background: #f8f9fc;
+    border-radius: 8px 8px 0 0;
+}
+
+.date-report-card-title {
+    color: #5a5c69;
+    font-weight: 700;
+    margin: 0 0 5px 0;
+    font-size: 18px;
+}
+
+.date-report-card-subtitle {
+    color: #858796;
+    margin: 0 0 15px 0;
+    font-size: 14px;
+}
+
+/* Filter form */
+.date-filter-form {
+    display: flex;
+    gap: 10px;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+.date-filter-group {
+    flex: 1;
+    min-width: 150px;
+}
+
+.date-filter-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d3e2;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.date-filter-input:focus {
+    border-color: #1cc88a;
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.25);
+}
+
+.date-filter-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.date-filter-btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.date-filter-btn-primary {
+    background: #1cc88a;
+    color: white;
+}
+
+.date-filter-btn-primary:hover {
+    background: #17a673;
+}
+
+.date-reset-link {
+    padding: 10px 16px;
+    background: #858796;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.date-reset-link:hover {
+    background: #717384;
+    color: white;
+    text-decoration: none;
+}
+
+/* Card body */
+.date-report-card-body {
+    padding: 20px;
+}
+
+/* Alert */
+.date-info-alert {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.date-alert-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #155724;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 10px;
+}
+
+/* Table container */
+.date-table-container {
+    overflow-x: auto;
+    border-radius: 6px;
+    border: 1px solid #e3e6f0;
+}
+
+.date-inventory-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    margin: 0;
+}
+
+.date-table-header {
+    background: #f8f9fc;
+    border-bottom: 2px solid #e3e6f0;
+}
+
+.date-table-header th {
+    padding: 15px 12px;
+    text-align: left;
+    font-weight: 700;
+    color: #5a5c69;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-right: 1px solid #e3e6f0;
+}
+
+.date-table-header th:last-child {
+    border-right: none;
+}
+
+.date-inventory-table tbody tr {
+    border-bottom: 1px solid #e3e6f0;
+    transition: background-color 0.2s ease;
+}
+
+.date-inventory-table tbody tr:hover {
+    background-color: #f8f9fc;
+}
+
+.date-inventory-table td {
+    padding: 12px;
+    font-size: 14px;
+    color: #5a5c69;
+    border-right: 1px solid #e3e6f0;
+}
+
+.date-inventory-table td:last-child {
+    border-right: none;
+}
+
+/* Expiry date grouping */
+.date-expiry-heading {
+    font-weight: 700;
+    font-size: 15px;
+}
+
+.date-expiry-days {
+    font-size: 12px;
+    font-weight: 500;
+    margin-left: 10px;
+}
+
+.date-expiry-value {
+    text-align: right;
+    font-weight: 700;
+}
+
+/* Color coding for expiry status */
+.date-expired {
+    background-color: #f8d7da !important;
+    color: #721c24;
+}
+
+.date-expiring-soon {
+    background-color: #fff3cd !important;
+    color: #856404;
+}
+
+.date-expiring-warning {
+    background-color: #ffeaa7 !important;
+    color: #6c5ce7;
+}
+
+.date-expiring-later {
+    background-color: #d1ecf1 !important;
+    color: #0c5460;
+}
+
+.date-no-expiry {
+    background-color: #e2e3e5 !important;
+    color: #383d41;
+}
+
+/* Individual product row styling */
+.expired-product {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.expiring-soon {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.expiring-warning {
+    background-color: #ffeaa7;
+    color: #6c5ce7;
+}
+
+/* Expiry date display styling */
+.expiry-mmyyyy {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 13px;
+}
+
+.days-remaining {
+    font-size: 11px;
+    font-style: italic;
+}
+
+/* Table footer */
+.date-table-footer {
+    background: #f8f9fc;
+    border-top: 2px solid #e3e6f0;
+}
+
+.date-table-footer td {
+    padding: 15px 12px;
+    font-weight: 700;
+    color: #5a5c69;
+    font-size: 14px;
+}
+
+.date-total-label {
+    text-align: right;
+    font-weight: 700;
+}
+
+/* Empty state */
+.date-empty-state {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    padding: 20px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.date-empty-link {
+    color: #155724;
+    font-weight: 500;
+    text-decoration: underline;
+}
+
+.date-empty-link:hover {
+    color: #0a3622;
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .date-report-container {
+        padding: 0;
+        background: white;
+    }
+    
+    .date-report-card {
+        box-shadow: none;
+        border: none;
+    }
+    
+    .date-inventory-table {
+        font-size: 12px;
+    }
+    
+    .date-inventory-table th,
+    .date-inventory-table td {
+        padding: 8px 6px;
+    }
+    
+    .date-expiry-heading {
+        font-size: 13px;
+    }
+    
+    .date-expiry-days {
+        font-size: 10px;
+    }
+}
+
+/* Mobile First Responsive Design */
+@media (max-width: 320px) {
+    .date-report-container {
+        padding: 6px;
+    }
+    
+    .date-report-header {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+        padding: 10px;
+    }
+    
+    .date-report-title {
+        font-size: 1.1rem;
+    }
+    
+    .date-report-btn {
+        padding: 6px 10px;
+        font-size: 0.7rem;
+    }
+    
+    .date-report-card-header {
+        padding: 10px;
+    }
+    
+    .date-report-card-title {
+        font-size: 1rem;
+    }
+    
+    .date-report-card-subtitle {
+        font-size: 0.75rem;
+    }
+    
+    .date-filter-form {
+        flex-direction: column;
+        gap: 6px;
+    }
+    
+    .date-filter-input {
+        padding: 6px 8px;
+        font-size: 0.75rem;
+    }
+    
+    .date-filter-btn {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+    }
+    
+    .date-reset-link {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+    }
+    
+    .date-report-card-body {
+        padding: 10px;
+    }
+    
+    .date-info-alert {
+        padding: 8px 10px;
+        font-size: 0.75rem;
+    }
+    
+    .date-inventory-table {
+        font-size: 0.65rem;
+    }
+    
+    .date-inventory-table th,
+    .date-inventory-table td {
+        padding: 4px 6px;
+    }
+    
+    .date-expiry-heading {
+        font-size: 0.75rem;
+    }
+    
+    .date-expiry-days {
+        font-size: 0.65rem;
+        display: block;
+        margin-left: 0;
+        margin-top: 2px;
+    }
+    
+    .expiry-mmyyyy {
+        font-size: 0.7rem;
+    }
+    
+    .days-remaining {
+        font-size: 0.6rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .date-report-container {
+        padding: 8px;
+    }
+    
+    .date-report-header {
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px;
+    }
+    
+    .date-report-title {
+        font-size: 1.3rem;
+    }
+    
+    .date-report-btn {
+        padding: 8px 12px;
+        font-size: 0.75rem;
+    }
+    
+    .date-report-card-header {
+        padding: 12px;
+    }
+    
+    .date-filter-form {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .date-filter-input {
+        padding: 8px 10px;
+        font-size: 0.8rem;
+    }
+    
+    .date-filter-btn {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .date-reset-link {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .date-report-card-body {
+        padding: 12px;
+    }
+    
+    .date-info-alert {
+        padding: 10px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .date-inventory-table {
+        font-size: 0.7rem;
+    }
+    
+    .date-inventory-table th,
+    .date-inventory-table td {
+        padding: 6px 8px;
+    }
+    
+    .date-expiry-heading {
+        font-size: 0.8rem;
+    }
+    
+    .date-expiry-days {
+        font-size: 0.7rem;
+        display: block;
+        margin-left: 0;
+        margin-top: 2px;
+    }
+}
+
+@media (max-width: 576px) {
+    .date-report-container {
+        padding: 10px;
+    }
+    
+    .date-report-header {
+        flex-direction: column;
+        gap: 12px;
+        padding: 15px;
+    }
+    
+    .date-filter-form {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .date-filter-group {
+        min-width: 100%;
+    }
+    
+    .date-filter-actions {
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .date-inventory-table {
+        font-size: 0.75rem;
+    }
+    
+    .date-inventory-table th,
+    .date-inventory-table td {
+        padding: 8px 10px;
+    }
+    
+    .date-expiry-heading {
+        font-size: 0.85rem;
+    }
+    
+    .date-expiry-days {
+        font-size: 0.75rem;
+    }
+}
+
+@media (min-width: 577px) and (max-width: 768px) {
+    .date-report-container {
+        padding: 12px;
+    }
+    
+    .date-report-header {
+        flex-direction: row;
+        gap: 15px;
+        padding: 18px;
+    }
+    
+    .date-filter-form {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    
+    .date-filter-group {
+        min-width: 150px;
+        flex: 1;
+    }
+    
+    .date-inventory-table {
+        font-size: 0.8rem;
+    }
+    
+    .date-inventory-table th,
+    .date-inventory-table td {
+        padding: 10px 12px;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .date-report-container {
+        padding: 15px;
+    }
+    
+    .date-report-header {
+        padding: 20px;
+    }
+    
+    .date-report-card-header {
+        padding: 18px;
+    }
+    
+    .date-report-card-body {
+        padding: 18px;
+    }
+}
+
+@media (min-width: 1025px) {
+    .date-report-container {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+    .date-report-btn,
+    .date-filter-btn,
+    .date-reset-link {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 10px 16px;
+    }
+    
+    .date-filter-input {
+        min-height: 44px;
+        padding: 10px 12px;
+    }
+    
+    .date-alert-close {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 10px;
+    }
+}
+
+/* Landscape orientation adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+    .date-report-header {
+        flex-direction: row;
+        padding: 10px 15px;
+    }
+    
+    .date-filter-form {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    
+    .date-report-card-header,
+    .date-report-card-body {
+        padding: 10px 15px;
+    }
+}
+
+/* Color adjustments for better mobile visibility */
+@media (max-width: 768px) {
+    .expired-product,
+    .expiring-soon,
+    .expiring-warning {
+        -webkit-print-color-adjust: exact;
+        color-adjust: exact;
+    }
+    
+    .date-expired {
+        background-color: #f8d7da !important;
+        color: #721c24 !important;
+        font-weight: 600;
+    }
+    
+    .date-expiring-soon {
+        background-color: #fff3cd !important;
+        color: #856404 !important;
+        font-weight: 600;
+    }
+    
+    .date-expiring-warning {
+        background-color: #ffeaa7 !important;
+        color: #6c5ce7 !important;
+        font-weight: 600;
+    }
+}

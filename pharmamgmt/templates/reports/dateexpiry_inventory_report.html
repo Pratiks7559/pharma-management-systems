@@ -4,86 +4,57 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block extra_css %}
-<style>
-    .expiry-warning {
-        color: #dc3545;
-        font-weight: bold;
-    }
-    .expiry-alert {
-        color: #ffc107;
-        font-weight: bold;
-    }
-    .expiry-safe {
-        color: #28a745;
-        font-weight: bold;
-    }
-    .expiry-date-heading {
-        background-color: #f8f9fa;
-        font-weight: bold;
-    }
-    @media print {
-        .no-print {
-            display: none;
-        }
-        .table-responsive {
-            overflow: visible !important;
-        }
-        .card {
-            border: none !important;
-        }
-        .card-header {
-            background-color: white !important;
-            border-bottom: 1px solid #ddd !important;
-        }
-    }
-</style>
+<link rel="stylesheet" href="{% load static %}{% static 'css/dateexpiry_inventory_report.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
-        <div>
-            <a href="{% url 'inventory_report' %}" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm me-2 no-print">
-                <i class="fas fa-list fa-sm text-white-50"></i> Regular Inventory
+<div class="date-report-container">
+    <div class="date-report-header">
+        <h1 class="date-report-title">{{ title }}</h1>
+        <div class="date-report-actions">
+            <a href="{% url 'batch_inventory_report' %}" class="date-report-btn date-report-btn-primary">
+                <i class="fas fa-boxes fa-sm"></i> Batch-wise Inventory
             </a>
-            <a href="{% url 'batch_inventory_report' %}" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm me-2 no-print">
-                <i class="fas fa-boxes fa-sm text-white-50"></i> Batch-wise Inventory
-            </a>
-            <a href="javascript:window.print()" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm no-print">
-                <i class="fas fa-download fa-sm text-white-50"></i> Print/Export
+            <a href="javascript:window.print()" class="date-report-btn date-report-btn-secondary">
+                <i class="fas fa-download fa-sm"></i> Print/Export
             </a>
         </div>
     </div>
 
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-            <h6 class="m-0 font-weight-bold text-primary">Expiry Date-wise Inventory</h6>
+    <div class="date-report-card">
+        <div class="date-report-card-header">
+            <h6 class="date-report-card-title">Date-wise Inventory Report</h6>
+            <small class="date-report-card-subtitle">Shows products grouped by expiry date with current stock</small>
             <div class="no-print">
-                <form action="{% url 'dateexpiry_inventory_report' %}" method="GET" class="row g-3 align-items-center">
-                    <div class="col-auto">
-                        <input type="text" name="search" value="{{ search_query }}" class="form-control bg-light border-0 small" placeholder="Search..." aria-label="Search">
+                <form action="{% url 'dateexpiry_inventory_report' %}" method="GET" class="date-filter-form">
+                    <div class="date-filter-group">
+                        <input type="text" name="search" value="{{ search_query }}" placeholder="Search..." aria-label="Search" class="date-filter-input">
                     </div>
-                    <div class="col-auto">
-                        <input type="date" name="expiry_from" value="{{ expiry_from }}" class="form-control" placeholder="Expiry From">
+                    <div class="date-filter-group">
+                        <input type="date" name="expiry_from" value="{{ expiry_from }}" placeholder="From Date" class="date-filter-input">
                     </div>
-                    <div class="col-auto">
-                        <input type="date" name="expiry_to" value="{{ expiry_to }}" class="form-control" placeholder="Expiry To">
+                    <div class="date-filter-group">
+                        <input type="date" name="expiry_to" value="{{ expiry_to }}" placeholder="To Date" class="date-filter-input">
                     </div>
-                    <div class="col-auto">
-                        <button class="btn btn-primary" type="submit">
+                    <div class="date-filter-actions">
+                        <button type="submit" class="date-filter-btn date-filter-btn-primary">
                             <i class="fas fa-search fa-sm"></i> Filter
                         </button>
-                        <a href="{% url 'dateexpiry_inventory_report' %}" class="btn btn-outline-secondary">Reset</a>
+                        <a href="{% url 'dateexpiry_inventory_report' %}" class="date-reset-link">Reset</a>
                     </div>
                 </form>
             </div>
         </div>
-        <div class="card-body">
+        <div class="date-report-card-body">
             {% if expiry_data %}
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
-                    <thead class="table-light">
+            <div class="date-info-alert" role="alert">
+                <span><i class="fas fa-info-circle me-2"></i>
+                This report shows products grouped by expiry date. Only products with current stock are displayed.</span>
+                <button type="button" class="date-alert-close" data-bs-dismiss="alert" aria-label="Close">&times;</button>
+            </div>
+            <div class="date-table-container">
+                <table class="date-inventory-table">
+                    <thead class="date-table-header">
                         <tr>
                             <th width="15%">Expiry Date</th>
                             <th width="15%">Product Name</th>
@@ -98,23 +69,34 @@
                     </thead>
                     <tbody>
                         {% for expiry_group in expiry_data %}
-                        <tr class="expiry-date-heading {% if expiry_group.days_to_expiry <= 30 %}table-danger{% elif expiry_group.days_to_expiry <= 90 %}table-warning{% else %}table-success{% endif %}">
+                        <tr class="date-expiry-heading {% if expiry_group.days_to_expiry < 0 and expiry_group.expiry_date %}date-expired{% elif expiry_group.days_to_expiry <= 30 and expiry_group.expiry_date %}date-expiring-soon{% elif expiry_group.days_to_expiry <= 90 and expiry_group.expiry_date %}date-expiring-warning{% elif expiry_group.expiry_date %}date-expiring-later{% else %}date-no-expiry{% endif %}">
                             <td colspan="8">
-                                <strong>{{ expiry_group.expiry_date|date:"d-m-Y" }}</strong>
-                                <span class="ms-2 {% if expiry_group.days_to_expiry <= 30 %}expiry-warning{% elif expiry_group.days_to_expiry <= 90 %}expiry-alert{% else %}expiry-safe{% endif %}">
-                                    ({{ expiry_group.days_to_expiry }} days remaining)
-                                </span>
+                                {% if expiry_group.expiry_date %}
+                                    <strong>{{ expiry_group.expiry_display }}</strong>
+                                    <span class="date-expiry-days">
+                                        {% if expiry_group.days_to_expiry < 0 %}
+                                            (Expired {{ expiry_group.days_to_expiry|absolute }} days ago)
+                                        {% elif expiry_group.days_to_expiry == 0 %}
+                                            (Expires today)
+                                        {% else %}
+                                            ({{ expiry_group.days_to_expiry }} days remaining)
+                                        {% endif %}
+                                    </span>
+                                {% else %}
+                                    <strong>{{ expiry_group.expiry_display }}</strong>
+                                    <span class="date-expiry-days">(Products without expiry date)</span>
+                                {% endif %}
                             </td>
-                            <td class="text-end">
+                            <td class="date-expiry-value">
                                 <strong>₹{{ expiry_group.total_value|floatformat:2 }}</strong>
                             </td>
                         </tr>
                         {% for item in expiry_group.products %}
-                        <tr>
+                        <tr class="{% if item.days_to_expiry < 0 %}expired-product{% elif item.days_to_expiry <= 30 %}expiring-soon{% elif item.days_to_expiry <= 90 %}expiring-warning{% endif %}">
                             <td></td>
-                            <td>{{ item.product.product_name }}</td>
-                            <td>{{ item.product.product_company }}</td>
-                            <td>{{ item.product.product_packing }}</td>
+                            <td>{{ item.product_name }}</td>
+                            <td>{{ item.product_company }}</td>
+                            <td>{{ item.product_packing }}</td>
                             <td>{{ item.batch_no }}</td>
                             <td>{{ item.quantity }}</td>
                             <td>₹{{ item.purchase_rate|floatformat:2 }}</td>
@@ -124,20 +106,20 @@
                         {% endfor %}
                         {% endfor %}
                     </tbody>
-                    <tfoot>
-                        <tr class="fw-bold bg-light">
-                            <td colspan="8" class="text-end">Total Inventory Value:</td>
+                    <tfoot class="date-table-footer">
+                        <tr>
+                            <td colspan="8" class="date-total-label">Total Inventory Value:</td>
                             <td>₹{{ total_value|floatformat:2 }}</td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
             {% else %}
-            <div class="alert alert-info">
+            <div class="date-empty-state">
                 <i class="fas fa-info-circle me-2"></i>
                 {% if expiry_from or expiry_to or search_query %}
                 No inventory data found with the current filters.
-                <a href="{% url 'dateexpiry_inventory_report' %}" class="alert-link">Clear filters</a> to see all inventory.
+                <a href="{% url 'dateexpiry_inventory_report' %}" class="date-empty-link">Clear filters</a> to see all inventory.
                 {% else %}
                 No inventory data found.
                 {% endif %}
@@ -156,3 +138,10 @@
     });
 </script>
 {% endblock %}
+
+
+
+
+
+
+

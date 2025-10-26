@@ -1,0 +1,941 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/enhanced_sales_analytics.css' %}">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+<style>
+/* DataTables Custom Styling */
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter,
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_processing,
+.dataTables_wrapper .dataTables_paginate {
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+    color: #9ca3af !important;
+}
+
+table.dataTable thead th {
+    border-bottom: 2px solid #e5e7eb;
+}
+
+table.dataTable tbody tr:hover {
+    background-color: rgba(59, 130, 246, 0.05) !important;
+}
+
+.dataTables_wrapper .dataTables_scroll {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+/* Purchase-specific color scheme */
+.kpi-card {
+    border-left-color: #059669 !important;
+}
+
+.analytics-header {
+    background: linear-gradient(135deg, #059669, #10b981) !important;
+}
+
+.btn-action.btn-primary {
+    background: #059669 !important;
+    border-color: #059669 !important;
+}
+
+.btn-action.btn-primary:hover {
+    background: #047857 !important;
+    border-color: #047857 !important;
+}
+
+/* Print Styles */
+@media print {
+    body * { visibility: hidden; }
+    .print-content, .print-content * { visibility: visible; }
+    .print-content { position: absolute; left: 0; top: 0; width: 100%; }
+    .action-buttons, .date-range-section, .sidebar-container, .navbar { display: none !important; }
+    .analytics-header { background: #059669 !important; -webkit-print-color-adjust: exact; }
+    .kpi-card { border: 1px solid #e5e7eb !important; page-break-inside: avoid; }
+    .chart-container canvas { max-height: 300px !important; }
+    .analytics-table { font-size: 10px !important; }
+    .analytics-table th, .analytics-table td { padding: 4px !important; }
+    @page { margin: 0.5in; size: A4; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sales-analytics-container print-content">
+    <!-- Header Section -->
+    <div class="analytics-header">
+        <h1 class="analytics-title">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="realtime-pulse"></span>
+            {{ title }}
+        </h1>
+        <p class="analytics-subtitle">
+            Real-time purchase analytics and comprehensive supplier intelligence<br>
+            <small>Period: {{ start_date|date:"d M Y" }} to {{ end_date|date:"d M Y" }}</small>
+        </p>
+        <div class="action-buttons">
+            <button onclick="refreshAnalytics()" class="btn-action btn-success">
+                <i class="fas fa-sync-alt"></i> Refresh Data
+            </button>
+            <button onclick="exportToPDF()" class="btn-action btn-warning">
+                <i class="fas fa-file-pdf"></i> Export PDF
+            </button>
+            <button onclick="exportToExcel()" class="btn-action btn-info">
+                <i class="fas fa-file-excel"></i> Export Excel
+            </button>
+            <button onclick="printReport()" class="btn-action btn-primary">
+                <i class="fas fa-print"></i> Print Report
+            </button>
+        </div>
+    </div>
+
+    <!-- Date Range Selector -->
+    <div class="date-range-section">
+        <div class="date-range-header">
+            <i class="fas fa-calendar-alt"></i>
+            <h3 class="date-range-title">Analysis Period</h3>
+        </div>
+        <form method="get" id="dateRangeForm">
+            <div class="date-controls">
+                <div class="form-group">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" id="start_date" name="start_date" 
+                           value="{{ start_date|date:'Y-m-d' }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" id="end_date" name="end_date" 
+                           value="{{ end_date|date:'Y-m-d' }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Quick Ranges</label>
+                    <div class="quick-ranges">
+                        <button type="button" onclick="setQuickRange('today')" class="btn-quick">Today</button>
+                        <button type="button" onclick="setQuickRange('week')" class="btn-quick">This Week</button>
+                        <button type="button" onclick="setQuickRange('month')" class="btn-quick">This Month</button>
+                        <button type="button" onclick="setQuickRange('quarter')" class="btn-quick">This Quarter</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn-action btn-primary">
+                        <i class="fas fa-search"></i> Analyze
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- KPI Dashboard -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <h4 class="kpi-title">Total Purchases</h4>
+                <div class="kpi-icon"><i class="fas fa-shopping-cart"></i></div>
+            </div>
+            <div class="kpi-value">₹{{ total_purchases|floatformat:0 }}</div>
+            <p class="kpi-subtitle">{{ start_date|date:"M d" }} - {{ end_date|date:"M d, Y" }}</p>
+            <div class="kpi-trend trend-up">
+                <i class="fas fa-arrow-up"></i> Total Procurement
+            </div>
+        </div>
+
+        <div class="kpi-card success">
+            <div class="kpi-header">
+                <h4 class="kpi-title">Amount Paid</h4>
+                <div class="kpi-icon"><i class="fas fa-money-bill-wave"></i></div>
+            </div>
+            <div class="kpi-value">₹{{ total_paid|floatformat:0 }}</div>
+            <p class="kpi-subtitle">{{ payment_analysis.payment_rate|floatformat:1 }}% Payment Rate</p>
+            <div class="kpi-trend trend-up">
+                <i class="fas fa-arrow-up"></i> Payments Made
+            </div>
+        </div>
+
+        <div class="kpi-card warning">
+            <div class="kpi-header">
+                <h4 class="kpi-title">Amount Pending</h4>
+                <div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            </div>
+            <div class="kpi-value">₹{{ total_pending|floatformat:0 }}</div>
+            <p class="kpi-subtitle">{{ payment_analysis.pending_rate|floatformat:1 }}% Pending Rate</p>
+            <div class="kpi-trend trend-down">
+                <i class="fas fa-arrow-down"></i> Outstanding
+            </div>
+        </div>
+
+        <div class="kpi-card info">
+            <div class="kpi-header">
+                <h4 class="kpi-title">Total Invoices</h4>
+                <div class="kpi-icon"><i class="fas fa-file-invoice"></i></div>
+            </div>
+            <div class="kpi-value">{{ invoice_analysis.total_invoices }}</div>
+            <p class="kpi-subtitle">Avg: ₹{{ invoice_analysis.avg_invoice_value|floatformat:0 }}</p>
+            <div class="kpi-trend">
+                <i class="fas fa-equals"></i> Transactions
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <h4 class="kpi-title">Products Purchased</h4>
+                <div class="kpi-icon"><i class="fas fa-boxes"></i></div>
+            </div>
+            <div class="kpi-value">{{ realtime_stats.total_products_purchased|floatformat:0 }}</div>
+            <p class="kpi-subtitle">{{ realtime_stats.unique_products }} Unique Items</p>
+            <div class="kpi-trend">
+                <i class="fas fa-cubes"></i> Inventory Added
+            </div>
+        </div>
+
+        <div class="kpi-card success">
+            <div class="kpi-header">
+                <h4 class="kpi-title">Suppliers Engaged</h4>
+                <div class="kpi-icon"><i class="fas fa-truck"></i></div>
+            </div>
+            <div class="kpi-value">{{ realtime_stats.unique_suppliers }}</div>
+            <p class="kpi-subtitle">{{ realtime_stats.avg_items_per_invoice|floatformat:1 }} Items/Invoice</p>
+            <div class="kpi-trend trend-up">
+                <i class="fas fa-arrow-up"></i> Supplier Base
+            </div>
+        </div>
+
+        <div class="kpi-card warning">
+            <div class="kpi-header">
+                <h4 class="kpi-title">Total Discount</h4>
+                <div class="kpi-icon"><i class="fas fa-percentage"></i></div>
+            </div>
+            <div class="kpi-value">₹{{ realtime_stats.total_discount_received|floatformat:0 }}</div>
+            <p class="kpi-subtitle">{{ realtime_stats.avg_discount_rate|floatformat:1 }}% Avg Rate</p>
+            <div class="kpi-trend">
+                <i class="fas fa-tags"></i> Discounts Received
+            </div>
+        </div>
+
+        <div class="kpi-card info">
+            <div class="kpi-header">
+                <h4 class="kpi-title">Transport Charges</h4>
+                <div class="kpi-icon"><i class="fas fa-shipping-fast"></i></div>
+            </div>
+            <div class="kpi-value">₹{{ realtime_stats.total_transport_charges|floatformat:0 }}</div>
+            <p class="kpi-subtitle">Logistics Cost</p>
+            <div class="kpi-trend">
+                <i class="fas fa-truck"></i> Transport Cost
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Status Analysis -->
+    <div class="data-section">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fas fa-chart-pie"></i>
+                Invoice Payment Analysis
+            </h3>
+            <p class="section-subtitle">Breakdown of invoice payment status and payment efficiency</p>
+        </div>
+        <div class="table-container">
+            <div class="kpi-grid">
+                <div class="kpi-card success">
+                    <div class="kpi-header">
+                        <h4 class="kpi-title">Paid Invoices</h4>
+                        <div class="kpi-icon"><i class="fas fa-check-circle"></i></div>
+                    </div>
+                    <div class="kpi-value">{{ invoice_analysis.paid_invoices }}</div>
+                    <p class="kpi-subtitle">Fully Settled</p>
+                </div>
+                <div class="kpi-card warning">
+                    <div class="kpi-header">
+                        <h4 class="kpi-title">Partial Payments</h4>
+                        <div class="kpi-icon"><i class="fas fa-clock"></i></div>
+                    </div>
+                    <div class="kpi-value">{{ invoice_analysis.partial_paid }}</div>
+                    <p class="kpi-subtitle">Partially Paid</p>
+                </div>
+                <div class="kpi-card danger">
+                    <div class="kpi-header">
+                        <h4 class="kpi-title">Unpaid Invoices</h4>
+                        <div class="kpi-icon"><i class="fas fa-times-circle"></i></div>
+                    </div>
+                    <div class="kpi-value">{{ invoice_analysis.unpaid_invoices }}</div>
+                    <p class="kpi-subtitle">No Payment</p>
+                </div>
+                <div class="kpi-card info">
+                    <div class="kpi-header">
+                        <h4 class="kpi-title">Largest Invoice</h4>
+                        <div class="kpi-icon"><i class="fas fa-trophy"></i></div>
+                    </div>
+                    <div class="kpi-value">₹{{ invoice_analysis.largest_invoice|floatformat:0 }}</div>
+                    <p class="kpi-subtitle">Highest Value</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Purchase Invoices Table -->
+    <div class="data-section">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fas fa-file-invoice-dollar"></i>
+                Purchase Invoices ({{ purchase_invoices|length }} invoices)
+            </h3>
+            <p class="section-subtitle">Complete list of purchase transactions in the selected period</p>
+        </div>
+        <div class="table-container">
+            <table id="purchaseTable" class="analytics-table">
+                <thead>
+                    <tr>
+                        <th>Invoice No</th>
+                        <th>Date</th>
+                        <th>Supplier</th>
+                        <th>Type</th>
+                        <th>Total Amount</th>
+                        <th>Paid Amount</th>
+                        <th>Balance</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for invoice in purchase_invoices %}
+                    <tr>
+                        <td data-label="Invoice No">{{ invoice.invoice_no }}</td>
+                        <td data-label="Date">{{ invoice.invoice_date|date:"d-m-Y" }}</td>
+                        <td data-label="Supplier">{{ invoice.supplier_name|truncatechars:25 }}</td>
+                        <td data-label="Type">{{ invoice.supplier_type }}</td>
+                        <td data-label="Total Amount">₹{{ invoice.invoice_total|floatformat:2 }}</td>
+                        <td data-label="Paid Amount">₹{{ invoice.invoice_paid|floatformat:2 }}</td>
+                        <td data-label="Balance">₹{{ invoice.invoice_total|sub:invoice.invoice_paid|floatformat:2 }}</td>
+                        <td data-label="Status">
+                            {% if invoice.invoice_paid >= invoice.invoice_total %}
+                                <span class="status-badge badge-success">Paid</span>
+                            {% elif invoice.invoice_paid > 0 %}
+                                <span class="status-badge badge-warning">Partial</span>
+                            {% else %}
+                                <span class="status-badge badge-danger">Unpaid</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Action">
+                            <a href="{% url 'invoice_detail' pk=invoice.invoiceid %}" 
+                               class="btn-action btn-primary" style="padding: 4px 8px; font-size: 0.8rem;">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr class="empty-row">
+                        <td colspan="9">
+                            <div style="text-align: center; padding: 50px; color: #64748b;">
+                                <i class="fas fa-file-invoice" style="font-size: 4rem; margin-bottom: 20px; opacity: 0.5;"></i>
+                                <p style="margin: 0; font-size: 1.2rem; font-weight: 600;">No purchase invoices found</p>
+                                <p style="margin: 10px 0 0 0; font-size: 1rem;">Try adjusting the date range or check if any purchases have been recorded</p>
+                                <button onclick="setQuickRange('month')" class="btn-quick" style="margin-top: 15px; padding: 8px 16px;">
+                                    <i class="fas fa-calendar"></i> View This Month
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Analytics Grid -->
+    <div class="analysis-grid">
+        <!-- Product Analytics -->
+        <div class="analysis-card">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <i class="fas fa-pills"></i>
+                    Product-wise Purchase Analysis
+                </h3>
+                <p class="section-subtitle">Top purchased products by value and quantity</p>
+            </div>
+            <div class="table-container">
+                <table id="productTable" class="analytics-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Company</th>
+                            <th>Quantity</th>
+                            <th>Amount</th>
+                            <th>Avg Rate</th>
+                            <th>Invoices</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in product_purchases|slice:":15" %}
+                        <tr>
+                            <td data-label="Product">{{ item.productid__product_name|truncatechars:25 }}</td>
+                            <td data-label="Company">{{ item.productid__product_company|truncatechars:20 }}</td>
+                            <td data-label="Quantity">{{ item.total_quantity|floatformat:0 }}</td>
+                            <td data-label="Amount">₹{{ item.total_amount|floatformat:2 }}</td>
+                            <td data-label="Avg Rate">₹{{ item.avg_rate|floatformat:2 }}</td>
+                            <td data-label="Invoices">{{ item.invoice_count }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr class="empty-row">
+                            <td colspan="6">
+                                <div style="text-align: center; padding: 40px; color: #64748b;">
+                                    <i class="fas fa-box-open" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.5;"></i>
+                                    <p style="margin: 0; font-size: 1.1rem; font-weight: 500;">No product purchase data available</p>
+                                    <p style="margin: 5px 0 0 0; font-size: 0.9rem;">Purchase data will appear here once transactions are recorded</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Supplier Analytics -->
+        <div class="analysis-card">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <i class="fas fa-truck"></i>
+                    Supplier-wise Purchase Analysis
+                </h3>
+                <p class="section-subtitle">Top suppliers by purchase value and frequency</p>
+            </div>
+            <div class="table-container">
+                <table id="supplierTable" class="analytics-table">
+                    <thead>
+                        <tr>
+                            <th>Supplier</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Invoices</th>
+                            <th>Payment Rate</th>
+                            <th>Last Purchase</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in supplier_purchases|slice:":15" %}
+                        <tr>
+                            <td data-label="Supplier">{{ item.supplierid__supplier_name|truncatechars:25 }}</td>
+                            <td data-label="Type">{{ item.supplierid__supplier_type }}</td>
+                            <td data-label="Amount">₹{{ item.total_amount|floatformat:2 }}</td>
+                            <td data-label="Invoices">{{ item.invoice_count }}</td>
+                            <td data-label="Payment Rate">{{ item.payment_rate|floatformat:1 }}%</td>
+                            <td data-label="Last Purchase">{% if item.last_purchase_date %}{{ item.last_purchase_date|date:"d-m-Y" }}{% else %}N/A{% endif %}</td>
+                        </tr>
+                        {% empty %}
+                        <tr class="empty-row">
+                            <td colspan="6">
+                                <div style="text-align: center; padding: 40px; color: #64748b;">
+                                    <i class="fas fa-truck" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.5;"></i>
+                                    <p style="margin: 0; font-size: 1.1rem; font-weight: 500;">No supplier purchase data available</p>
+                                    <p style="margin: 5px 0 0 0; font-size: 0.9rem;">Supplier analytics will appear here once purchases are made</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-grid">
+        <!-- Product Distribution Chart -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="fas fa-chart-pie"></i>
+                    Product Purchase Distribution
+                </h3>
+            </div>
+            <div class="chart-container">
+                <canvas id="productChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Supplier Distribution Chart -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="fas fa-chart-doughnut"></i>
+                    Supplier Purchase Distribution
+                </h3>
+            </div>
+            <div class="chart-container">
+                <canvas id="supplierChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Daily Trend Chart -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="fas fa-chart-line"></i>
+                    Daily Purchase Trend
+                </h3>
+            </div>
+            <div class="chart-container">
+                <canvas id="dailyChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Monthly Comparison Chart -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="fas fa-chart-bar"></i>
+                    Monthly Purchase Comparison
+                </h3>
+            </div>
+            <div class="chart-container">
+                <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Analysis -->
+    {% if category_purchases %}
+    <div class="data-section">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fas fa-tags"></i>
+                Category-wise Purchase Distribution
+            </h3>
+            <p class="section-subtitle">Purchase performance by product categories</p>
+        </div>
+        <div class="table-container">
+            <div class="kpi-grid">
+                {% for category in category_purchases|slice:":8" %}
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <h4 class="kpi-title">{{ category.productid__product_category|default:"Uncategorized" }}</h4>
+                        <div class="kpi-icon"><i class="fas fa-tag"></i></div>
+                    </div>
+                    <div class="kpi-value">₹{{ category.total_amount|floatformat:0 }}</div>
+                    <p class="kpi-subtitle">Qty: {{ category.total_quantity|floatformat:0 }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 30px; border-radius: 10px; text-align: center;">
+        <div class="loading-spinner"></div>
+        <p style="margin: 15px 0 0 0; color: #64748b;">Loading analytics data...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script>
+// Keyboard shortcuts for reports
+document.addEventListener('keydown', function(e) {
+    if (e.altKey) {
+        switch(e.key.toLowerCase()) {
+            case 'm':
+                e.preventDefault();
+                window.location.href = '{% url "sales_report" %}';
+                break;
+            case 'n':
+                e.preventDefault();
+                window.location.href = '{% url "purchase_report" %}';
+                break;
+            case 'v':
+                e.preventDefault();
+                window.location.href = '{% url "financial_report" %}';
+                break;
+        }
+    }
+    
+    // Export shortcuts
+    if (e.ctrlKey && !e.altKey && !e.shiftKey) {
+        switch(e.key.toLowerCase()) {
+            case 'p':
+                e.preventDefault();
+                exportToPDF();
+                break;
+            case 'x':
+                e.preventDefault();
+                exportToExcel();
+                break;
+        }
+    }
+});
+$(document).ready(function() {
+    // Initialize DataTables with error handling
+    try {
+        if ($('#purchaseTable tbody tr').length > 0 && !$('#purchaseTable tbody tr').first().hasClass('empty-row')) {
+            $('#purchaseTable').DataTable({
+                order: [[1, 'desc']],
+                pageLength: 25,
+                responsive: true,
+                destroy: true,
+                language: {
+                    search: "Search invoices:",
+                    lengthMenu: "Show _MENU_ invoices per page"
+                }
+            });
+        }
+    } catch (e) {
+        console.log('Purchase table initialization skipped');
+    }
+    
+    try {
+        if ($('#productTable tbody tr').length > 0 && !$('#productTable tbody tr').first().hasClass('empty-row')) {
+            $('#productTable').DataTable({
+                order: [[3, 'desc']],
+                pageLength: 15,
+                responsive: true,
+                destroy: true
+            });
+        }
+    } catch (e) {
+        console.log('Product table initialization skipped');
+    }
+    
+    try {
+        if ($('#supplierTable tbody tr').length > 0 && !$('#supplierTable tbody tr').first().hasClass('empty-row')) {
+            $('#supplierTable').DataTable({
+                order: [[2, 'desc']],
+                pageLength: 15,
+                responsive: true,
+                destroy: true
+            });
+        }
+    } catch (e) {
+        console.log('Supplier table initialization skipped');
+    }
+
+    // Chart colors - green theme for purchases
+    const colors = [
+        '#059669', '#dc2626', '#2563eb', '#d97706', '#7c3aed',
+        '#db2777', '#0891b2', '#65a30d', '#dc2626', '#7c2d12'
+    ];
+
+    // Product Chart
+    const productCtx = document.getElementById('productChart');
+    if (productCtx) {
+        new Chart(productCtx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: [{% for item in top_products|slice:":8" %}'{{ item.productid__product_name|truncatechars:20 }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+                datasets: [{
+                    data: [{% for item in top_products|slice:":8" %}{{ item.total_amount }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                    backgroundColor: colors,
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { 
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ₹' + context.parsed.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Supplier Chart
+    const supplierCtx = document.getElementById('supplierChart');
+    if (supplierCtx) {
+        new Chart(supplierCtx.getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: [{% for item in top_suppliers|slice:":8" %}'{{ item.supplierid__supplier_name|truncatechars:20 }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+                datasets: [{
+                    data: [{% for item in top_suppliers|slice:":8" %}{{ item.total_amount }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                    backgroundColor: colors,
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { 
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ₹' + context.parsed.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Daily Trend Chart
+    const dailyCtx = document.getElementById('dailyChart');
+    if (dailyCtx) {
+        new Chart(dailyCtx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: [{% for item in daily_purchases %}'{{ item.day|date:"M d" }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+                datasets: [{
+                    label: 'Daily Purchases (₹)',
+                    data: [{% for item in daily_purchases %}{{ item.daily_total }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                    borderColor: '#059669',
+                    backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#059669',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString();
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Monthly Trend Chart
+    const monthlyCtx = document.getElementById('monthlyChart');
+    if (monthlyCtx) {
+        new Chart(monthlyCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: [{% for item in monthly_purchases %}'{{ item.month }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+                datasets: [{
+                    label: 'Monthly Purchases (₹)',
+                    data: [{% for item in monthly_purchases %}{{ item.monthly_total }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                    backgroundColor: 'rgba(5, 150, 105, 0.8)',
+                    borderColor: '#047857',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString();
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+
+// Utility Functions
+function setQuickRange(period) {
+    const today = new Date();
+    const startInput = document.getElementById('start_date');
+    const endInput = document.getElementById('end_date');
+    
+    switch(period) {
+        case 'today':
+            startInput.value = today.toISOString().split('T')[0];
+            endInput.value = today.toISOString().split('T')[0];
+            break;
+        case 'week':
+            const weekStart = new Date(today.setDate(today.getDate() - today.getDay()));
+            startInput.value = weekStart.toISOString().split('T')[0];
+            endInput.value = new Date().toISOString().split('T')[0];
+            break;
+        case 'month':
+            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            startInput.value = monthStart.toISOString().split('T')[0];
+            endInput.value = new Date().toISOString().split('T')[0];
+            break;
+        case 'quarter':
+            const quarterStart = new Date(today.getFullYear(), Math.floor(today.getMonth() / 3) * 3, 1);
+            startInput.value = quarterStart.toISOString().split('T')[0];
+            endInput.value = new Date().toISOString().split('T')[0];
+            break;
+    }
+}
+
+function refreshAnalytics() {
+    showLoading();
+    document.getElementById('dateRangeForm').submit();
+}
+
+function exportToPDF() {
+    const startDate = document.getElementById('start_date').value;
+    const endDate = document.getElementById('end_date').value;
+    const url = `{% url 'export_purchases_pdf' %}?start_date=${startDate}&end_date=${endDate}`;
+    
+    // Direct download and auto-open
+    fetch(url)
+        .then(response => response.blob())
+        .then(blob => {
+            // Create download link
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = `purchase_analytics_${startDate}_to_${endDate}.pdf`;
+            link.click();
+            
+            // Auto open after download
+            setTimeout(() => {
+                window.open(downloadUrl, '_blank');
+                window.URL.revokeObjectURL(downloadUrl);
+            }, 1000);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Fallback to direct open
+            window.open(url, '_blank');
+        });
+}
+
+function exportToExcel() {
+    const startDate = document.getElementById('start_date').value;
+    const endDate = document.getElementById('end_date').value;
+    const url = `{% url 'export_purchases_excel' %}?start_date=${startDate}&end_date=${endDate}`;
+    
+    // Safe download without auto-open to avoid Office security restrictions
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `purchase_analytics_${startDate}_to_${endDate}.xlsx`;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Show user-friendly message
+    setTimeout(() => {
+        const message = 'Excel file downloaded successfully!\n\nTo open the file:\n1. Go to your Downloads folder\n2. Double-click the Excel file\n3. If prompted by Office security, click "Enable Editing"';
+        alert(message);
+    }, 1000);
+}
+
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+// Auto-hide loading on page load
+window.addEventListener('load', hideLoading);
+
+// Enhanced Print Function
+function printReport() {
+    // Capture all charts as images before printing
+    const charts = document.querySelectorAll('canvas');
+    const chartImages = [];
+    
+    charts.forEach((canvas, index) => {
+        const imgData = canvas.toDataURL('image/png');
+        const img = document.createElement('img');
+        img.src = imgData;
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        img.className = 'print-chart-image';
+        chartImages.push({ canvas, img });
+    });
+    
+    // Replace canvases with images for printing
+    chartImages.forEach(({ canvas, img }) => {
+        canvas.style.display = 'none';
+        canvas.parentNode.appendChild(img);
+    });
+    
+    // Add print timestamp
+    const printInfo = document.createElement('div');
+    printInfo.innerHTML = `
+        <div style="text-align: center; margin: 20px 0; padding: 10px; border-top: 2px solid #e5e7eb; font-size: 12px; color: #6b7280;">
+            <p><strong>Report Generated:</strong> ${new Date().toLocaleString()}</p>
+            <p><strong>Period:</strong> ${document.getElementById('start_date').value} to ${document.getElementById('end_date').value}</p>
+        </div>
+    `;
+    document.querySelector('.print-content').appendChild(printInfo);
+    
+    // Print
+    window.print();
+    
+    // Restore canvases after printing
+    setTimeout(() => {
+        chartImages.forEach(({ canvas, img }) => {
+            canvas.style.display = 'block';
+            img.remove();
+        });
+        printInfo.remove();
+    }, 1000);
+}
+</script>
+{% endblock %}

@@ -1,28 +1,33 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/sale_rate_list.css' %}">
+{% endblock %}
 
 {% block content %}
 
-<div class="container-fluid">
+<div class="sale-rate-list-container">
     <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Batch-Specific Sale Rates</h1>
-        <a href="{% url 'add_sale_rate' %}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
-            <i class="fas fa-plus fa-sm text-white-50"></i> Add New Rate
+    <div class="sale-rate-list-header">
+        <h1 class="sale-rate-list-title">Batch-Specific Sale Rates</h1>
+        <a href="{% url 'add_sale_rate' %}" class="sale-rate-list-add-btn">
+            <i class="fas fa-plus sale-rate-list-add-icon"></i> Add New Rate
         </a>
     </div>
 
     <!-- Search Bar -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Search Rates</h6>
+    <div class="sale-rate-list-search-card">
+        <div class="sale-rate-list-search-header">
+            <h6 class="sale-rate-list-search-title">Search Rates</h6>
         </div>
-        <div class="card-body">
-            <form method="GET" action="{% url 'sale_rate_list' %}">
-                <div class="input-group">
-                    <input type="text" class="form-control" name="search" placeholder="Search by product name or batch number" value="{{ search_query }}">
-                    <div class="input-group-append">
-                        <button class="btn btn-primary" type="submit">
-                            <i class="fas fa-search fa-sm"></i>
+        <div class="sale-rate-list-search-body">
+            <form method="GET" action="{% url 'sale_rate_list' %}" class="sale-rate-list-search-form">
+                <div class="sale-rate-list-search-group">
+                    <input type="text" name="search" class="sale-rate-list-search-input" placeholder="Search by product name or batch number" value="{{ search_query }}">
+                    <div class="sale-rate-list-search-btn-wrapper">
+                        <button type="submit" class="sale-rate-list-search-btn">
+                            <i class="fas fa-search sale-rate-list-search-icon"></i>
                         </button>
                     </div>
                 </div>
@@ -31,45 +36,45 @@
     </div>
 
     <!-- Sale Rates Table -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Sale Rates</h6>
+    <div class="sale-rate-list-table-card">
+        <div class="sale-rate-list-table-header">
+            <h6 class="sale-rate-list-table-title">Sale Rates</h6>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Company</th>
-                            <th>Batch No</th>
-                            <th>Rate A</th>
-                            <th>Rate B</th>
-                            <th>Rate C</th>
-                            <th>Actions</th>
+        <div class="sale-rate-list-table-body">
+            <div class="sale-rate-list-table-wrapper">
+                <table class="sale-rate-list-table" width="100%" cellspacing="0">
+                    <thead class="sale-rate-list-table-head">
+                        <tr class="sale-rate-list-table-header-row">
+                            <th class="sale-rate-list-product-header">Product</th>
+                            <th class="sale-rate-list-company-header">Company</th>
+                            <th class="sale-rate-list-batch-header">Batch No</th>
+                            <th class="sale-rate-list-rate-a-header">Rate A</th>
+                            <th class="sale-rate-list-rate-b-header">Rate B</th>
+                            <th class="sale-rate-list-rate-c-header">Rate C</th>
+                            <th class="sale-rate-list-actions-header">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="sale-rate-list-table-tbody">
                         {% for rate in sale_rates %}
-                        <tr>
-                            <td>{{ rate.productid.product_name }}</td>
-                            <td>{{ rate.productid.product_company }}</td>
-                            <td>{{ rate.product_batch_no }}</td>
-                            <td>{{ rate.rate_A }}</td>
-                            <td>{{ rate.rate_B }}</td>
-                            <td>{{ rate.rate_C }}</td>
-                            <td>
-                                <a href="{% url 'update_sale_rate' rate.pk %}" class="btn btn-sm btn-info">
-                                    <i class="fas fa-edit"></i>
+                        <tr class="sale-rate-list-table-row">
+                            <td class="sale-rate-list-product-cell">{{ rate.productid.product_name }}</td>
+                            <td class="sale-rate-list-company-cell">{{ rate.productid.product_company }}</td>
+                            <td class="sale-rate-list-batch-cell">{{ rate.product_batch_no }}</td>
+                            <td class="sale-rate-list-rate-a-cell">{{ rate.rate_A }}</td>
+                            <td class="sale-rate-list-rate-b-cell">{{ rate.rate_B }}</td>
+                            <td class="sale-rate-list-rate-c-cell">{{ rate.rate_C }}</td>
+                            <td class="sale-rate-list-actions-cell">
+                                <a href="{% url 'update_sale_rate' rate.pk %}" class="sale-rate-list-edit-btn">
+                                    <i class="fas fa-edit sale-rate-list-edit-icon"></i>
                                 </a>
-                                <a href="{% url 'delete_sale_rate' rate.pk %}" class="btn btn-sm btn-danger">
-                                    <i class="fas fa-trash"></i>
+                                <a href="{% url 'delete_sale_rate' rate.pk %}" class="sale-rate-list-delete-btn">
+                                    <i class="fas fa-trash sale-rate-list-delete-icon"></i>
                                 </a>
                             </td>
                         </tr>
                         {% empty %}
-                        <tr>
-                            <td colspan="7" class="text-center">No sale rates found.</td>
+                        <tr class="sale-rate-list-empty-row">
+                            <td colspan="7" class="sale-rate-list-empty-cell">No sale rates found.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -78,41 +83,41 @@
 
             <!-- Pagination -->
             {% if sale_rates.has_other_pages %}
-            <div class="pagination justify-content-center mt-4">
-                <ul class="pagination">
+            <div class="sale-rate-list-pagination">
+                <ul class="sale-rate-list-pagination-list">
                     {% if sale_rates.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ sale_rates.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
-                            <i class="fas fa-angle-left"></i>
+                    <li class="sale-rate-list-pagination-item">
+                        <a href="?page={{ sale_rates.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="sale-rate-list-pagination-link">
+                            <i class="fas fa-angle-left sale-rate-list-pagination-icon"></i>
                         </a>
                     </li>
                     {% else %}
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#"><i class="fas fa-angle-left"></i></a>
+                    <li class="sale-rate-list-pagination-item sale-rate-list-pagination-disabled">
+                        <a href="#" class="sale-rate-list-pagination-link"><i class="fas fa-angle-left sale-rate-list-pagination-icon"></i></a>
                     </li>
                     {% endif %}
 
                     {% for i in sale_rates.paginator.page_range %}
                     {% if sale_rates.number == i %}
-                    <li class="page-item active">
-                        <a class="page-link" href="#">{{ i }}</a>
+                    <li class="sale-rate-list-pagination-item sale-rate-list-pagination-active">
+                        <a href="#" class="sale-rate-list-pagination-link">{{ i }}</a>
                     </li>
                     {% else %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ i }}</a>
+                    <li class="sale-rate-list-pagination-item">
+                        <a href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}" class="sale-rate-list-pagination-link">{{ i }}</a>
                     </li>
                     {% endif %}
                     {% endfor %}
 
                     {% if sale_rates.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ sale_rates.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
-                            <i class="fas fa-angle-right"></i>
+                    <li class="sale-rate-list-pagination-item">
+                        <a href="?page={{ sale_rates.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="sale-rate-list-pagination-link">
+                            <i class="fas fa-angle-right sale-rate-list-pagination-icon"></i>
                         </a>
                     </li>
                     {% else %}
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#"><i class="fas fa-angle-right"></i></a>
+                    <li class="sale-rate-list-pagination-item sale-rate-list-pagination-disabled">
+                        <a href="#" class="sale-rate-list-pagination-link"><i class="fas fa-angle-right sale-rate-list-pagination-icon"></i></a>
                     </li>
                     {% endif %}
                 </ul>
@@ -123,3 +128,10 @@
 </div>
 
 {% endblock %}
+
+
+
+
+
+
+

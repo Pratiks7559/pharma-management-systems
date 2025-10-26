@@ -1,273 +1,301 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
 
 {% block content %}
-<div class="dashboard">
-    <!-- Statistic Cards -->
-    <div class="row">
-        <div class="col-md-3">
-            <div class="card stat-card bg-primary text-white mb-4">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">
-                        <i class="fas fa-pills fa-2x"></i>
-                    </h5>
-                    <h3 class="mb-0">{{ product_count }}</h3>
-                    <div>Products</div>
+<div class="dashboard-container">
+    <!-- Header Section -->
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">Dashboard</h1>
+        <p class="dashboard-subtitle">Welcome back! Here's what's happening with your pharmacy today.</p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <!-- Products Card -->
+        <div class="stat-card stat-card-blue">
+            <div class="stat-card-content">
+                <div class="stat-info">
+                    <p class="stat-label">Total Products</p>
+                    <p class="stat-value">{{ product_count }}</p>
+                </div>
+                <div class="stat-icon stat-icon-blue">
+                    <i class="fas fa-pills"></i>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-3">
-            <div class="card stat-card bg-success text-white mb-4">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">
-                        <i class="fas fa-truck fa-2x"></i>
-                    </h5>
-                    <h3 class="mb-0">{{ supplier_count }}</h3>
-                    <div>Suppliers</div>
+
+        <!-- Suppliers Card -->
+        <div class="stat-card stat-card-green">
+            <div class="stat-card-content">
+                <div class="stat-info">
+                    <p class="stat-label">Suppliers</p>
+                    <p class="stat-value">{{ supplier_count }}</p>
+                </div>
+                <div class="stat-icon stat-icon-green">
+                    <i class="fas fa-truck"></i>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-3">
-            <div class="card stat-card bg-warning text-white mb-4">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">
-                        <i class="fas fa-users fa-2x"></i>
-                    </h5>
-                    <h3 class="mb-0">{{ customer_count }}</h3>
-                    <div>Customers</div>
+
+        <!-- Customers Card -->
+        <div class="stat-card stat-card-purple">
+            <div class="stat-card-content">
+                <div class="stat-info">
+                    <p class="stat-label">Customers</p>
+                    <p class="stat-value">{{ customer_count }}</p>
+                </div>
+                <div class="stat-icon stat-icon-purple">
+                    <i class="fas fa-users"></i>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-3">
-            <div class="card stat-card bg-danger text-white mb-4">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">
-                        <i class="fas fa-exclamation-triangle fa-2x"></i>
-                    </h5>
-                    <h3 class="mb-0">{{ low_stock_products|length }}</h3>
-                    <div>Low Stock Items</div>
+
+        <!-- Low Stock Card -->
+        <div class="stat-card stat-card-red">
+            <div class="stat-card-content">
+                <div class="stat-info">
+                    <p class="stat-label">Low Stock Items</p>
+                    <p class="stat-value stat-value-red">{{ low_stock_count }}</p>
+                </div>
+                <div class="stat-icon stat-icon-red">
+                    <i class="fas fa-exclamation-triangle"></i>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Financial Overview -->
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Financial Overview</h5>
+
+    <!-- Main Content Grid -->
+    <div class="main-content-grid">
+        <!-- Financial Overview -->
+        <div class="content-card">
+            <div class="card-header">
+                <div class="card-icon card-icon-emerald">
+                    <i class="fas fa-chart-line"></i>
                 </div>
-                <div class="card-body">
-                    <div class="row align-items-center mb-4">
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Monthly Sales</h6>
-                            <h4 class="mb-0">{{ monthly_sales|currency }}</h4>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Monthly Purchases</h6>
-                            <h4 class="mb-0">{{ monthly_purchases|currency }}</h4>
-                        </div>
-                    </div>
-                    <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Total Receivable</h6>
-                            <h4 class="mb-0 text-primary">{{ total_receivable|currency }}</h4>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Total Payable</h6>
-                            <h4 class="mb-0 text-danger">{{ total_payable|currency }}</h4>
-                        </div>
-                    </div>
+                <h2 class="card-title">Financial Overview</h2>
+            </div>
+            
+            <div class="financial-grid">
+                <div class="financial-item financial-item-emerald">
+                    <p class="financial-label">Monthly Sales</p>
+                    <p class="financial-value">{{ monthly_sales|currency }}</p>
                 </div>
-                <div class="card-footer d-flex justify-content-end">
-                    <a href="{% url 'financial_report' %}" class="btn btn-sm btn-primary">
-                        <i class="fas fa-chart-bar me-1"></i> View Full Report
-                    </a>
+                <div class="financial-item financial-item-blue">
+                    <p class="financial-label">Monthly Purchases</p>
+                    <p class="financial-value">{{ monthly_purchases|currency }}</p>
+                </div>
+                <div class="financial-item financial-item-amber">
+                    <p class="financial-label">Total Receivable</p>
+                    <p class="financial-value">{{ total_receivable|currency }}</p>
+                </div>
+                <div class="financial-item financial-item-rose">
+                    <p class="financial-label">Total Payable</p>
+                    <p class="financial-value">{{ total_payable|currency }}</p>
                 </div>
             </div>
+            
+            <a href="{% url 'financial_report' %}" class="card-button card-button-emerald">
+                <i class="fas fa-chart-bar"></i>
+                View Full Report
+            </a>
         </div>
-        
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-boxes me-2"></i>Inventory Status</h5>
+
+        <!-- Inventory Status -->
+        <div class="content-card">
+            <div class="card-header">
+                <div class="card-icon card-icon-orange">
+                    <i class="fas fa-boxes"></i>
                 </div>
-                <div class="card-body">
-                    <div class="alert alert-warning" role="alert">
-                        <strong>{{ low_stock_products|length }}</strong> products are running low on stock
-                    </div>
-                    <div class="alert alert-danger" role="alert">
-                        <strong>{{ expired_products|length }}</strong> products are expired or expiring soon
-                    </div>
-                    
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Product</th>
-                                    <th>Stock</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in low_stock_products|slice:":5" %}
-                                <tr>
-                                    <td>{{ item.product.product_name }}</td>
-                                    <td>{{ item.current_stock }}</td>
-                                    <td><span class="badge bg-warning text-dark">Low Stock</span></td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                <h2 class="card-title">Inventory Status</h2>
+            </div>
+            
+            <div class="alert-container">
+                <div class="alert-box alert-red">
+                    <div class="alert-content">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>
+                            <strong>{{ low_stock_products|length }}</strong> products are running low on stock
+                        </span>
                     </div>
                 </div>
-                <div class="card-footer d-flex justify-content-end">
-                    <a href="{% url 'inventory_report' %}" class="btn btn-sm btn-primary">
-                        <i class="fas fa-list me-1"></i> View Inventory
-                    </a>
+                
+                <div class="alert-box alert-amber">
+                    <div class="alert-content">
+                        <i class="fas fa-clock"></i>
+                        <span>
+                            <strong>{{ expired_products|length|default:0 }}</strong> products are expired or expiring soon
+                        </span>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <!-- Recent Activity -->
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Recent Sales</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Invoice #</th>
-                                    <th>Date</th>
-                                    <th>Customer</th>
-                                    <th>Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for sale in recent_sales %}
-                                <tr>
-                                    <td>
-                                        <a href="{% url 'sales_invoice_detail' pk=sale.sales_invoice_no %}">
-                                            {{ sale.sales_invoice_no }}
-                                        </a>
-                                    </td>
-                                    <td>{{ sale.sales_invoice_date }}</td>
-                                    <td>{{ sale.customerid.customer_name }}</td>
-                                    <td>{{ sale.sales_invoice_total|currency }}</td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="4" class="text-center">No recent sales</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="card-footer d-flex justify-content-end">
-                    <a href="{% url 'sales_invoice_list' %}" class="btn btn-sm btn-primary">
-                        <i class="fas fa-list me-1"></i> View All Sales
-                    </a>
+
+            {% if low_stock_products or expired_products %}
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Batch</th>
+                            <th>Stock</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in low_stock_products|slice:":3" %}
+                        <tr>
+                            <td class="text-gray-800">{{ item.product.product_name }}</td>
+                            <td class="text-gray-600">-</td>
+                            <td class="text-gray-600">{{ item.current_stock }}</td>
+                            <td>
+                                <span class="status-badge status-red">
+                                    Low Stock
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% for item in expired_products|slice:":3" %}
+                        <tr>
+                            <td class="text-gray-800">{{ item.product.product_name }}</td>
+                            <td class="text-gray-600">{{ item.batch_no }}</td>
+                            <td class="text-gray-600">{{ item.current_stock }}</td>
+                            <td>
+                                {% if item.days_to_expiry < 0 %}
+                                    <span class="status-badge status-red">
+                                        Expired
+                                    </span>
+                                {% else %}
+                                    <span class="status-badge status-amber">
+                                        {{ item.days_to_expiry }} days
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert-box" style="background: #f0f9ff; border-color: #0ea5e9; color: #0369a1;">
+                <div class="alert-content">
+                    <i class="fas fa-info-circle"></i>
+                    <span>No low stock or expiring products found. All inventory levels are healthy!</span>
                 </div>
             </div>
-        </div>
-        
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Recent Purchases</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Invoice #</th>
-                                    <th>Date</th>
-                                    <th>Supplier</th>
-                                    <th>Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for purchase in recent_purchases %}
-                                <tr>
-                                    <td>
-                                        <a href="{% url 'invoice_detail' pk=purchase.invoiceid %}">
-                                            {{ purchase.invoice_no }}
-                                        </a>
-                                    </td>
-                                    <td>{{ purchase.invoice_date }}</td>
-                                    <td>{{ purchase.supplierid.supplier_name }}</td>
-                                    <td>{{ purchase.invoice_total|currency }}</td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="4" class="text-center">No recent purchases</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="card-footer d-flex justify-content-end">
-                    <a href="{% url 'invoice_list' %}" class="btn btn-sm btn-primary">
-                        <i class="fas fa-list me-1"></i> View All Purchases
-                    </a>
-                </div>
+            {% endif %}
+            
+            <div class="card-footer">
+                <a href="{% url 'low_stock_update' %}" class="card-button" style="background: #ff9800; color: white; margin-right: 10px;">
+                    <i class="fas fa-plus-circle"></i>
+                    Update Low Stock
+                </a>
+                <a href="{% url 'inventory_list' %}" class="card-button card-button-orange">
+                    <i class="fas fa-boxes"></i>
+                    View Inventory
+                </a>
             </div>
         </div>
     </div>
-    
-    <!-- Expiring Products -->
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-calendar-times me-2"></i>Expiring Products</h5>
+
+    <!-- Recent Transactions -->
+    <div class="main-content-grid">
+        <!-- Recent Sales -->
+        <div class="content-card">
+            <div class="card-header">
+                <div class="card-icon card-icon-blue">
+                    <i class="fas fa-shopping-cart"></i>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Product</th>
-                                    <th>Batch</th>
-                                    <th>Expiry Date</th>
-                                    <th>Quantity</th>
-                                    <th>Days Left</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for product in expired_products %}
-                                <tr>
-                                    <td>{{ product.product_name }}</td>
-                                    <td>{{ product.product_batch_no }}</td>
-                                    <td>{{ product.product_expiry }}</td>
-                                    <td>{{ product.product_quantity }}</td>
-                                    <td>{{ product.product_expiry }}</td>
-                                    <td>
-                                        <span class="badge bg-warning text-dark">Check Expiry</span>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="6" class="text-center">No expiring products</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                <h2 class="card-title">Recent Sales</h2>
+            </div>
+            
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in recent_sales %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'sales_invoice_detail' pk=sale.sales_invoice_no %}" class="table-link">
+                                    {{ sale.sales_invoice_no }}
+                                </a>
+                            </td>
+                            <td class="text-gray-600">{{ sale.sales_invoice_date }}</td>
+                            <td class="text-gray-800">{{ sale.customerid.customer_name }}</td>
+                            <td class="font-semibold text-emerald-600">{{ sale.sales_invoice_total|currency }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-gray-500" style="padding: 32px;">No recent sales</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="card-footer">
+                <a href="{% url 'sales_invoice_list' %}" class="card-button card-button-blue">
+                    <i class="fas fa-list"></i>
+                    View All Sales
+                </a>
+            </div>
+        </div>
+
+        <!-- Recent Purchases -->
+        <div class="content-card">
+            <div class="card-header">
+                <div class="card-icon card-icon-purple">
+                    <i class="fas fa-truck"></i>
                 </div>
+                <h2 class="card-title">Recent Purchases</h2>
+            </div>
+            
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Date</th>
+                            <th>Supplier</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for purchase in recent_purchases %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'invoice_detail' pk=purchase.invoiceid %}" class="table-link">
+                                    {{ purchase.invoice_no }}
+                                </a>
+                            </td>
+                            <td class="text-gray-600">{{ purchase.invoice_date }}</td>
+                            <td class="text-gray-800">{{ purchase.supplierid.supplier_name }}</td>
+                            <td class="font-semibold text-emerald-600">{{ purchase.invoice_total|currency }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-gray-500" style="padding: 32px;">No recent purchases</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="card-footer">
+                <a href="{% url 'invoice_list' %}" class="card-button card-button-purple">
+                    <i class="fas fa-list"></i>
+                    View All Purchases
+                </a>
             </div>
         </div>
     </div>

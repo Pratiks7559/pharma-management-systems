@@ -1,349 +1,194 @@
 {% extends 'base.html' %}
-{% load custom_filters %}
+{% load static %}
 
-{% block extra_js %}
-<script>
-    $(document).ready(function() {
-        console.log("Document ready - initializing sales return form");
-        
-        // Function to fetch batch details when product and batch are selected
-        function fetchBatchDetails() {
-            const product_id = $('#id_return_productid').val();
-            const batch_no = $('#id_return_product_batch_no').val();
-            
-            console.log("Fetching details for product:", product_id, "batch:", batch_no);
-            
-            if (product_id && batch_no) {
-                $.ajax({
-                    url: window.location.href,
-                    data: {
-                        'product_id': product_id,
-                        'batch_no': batch_no
-                    },
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    dataType: 'json',
-                    beforeSend: function() {
-                        $('#batch_info').html('<div class="alert alert-info">Loading batch information...</div>');
-                    },
-                    success: function(data) {
-                        console.log("API response:", data);
-                        if (data.exists) {
-                            // Auto-fill fields
-                            $('#id_return_product_expiry').val(data.expiry);
-                            $('#id_return_sale_rate').val(data.rate);
-                            $('#id_return_product_MRP').val(data.mrp);
-                            $('#id_return_sale_quantity').attr('max', data.available_qty);
-                            
-                            // Auto-populate discount type, discount, and GST from original sale
-                            if (data.discount_type) {
-                                $('#id_return_sale_calculation_mode').val(data.discount_type);
-                            }
-                            if (data.discount !== undefined) {
-                                $('#id_return_sale_discount').val(data.discount);
-                            }
-                            if (data.igst !== undefined) {
-                                $('#id_return_sale_igst').val(data.igst);
-                            }
-                            
-                            // Update stock info message
-                            if (data.available_qty <= 0) {
-                                $('#batch_info').html('<div class="alert alert-danger">' + data.message + '</div>');
-                            } else {
-                                $('#batch_info').html('<div class="alert alert-success">' + data.message + '</div>');
-                            }
-                            
-                            // Update total after setting values
-                            calculateSalesReturnTotal();
-                        } else {
-                            // Initialize with default values
-                            $('#id_return_sale_discount').val('0');
-                            $('#id_return_sale_igst').val('0');
-                            $('#id_return_sale_calculation_mode').val('percentage');
-                            
-                            // If product exists in inventory but not in sales
-                            if (data.expiry) {
-                                $('#id_return_product_expiry').val(data.expiry);
-                                // Set MRP from purchase data if available
-                                if (data.mrp !== undefined) {
-                                    $('#id_return_product_MRP').val(data.mrp);
-                                } else {
-                                    $('#id_return_product_MRP').val('');
-                                }
-                                $('#id_return_sale_rate').val('');
-                            } else {
-                                // Clear all fields if batch not found
-                                $('#id_return_product_expiry').val('');
-                                $('#id_return_sale_rate').val('');
-                                $('#id_return_product_MRP').val('');
-                            }
-                            
-                            $('#batch_info').html('<div class="alert alert-warning">' + data.message + '</div>');
-                            calculateSalesReturnTotal();
-                        }
-                    },
-                    error: function(jqXHR, textStatus, errorThrown) {
-                        console.error("AJAX error:", textStatus, errorThrown);
-                        $('#batch_info').html('<div class="alert alert-danger">Error retrieving batch information: ' + textStatus + '</div>');
-                    }
-                });
-            }
-        }
-        
-        // Trigger batch details lookup when either product or batch changes
-        $('#id_return_productid, #id_return_product_batch_no').change(function() {
-            console.log("Product or batch field changed:", this.id);
-            fetchBatchDetails();
-        });
-        
-        // Direct calculation function
-        function calculateSalesReturnTotal() {
-            // Get values directly from DOM by ID
-            const quantity = parseFloat($('#id_return_sale_quantity').val() || 0);
-            const rate = parseFloat($('#id_return_sale_rate').val() || 0);
-            const discount = parseFloat($('#id_return_sale_discount').val() || 0);
-            const igst = parseFloat($('#id_return_sale_igst').val() || 0);
-            const discountType = $('#id_return_sale_calculation_mode').val();
-            
-            // Calculate subtotal (quantity * rate)
-            let subtotal = quantity * rate;
-            
-            // Apply discount
-            let discountAmount = 0;
-            if (discountType === 'percentage') {
-                discountAmount = subtotal * (discount / 100);
-            } else {
-                discountAmount = discount;
-            }
-            
-            // Apply discount to subtotal
-            let discountedAmount = subtotal - discountAmount;
-            
-            // Calculate GST on discounted amount
-            let gstAmount = discountedAmount * (igst / 100);
-            
-            // Calculate final total
-            let total = discountedAmount + gstAmount;
-            
-            console.log("Direct calculation:", {
-                quantity, rate, discount, igst, discountType,
-                subtotal, discountAmount, discountedAmount, gstAmount, total
-            });
-            
-            // Update displays
-            if (!isNaN(total)) {
-                $('#subtotal_preview').text(subtotal.toFixed(2));
-                $('#discount_preview').text(discountAmount.toFixed(2));
-                $('#taxable_preview').text(discountedAmount.toFixed(2));
-                $('#gst_preview').text(gstAmount.toFixed(2));
-                $('#total_preview').text(total.toFixed(2));
-            } else {
-                $('#subtotal_preview').text('0.00');
-                $('#discount_preview').text('0.00');
-                $('#taxable_preview').text('0.00');
-                $('#gst_preview').text('0.00');
-                $('#total_preview').text('0.00');
-            }
-        }
-        
-        // Bind calculation events directly to input elements by ID
-        $('#id_return_sale_quantity, #id_return_sale_rate, #id_return_sale_discount, #id_return_sale_igst, #id_return_sale_calculation_mode').on('input change keyup', function() {
-            console.log(`Field changed: ${this.id} with value ${this.value}`);
-            calculateSalesReturnTotal();
-        });
-        
-        // Initial calculation
-        calculateSalesReturnTotal();
-        
-        // Setup a periodic check to ensure the total is calculated
-        setInterval(calculateSalesReturnTotal, 2000);
-    });
-</script>
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/sales_return_item_form.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-10">
-            <div class="card">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="mb-0">Add Product to Sales Return #{{ return_invoice.return_sales_invoice_no }}</h5>
-                            <p class="mb-0">Customer: <span class="badge bg-info text-dark">{{ return_invoice.return_sales_customerid.customer_name }}</span></p>
-                        </div>
-                    </div>
+<div class="sr-item-form-container">
+    <div class="sr-item-form-row">
+        <div class="sr-item-form-col">
+            <div class="sr-item-form-card">
+                <div class="sr-item-form-header">
+                    <h4 class="sr-item-form-title">{{ title }}</h4>
+                    <a href="{% url 'sales_return_detail' pk=return_invoice.return_sales_invoice_no %}" class="sr-item-form-back-btn">
+                        <i class="sr-item-form-back-icon"></i> Back to Return
+                    </a>
                 </div>
-                <div class="card-body">
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Return Details</h6>
-                            <ul class="list-unstyled">
-                                <li><strong>Return No:</strong> {{ return_invoice.return_sales_invoice_no }}</li>
-                                <li><strong>Date:</strong> {{ return_invoice.return_sales_invoice_date }}</li>
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    <!-- Display batch information -->
-                    <div id="batch_info" class="mb-3"></div>
-                    
-                    <form method="post">
+                
+                <div class="sr-item-form-body">
+                    <form method="post" class="sr-item-form">
                         {% csrf_token %}
                         
-                        <div class="form-group mb-3">
-                            <label for="{{ form.return_productid.id_for_label }}">Product*</label>
-                            {{ form.return_productid }}
-                            {% if form.return_productid.errors %}
-                                <div class="text-danger">{{ form.return_productid.errors }}</div>
+                        <div class="sr-item-form-row-fields">
+                            <div class="sr-item-form-col-field">
+                                <div class="sr-item-form-group">
+                                    <label for="{{ form.return_productid.id_for_label }}" class="sr-item-form-label sr-item-form-required">
+                                        {{ form.return_productid.label }}
+                                    </label>
+                                    {{ form.return_productid }}
+                                    {% if form.return_productid.errors %}
+                                    <div class="sr-item-form-error">
+                                        {{ form.return_productid.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="sr-item-form-col-field">
+                                <div class="sr-item-form-group">
+                                    <label for="{{ form.return_product_batch_no.id_for_label }}" class="sr-item-form-label sr-item-form-required">
+                                        {{ form.return_product_batch_no.label }}
+                                    </label>
+                                    {{ form.return_product_batch_no }}
+                                    {% if form.return_product_batch_no.errors %}
+                                    <div class="sr-item-form-error">
+                                        {{ form.return_product_batch_no.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.return_product_expiry.id_for_label }}" class="form-label required">
+                                        {{ form.return_product_expiry.label }}
+                                    </label>
+                                    {{ form.return_product_expiry }}
+                                    {% if form.return_product_expiry.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.return_product_expiry.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.return_product_MRP.id_for_label }}" class="form-label required">
+                                        {{ form.return_product_MRP.label }}
+                                    </label>
+                                    {{ form.return_product_MRP }}
+                                    {% if form.return_product_MRP.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.return_product_MRP.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.return_sale_rate.id_for_label }}" class="form-label required">
+                                        {{ form.return_sale_rate.label }}
+                                    </label>
+                                    {{ form.return_sale_rate }}
+                                    {% if form.return_sale_rate.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.return_sale_rate.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.return_sale_quantity.id_for_label }}" class="form-label required">
+                                        {{ form.return_sale_quantity.label }}
+                                    </label>
+                                    {{ form.return_sale_quantity }}
+                                    {% if form.return_sale_quantity.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.return_sale_quantity.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.return_sale_discount.id_for_label }}" class="form-label">
+                                        {{ form.return_sale_discount.label }}
+                                    </label>
+                                    {{ form.return_sale_discount }}
+                                    {% if form.return_sale_discount.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.return_sale_discount.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.return_sale_calculation_mode.id_for_label }}" class="form-label">
+                                        {{ form.return_sale_calculation_mode.label }}
+                                    </label>
+                                    {{ form.return_sale_calculation_mode }}
+                                    {% if form.return_sale_calculation_mode.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.return_sale_calculation_mode.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.return_sale_igst.id_for_label }}" class="form-label">
+                                        {{ form.return_sale_igst.label }}
+                                    </label>
+                                    {{ form.return_sale_igst }}
+                                    {% if form.return_sale_igst.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.return_sale_igst.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.return_sale_scheme.id_for_label }}" class="form-label">
+                                        {{ form.return_sale_scheme.label }}
+                                    </label>
+                                    {{ form.return_sale_scheme }}
+                                    {% if form.return_sale_scheme.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.return_sale_scheme.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.return_reason.id_for_label }}" class="form-label">
+                                {{ form.return_reason.label }}
+                            </label>
+                            {{ form.return_reason }}
+                            {% if form.return_reason.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.return_reason.errors.0 }}
+                            </div>
                             {% endif %}
                         </div>
                         
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.return_product_batch_no.id_for_label }}">Batch No*</label>
-                                    {{ form.return_product_batch_no }}
-                                    {% if form.return_product_batch_no.errors %}
-                                        <div class="text-danger">{{ form.return_product_batch_no.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.return_product_expiry.id_for_label }}">Expiry Date*</label>
-                                    {{ form.return_product_expiry }}
-                                    {% if form.return_product_expiry.errors %}
-                                        <div class="text-danger">{{ form.return_product_expiry.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.return_product_MRP.id_for_label }}">MRP*</label>
-                                    {{ form.return_product_MRP }}
-                                    {% if form.return_product_MRP.errors %}
-                                        <div class="text-danger">{{ form.return_product_MRP.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.return_sale_rate.id_for_label }}">Sale Rate*</label>
-                                    {{ form.return_sale_rate }}
-                                    {% if form.return_sale_rate.errors %}
-                                        <div class="text-danger">{{ form.return_sale_rate.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.return_sale_quantity.id_for_label }}">Quantity*</label>
-                                    {{ form.return_sale_quantity }}
-                                    {% if form.return_sale_quantity.errors %}
-                                        <div class="text-danger">{{ form.return_sale_quantity.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.return_sale_calculation_mode.id_for_label }}">Discount Type</label>
-                                    {{ form.return_sale_calculation_mode }}
-                                    {% if form.return_sale_calculation_mode.errors %}
-                                        <div class="text-danger">{{ form.return_sale_calculation_mode.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.return_sale_discount.id_for_label }}">Discount</label>
-                                    {{ form.return_sale_discount }}
-                                    {% if form.return_sale_discount.errors %}
-                                        <div class="text-danger">{{ form.return_sale_discount.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.return_sale_igst.id_for_label }}">GST %</label>
-                                    {{ form.return_sale_igst }}
-                                    {% if form.return_sale_igst.errors %}
-                                        <div class="text-danger">{{ form.return_sale_igst.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-8">
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-bordered bg-light">
-                                        <tbody>
-                                            <tr>
-                                                <th>Subtotal:</th>
-                                                <td class="text-end">₹ <span id="subtotal_preview">0.00</span></td>
-                                            </tr>
-                                            <tr>
-                                                <th>Discount:</th>
-                                                <td class="text-end">₹ <span id="discount_preview">0.00</span></td>
-                                            </tr>
-                                            <tr>
-                                                <th>Taxable Value:</th>
-                                                <td class="text-end">₹ <span id="taxable_preview">0.00</span></td>
-                                            </tr>
-                                            <tr>
-                                                <th>GST Amount:</th>
-                                                <td class="text-end">₹ <span id="gst_preview">0.00</span></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label>Total Amount (Preview)</label>
-                                    <div class="form-control bg-light">₹ <span id="total_preview">0.00</span></div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.return_remarks.id_for_label }}">Remarks</label>
-                                    {{ form.return_remarks }}
-                                    {% if form.return_remarks.errors %}
-                                        <div class="text-danger">{{ form.return_remarks.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.return_reason.id_for_label }}">Return Reason</label>
-                                    {{ form.return_reason }}
-                                    {% if form.return_reason.errors %}
-                                        <div class="text-danger">{{ form.return_reason.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group mt-4">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>Add Product
+                        <div class="sr-item-form-actions">
+                            <button type="submit" class="sr-item-form-submit-btn">
+                                <i class="sr-item-form-save-icon"></i> {% if is_edit %}Update{% else %}Add{% endif %} Return Item
                             </button>
-                            <a href="{% url 'sales_return_detail' pk=return_invoice.return_sales_invoice_no %}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left me-2"></i>Back to Return
+                            <a href="{% url 'sales_return_detail' pk=return_invoice.return_sales_invoice_no %}" class="sr-item-form-cancel-btn">
+                                <i class="sr-item-form-cancel-icon"></i> Cancel
                             </a>
                         </div>
                     </form>

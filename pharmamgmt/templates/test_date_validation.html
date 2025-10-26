@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .test-form {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 30px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-label {
+        font-weight: bold;
+        margin-bottom: 8px;
+        display: block;
+    }
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+    .examples {
+        background: #e9ecef;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+    .examples h4 {
+        margin-top: 0;
+        color: #495057;
+    }
+    .examples ul {
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="test-form">
+    <h2>Date Validation Test</h2>
+    
+    <div class="examples">
+        <h4>Supported Date Formats:</h4>
+        <ul>
+            <li><strong>DDMMYYYY:</strong> 15012024 (15 January 2024)</li>
+            <li><strong>DDMM:</strong> 1501 (15 January, current year)</li>
+            <li><strong>DD/MM:</strong> 15/01 (15 January, current year)</li>
+            <li><strong>MM-YYYY:</strong> 01-2024 (Last day of January 2024)</li>
+        </ul>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label class="form-label" for="invoice_date">Invoice Date (DDMMYYYY):</label>
+            <input type="text" 
+                   id="invoice_date" 
+                   name="invoice_date" 
+                   class="form-control date-input" 
+                   placeholder="DDMMYYYY" 
+                   maxlength="8"
+                   title="Enter date in DDMMYYYY format">
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="expiry_date">Product Expiry (DDMM or DDMMYYYY):</label>
+            <input type="text" 
+                   id="expiry_date" 
+                   name="expiry_date" 
+                   class="form-control date-input" 
+                   placeholder="DDMM or DDMMYYYY" 
+                   maxlength="8"
+                   title="Enter expiry date in DDMM or DDMMYYYY format">
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="purchase_date">Purchase Date (DDMMYYYY):</label>
+            <input type="text" 
+                   id="purchase_date" 
+                   name="purchase_date" 
+                   class="form-control date-input" 
+                   placeholder="DDMMYYYY" 
+                   maxlength="8"
+                   title="Enter purchase date in DDMMYYYY format">
+        </div>
+        
+        <button type="submit" class="btn-primary">Test Validation</button>
+    </form>
+    
+    <div style="margin-top: 30px; padding: 15px; background: #fff3cd; border-radius: 4px;">
+        <h4>Instructions:</h4>
+        <ol>
+            <li>Try entering dates in different formats</li>
+            <li>Watch for real-time validation messages</li>
+            <li>Invalid dates will show specific error messages</li>
+            <li>Valid dates will show confirmation messages</li>
+        </ol>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/date-validation-helper.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Date validation test page loaded');
+    
+    // Test the validation helper
+    const testButton = document.createElement('button');
+    testButton.textContent = 'Test Validation Functions';
+    testButton.style.cssText = 'margin: 10px; padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;';
+    testButton.onclick = function() {
+        console.log('Testing date validation functions...');
+        
+        const testDates = ['15012024', '1501', '15/01', '01-2024', '32012024', '15132024', ''];
+        testDates.forEach(testDate => {
+            console.log(`Testing "${testDate}":`, window.DateValidationHelper ? 'Helper available' : 'Helper not available');
+        });
+    };
+    
+    document.querySelector('.test-form').appendChild(testButton);
+});
+</script>
+{% endblock %}

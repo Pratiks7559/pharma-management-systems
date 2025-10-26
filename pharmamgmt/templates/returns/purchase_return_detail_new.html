@@ -4,29 +4,29 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Purchase Return #{{ return_invoice.returninvoiceid }}</h5>
-                    <div class="btn-group" role="group">
-                        <a href="{% url 'add_purchase_return_item' return_id=return_invoice.returninvoiceid %}" class="btn btn-primary btn-sm">
+<div >
+    <div >
+        <div >
+            <div >
+                <div >
+                    <h5 >Purchase Return #{{ return_invoice.returninvoiceid }}</h5>
+                    <div role="group">
+                        <a href="{% url 'add_purchase_return_item' return_id=return_invoice.returninvoiceid %}" >
                             <i class="fas fa-plus-circle me-1"></i>Add Product
                         </a>
-                        <a href="{% url 'delete_purchase_return' pk=return_invoice.returninvoiceid %}" class="btn btn-danger btn-sm">
+                        <a href="{% url 'delete_purchase_return' pk=return_invoice.returninvoiceid %}" >
                             <i class="fas fa-trash me-1"></i>Delete Return
                         </a>
-                        <a href="{% url 'purchase_return_list' %}" class="btn btn-outline-secondary btn-sm">
+                        <a href="{% url 'purchase_return_list' %}" >
                             <i class="fas fa-arrow-left me-1"></i>Back to List
                         </a>
                     </div>
                 </div>
-                <div class="card-body">
+                <div >
                     <!-- Return details section -->
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Return Details</h6>
+                    <div >
+                        <div >
+                            <h6 >Return Details</h6>
                             <ul class="list-unstyled">
                                 <li><strong>Return No:</strong> {{ return_invoice.returninvoiceid }}</li>
                                 <li><strong>Date:</strong> {{ return_invoice.returninvoice_date }}</li>
@@ -34,8 +34,8 @@
                                 <li><strong>Contact:</strong> {{ return_invoice.returnsupplierid.supplier_mobile }}</li>
                             </ul>
                         </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Financial Summary</h6>
+                        <div >
+                            <h6 >Financial Summary</h6>
                             <ul class="list-unstyled">
                                 <li><strong>Return Total:</strong> ₹{{ return_invoice.returninvoice_total|floatformat:2 }}</li>
                                 <li><strong>Charged Back:</strong> ₹{{ return_invoice.returninvoice_paid|floatformat:2 }}</li>
@@ -46,11 +46,11 @@
                     </div>
 
                     <!-- Returned products table -->
-                    <h6 class="text-muted mb-3">Returned Products</h6>
+                    <h6 >Returned Products</h6>
                     {% if returns %}
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover">
-                            <thead class="table-light">
+                    <div >
+                        <table >
+                            <thead >
                                 <tr>
                                     <th>Product</th>
                                     <th>Batch No</th>
@@ -73,8 +73,8 @@
                                     <td>{{ item.returnproduct_quantity }}</td>
                                     <td>₹{{ item.returntotal_amount|floatformat:2 }}</td>
                                     <td>
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <a href="{% url 'delete_purchase_return_item' return_id=return_invoice.returninvoiceid item_id=item.id %}" class="btn btn-outline-danger">
+                                        <div role="group">
+                                            <a href="{% url 'delete_purchase_return_item' return_id=return_invoice.returninvoiceid item_id=item.id %}" >
                                                 <i class="fas fa-trash"></i>
                                             </a>
                                         </div>
@@ -83,26 +83,26 @@
                                 {% endfor %}
                             </tbody>
                             <tfoot>
-                                <tr class="fw-bold">
-                                    <td colspan="6" class="text-end">Total:</td>
+                                <tr >
+                                    <td colspan="6" >Total:</td>
                                     <td colspan="2">₹{{ returns|sum_field:'returntotal_amount'|floatformat:2 }}</td>
                                 </tr>
                             </tfoot>
                         </table>
                     </div>
                     {% else %}
-                    <div class="alert alert-info">
+                    <div >
                         <i class="fas fa-info-circle me-2"></i>No products have been added to this return yet.
-                        <a href="{% url 'add_purchase_return_item' return_id=return_invoice.returninvoiceid %}" class="alert-link">Add one now</a>.
+                        <a href="{% url 'add_purchase_return_item' return_id=return_invoice.returninvoiceid %}" >Add one now</a>.
                     </div>
                     {% endif %}
 
                     <!-- Payments section -->
-                    <h6 class="text-muted mt-4 mb-3">Refund Payments</h6>
+                    <h6 >Refund Payments</h6>
                     {% if payments %}
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered">
-                            <thead class="table-light">
+                    <div >
+                        <table >
+                            <thead >
                                 <tr>
                                     <th>Date</th>
                                     <th>Amount</th>
@@ -119,8 +119,8 @@
                                     <td>{{ payment.payment_mode }}</td>
                                     <td>{{ payment.payment_ref_no }}</td>
                                     <td>
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <a href="#" class="btn btn-outline-danger">
+                                        <div role="group">
+                                            <a href="#" >
                                                 <i class="fas fa-trash"></i>
                                             </a>
                                         </div>
@@ -129,15 +129,15 @@
                                 {% endfor %}
                             </tbody>
                             <tfoot>
-                                <tr class="fw-bold">
-                                    <td colspan="1" class="text-end">Total Refunded:</td>
+                                <tr >
+                                    <td colspan="1" >Total Refunded:</td>
                                     <td colspan="4">₹{{ payments|sum_field:'payment_amount'|floatformat:2 }}</td>
                                 </tr>
                             </tfoot>
                         </table>
                     </div>
                     {% else %}
-                    <div class="alert alert-info">
+                    <div >
                         <i class="fas fa-info-circle me-2"></i>No refund payments have been recorded for this return yet.
                     </div>
                     {% endif %}
@@ -147,3 +147,10 @@
     </div>
 </div>
 {% endblock %}
+
+
+
+
+
+
+

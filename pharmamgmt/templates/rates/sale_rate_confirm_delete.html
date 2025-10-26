@@ -1,42 +1,47 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/sale_rate_confirm_delete.css' %}">
+{% endblock %}
 
 {% block content %}
 
-<div class="container-fluid">
+<div class="sale-rate-delete-container">
     <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Delete Sale Rate</h1>
-        <a href="{% url 'sale_rate_list' %}" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
-            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to Sale Rates
+    <div class="sale-rate-delete-header">
+        <h1 class="sale-rate-delete-title">Delete Sale Rate</h1>
+        <a href="{% url 'sale_rate_list' %}" class="sale-rate-delete-back-btn">
+            <i class="fas fa-arrow-left sale-rate-delete-back-icon"></i> Back to Sale Rates
         </a>
     </div>
 
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Confirm Deletion</h6>
+    <div class="sale-rate-delete-content">
+        <div class="sale-rate-delete-wrapper">
+            <div class="sale-rate-delete-card">
+                <div class="sale-rate-delete-card-header">
+                    <h6 class="sale-rate-delete-card-title">Confirm Deletion</h6>
                 </div>
-                <div class="card-body">
-                    <div class="alert alert-danger">
-                        <h5>Are you sure you want to delete this sale rate?</h5>
-                        <p>This action cannot be undone.</p>
+                <div class="sale-rate-delete-card-body">
+                    <div class="sale-rate-delete-warning">
+                        <h5 class="sale-rate-delete-warning-title">Are you sure you want to delete this sale rate?</h5>
+                        <p class="sale-rate-delete-warning-text">This action cannot be undone.</p>
                     </div>
                     
-                    <div class="mb-4">
-                        <p><strong>Product:</strong> {{ sale_rate.productid.product_name }}</p>
-                        <p><strong>Company:</strong> {{ sale_rate.productid.product_company }}</p>
-                        <p><strong>Batch Number:</strong> {{ sale_rate.product_batch_no }}</p>
-                        <hr>
-                        <p><strong>Rate A:</strong> {{ sale_rate.rate_A }}</p>
-                        <p><strong>Rate B:</strong> {{ sale_rate.rate_B }}</p>
-                        <p><strong>Rate C:</strong> {{ sale_rate.rate_C }}</p>
+                    <div class="sale-rate-delete-details">
+                        <p class="sale-rate-delete-detail-item"><strong>Product:</strong> {{ sale_rate.productid.product_name }}</p>
+                        <p class="sale-rate-delete-detail-item"><strong>Company:</strong> {{ sale_rate.productid.product_company }}</p>
+                        <p class="sale-rate-delete-detail-item"><strong>Batch Number:</strong> {{ sale_rate.product_batch_no }}</p>
+                        <hr class="sale-rate-delete-divider">
+                        <p class="sale-rate-delete-detail-item"><strong>Rate A:</strong> {{ sale_rate.rate_A }}</p>
+                        <p class="sale-rate-delete-detail-item"><strong>Rate B:</strong> {{ sale_rate.rate_B }}</p>
+                        <p class="sale-rate-delete-detail-item"><strong>Rate C:</strong> {{ sale_rate.rate_C }}</p>
                     </div>
                     
-                    <form method="post">
+                    <form method="post" class="sale-rate-delete-form">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">Confirm Delete</button>
-                        <a href="{% url 'sale_rate_list' %}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="sale-rate-delete-confirm-btn">Confirm Delete</button>
+                        <a href="{% url 'sale_rate_list' %}" class="sale-rate-delete-cancel-btn">Cancel</a>
                     </form>
                 </div>
             </div>
@@ -45,3 +50,10 @@
 </div>
 
 {% endblock %}
+
+
+
+
+
+
+

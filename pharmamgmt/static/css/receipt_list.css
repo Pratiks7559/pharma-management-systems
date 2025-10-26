@@ -1,0 +1,738 @@
+/* Receipt List Styles */
+.receipt-list-container {
+    padding: 20px;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.receipt-list-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.receipt-list-row {
+    display: flex;
+    flex-direction: column;
+}
+
+.receipt-list-col {
+    width: 100%;
+}
+
+.receipt-list-header {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px 8px 0 0;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.receipt-list-title {
+    margin: 0;
+    color: #495057;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.receipt-list-add-btn {
+    background: #17a2b8;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.receipt-list-add-btn:hover {
+    background: #138496;
+    color: #fff;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.receipt-list-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Export Buttons */
+.receipt-list-export-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.receipt-list-print-btn,
+.receipt-list-pdf-btn,
+.receipt-list-excel-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.receipt-list-print-btn {
+    background: #6c757d;
+    color: #fff;
+}
+
+.receipt-list-print-btn:hover {
+    background: #5a6268;
+}
+
+.receipt-list-pdf-btn {
+    background: #dc3545;
+    color: #fff;
+}
+
+.receipt-list-pdf-btn:hover {
+    background: #c82333;
+    color: #fff;
+    text-decoration: none;
+}
+
+.receipt-list-excel-btn {
+    background: #28a745;
+    color: #fff;
+}
+
+.receipt-list-excel-btn:hover {
+    background: #218838;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* Filter Form */
+.receipt-list-filter-form {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+.receipt-list-filter {
+    display: flex;
+    gap: 15px;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+.receipt-list-filter-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 150px;
+}
+
+.receipt-list-filter-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+}
+
+.receipt-list-search-input,
+.receipt-list-date-input {
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    transition: border-color 0.3s ease;
+}
+
+.receipt-list-search-input:focus,
+.receipt-list-date-input:focus {
+    outline: none;
+    border-color: #17a2b8;
+    box-shadow: 0 0 0 2px rgba(23,162,184,0.25);
+}
+
+.receipt-list-filter-btn-group {
+    display: flex;
+}
+
+.receipt-list-filter-btn {
+    background: #17a2b8;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.receipt-list-filter-btn:hover {
+    background: #138496;
+}
+
+/* Summary */
+.receipt-list-summary {
+    background: #e9ecef;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+.receipt-list-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.receipt-list-total {
+    margin: 0;
+    color: #495057;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.receipt-list-count {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+/* Print Area */
+.receipt-list-print-area {
+    display: none;
+}
+
+@media print {
+    .receipt-list-print-area {
+        display: block;
+        margin-bottom: 20px;
+    }
+    
+    .no-print {
+        display: none !important;
+    }
+}
+
+/* Table */
+.receipt-list-table-wrapper {
+    overflow-x: auto;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+}
+
+.receipt-list-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+    background: #fff;
+}
+
+.receipt-list-table-head {
+    background: #f8f9fa;
+}
+
+.receipt-list-table-header-row {
+    border-bottom: 2px solid #dee2e6;
+}
+
+.receipt-list-table-header {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.receipt-list-table-body {
+    background: #fff;
+}
+
+.receipt-list-table-row {
+    border-bottom: 1px solid #dee2e6;
+    transition: background-color 0.2s ease;
+}
+
+.receipt-list-table-row:hover {
+    background: #f8f9fa;
+}
+
+.receipt-list-table-cell {
+    padding: 12px;
+    color: #495057;
+    vertical-align: middle;
+}
+
+.receipt-list-empty-row {
+    background: #f8f9fa;
+}
+
+.receipt-list-empty-cell {
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    padding: 30px;
+}
+
+/* Actions */
+.receipt-list-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.receipt-list-edit-btn,
+.receipt-list-delete-btn {
+    padding: 6px 10px;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+}
+
+.receipt-list-edit-btn {
+    background: #ffc107;
+    color: #212529;
+}
+
+.receipt-list-edit-btn:hover {
+    background: #e0a800;
+    color: #212529;
+    text-decoration: none;
+}
+
+.receipt-list-delete-btn {
+    background: #dc3545;
+    color: #fff;
+}
+
+.receipt-list-delete-btn:hover {
+    background: #c82333;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* Pagination */
+.receipt-list-pagination {
+    margin-top: 20px;
+}
+
+.receipt-list-pagination-list {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.receipt-list-pagination-item {
+    display: flex;
+}
+
+.receipt-list-pagination-link {
+    padding: 8px 12px;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    color: #17a2b8;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.receipt-list-pagination-link:hover {
+    background: #e9ecef;
+    color: #138496;
+    text-decoration: none;
+}
+
+.receipt-list-pagination-current {
+    padding: 8px 12px;
+    background: #17a2b8;
+    color: #fff;
+    border: 1px solid #17a2b8;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .receipt-list-container {
+        padding: 15px;
+    }
+    
+    .receipt-list-wrapper {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 992px) {
+    .receipt-list-header {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .receipt-list-filter {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    
+    .receipt-list-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .receipt-list-table {
+        min-width: 800px;
+    }
+}
+
+@media (max-width: 768px) {
+    .receipt-list-container {
+        padding: 10px;
+    }
+    
+    .receipt-list-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+        padding: 15px;
+    }
+    
+    .receipt-list-title {
+        font-size: 1.3rem;
+        text-align: center;
+    }
+    
+    .receipt-list-add-btn {
+        justify-content: center;
+        padding: 8px 16px;
+    }
+    
+    .receipt-list-content {
+        padding: 15px;
+    }
+    
+    .receipt-list-export-buttons {
+        justify-content: center;
+        margin-bottom: 15px;
+    }
+    
+    .receipt-list-print-btn,
+    .receipt-list-pdf-btn,
+    .receipt-list-excel-btn {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+    }
+    
+    .receipt-list-filter-form {
+        padding: 15px;
+    }
+    
+    .receipt-list-filter {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .receipt-list-filter-group {
+        min-width: auto;
+    }
+    
+    .receipt-list-filter-label {
+        font-size: 0.85rem;
+    }
+    
+    .receipt-list-search-input,
+    .receipt-list-date-input {
+        padding: 7px 10px;
+        font-size: 0.85rem;
+    }
+    
+    .receipt-list-filter-btn {
+        padding: 7px 14px;
+        font-size: 0.85rem;
+    }
+    
+    .receipt-list-summary {
+        padding: 12px;
+    }
+    
+    .receipt-list-summary-row {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    .receipt-list-total {
+        font-size: 1.1rem;
+    }
+    
+    .receipt-list-count {
+        font-size: 0.85rem;
+    }
+    
+    .receipt-list-table {
+        font-size: 0.8rem;
+        min-width: 700px;
+    }
+    
+    .receipt-list-table-header,
+    .receipt-list-table-cell {
+        padding: 8px;
+    }
+    
+    .receipt-list-actions {
+        flex-direction: column;
+        gap: 4px;
+        align-items: stretch;
+    }
+    
+    .receipt-list-edit-btn,
+    .receipt-list-delete-btn {
+        padding: 5px 8px;
+        font-size: 0.75rem;
+        justify-content: center;
+    }
+    
+    .receipt-list-pagination-list {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 3px;
+    }
+    
+    .receipt-list-pagination-link,
+    .receipt-list-pagination-current {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .receipt-list-container {
+        padding: 8px;
+    }
+    
+    .receipt-list-header {
+        padding: 12px;
+    }
+    
+    .receipt-list-title {
+        font-size: 1.2rem;
+    }
+    
+    .receipt-list-add-btn {
+        padding: 7px 14px;
+        font-size: 0.85rem;
+    }
+    
+    .receipt-list-content {
+        padding: 12px;
+    }
+    
+    .receipt-list-export-buttons {
+        margin-bottom: 12px;
+    }
+    
+    .receipt-list-print-btn,
+    .receipt-list-pdf-btn,
+    .receipt-list-excel-btn {
+        padding: 5px 10px;
+        font-size: 0.8rem;
+    }
+    
+    .receipt-list-filter-form {
+        padding: 12px;
+    }
+    
+    .receipt-list-search-input,
+    .receipt-list-date-input {
+        padding: 6px 8px;
+        font-size: 0.8rem;
+    }
+    
+    .receipt-list-filter-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .receipt-list-summary {
+        padding: 10px;
+    }
+    
+    .receipt-list-total {
+        font-size: 1rem;
+    }
+    
+    .receipt-list-table {
+        font-size: 0.75rem;
+        min-width: 600px;
+    }
+    
+    .receipt-list-table-header,
+    .receipt-list-table-cell {
+        padding: 6px;
+    }
+    
+    .receipt-list-edit-btn,
+    .receipt-list-delete-btn {
+        padding: 4px 6px;
+        font-size: 0.7rem;
+    }
+    
+    .receipt-list-empty-cell {
+        padding: 20px;
+    }
+    
+    .receipt-list-pagination-link,
+    .receipt-list-pagination-current {
+        padding: 5px 8px;
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .receipt-list-container {
+        padding: 5px;
+    }
+    
+    .receipt-list-header {
+        padding: 10px;
+    }
+    
+    .receipt-list-title {
+        font-size: 1.1rem;
+    }
+    
+    .receipt-list-add-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .receipt-list-content {
+        padding: 10px;
+    }
+    
+    .receipt-list-print-btn,
+    .receipt-list-pdf-btn,
+    .receipt-list-excel-btn {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+    }
+    
+    .receipt-list-filter-form {
+        padding: 10px;
+    }
+    
+    .receipt-list-search-input,
+    .receipt-list-date-input {
+        padding: 5px 7px;
+        font-size: 0.75rem;
+    }
+    
+    .receipt-list-filter-btn {
+        padding: 5px 10px;
+        font-size: 0.75rem;
+    }
+    
+    .receipt-list-table {
+        font-size: 0.7rem;
+        min-width: 500px;
+    }
+    
+    .receipt-list-table-header,
+    .receipt-list-table-cell {
+        padding: 4px;
+    }
+    
+    .receipt-list-edit-btn,
+    .receipt-list-delete-btn {
+        padding: 3px 5px;
+        font-size: 0.65rem;
+    }
+    
+    .receipt-list-pagination-link,
+    .receipt-list-pagination-current {
+        padding: 4px 6px;
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .receipt-list-container {
+        padding: 3px;
+    }
+    
+    .receipt-list-title {
+        font-size: 1rem;
+    }
+    
+    .receipt-list-table {
+        font-size: 0.65rem;
+        min-width: 450px;
+    }
+    
+    .receipt-list-search-input,
+    .receipt-list-date-input {
+        font-size: 0.7rem;
+    }
+    
+    .receipt-list-filter-btn {
+        font-size: 0.7rem;
+    }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+    .receipt-list-search-input,
+    .receipt-list-date-input {
+        min-height: 44px;
+        padding: 12px 15px;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    .receipt-list-filter-btn,
+    .receipt-list-add-btn {
+        min-height: 44px;
+        padding: 12px 20px;
+    }
+    
+    .receipt-list-edit-btn,
+    .receipt-list-delete-btn {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 10px 12px;
+    }
+    
+    .receipt-list-pagination-link,
+    .receipt-list-pagination-current {
+        min-height: 44px;
+        min-width: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .receipt-list-table {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}

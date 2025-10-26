@@ -1,101 +1,94 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/payment_form.css' %}">
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        {% if is_edit %}
-                            Edit Payment for Invoice #{{ invoice.invoice_no }}
-                        {% else %}
-                            Add Payment for Invoice #{{ invoice.invoice_no }}
-                        {% endif %}
-                    </h5>
+<div class="purchase-payment-form-container">
+    <div class="purchase-payment-form-card">
+        <div class="purchase-payment-form-header">
+            <h5 class="purchase-payment-form-title">
+                {% if is_edit %}
+                    Edit Payment for Invoice #{{ invoice.invoice_no }}
+                {% else %}
+                    Add Payment for Invoice #{{ invoice.invoice_no }}
+                {% endif %}
+            </h5>
+        </div>
+        <div class="purchase-payment-form-body">
+            <div class="purchase-payment-invoice-info">
+                <div class="purchase-payment-invoice-details">
+                    <h6 class="purchase-payment-section-title">Invoice Details</h6>
+                    <ul class="purchase-payment-details-list">
+                        <li class="purchase-payment-detail-item"><strong>Invoice No:</strong> {{ invoice.invoice_no }}</li>
+                        <li class="purchase-payment-detail-item"><strong>Date:</strong> {{ invoice.invoice_date }}</li>
+                        <li class="purchase-payment-detail-item"><strong>Supplier:</strong> {{ invoice.supplierid.supplier_name }}</li>
+                    </ul>
                 </div>
-                <div class="card-body">
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Invoice Details</h6>
-                            <ul class="list-unstyled">
-                                <li><strong>Invoice No:</strong> {{ invoice.invoice_no }}</li>
-                                <li><strong>Date:</strong> {{ invoice.invoice_date }}</li>
-                                <li><strong>Supplier:</strong> {{ invoice.supplierid.supplier_name }}</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Payment Details</h6>
-                            <ul class="list-unstyled">
-                                <li><strong>Total Amount:</strong> {{ invoice.invoice_total|currency }}</li>
-                                <li><strong>Amount Paid:</strong> {{ invoice.invoice_paid|currency }}</li>
-                                <li><strong>Balance Due:</strong> <span class="text-danger">{{ balance|currency }}</span></li>
-                            </ul>
-                        </div>
-                    </div>
+                <div class="purchase-payment-amount-details">
+                    <h6 class="purchase-payment-section-title">Payment Details</h6>
+                    <ul class="purchase-payment-details-list">
+                        <li class="purchase-payment-detail-item"><strong>Total Amount:</strong> {{ invoice.invoice_total|currency }}</li>
+                        <li class="purchase-payment-detail-item"><strong>Amount Paid:</strong> {{ invoice.invoice_paid|currency }}</li>
+                        <li class="purchase-payment-detail-item"><strong>Balance Due:</strong> <span class="purchase-payment-balance-due">{{ balance|currency }}</span></li>
+                    </ul>
+                </div>
+            </div>
                     
                     <form method="post">
                         {% csrf_token %}
                         
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.payment_date.id_for_label }}">Payment Date*</label>
-                                    {{ form.payment_date }}
-                                    {% if form.payment_date.errors %}
-                                        <div class="text-danger">{{ form.payment_date.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.payment_amount.id_for_label }}">Payment Amount*</label>
-                                    {{ form.payment_amount }}
-                                    {% if form.payment_amount.errors %}
-                                        <div class="text-danger">{{ form.payment_amount.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.payment_mode.id_for_label }}">Payment Mode*</label>
-                                    {{ form.payment_mode }}
-                                    {% if form.payment_mode.errors %}
-                                        <div class="text-danger">{{ form.payment_mode.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.payment_ref_no.id_for_label }}">Reference No.</label>
-                                    {{ form.payment_ref_no }}
-                                    {% if form.payment_ref_no.errors %}
-                                        <div class="text-danger">{{ form.payment_ref_no.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group mt-4">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>
-                                {% if is_edit %}
-                                    Update Payment
-                                {% else %}
-                                    Add Payment
-                                {% endif %}
-                            </button>
-                            <a href="{% url 'invoice_detail' pk=invoice.invoiceid %}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left me-2"></i>Back to Invoice
-                            </a>
-                        </div>
-                    </form>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.payment_date.id_for_label }}">Payment Date*</label>
+                    {{ form.payment_date }}
+                    {% if form.payment_date.errors %}
+                        <div class="invalid-feedback">{{ form.payment_date.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.payment_amount.id_for_label }}">Payment Amount*</label>
+                    {{ form.payment_amount }}
+                    {% if form.payment_amount.errors %}
+                        <div class="invalid-feedback">{{ form.payment_amount.errors }}</div>
+                    {% endif %}
                 </div>
             </div>
+                        
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.payment_mode.id_for_label }}">Payment Mode*</label>
+                    {{ form.payment_mode }}
+                    {% if form.payment_mode.errors %}
+                        <div class="invalid-feedback">{{ form.payment_mode.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.payment_ref_no.id_for_label }}">Reference No.</label>
+                    {{ form.payment_ref_no }}
+                    {% if form.payment_ref_no.errors %}
+                        <div class="invalid-feedback">{{ form.payment_ref_no.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+                        
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save me-2"></i>
+                    {% if is_edit %}
+                        Update Payment
+                    {% else %}
+                        Add Payment
+                    {% endif %}
+                </button>
+                <a href="{% url 'invoice_detail' pk=invoice.invoiceid %}" class="btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Invoice
+                </a>
+            </div>
+                    </form>
         </div>
     </div>
 </div>
@@ -136,3 +129,11 @@
     });
 </script>
 {% endblock %}
+
+
+
+
+
+
+
+

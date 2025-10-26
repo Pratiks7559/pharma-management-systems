@@ -4,119 +4,147 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block extra_css %}
-<style>
-    .expiry-warning {
-        color: #dc3545;
-        font-weight: bold;
-    }
-    .expiry-alert {
-        color: #ffc107;
-        font-weight: bold;
-    }
-    .expiry-safe {
-        color: #28a745;
-        font-weight: bold;
-    }
-    @media print {
-        .no-print {
-            display: none;
-        }
-        .table-responsive {
-            overflow: visible !important;
-        }
-        .card {
-            border: none !important;
-        }
-        .card-header {
-            background-color: white !important;
-            border-bottom: 1px solid #ddd !important;
-        }
-    }
-</style>
+<link rel="stylesheet" href="{% load static %}{% static 'css/batch_inventory_report.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
-        <div>
-            <a href="{% url 'inventory_report' %}" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm me-2 no-print">
-                <i class="fas fa-list fa-sm text-white-50"></i> Regular Inventory
+<div class="batch-report-container">
+    <div class="batch-report-header">
+        <h1 class="batch-report-title">{{ title }}</h1>
+        <div class="batch-report-actions">
+            <a href="{% url 'dateexpiry_inventory_report' %}" class="batch-report-btn batch-report-btn-primary">
+                <i class="fas fa-calendar-alt fa-sm"></i> Date-wise Inventory
             </a>
-            <a href="{% url 'dateexpiry_inventory_report' %}" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm me-2 no-print">
-                <i class="fas fa-calendar fa-sm text-white-50"></i> Expiry Date Report
-            </a>
-            <a href="javascript:window.print()" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm no-print">
-                <i class="fas fa-download fa-sm text-white-50"></i> Print/Export
+            <a href="javascript:window.print()" class="batch-report-btn batch-report-btn-secondary">
+                <i class="fas fa-download fa-sm"></i> Print/Export
             </a>
         </div>
     </div>
 
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-            <h6 class="m-0 font-weight-bold text-primary">Batch-wise Inventory Details</h6>
-            <form action="{% url 'batch_inventory_report' %}" method="GET" class="d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search no-print">
-                <div class="input-group">
-                    <input type="text" name="search" value="{{ search_query }}" class="form-control bg-light border-0 small" placeholder="Search by product name, company, category..." aria-label="Search" aria-describedby="basic-addon2">
-                    <div class="input-group-append">
-                        <button class="btn btn-primary" type="submit">
-                            <i class="fas fa-search fa-sm"></i>
-                        </button>
+    <div class="batch-report-card">
+        <div class="batch-report-card-header">
+            <h6 class="batch-report-card-title">Batch-wise Inventory Report</h6>
+            <small class="batch-report-card-subtitle">Shows all products including those with zero stock</small>
+            <div class="no-print">
+                <form action="{% url 'batch_inventory_report' %}" method="GET" class="batch-search-form">
+                    <div class="batch-search-group">
+                        <input type="text" name="search" value="{{ search_query }}" placeholder="Search products..." aria-label="Search" class="batch-search-input">
                     </div>
-                </div>
-            </form>
+                    <div class="batch-search-actions">
+                        <button type="submit" class="batch-search-btn batch-search-btn-primary">
+                            <i class="fas fa-search fa-sm"></i> Search
+                        </button>
+                        <a href="{% url 'batch_inventory_report' %}" class="batch-reset-link">Reset</a>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="card-body">
-            {% if batch_inventory_data %}
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
-                    <thead class="table-light">
+        <div class="batch-report-card-body">
+            {% if inventory_data %}
+            <div class="batch-info-alert" role="alert">
+                <span><i class="fas fa-info-circle me-2"></i>
+                This report shows ALL products from your product list, including those with zero stock (highlighted in yellow).</span>
+                <button type="button" class="batch-alert-close" data-bs-dismiss="alert" aria-label="Close">&times;</button>
+            </div>
+            <div class="batch-table-container">
+                <table class="batch-inventory-table">
+                    <thead class="batch-table-header">
                         <tr>
-                            <th>Product ID</th>
                             <th>Product Name</th>
                             <th>Company</th>
                             <th>Packing</th>
                             <th>Batch No</th>
-                            <th>Expiry Date</th>
-                            <th>Days to Expiry</th>
-                            <th>Quantity</th>
-                            <th>Purchase Rate</th>
+                            <th>Expiry</th>
+                            <th>Stock Qty</th>
                             <th>MRP</th>
                             <th>Stock Value</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for item in batch_inventory_data %}
-                        <tr>
-                            <td>{{ item.product.productid }}</td>
-                            <td>{{ item.product.product_name }}</td>
-                            <td>{{ item.product.product_company }}</td>
-                            <td>{{ item.product.product_packing }}</td>
-                            <td>{{ item.batch_no }}</td>
-                            <td>{{ item.expiry|date:"d-m-Y" }}</td>
-                            <td class="{% if item.days_to_expiry <= 30 %}expiry-warning{% elif item.days_to_expiry <= 90 %}expiry-alert{% else %}expiry-safe{% endif %}">
-                                {{ item.days_to_expiry }} days
+                        {% for item in inventory_data %}
+                        <tr {% if item.stock <= 0 %}class="batch-zero-stock-row"{% endif %}>
+                            <td>
+                                <a href="{% url 'product_detail' item.product_id %}" class="batch-product-link">
+                                    {{ item.product_name }}
+                                </a>
                             </td>
-                            <td>{{ item.quantity }}</td>
-                            <td>₹{{ item.purchase_rate|floatformat:2 }}</td>
+                            <td>{{ item.product_company }}</td>
+                            <td>{{ item.product_packing }}</td>
+                            <td>{{ item.batch_no }}</td>
+                            <td>{{ item.expiry|expiry_mmyyyy }}</td>
+                            <td>
+                                {% if item.stock <= 0 %}
+                                    <span class="batch-zero-stock-badge">{{ item.stock }}</span>
+                                {% else %}
+                                    {{ item.stock }}
+                                {% endif %}
+                            </td>
                             <td>₹{{ item.mrp|floatformat:2 }}</td>
                             <td>₹{{ item.value|floatformat:2 }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
-                    <tfoot>
-                        <tr class="fw-bold bg-light">
-                            <td colspan="10" class="text-end">Total Inventory Value:</td>
-                            <td>₹{{ total_value|floatformat:2 }}</td>
+                    <tfoot class="batch-table-footer">
+                        <tr>
+                            <td colspan="7" class="batch-total-label">Page Total Value:</td>
+                            <td>₹{{ page_total_value|floatformat:2 }}</td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
+            
+            <!-- Pagination -->
+            {% if batches_page.has_other_pages %}
+            <nav aria-label="Batch inventory pagination" class="no-print batch-pagination-container">
+                <div class="batch-pagination-info">
+                    <div>
+                        <small class="batch-pagination-text">
+                            Showing {{ batches_page.start_index }}-{{ batches_page.end_index }} of {{ batches_page.paginator.count }} batches
+                        </small>
+                    </div>
+                    <ul class="batch-pagination-list">
+                        {% if batches_page.has_previous %}
+                            <li class="batch-pagination-item">
+                                <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}" class="batch-pagination-link">&laquo;&laquo;</a>
+                            </li>
+                            <li class="batch-pagination-item">
+                                <a href="?page={{ batches_page.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="batch-pagination-link">&laquo;</a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in batches_page.paginator.page_range %}
+                            {% if batches_page.number == num %}
+                                <li class="batch-pagination-item">
+                                    <span class="batch-pagination-active">{{ num }}</span>
+                                </li>
+                            {% elif num > batches_page.number|add:'-3' and num < batches_page.number|add:'3' %}
+                                <li class="batch-pagination-item">
+                                    <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}" class="batch-pagination-link">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if batches_page.has_next %}
+                            <li class="batch-pagination-item">
+                                <a href="?page={{ batches_page.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="batch-pagination-link">&raquo;</a>
+                            </li>
+                            <li class="batch-pagination-item">
+                                <a href="?page={{ batches_page.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}" class="batch-pagination-link">&raquo;&raquo;</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </nav>
+            {% endif %}
+            
             {% else %}
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>No batch-wise inventory data found.
+            <div class="batch-empty-state">
+                <i class="fas fa-info-circle me-2"></i>
                 {% if search_query %}
-                <a href="{% url 'batch_inventory_report' %}" class="alert-link">Clear search</a> to see all inventory.
+                No inventory data found with the current search.
+                <a href="{% url 'batch_inventory_report' %}" class="batch-empty-link">Clear search</a> to see all inventory.
+                {% else %}
+                No inventory data found. Add some purchases to see inventory.
                 {% endif %}
             </div>
             {% endif %}
@@ -125,17 +153,9 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}
-<script>
-    $(document).ready(function() {
-        $('#dataTable').DataTable({
-            "pageLength": 25,
-            "dom": '<"top"f>rt<"bottom"ip><"clear">',
-            "ordering": true,
-            "info": true,
-            "paging": true,
-            "searching": false, // Disabled because we have our own search form
-        });
-    });
-</script>
-{% endblock %}
+
+
+
+
+
+

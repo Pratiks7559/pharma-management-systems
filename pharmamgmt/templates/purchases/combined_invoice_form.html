@@ -1,0 +1,1658 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/combined_invoice_form.css' %}">
+<link rel="stylesheet" href="{% static 'css/supplier_detail.css' %}">
+<link rel="stylesheet" href="{% static 'css/ci_unique_styles.css' %}">
+<link rel="stylesheet" href="{% static 'css/stock_management.css' %}">
+<link rel="stylesheet" href="{% static 'css/compact_form_styles.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/expiry-date-formatter.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="ci-main-container">
+    <div class="ci-wrapper-card">
+        <div class="ci-page-header">
+            <h5 class="ci-main-title">Add Purchase Invoice with Products</h5>
+        </div>
+        <div class="ci-content-body">
+                    <form method="post" id="combinedInvoiceForm" class="ci-main-form">
+                        {% csrf_token %}
+                        
+                        <!-- Invoice Details Section -->
+                        <div class="ci-invoice-details-section">
+                            <h6 class="ci-section-title">Invoice Details</h6>
+                            <div class="ci-form-row">
+                                <div class="ci-form-column">
+                                    <div class="ci-field-group">
+                                        <label for="{{ invoice_form.invoice_no.id_for_label }}" class="ci-field-label">Invoice No*</label>
+                                        {{ invoice_form.invoice_no }}
+                                    </div>
+                                </div>
+                                <div class="ci-form-column">
+                                    <div class="ci-field-group">
+                                        <label for="{{ invoice_form.invoice_date.id_for_label }}" class="ci-field-label">Invoice Date*</label>
+                                        {{ invoice_form.invoice_date }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ci-form-row">
+                                <div class="ci-form-column">
+                                    <div class="ci-supplier-field-group">
+                                        <label for="{{ invoice_form.supplierid.id_for_label }}" class="ci-supplier-label">Supplier*</label>
+                                        <div class="ci-supplier-select-wrapper">
+                                            {{ invoice_form.supplierid }}
+                                            <button type="button" class="ci-add-supplier-btn" 
+                                            onclick="openSupplierDialog()">
+                                                <i class="fas fa-plus"></i> Add Supplier
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ci-form-column">
+                                    <div class="ci-field-group">
+                                        <label for="{{ invoice_form.scroll_no.id_for_label }}" class="ci-field-label">Scroll No</label>
+                                        {{ invoice_form.scroll_no }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="ci-charges-section">
+                            <div class="ci-form-row">
+                                <div class="ci-form-column">
+                                    <div class="ci-field-group">
+                                        <label for="{{ invoice_form.transport_charges.id_for_label }}" class="ci-field-label">Transport Charges</label>
+                                        {{ invoice_form.transport_charges }}
+                                    </div>
+                                </div>
+                                <div class="ci-form-column">
+                                    <div class="ci-field-group">
+                                        <label for="{{ invoice_form.invoice_total.id_for_label }}" class="ci-field-label">Invoice Total*</label>
+                                        {{ invoice_form.invoice_total }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Products Section -->
+                        <div class="ci-products-section">
+                            <div class="ci-products-header">
+                                <div class="ci-products-title-area">
+                                    <h6 class="ci-section-title">Products</h6>
+                                    <small class="ci-keyboard-shortcuts">⚡ F2 (Quick Search), Ctrl+Enter (Add Product), Ctrl+D (Duplicate), Ctrl+S (Save), Alt+W (Batch)</small>
+                                </div>
+                                <div class="ci-header-buttons">
+                                    <button type="button" class="ci-add-product-btn" onclick="addProductRow()">
+                                        <i class="fas fa-plus"></i> Add Product
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="ci-table-container">
+                                <table class="ci-products-table" id="productsTable">
+                                    <thead class="ci-table-header">
+                                        <tr class="ci-header-row">
+                                            <th class="ci-th-product">Product</th>
+                                            <th class="ci-th-batch">Batch No</th>
+                                            <th class="ci-th-expiry">Expiry</th>
+                                            <th class="ci-th-mrp">MRP</th>
+                                            <th class="ci-th-purchase-rate">Purchase Rate</th>
+                                            <th class="ci-th-qty">Qty</th>
+                                            <th class="ci-th-discount">Discount</th>
+                                            <th class="ci-th-gst">GST %</th>
+                                            <th class="ci-th-rate-a">Rate A</th>
+                                            <th class="ci-th-rate-b">Rate B</th>
+                                            <th class="ci-th-rate-c">Rate C</th>
+                                            <th class="ci-th-total">Total</th>
+                                            <th class="ci-th-action">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="productRows" class="ci-table-body">
+                                        <!-- Product rows will be added here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="ci-total-section">
+                                <div class="ci-grand-total-display">
+                                    <strong class="ci-total-text">Invoice Total: ₹<span id="invoiceTotal" class="ci-total-amount">0.00</span></strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hidden field for products data -->
+                        <input type="hidden" name="products_data" id="productsData">
+
+                        <!-- Submit Button -->
+                        <div class="ci-form-actions">
+                            <button type="submit" class="ci-save-btn" id="saveInvoiceBtn">
+                                <i class="fas fa-save"></i> Save Purchase Invoice
+                            </button>
+                            <a href="{% url 'invoice_list' %}" class="ci-back-btn">
+                                <i class="fas fa-arrow-left"></i> Back to Invoices
+                            </a>
+                        </div>
+                        
+                        <!-- Debug Information -->
+                        {% if messages %}
+                        <div class="ci-messages-section">
+                            {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Supplier Dialog Modal -->
+<div id="supplierDialog" class="supplier-dialog-overlay" style="display: none;">
+    <div class="supplier-dialog-content">
+        <div class="supplier-dialog-header">
+            <h3><i class="fas fa-plus-circle"></i> Add New Supplier</h3>
+            <button type="button" class="supplier-dialog-close" onclick="closeSupplierDialog()">&times;</button>
+        </div>
+        <div class="supplier-dialog-body">
+            <form id="supplierDialogForm" class="supplier-dialog-form">
+                {% csrf_token %}
+                <div class="supplier-form-row">
+                    <div class="supplier-form-col">
+                        <label class="supplier-form-label">Supplier Name*</label>
+                        <input type="text" name="supplier_name" class="supplier-form-input" required>
+                    </div>
+                    <div class="supplier-form-col">
+                        <label class="supplier-form-label">Supplier Type*</label>
+                        <input type="text" name="supplier_type" class="supplier-form-input" placeholder="e.g. Distributor, Manufacturer, Wholesaler" required>
+                    </div>
+                    <div class="supplier-form-col">
+                        <label class="supplier-form-label">Mobile*</label>
+                        <input type="text" name="supplier_mobile" class="supplier-form-input" required>
+                    </div>
+                </div>
+                
+                <div class="supplier-form-row">
+                    <div class="supplier-form-col">
+                        <label class="supplier-form-label">WhatsApp*</label>
+                        <input type="text" name="supplier_whatsapp" class="supplier-form-input" required>
+                    </div>
+                    <div class="supplier-form-col">
+                        <label class="supplier-form-label">Email*</label>
+                        <input type="email" name="supplier_emailid" class="supplier-form-input" required>
+                    </div>
+                    <div class="supplier-form-col">
+                        <label class="supplier-form-label">Contact Person*</label>
+                        <input type="text" name="supplier_spoc" class="supplier-form-input" required>
+                    </div>
+                </div>
+                
+                <div class="supplier-form-row">
+                    <div class="supplier-form-col">
+                        <label class="supplier-form-label">Address*</label>
+                        <textarea name="supplier_address" class="supplier-form-input" rows="2" required></textarea>
+                    </div>
+                    <div class="supplier-form-col">
+                        <label class="supplier-form-label">Drug License*</label>
+                        <input type="text" name="supplier_dlno" class="supplier-form-input" required>
+                    </div>
+                    <div class="supplier-form-col">
+                        <label class="supplier-form-label">GST Number*</label>
+                        <input type="text" name="supplier_gstno" class="supplier-form-input" required>
+                    </div>
+                </div>
+                
+                <div class="supplier-form-row">
+                    <div class="supplier-form-col">
+                        <label class="supplier-form-label">Bank Name*</label>
+                        <input type="text" name="supplier_bank" class="supplier-form-input" required>
+                    </div>
+                    <div class="supplier-form-col">
+                        <label class="supplier-form-label">Account Number*</label>
+                        <input type="text" name="supplier_bankaccountno" class="supplier-form-input" required>
+                    </div>
+                    <div class="supplier-form-col">
+                        <label class="supplier-form-label">IFSC Code*</label>
+                        <input type="text" name="supplier_bankifsc" class="supplier-form-input" required>
+                    </div>
+                </div>
+                
+                <div class="supplier-form-row">
+                    <div class="supplier-form-col">
+                        <label class="supplier-form-label">UPI ID</label>
+                        <input type="text" name="supplier_upi" class="supplier-form-input">
+                    </div>
+                    <div class="supplier-form-col">
+                        <!-- Empty column for spacing -->
+                    </div>
+                    <div class="supplier-form-col">
+                        <!-- Empty column for spacing -->
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="supplier-dialog-footer">
+            <button type="button" class="supplier-dialog-btn supplier-dialog-btn-secondary" onclick="closeSupplierDialog()">Cancel</button>
+            <button type="button" class="supplier-dialog-btn supplier-dialog-btn-primary" onclick="saveSupplier()">Save Supplier</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.supplier-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.supplier-dialog-content {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.supplier-dialog-header {
+    padding: 20px;
+    border-bottom: 1px solid #e5e5e5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+}
+
+.supplier-dialog-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 18px;
+}
+
+.supplier-dialog-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.supplier-dialog-close:hover {
+    color: #000;
+}
+
+.supplier-dialog-body {
+    padding: 20px;
+}
+
+.supplier-form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.supplier-form-col {
+    flex: 1;
+}
+
+.supplier-form-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333;
+    font-size: 14px;
+}
+
+.supplier-form-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.supplier-form-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.supplier-dialog-footer {
+    padding: 20px;
+    border-top: 1px solid #e5e5e5;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    background: #f8f9fa;
+    border-radius: 0 0 8px 8px;
+}
+
+.supplier-dialog-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.supplier-dialog-btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.supplier-dialog-btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.supplier-dialog-btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.supplier-dialog-btn-secondary:hover {
+    background-color: #545b62;
+}
+
+@media (max-width: 768px) {
+    .supplier-form-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .supplier-dialog-content {
+        width: 95%;
+        margin: 10px;
+    }
+}
+</style>
+
+<script>
+let productRowIndex = 0;
+
+function addProductRow() {
+    const tbody = document.getElementById('productRows');
+    const row = document.createElement('tr');
+    row.id = `productRow_${productRowIndex}`;
+    
+    row.innerHTML = `
+        <td><select class="product-select" onchange="loadProductInfo(${productRowIndex}, this.value)" required>
+            <option value="">Select Product</option>
+            {% for product in products %}
+            <option value="{{ product.productid }}">{{ product.product_name }} - {{ product.product_company }}</option>
+            {% endfor %}
+        </select></td>
+        <td><input type="text" class="batch-no" placeholder="Batch No" required></td>
+        <td><input type="text" class="expiry" placeholder="MM-YYYY" maxlength="7" title="Enter expiry in MM-YYYY format (e.g., 12-2025)" required></td>
+        <td><input type="number" class="mrp" step="0.01" placeholder="MRP" min="0.01" required></td>
+        <td><input type="number" class="purchase-rate" step="0.01" placeholder="Rate" min="0.01" onchange="calculateRowTotal(${productRowIndex})" required></td>
+        <td><input type="number" class="qty" placeholder="Qty" min="0.01" step="0.01" onchange="calculateRowTotal(${productRowIndex})" required></td>
+        <td><input type="number" class="discount" step="0.01" placeholder="Discount" min="0" onchange="calculateRowTotal(${productRowIndex})"></td>
+        <td><input type="number" class="gst-rate" step="0.01" placeholder="GST %" min="0" max="100" onchange="calculateRowTotal(${productRowIndex})"></td>
+        <td><input type="number" class="rate-a" step="0.01" placeholder="Rate A" min="0"></td>
+        <td><input type="number" class="rate-b" step="0.01" placeholder="Rate B" min="0"></td>
+        <td><input type="number" class="rate-c" step="0.01" placeholder="Rate C" min="0"></td>
+        <td><span class="row-total">0.00</span></td>
+        <td><button type="button" class="remove-btn" onclick="removeProductRow(${productRowIndex})" title="Remove Row"><i class="fas fa-trash"></i></button></td>
+    `;
+    
+    tbody.appendChild(row);
+    productRowIndex++;
+    
+    // Focus on the product select of the new row
+    setTimeout(() => {
+        const newRow = document.getElementById(`productRow_${productRowIndex - 1}`);
+        if (newRow) {
+            newRow.querySelector('.product-select')?.focus();
+        }
+    }, 100);
+}
+
+function removeProductRow(rowIndex) {
+    const row = document.getElementById(`productRow_${rowIndex}`);
+    if (row) {
+        row.remove();
+        calculateInvoiceTotal();
+    }
+}
+
+function calculateRowTotal(rowIndex) {
+    const row = document.getElementById(`productRow_${rowIndex}`);
+    if (!row) return;
+    
+    const rate = parseFloat(row.querySelector('.purchase-rate').value) || 0;
+    const qty = parseFloat(row.querySelector('.qty').value) || 0;
+    const discount = parseFloat(row.querySelector('.discount').value) || 0;
+    const gstRate = parseFloat(row.querySelector('.gst-rate').value) || 0;
+    
+    const subtotal = rate * qty;
+    const afterDiscount = subtotal - discount;
+    const gstAmount = (afterDiscount * gstRate) / 100;
+    const total = afterDiscount + gstAmount;
+    
+    row.querySelector('.row-total').textContent = total.toFixed(2);
+    calculateInvoiceTotal();
+}
+
+function calculateInvoiceTotal() {
+    let total = 0;
+    document.querySelectorAll('.row-total').forEach(span => {
+        total += parseFloat(span.textContent) || 0;
+    });
+    document.getElementById('invoiceTotal').textContent = total.toFixed(2);
+    
+    // Auto-fill the invoice total field
+    const invoiceTotalInput = document.querySelector('input[name*="invoice_total"]');
+    if (invoiceTotalInput) {
+        invoiceTotalInput.value = total.toFixed(2);
+    }
+}
+
+// Expiry date formatting for MM-YYYY format
+function formatExpiryDate(input) {
+    let value = input.value.replace(/[^0-9]/g, '');
+    
+    if (value.length >= 2) {
+        let month = value.substring(0, 2);
+        let year = value.substring(2);
+        
+        // Validate month
+        if (parseInt(month) > 12) {
+            month = '12';
+        } else if (parseInt(month) < 1) {
+            month = '01';
+        }
+        
+        if (value.length === 4) {
+            // MMYY format - convert to MM-YYYY
+            year = '20' + year;
+            input.value = `${month}-${year}`;
+        } else if (value.length >= 6) {
+            // MMYYYY format - convert to MM-YYYY
+            year = year.substring(0, 4);
+            input.value = `${month}-${year}`;
+        } else if (value.length === 2) {
+            // Just month entered
+            input.value = month;
+        }
+    }
+}
+
+// Set current date in YYYY-MM-DD format (HTML5 date input format)
+function setCurrentDate() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const dateString = `${year}-${month}-${day}`;
+    
+    const invoiceDateInput = document.querySelector('input[name*="invoice_date"]');
+    if (invoiceDateInput) {
+        invoiceDateInput.value = dateString;
+        invoiceDateInput.setAttribute('data-original-value', dateString);
+        // Make it read-write by default
+        invoiceDateInput.removeAttribute('readonly');
+        
+        // Add placeholder and title for user guidance
+        invoiceDateInput.setAttribute('placeholder', 'YYYY-MM-DD or DDMM');
+        invoiceDateInput.setAttribute('title', 'Enter date in YYYY-MM-DD format or use DDMM shortcut (e.g., 1510 for 15th Oct)');
+        
+        console.log('Set invoice date to:', dateString);
+    }
+}
+
+// Validate form before submission
+function validateInvoiceForm() {
+    const errors = [];
+    
+    // Check invoice number
+    const invoiceNo = document.querySelector('input[name*="invoice_no"]')?.value?.trim();
+    if (!invoiceNo) {
+        errors.push('Invoice number is required');
+    }
+    
+    // Check invoice date
+    const invoiceDate = document.querySelector('input[name*="invoice_date"]')?.value?.trim();
+    if (!invoiceDate) {
+        errors.push('Invoice date is required');
+    }
+    
+    // Check supplier
+    const supplierId = document.querySelector('select[name*="supplierid"]')?.value;
+    if (!supplierId) {
+        errors.push('Supplier selection is required');
+    }
+    
+    // Check invoice total
+    const invoiceTotal = document.querySelector('input[name*="invoice_total"]')?.value?.trim();
+    if (!invoiceTotal || parseFloat(invoiceTotal) <= 0) {
+        errors.push('Invoice total must be greater than 0');
+    }
+    
+    return errors;
+}
+
+// Show validation errors
+function showValidationErrors(errors) {
+    const errorHtml = errors.map(error => `<li>${error}</li>`).join('');
+    const errorMessage = `
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Please fix the following errors:</strong>
+            <ul class="mb-0 mt-2">${errorHtml}</ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // Remove existing error messages
+    const existingErrors = document.querySelectorAll('.alert-danger');
+    existingErrors.forEach(error => error.remove());
+    
+    // Add new error message at the top of the form
+    const form = document.getElementById('combinedInvoiceForm');
+    if (form) {
+        form.insertAdjacentHTML('afterbegin', errorMessage);
+        // Scroll to top to show errors
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+// Quick date shortcuts for efficient date entry with minimum time complexity O(1)
+function handleDateShortcuts(input, value) {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth() + 1;
+    
+    // Remove any non-digit characters - O(n) where n is string length
+    const digits = value.replace(/\D/g, '');
+    
+    if (digits.length === 0) return;
+    
+    let day, month, year;
+    
+    // Direct assignment based on length - O(1) operations
+    switch(digits.length) {
+        case 1:
+        case 2:
+            // Just day entered - use current month and year
+            day = Math.min(parseInt(digits), 31);
+            month = currentMonth;
+            year = currentYear;
+            break;
+        case 3:
+        case 4:
+            // Day and month entered - use current year
+            day = Math.min(parseInt(digits.slice(0, 2)), 31);
+            month = Math.min(parseInt(digits.slice(2, 4)), 12);
+            year = currentYear;
+            break;
+        case 5:
+        case 6:
+            // Day, month, and 2-digit year
+            day = Math.min(parseInt(digits.slice(0, 2)), 31);
+            month = Math.min(parseInt(digits.slice(2, 4)), 12);
+            year = 2000 + parseInt(digits.slice(4, 6));
+            break;
+        default:
+            // Full date with 4-digit year
+            day = Math.min(parseInt(digits.slice(0, 2)), 31);
+            month = Math.min(parseInt(digits.slice(2, 4)), 12);
+            year = parseInt(digits.slice(4, 8));
+    }
+    
+    // Ensure minimum values - O(1)
+    day = Math.max(day, 1);
+    month = Math.max(month, 1);
+    
+    // Format as YYYY-MM-DD for HTML5 date input - O(1)
+    const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    input.value = formattedDate;
+}
+
+// Enhanced keyboard shortcuts and navigation
+document.addEventListener('keydown', function(e) {
+    // Ctrl+Enter: Add new product row
+    if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        addProductRow();
+        // Focus on the product select of the new row
+        setTimeout(() => {
+            const newRow = document.querySelector(`#productRow_${productRowIndex - 1}`);
+            if (newRow) {
+                newRow.querySelector('.product-select').focus();
+            }
+        }, 100);
+    }
+    
+    // Ctrl+S: Save form
+    if (e.ctrlKey && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        const form = document.getElementById('combinedInvoiceForm');
+        if (form) {
+            // Trigger the form submission event to run validation
+            form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        }
+    }
+    
+    // Ctrl+D: Duplicate last product row
+    if (e.ctrlKey && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        duplicateLastProductRow();
+    }
+    
+    // F2: Open quick product search
+    if (e.key === 'F2') {
+        e.preventDefault();
+        openQuickProductSearch();
+    }
+    
+    // F3: Focus on supplier select
+    if (e.key === 'F3') {
+        e.preventDefault();
+        document.querySelector('select[name*="supplierid"]')?.focus();
+    }
+    
+
+    
+    // Alt + W for batch selection
+    if (e.altKey && e.key.toLowerCase() === 'w') {
+        e.preventDefault();
+        const focusedElement = document.activeElement;
+        if (focusedElement && focusedElement.classList.contains('batch-no')) {
+            const row = focusedElement.closest('tr');
+            const productSelect = row.querySelector('.product-select');
+            const rowIndex = row.id.split('_')[1];
+            
+            if (productSelect && productSelect.value) {
+                showBatchSelectionDialog(productSelect.value, rowIndex);
+            } else {
+                alert('Please select a product first!');
+            }
+        }
+    }
+    
+    // Escape: Clear current input or go back
+    if (e.key === 'Escape') {
+        e.preventDefault();
+        const focused = document.activeElement;
+        if (focused.tagName === 'INPUT' || focused.tagName === 'SELECT') {
+            if (focused.value) {
+                focused.value = '';
+                if (focused.onchange) focused.onchange();
+            } else {
+                focused.blur();
+            }
+        }
+    }
+});
+
+// Function to duplicate the last product row
+function duplicateLastProductRow() {
+    const rows = document.querySelectorAll('#productRows tr');
+    if (rows.length === 0) {
+        addProductRow();
+        return;
+    }
+    
+    const lastRow = rows[rows.length - 1];
+    addProductRow();
+    
+    // Copy values from last row to new row
+    const newRow = document.querySelector(`#productRow_${productRowIndex - 1}`);
+    if (newRow && lastRow) {
+        const lastInputs = lastRow.querySelectorAll('input, select');
+        const newInputs = newRow.querySelectorAll('input, select');
+        
+        lastInputs.forEach((input, index) => {
+            if (newInputs[index] && input.type !== 'number') {
+                newInputs[index].value = input.value;
+            }
+        });
+        
+        // Focus on quantity field of new row
+        newRow.querySelector('.qty')?.focus();
+    }
+}
+
+// Enhanced date input handling with shortcuts
+document.addEventListener('DOMContentLoaded', function() {
+    setCurrentDate();
+    
+    // Handle regular date inputs
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    dateInputs.forEach(input => {
+        // Store original placeholder behavior
+        input.setAttribute('placeholder', 'DD/MM/YYYY or DDMM or DDMMYY');
+        
+        // Handle keyboard shortcuts
+        input.addEventListener('keydown', function(e) {
+            // Ctrl+T for today's date
+            if (e.ctrlKey && e.key.toLowerCase() === 't') {
+                e.preventDefault();
+                setCurrentDate();
+                return;
+            }
+            
+            // Ctrl+Y for yesterday
+            if (e.ctrlKey && e.key.toLowerCase() === 'y') {
+                e.preventDefault();
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                const year = yesterday.getFullYear();
+                const month = String(yesterday.getMonth() + 1).padStart(2, '0');
+                const day = String(yesterday.getDate()).padStart(2, '0');
+                this.value = `${year}-${month}-${day}`;
+                return;
+            }
+            
+            // Ctrl+M for tomorrow
+            if (e.ctrlKey && e.key.toLowerCase() === 'm') {
+                e.preventDefault();
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const year = tomorrow.getFullYear();
+                const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+                const day = String(tomorrow.getDate()).padStart(2, '0');
+                this.value = `${year}-${month}-${day}`;
+                return;
+            }
+        });
+        
+        // Handle quick date entry on blur
+        input.addEventListener('blur', function() {
+            if (this.value && this.value.length < 10) {
+                handleDateShortcuts(this, this.value);
+            }
+        });
+        
+        // Add change event for DDMM format conversion
+        input.addEventListener('change', function() {
+            const value = this.value;
+            if (value && value.length === 4 && /^\d{4}$/.test(value)) {
+                // Convert DDMM to YYYY-MM-DD
+                const day = value.substring(0, 2);
+                const month = value.substring(2, 4);
+                const year = new Date().getFullYear();
+                
+                try {
+                    const date = new Date(year, month - 1, day);
+                    if (date.getDate() == day && date.getMonth() == month - 1) {
+                        this.value = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                    }
+                } catch (e) {
+                    // Invalid date, keep original value
+                }
+            }
+        });
+        
+        // Handle Enter key for quick date formatting
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (this.value && this.value.length < 10) {
+                    handleDateShortcuts(this, this.value);
+                }
+                // Move to next input
+                const inputs = Array.from(document.querySelectorAll('input, select'));
+                const currentIndex = inputs.indexOf(this);
+                if (currentIndex < inputs.length - 1) {
+                    inputs[currentIndex + 1].focus();
+                }
+            }
+        });
+        
+        // Add tooltip for shortcuts
+        input.setAttribute('title', 'Shortcuts: Ctrl+T (Today), Ctrl+Y (Yesterday), Ctrl+M (Tomorrow)\nQuick entry: Type DDMM or DDMMYY and press Enter');
+    });
+    
+    // Handle expiry date inputs with MM-YYYY format - ONLY for expiry fields
+    document.addEventListener('input', function(e) {
+        // ONLY apply expiry formatting to expiry fields
+        if (e.target.classList.contains('expiry') || e.target.id === 'updateExpiry') {
+            formatExpiryDate(e.target);
+        }
+        
+        // Clear any incorrect validation on purchase rate fields
+        if (e.target.classList.contains('purchase-rate') || 
+            e.target.classList.contains('purchase-rate-input') || 
+            e.target.id === 'updatePurchaseRate' ||
+            e.target.id.includes('purchase') ||
+            e.target.id.includes('rate') ||
+            e.target.type === 'number') {
+            // Remove any date validation that might have been applied
+            e.target.setCustomValidity('');
+            e.target.removeAttribute('data-date-initialized');
+            e.target.removeAttribute('data-flexible-date-initialized');
+            e.target.classList.remove('date-input', 'valid-date', 'invalid-date');
+        }
+    });
+    
+    // Add validation ONLY for specific field types
+    document.addEventListener('blur', function(e) {
+        // ONLY validate expiry fields for MM-YYYY format
+        if (e.target.classList.contains('expiry') || e.target.id === 'updateExpiry') {
+            const value = e.target.value;
+            if (value && !/^(0[1-9]|1[0-2])-\d{4}$/.test(value)) {
+                e.target.setCustomValidity('Please enter expiry in MM-YYYY format (e.g., 12-2025)');
+            } else {
+                e.target.setCustomValidity('');
+            }
+        }
+        
+        // ONLY validate purchase rate fields for numeric values
+        else if (e.target.classList.contains('purchase-rate') || 
+                 e.target.classList.contains('purchase-rate-input') || 
+                 e.target.id === 'updatePurchaseRate') {
+            const value = parseFloat(e.target.value);
+            if (e.target.value && (isNaN(value) || value <= 0)) {
+                e.target.setCustomValidity('Please enter a valid purchase rate greater than 0');
+            } else {
+                e.target.setCustomValidity('');
+            }
+        }
+        
+        // Clear validation for other numeric fields that shouldn't have date validation
+        else if (e.target.type === 'number' && !e.target.classList.contains('expiry')) {
+            e.target.setCustomValidity('');
+        }
+    });
+});
+
+function loadProductInfo(rowIndex, productId) {
+    if (!productId) {
+        // Clear fields when no product selected
+        const row = document.getElementById(`productRow_${rowIndex}`);
+        if (row) {
+            row.querySelector('.batch-no').value = '';
+            row.querySelector('.expiry').value = '';
+            row.querySelector('.mrp').value = '';
+            row.querySelector('.purchase-rate').value = '';
+            row.querySelector('.gst-rate').value = '';
+            row.querySelector('.rate-a').value = '';
+            row.querySelector('.rate-b').value = '';
+            row.querySelector('.rate-c').value = '';
+            calculateRowTotal(rowIndex);
+        }
+        return;
+    }
+    
+    fetch(`/get-product-info/?product_id=${productId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Error:', data.error);
+                return;
+            }
+            
+            const row = document.getElementById(`productRow_${rowIndex}`);
+            if (row) {
+                // Auto-fill fields
+                row.querySelector('.batch-no').value = data.last_batch_no || '';
+                // Ensure expiry is in MM-YYYY format
+                let expiry = data.last_expiry || '';
+                if (expiry && expiry.length === 10 && expiry.includes('-')) {
+                    // Convert YYYY-MM-DD to MM-YYYY
+                    const parts = expiry.split('-');
+                    if (parts.length === 3) {
+                        expiry = `${parts[1]}-${parts[0]}`;
+                    }
+                }
+                row.querySelector('.expiry').value = expiry;
+                row.querySelector('.mrp').value = data.product_MRP || '';
+                row.querySelector('.purchase-rate').value = data.last_purchase_rate || '';
+                row.querySelector('.gst-rate').value = data.gst_rate || '';
+                row.querySelector('.rate-a').value = data.rate_A || '';
+                row.querySelector('.rate-b').value = data.rate_B || '';
+                row.querySelector('.rate-c').value = data.rate_C || '';
+                
+                // Recalculate row total
+                calculateRowTotal(rowIndex);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching product info:', error);
+        });
+}
+
+// Function to collect all product data before form submission
+function collectProductsData() {
+    const products = [];
+    const rows = document.querySelectorAll('#productRows tr');
+    
+    console.log('Collecting data from', rows.length, 'rows');
+    
+    rows.forEach((row, index) => {
+        const productSelect = row.querySelector('.product-select');
+        const productId = productSelect ? productSelect.value : '';
+        
+        console.log(`Row ${index + 1}: Product ID = ${productId}`);
+        
+        if (productId) {
+            const batchNo = row.querySelector('.batch-no')?.value?.trim() || '';
+            const expiry = row.querySelector('.expiry')?.value?.trim() || '';
+            const mrp = row.querySelector('.mrp')?.value?.trim() || '0';
+            const purchaseRate = row.querySelector('.purchase-rate')?.value?.trim() || '0';
+            const quantity = row.querySelector('.qty')?.value?.trim() || '0';
+            const discount = row.querySelector('.discount')?.value?.trim() || '0';
+            const gstRate = row.querySelector('.gst-rate')?.value?.trim() || '0';
+            const rateA = row.querySelector('.rate-a')?.value?.trim() || '0';
+            const rateB = row.querySelector('.rate-b')?.value?.trim() || '0';
+            const rateC = row.querySelector('.rate-c')?.value?.trim() || '0';
+            
+            const product = {
+                productid: productId,
+                batch_no: batchNo,
+                expiry: expiry,
+                mrp: mrp,
+                purchase_rate: purchaseRate,
+                quantity: quantity,
+                scheme: '0',
+                discount: discount,
+                igst: gstRate,
+                calculation_mode: 'flat',
+                rate_A: rateA,
+                rate_B: rateB,
+                rate_C: rateC
+            };
+            
+            console.log(`Row ${index + 1} data:`, product);
+            products.push(product);
+        }
+    });
+    
+    console.log('Total products collected:', products.length);
+    return products;
+}
+
+// Quick product search functionality
+function openQuickProductSearch() {
+    const existingModal = document.getElementById('quickProductModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    const modalHTML = `
+        <div id="quickProductModal" class="quick-search-overlay">
+            <div class="quick-search-content">
+                <div class="quick-search-header">
+                    <h4>🔍 Quick Product Search</h4>
+                    <small>Type product name and press Enter</small>
+                </div>
+                <div class="quick-search-input">
+                    <input type="text" id="quickProductInput" placeholder="Type product name..." onkeyup="quickSearchProducts(event)">
+                </div>
+                <div class="quick-search-results" id="quickResults"></div>
+                <div class="quick-search-footer">
+                    <small>↑↓: Navigate | Enter: Select | Esc: Close</small>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    setTimeout(() => {
+        const input = document.getElementById('quickProductInput');
+        input.focus();
+        
+        input.addEventListener('keydown', function(e) {
+            const resultsDiv = document.getElementById('quickResults');
+            
+            switch(e.key) {
+                case 'Escape':
+                    closeQuickSearch();
+                    break;
+                    
+                case 'ArrowDown':
+                    e.preventDefault();
+                    navigateResults(1);
+                    break;
+                    
+                case 'ArrowUp':
+                    e.preventDefault();
+                    navigateResults(-1);
+                    break;
+                    
+                case 'Enter':
+                    e.preventDefault();
+                    const selected = resultsDiv.querySelector('.selected') || resultsDiv.querySelector('.quick-result-item');
+                    if (selected) {
+                        const productName = selected.querySelector('.product-name').textContent;
+                        const productCompany = selected.querySelector('.product-company').textContent;
+                        
+                        const products = [{% for product in products %}{
+                            id: {{ product.productid }},
+                            name: '{{ product.product_name|escapejs }}',
+                            company: '{{ product.product_company|escapejs }}'
+                        },{% endfor %}];
+                        
+                        const matchedProduct = products.find(p => 
+                            p.name === productName && p.company === productCompany
+                        );
+                        
+                        if (matchedProduct) {
+                            quickSelectProduct(matchedProduct.id, matchedProduct.name, matchedProduct.company);
+                        }
+                    }
+                    break;
+            }
+        });
+    }, 100);
+}
+
+function quickSearchProducts(event) {
+    const searchTerm = event.target.value.toLowerCase();
+    const resultsDiv = document.getElementById('quickResults');
+    
+    if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(event.key)) {
+        return;
+    }
+    
+    if (searchTerm.length < 2) {
+        resultsDiv.innerHTML = '<div class="quick-hint">Type at least 2 characters...</div>';
+        return;
+    }
+    
+    const products = [{% for product in products %}{
+        id: {{ product.productid }},
+        name: '{{ product.product_name|escapejs }}',
+        company: '{{ product.product_company|escapejs }}'
+    },{% endfor %}];
+    
+    // Case-sensitive search - exact case match gets priority
+    const originalSearchTerm = event.target.value;
+    
+    const filtered = products.filter(p => {
+        // Exact case match (highest priority)
+        const exactNameMatch = p.name.includes(originalSearchTerm);
+        const exactCompanyMatch = p.company.includes(originalSearchTerm);
+        
+        // Case-insensitive match (lower priority)
+        const nameMatch = p.name.toLowerCase().includes(searchTerm);
+        const companyMatch = p.company.toLowerCase().includes(searchTerm);
+        
+        return exactNameMatch || exactCompanyMatch || nameMatch || companyMatch;
+    }).sort((a, b) => {
+        // Priority sorting: exact case matches first
+        const aExactMatch = a.name.includes(originalSearchTerm) || a.company.includes(originalSearchTerm);
+        const bExactMatch = b.name.includes(originalSearchTerm) || b.company.includes(originalSearchTerm);
+        
+        if (aExactMatch && !bExactMatch) return -1;
+        if (!aExactMatch && bExactMatch) return 1;
+        
+        // If both exact or both non-exact, sort alphabetically
+        return a.name.localeCompare(b.name);
+    }).slice(0, 8);
+    
+    if (filtered.length === 0) {
+        resultsDiv.innerHTML = '<div class="no-results">No products found</div>';
+        return;
+    }
+    
+    resultsDiv.innerHTML = filtered.map((product, index) => `
+        <div class="quick-result-item ${index === 0 ? 'selected' : ''}" 
+             onclick="quickSelectProduct(${product.id}, '${product.name}', '${product.company}')">
+            <div class="product-name">${product.name}</div>
+            <div class="product-company">${product.company}</div>
+        </div>
+    `).join('');
+}
+
+function navigateResults(direction) {
+    const items = document.querySelectorAll('.quick-result-item');
+    if (items.length === 0) return;
+    
+    const current = document.querySelector('.quick-result-item.selected');
+    let newIndex = 0;
+    
+    if (current) {
+        const currentIndex = Array.from(items).indexOf(current);
+        newIndex = currentIndex + direction;
+        
+        if (newIndex < 0) newIndex = items.length - 1;
+        else if (newIndex >= items.length) newIndex = 0;
+        
+        current.classList.remove('selected');
+    }
+    
+    items[newIndex].classList.add('selected');
+    items[newIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function quickSelectProduct(productId, productName, productCompany) {
+    const rows = document.querySelectorAll('#productRows tr');
+    let targetRow = null;
+    
+    for (let row of rows) {
+        const productSelect = row.querySelector('.product-select');
+        if (productSelect && !productSelect.value) {
+            targetRow = row;
+            break;
+        }
+    }
+    
+    if (!targetRow) {
+        addProductRow();
+        setTimeout(() => {
+            const newRows = document.querySelectorAll('#productRows tr');
+            targetRow = newRows[newRows.length - 1];
+            fillProductInRow(targetRow, productId);
+        }, 100);
+    } else {
+        fillProductInRow(targetRow, productId);
+    }
+    
+    closeQuickSearch();
+}
+
+function fillProductInRow(row, productId) {
+    const productSelect = row.querySelector('.product-select');
+    if (productSelect) {
+        productSelect.value = productId;
+        
+        const rowIndex = row.id.split('_')[1];
+        loadProductInfo(rowIndex, productId);
+        
+        setTimeout(() => {
+            const batchField = row.querySelector('.batch-no');
+            if (batchField) {
+                batchField.focus();
+                batchField.select();
+            }
+        }, 500);
+    }
+}
+
+function closeQuickSearch() {
+    const modal = document.getElementById('quickProductModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Batch selection dialog
+function showBatchSelectionDialog(productId, rowIndex) {
+    fetch(`/api/existing-batches/?product_id=${productId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.batches.length > 0) {
+                createBatchSelectionModal(data.batches, rowIndex, productId);
+            } else {
+                alert('No batches found for this product.');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching batches:', error);
+            alert('Error loading batch information.');
+        });
+}
+
+function createBatchSelectionModal(batches, rowIndex, productId) {
+    const existingModal = document.getElementById('batchSelectionModal');
+    if (existingModal) existingModal.remove();
+    
+    const modalHTML = `
+        <div id="batchSelectionModal" class="batch-modal-overlay">
+            <div class="batch-modal-content">
+                <div class="batch-modal-header">
+                    <h3>Select Existing Batch or Update Stock</h3>
+                    <button type="button" class="batch-modal-close" onclick="closeBatchModal()">&times;</button>
+                </div>
+                <div class="batch-modal-body">
+                    <div class="batch-search">
+                        <input type="text" id="batchSearch" placeholder="Search batch..." onkeyup="filterBatches()">
+                    </div>
+                    <div class="batch-list" id="batchList">
+                        ${batches.map(batch => `
+                            <div class="batch-item" onclick="selectBatch('${batch.batch_no}', ${rowIndex}, ${JSON.stringify(batch).replace(/"/g, '&quot;')})">
+                                <div class="batch-info">
+                                    <div class="batch-no"><strong>${batch.batch_no}</strong></div>
+                                    <div class="batch-details">
+                                        <span>Exp: ${batch.expiry}</span>
+                                        <span class="${batch.stock <= 10 ? 'text-danger' : 'text-success'}">Stock: ${batch.stock}</span>
+                                        <span>MRP: ₹${batch.mrp}</span>
+                                    </div>
+                                </div>
+
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="batch-modal-footer">
+                    <div class="batch-shortcuts">
+                        <small>↑↓: Navigate | Enter: Select | Esc: Close</small>
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="closeBatchModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    setTimeout(() => {
+        const searchInput = document.getElementById('batchSearch');
+        searchInput.focus();
+        
+        const firstBatch = document.querySelector('.batch-item');
+        if (firstBatch) firstBatch.classList.add('batch-selected');
+        
+        searchInput.addEventListener('keydown', function(e) {
+            const visibleItems = document.querySelectorAll('.batch-item:not([style*="display: none"])');
+            let selectedIndex = Array.from(visibleItems).findIndex(item => item.classList.contains('batch-selected'));
+            
+            switch(e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    if (selectedIndex < visibleItems.length - 1) {
+                        if (selectedIndex >= 0) visibleItems[selectedIndex].classList.remove('batch-selected');
+                        selectedIndex++;
+                        visibleItems[selectedIndex].classList.add('batch-selected');
+                        visibleItems[selectedIndex].scrollIntoView({ block: 'nearest' });
+                    }
+                    break;
+                    
+                case 'ArrowUp':
+                    e.preventDefault();
+                    if (selectedIndex > 0) {
+                        visibleItems[selectedIndex].classList.remove('batch-selected');
+                        selectedIndex--;
+                        visibleItems[selectedIndex].classList.add('batch-selected');
+                        visibleItems[selectedIndex].scrollIntoView({ block: 'nearest' });
+                    }
+                    break;
+                    
+                case 'Enter':
+                    e.preventDefault();
+                    if (selectedIndex >= 0 && visibleItems[selectedIndex]) {
+                        visibleItems[selectedIndex].click();
+                    }
+                    break;
+                    
+                case 'Escape':
+                    e.preventDefault();
+                    closeBatchModal();
+                    break;
+            }
+        });
+    }, 100);
+}
+
+function selectBatch(batchNo, rowIndex, batchData) {
+    const row = document.getElementById(`productRow_${rowIndex}`);
+    if (row) {
+        row.querySelector('.batch-no').value = batchNo;
+        // Ensure expiry is in MM-YYYY format
+        let expiry = batchData.expiry;
+        if (expiry && expiry.length === 10 && expiry.includes('-')) {
+            // Convert YYYY-MM-DD to MM-YYYY if needed
+            const parts = expiry.split('-');
+            if (parts.length === 3 && parts[0].length === 4) {
+                expiry = `${parts[1]}-${parts[0]}`;
+            }
+        }
+        row.querySelector('.expiry').value = expiry;
+        row.querySelector('.mrp').value = batchData.mrp;
+        row.querySelector('.purchase-rate').value = batchData.purchase_rate || '';
+        
+        calculateRowTotal(rowIndex);
+    }
+    closeBatchModal();
+}
+
+function closeBatchModal() {
+    const modal = document.getElementById('batchSelectionModal');
+    if (modal) modal.remove();
+}
+
+function filterBatches() {
+    const searchTerm = document.getElementById('batchSearch').value.toLowerCase();
+    const batchItems = document.querySelectorAll('.batch-item');
+    
+    batchItems.forEach(item => {
+        const batchNo = item.querySelector('.batch-no').textContent.toLowerCase();
+        if (batchNo.includes(searchTerm)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+// Form submission handler
+document.addEventListener('DOMContentLoaded', function() {
+    addProductRow();
+    
+    // Enhanced focus on invoice number input when page loads
+    function focusInvoiceNumber() {
+        const invoiceNoInput = document.querySelector('input[name*="invoice_no"]') ||
+                              document.querySelector('#id_invoice_no');
+        
+        if (invoiceNoInput) {
+            invoiceNoInput.focus();
+            console.log('✓ Invoice number field focused:', invoiceNoInput.name);
+            return true;
+        } else {
+            console.error('❌ Invoice number field not found');
+            return false;
+        }
+    }
+    
+    // Try multiple times with increasing delays
+    setTimeout(focusInvoiceNumber, 100);
+    setTimeout(focusInvoiceNumber, 300);
+    setTimeout(focusInvoiceNumber, 500);
+    
+    // Add form submission handler
+    const form = document.getElementById('combinedInvoiceForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            console.log('Form submission started');
+            console.log('Form element:', form);
+            console.log('Form action:', form.action);
+            console.log('Form method:', form.method);
+            
+            // Validate invoice form fields first
+            const invoiceErrors = validateInvoiceForm();
+            if (invoiceErrors.length > 0) {
+                showValidationErrors(invoiceErrors);
+                return false;
+            }
+            
+            // Collect products data
+            const productsData = collectProductsData();
+            
+            // Check if at least one product is added
+            if (productsData.length === 0) {
+                alert('Please add at least one product to the invoice.');
+                return false;
+            }
+            
+            // Validate products data
+            let hasErrors = false;
+            let errorMessages = [];
+            
+            productsData.forEach((product, index) => {
+                const rowNum = index + 1;
+                
+                if (!product.batch_no) {
+                    errorMessages.push(`Row ${rowNum}: Batch number is required`);
+                    hasErrors = true;
+                }
+                if (!product.expiry) {
+                    errorMessages.push(`Row ${rowNum}: Expiry date is required`);
+                    hasErrors = true;
+                }
+                if (!product.quantity || parseFloat(product.quantity) <= 0) {
+                    errorMessages.push(`Row ${rowNum}: Quantity must be greater than 0`);
+                    hasErrors = true;
+                }
+                if (!product.purchase_rate || parseFloat(product.purchase_rate) <= 0) {
+                    errorMessages.push(`Row ${rowNum}: Purchase rate must be greater than 0`);
+                    hasErrors = true;
+                }
+                if (!product.mrp || parseFloat(product.mrp) <= 0) {
+                    errorMessages.push(`Row ${rowNum}: MRP must be greater than 0`);
+                    hasErrors = true;
+                }
+            });
+            
+            if (hasErrors) {
+                alert('Please fix the following errors:\n\n' + errorMessages.slice(0, 5).join('\n'));
+                return false;
+            }
+            
+            // Set products data in hidden field
+            const productsDataJson = JSON.stringify(productsData);
+            console.log('Products data JSON:', productsDataJson);
+            document.getElementById('productsData').value = productsDataJson;
+            
+            // Disable submit button to prevent double submission
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            }
+            
+            console.log('Submitting form with products data');
+            console.log('Form data being submitted:', new FormData(form));
+            
+            // Submit the form
+            try {
+                form.submit();
+            } catch (error) {
+                console.error('Error submitting form:', error);
+                alert('Error submitting form. Please check the console for details.');
+                // Re-enable submit button
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Purchase Invoice';
+                }
+            }
+        });
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Debug function to check field validation
+function debugFieldValidation() {
+    const purchaseRateField = document.getElementById('updatePurchaseRate');
+    if (purchaseRateField) {
+        console.log('Purchase Rate Field Validation:', {
+            value: purchaseRateField.value,
+            type: purchaseRateField.type,
+            classList: Array.from(purchaseRateField.classList),
+            validity: purchaseRateField.validity,
+            validationMessage: purchaseRateField.validationMessage,
+            hasDateInitialized: purchaseRateField.hasAttribute('data-date-initialized'),
+            hasFlexibleDateInitialized: purchaseRateField.hasAttribute('data-flexible-date-initialized')
+        });
+    }
+    
+    const expiryField = document.getElementById('updateExpiry');
+    if (expiryField) {
+        console.log('Expiry Field Validation:', {
+            value: expiryField.value,
+            type: expiryField.type,
+            classList: Array.from(expiryField.classList),
+            validity: expiryField.validity,
+            validationMessage: expiryField.validationMessage,
+            hasDateInitialized: expiryField.hasAttribute('data-date-initialized'),
+            hasFlexibleDateInitialized: expiryField.hasAttribute('data-flexible-date-initialized')
+        });
+    }
+}
+
+// Add a button to test validation in development
+
+
+// Immediate fix for purchase rate fields on page load
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        const purchaseRateFields = document.querySelectorAll('input[id*="purchase"], input[id*="rate"], input[id*="Rate"], input[class*="purchase-rate"], input[name*="purchase_rate"]');
+        
+        purchaseRateFields.forEach(field => {
+            if (field.type === 'number' || field.classList.contains('purchase-rate') || field.classList.contains('purchase-rate-input')) {
+                field.removeAttribute('data-date-initialized');
+                field.removeAttribute('data-flexible-date-initialized');
+                field.removeAttribute('data-date-format');
+                field.classList.remove('date-input');
+                field.setCustomValidity('');
+                field.classList.remove('valid-date', 'invalid-date');
+                field.style.borderColor = '';
+            }
+        });
+    }, 100);
+});
+
+// Supplier Dialog Functions
+function openSupplierDialog() {
+    document.getElementById('supplierDialog').style.display = 'flex';
+    // Focus on first input
+    setTimeout(() => {
+        const firstInput = document.querySelector('#supplierDialogForm input[name="supplier_name"]');
+        if (firstInput) {
+            firstInput.focus();
+        }
+    }, 100);
+}
+
+function closeSupplierDialog() {
+    document.getElementById('supplierDialog').style.display = 'none';
+    // Clear form
+    document.getElementById('supplierDialogForm').reset();
+}
+
+function saveSupplier() {
+    const form = document.getElementById('supplierDialogForm');
+    const formData = new FormData(form);
+    
+    // Basic validation
+    const requiredFields = ['supplier_name', 'supplier_type', 'supplier_mobile', 'supplier_whatsapp', 'supplier_emailid', 'supplier_spoc', 'supplier_address', 'supplier_dlno', 'supplier_gstno', 'supplier_bank', 'supplier_bankaccountno', 'supplier_bankifsc'];
+    
+    for (let field of requiredFields) {
+        if (!formData.get(field) || formData.get(field).trim() === '') {
+            alert(`Please fill in the ${field.replace('supplier_', '').replace('_', ' ')} field.`);
+            return;
+        }
+    }
+    
+    // Show loading state
+    const saveBtn = document.querySelector('.supplier-dialog-btn-primary');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    saveBtn.disabled = true;
+    
+    // Send AJAX request
+    fetch('{% url "add_supplier" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Add new supplier to dropdown
+            const supplierSelect = document.querySelector('select[name*="supplierid"]');
+            if (supplierSelect) {
+                const newOption = document.createElement('option');
+                newOption.value = data.supplier_id;
+                newOption.textContent = data.supplier_name;
+                newOption.selected = true;
+                supplierSelect.appendChild(newOption);
+            }
+            
+            // Close dialog
+            closeSupplierDialog();
+            
+            // Show success message
+            alert(`Supplier "${data.supplier_name}" added successfully!`);
+        } else {
+            // Show error message
+            alert('Error: ' + (data.error || 'Failed to save supplier'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving supplier. Please try again.');
+    })
+    .finally(() => {
+        // Restore button state
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    });
+}
+
+// Close dialog when clicking outside
+document.addEventListener('click', function(e) {
+    const dialog = document.getElementById('supplierDialog');
+    if (e.target === dialog) {
+        closeSupplierDialog();
+    }
+});
+
+// Close dialog with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const dialog = document.getElementById('supplierDialog');
+        if (dialog.style.display === 'flex') {
+            closeSupplierDialog();
+        }
+    }
+});
+
+// Global override to prevent date validation on purchase rate fields
+setInterval(function() {
+    // Find all purchase rate fields and ensure they don't have date validation
+    const purchaseRateFields = document.querySelectorAll('input[id*="purchase"], input[id*="rate"], input[id*="Rate"], input[class*="purchase-rate"], input[name*="purchase_rate"]');
+    
+    purchaseRateFields.forEach(field => {
+        if (field.type === 'number' || field.classList.contains('purchase-rate') || field.classList.contains('purchase-rate-input')) {
+            // Remove any date validation attributes
+            field.removeAttribute('data-date-initialized');
+            field.removeAttribute('data-flexible-date-initialized');
+            field.removeAttribute('data-date-format');
+            field.classList.remove('date-input');
+            
+            // Clear any date validation messages
+            if (field.validationMessage && field.validationMessage.includes('ddmmyyyy')) {
+                field.setCustomValidity('');
+            }
+            
+            // Remove date validation styling
+            field.classList.remove('valid-date', 'invalid-date');
+            if (field.style.borderColor === 'rgb(220, 53, 69)' || field.style.borderColor === '#dc3545') {
+                field.style.borderColor = '';
+            }
+        }
+    });
+}, 500); // Run every 500ms to catch dynamically added fields
+
+</script>
+{% endblock %}

@@ -1,69 +1,117 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pharmacy_details.css' %}">
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">{{ title }}</h5>
+<div class="pharmacy-details-container">
+    <div class="pharmacy-details-wrapper">
+        <!-- Header -->
+        <div class="pharmacy-header-section">
+            <div class="pharmacy-header-content">
+                <div class="pharmacy-icon-container">
+                    <i class="fas fa-clinic-medical pharmacy-icon"></i>
                 </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        
-                        <div class="form-group mb-3">
-                            <label for="{{ form.pharmaname.id_for_label }}">Pharmacy Name</label>
-                            {{ form.pharmaname }}
-                            {% if form.pharmaname.errors %}
-                                <div class="text-danger">{{ form.pharmaname.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="form-group mb-3">
-                            <label for="{{ form.pharmaweburl.id_for_label }}">Website URL</label>
-                            {{ form.pharmaweburl }}
-                            {% if form.pharmaweburl.errors %}
-                                <div class="text-danger">{{ form.pharmaweburl.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="form-group mb-3">
-                            <label for="{{ form.proprietorname.id_for_label }}">Proprietor Name</label>
-                            {{ form.proprietorname }}
-                            {% if form.proprietorname.errors %}
-                                <div class="text-danger">{{ form.proprietorname.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="form-group mb-3">
-                            <label for="{{ form.proprietorcontact.id_for_label }}">Proprietor Contact</label>
-                            {{ form.proprietorcontact }}
-                            {% if form.proprietorcontact.errors %}
-                                <div class="text-danger">{{ form.proprietorcontact.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="form-group mb-3">
-                            <label for="{{ form.proprietoremail.id_for_label }}">Proprietor Email</label>
-                            {{ form.proprietoremail }}
-                            {% if form.proprietoremail.errors %}
-                                <div class="text-danger">{{ form.proprietoremail.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="form-group mt-4">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>Save
-                            </button>
-                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-                            </a>
-                        </div>
-                    </form>
-                </div>
+                <h1 class="pharmacy-main-title">{{ title }}</h1>
+            </div>
+            <p class="pharmacy-subtitle">Manage your pharmacy information and settings</p>
+        </div>
+
+        <!-- Form Card -->
+        <div class="pharmacy-form-card">
+            <div class="pharmacy-form-content">
+                <form method="post" class="pharmacy-form">
+                    {% csrf_token %}
+                    
+                    <!-- Pharmacy Name -->
+                    <div class="pharmacy-field-group">
+                        <label for="{{ form.pharmaname.id_for_label }}" class="pharmacy-field-label">
+                            Pharmacy Name
+                        </label>
+                        <input type="text" id="{{ form.pharmaname.id_for_label }}" name="{{ form.pharmaname.name }}" 
+                               value="{{ form.pharmaname.value|default:'' }}" 
+                               class="pharmacy-input-field" autofocus>
+                        {% if form.pharmaname.errors %}
+                            <div class="pharmacy-error-message">{{ form.pharmaname.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Website URL -->
+                    <div class="pharmacy-field-group">
+                        <label for="{{ form.pharmaweburl.id_for_label }}" class="pharmacy-field-label">
+                            Website URL
+                        </label>
+                        <input type="url" id="{{ form.pharmaweburl.id_for_label }}" name="{{ form.pharmaweburl.name }}" 
+                               value="{{ form.pharmaweburl.value|default:'' }}" 
+                               class="pharmacy-input-field">
+                        {% if form.pharmaweburl.errors %}
+                            <div class="pharmacy-error-message">{{ form.pharmaweburl.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Proprietor Name -->
+                    <div class="pharmacy-field-group">
+                        <label for="{{ form.proprietorname.id_for_label }}" class="pharmacy-field-label">
+                            Proprietor Name
+                        </label>
+                        <input type="text" id="{{ form.proprietorname.id_for_label }}" name="{{ form.proprietorname.name }}" 
+                               value="{{ form.proprietorname.value|default:'' }}" 
+                               class="pharmacy-input-field">
+                        {% if form.proprietorname.errors %}
+                            <div class="pharmacy-error-message">{{ form.proprietorname.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Proprietor Contact -->
+                    <div class="pharmacy-field-group">
+                        <label for="{{ form.proprietorcontact.id_for_label }}" class="pharmacy-field-label">
+                            Proprietor Contact
+                        </label>
+                        <input type="tel" id="{{ form.proprietorcontact.id_for_label }}" name="{{ form.proprietorcontact.name }}" 
+                               value="{{ form.proprietorcontact.value|default:'' }}" 
+                               class="pharmacy-input-field">
+                        {% if form.proprietorcontact.errors %}
+                            <div class="pharmacy-error-message">{{ form.proprietorcontact.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Proprietor Email -->
+                    <div class="pharmacy-field-group">
+                        <label for="{{ form.proprietoremail.id_for_label }}" class="pharmacy-field-label">
+                            Proprietor Email
+                        </label>
+                        <input type="email" id="{{ form.proprietoremail.id_for_label }}" name="{{ form.proprietoremail.name }}" 
+                               value="{{ form.proprietoremail.value|default:'' }}" 
+                               class="pharmacy-input-field">
+                        {% if form.proprietoremail.errors %}
+                            <div class="pharmacy-error-message">{{ form.proprietoremail.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="pharmacy-actions-section">
+                        <button type="submit" class="pharmacy-save-btn">
+                            <i class="fas fa-save"></i>
+                            <span>Save Changes</span>
+                        </button>
+                        <a href="{% url 'dashboard' %}" class="pharmacy-back-btn">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Back to Dashboard</span>
+                        </a>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
+
+
+
+
+
+
+
+

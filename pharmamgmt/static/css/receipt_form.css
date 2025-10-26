@@ -1,0 +1,465 @@
+/* Receipt Form Styles */
+.receipt-form-container {
+    padding: 20px;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.receipt-form-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.receipt-form-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.receipt-form-header {
+    background: #17a2b8;
+    color: #fff;
+    padding: 20px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.receipt-form-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.receipt-form-body {
+    padding: 30px;
+}
+
+.receipt-form {
+    margin: 0;
+}
+
+.receipt-form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.receipt-form-col {
+    flex: 1;
+}
+
+.receipt-form-group {
+    margin-bottom: 20px;
+}
+
+.receipt-form-label {
+    display: block;
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+
+.receipt-form input,
+.receipt-form select,
+.receipt-form textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    background-color: #fff;
+    box-sizing: border-box;
+}
+
+.receipt-form input:focus,
+.receipt-form select:focus,
+.receipt-form textarea:focus {
+    outline: none;
+    border-color: #17a2b8;
+    box-shadow: 0 0 0 3px rgba(23,162,184,0.25);
+}
+
+.receipt-form input[type="date"] {
+    cursor: pointer;
+}
+
+.receipt-form input[type="number"] {
+    text-align: right;
+}
+
+.receipt-form select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 8px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+.receipt-form textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.receipt-form-error {
+    color: #dc3545;
+    font-size: 0.85rem;
+    margin-top: 5px;
+    display: block;
+}
+
+.receipt-form-error ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.receipt-form-error li {
+    margin-bottom: 3px;
+}
+
+.receipt-form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    padding-top: 25px;
+    border-top: 1px solid #e9ecef;
+    margin-top: 30px;
+}
+
+.receipt-form-back-btn {
+    background: #6c757d;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.receipt-form-back-btn:hover {
+    background: #5a6268;
+    color: #fff;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.receipt-form-save-btn {
+    background: #17a2b8;
+    color: #fff;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
+.receipt-form-save-btn:hover {
+    background: #138496;
+    transform: translateY(-1px);
+}
+
+.receipt-form-save-btn:active {
+    transform: translateY(0);
+}
+
+/* Form Validation States */
+.receipt-form input.is-invalid,
+.receipt-form select.is-invalid,
+.receipt-form textarea.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 3px rgba(220,53,69,0.25);
+}
+
+.receipt-form input.is-valid,
+.receipt-form select.is-valid,
+.receipt-form textarea.is-valid {
+    border-color: #28a745;
+    box-shadow: 0 0 0 3px rgba(40,167,69,0.25);
+}
+
+/* Loading State */
+.receipt-form-save-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.receipt-form-save-btn:disabled:hover {
+    background: #6c757d;
+    transform: none;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .receipt-form-container {
+        padding: 15px;
+    }
+    
+    .receipt-form-wrapper {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 992px) {
+    .receipt-form-row {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .receipt-form-container {
+        padding: 10px;
+    }
+    
+    .receipt-form-header {
+        padding: 15px;
+    }
+    
+    .receipt-form-title {
+        font-size: 1.3rem;
+    }
+    
+    .receipt-form-body {
+        padding: 20px;
+    }
+    
+    .receipt-form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .receipt-form-group {
+        margin-bottom: 15px;
+    }
+    
+    .receipt-form-label {
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+    }
+    
+    .receipt-form input,
+    .receipt-form select,
+    .receipt-form textarea {
+        padding: 8px 10px;
+        font-size: 0.9rem;
+    }
+    
+    .receipt-form-actions {
+        flex-direction: column;
+        gap: 10px;
+        justify-content: stretch;
+    }
+    
+    .receipt-form-back-btn,
+    .receipt-form-save-btn {
+        text-align: center;
+        justify-content: center;
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .receipt-form-container {
+        padding: 8px;
+    }
+    
+    .receipt-form-header {
+        padding: 12px;
+    }
+    
+    .receipt-form-title {
+        font-size: 1.2rem;
+    }
+    
+    .receipt-form-body {
+        padding: 15px;
+    }
+    
+    .receipt-form-group {
+        margin-bottom: 12px;
+    }
+    
+    .receipt-form-label {
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+    }
+    
+    .receipt-form input,
+    .receipt-form select,
+    .receipt-form textarea {
+        padding: 7px 8px;
+        font-size: 0.85rem;
+    }
+    
+    .receipt-form textarea {
+        min-height: 60px;
+    }
+    
+    .receipt-form-error {
+        font-size: 0.8rem;
+    }
+    
+    .receipt-form-actions {
+        margin-top: 20px;
+        padding-top: 15px;
+    }
+    
+    .receipt-form-back-btn,
+    .receipt-form-save-btn {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .receipt-form-container {
+        padding: 5px;
+    }
+    
+    .receipt-form-header {
+        padding: 10px;
+    }
+    
+    .receipt-form-title {
+        font-size: 1.1rem;
+    }
+    
+    .receipt-form-body {
+        padding: 12px;
+    }
+    
+    .receipt-form-group {
+        margin-bottom: 10px;
+    }
+    
+    .receipt-form-label {
+        font-size: 0.8rem;
+        margin-bottom: 4px;
+    }
+    
+    .receipt-form input,
+    .receipt-form select,
+    .receipt-form textarea {
+        padding: 6px 7px;
+        font-size: 0.8rem;
+    }
+    
+    .receipt-form textarea {
+        min-height: 50px;
+    }
+    
+    .receipt-form-back-btn,
+    .receipt-form-save-btn {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .receipt-form-container {
+        padding: 3px;
+    }
+    
+    .receipt-form-title {
+        font-size: 1rem;
+    }
+    
+    .receipt-form-label {
+        font-size: 0.75rem;
+    }
+    
+    .receipt-form input,
+    .receipt-form select,
+    .receipt-form textarea {
+        font-size: 0.75rem;
+    }
+    
+    .receipt-form-back-btn,
+    .receipt-form-save-btn {
+        font-size: 0.8rem;
+    }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+    .receipt-form input,
+    .receipt-form select,
+    .receipt-form textarea {
+        min-height: 44px;
+        padding: 12px 15px;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    .receipt-form-back-btn,
+    .receipt-form-save-btn {
+        min-height: 44px;
+        padding: 12px 24px;
+    }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .receipt-form input,
+    .receipt-form select,
+    .receipt-form textarea {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}
+
+/* Focus Management */
+.receipt-form input:focus + .receipt-form-label,
+.receipt-form select:focus + .receipt-form-label,
+.receipt-form textarea:focus + .receipt-form-label {
+    color: #17a2b8;
+}
+
+/* Placeholder Styles */
+.receipt-form input::placeholder,
+.receipt-form textarea::placeholder {
+    color: #6c757d;
+    opacity: 0.7;
+}
+
+/* Required Field Indicator */
+.receipt-form-label.required::after {
+    content: " *";
+    color: #dc3545;
+}
+
+/* Success Message */
+.receipt-form-success {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Help Text */
+.receipt-form-help {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 4px;
+}

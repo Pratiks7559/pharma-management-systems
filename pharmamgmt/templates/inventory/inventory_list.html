@@ -1,0 +1,490 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/inventory_list.css' %}">
+<link rel="stylesheet" href="{% static 'css/batch_inventory_report.css' %}">
+<link rel="stylesheet" href="{% static 'css/datewise_inventory_report.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="inventory-container">
+    <div class="inventory-header">
+        <h1 class="inventory-title">{{ title }}</h1>
+        <div class="inventory-actions">
+            <a href="{% url 'low_stock_update' %}" class="low-stock-update-link" style="background: #ff9800; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; margin-right: 10px;">
+                <i class="fas fa-plus-circle fa-sm"></i> Update Low Stock
+            </a>
+            <a href="{% url 'batch_inventory_report' %}" class="batch-inventory-report-link">
+                <i class="fas fa-layer-group fa-sm"></i> Batch-wise Report
+            </a>
+            <a href="{% url 'dateexpiry_inventory_report' %}" class="datewise-inventory-report-link">
+                <i class="fas fa-calendar-alt fa-sm"></i> Date-wise Report
+            </a>
+            <div class="export-buttons no-print">
+                <a href="{% url 'export_inventory_pdf' %}" class="export-btn export-pdf">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </a>
+                <a href="{% url 'export_inventory_excel' %}" class="export-btn export-excel">
+                    <i class="fas fa-file-csv"></i> CSV/Excel
+                </a>
+                <button onclick="window.print()" class="export-btn export-print">
+                    <i class="fas fa-print"></i> Print (Ctrl+P)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards-container">
+        <div class="summary-card total-products-card">
+            <div class="card-inner">
+                <div class="card-body">
+                    <div class="card-content">
+                        <div class="card-text-section">
+                            <div class="card-label">
+                                Total Products</div>
+                            <div class="card-value">{{ total_products }}</div>
+                        </div>
+                        <div class="card-icon-section">
+                            <i class="fas fa-pills fa-2x card-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-card inventory-value-card">
+            <div class="card-inner">
+                <div class="card-body">
+                    <div class="card-content">
+                        <div class="card-text-section">
+                            <div class="card-label">
+                                Total Inventory Value</div>
+                            <div class="card-value">₹{{ page_total_value|floatformat:2 }}</div>
+                        </div>
+                        <div class="card-icon-section">
+                            <i class="fas fa-dollar-sign fa-2x card-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-card low-stock-card">
+            <div class="card-inner">
+                <div class="card-body">
+                    <div class="card-content">
+                        <div class="card-text-section">
+                            <div class="card-label">
+                                Low Stock Items</div>
+                            <div class="card-value">{{ page_low_stock }}</div>
+                        </div>
+                        <div class="card-icon-section">
+                            <i class="fas fa-exclamation-triangle fa-2x card-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-card out-of-stock-card">
+            <div class="card-inner">
+                <div class="card-body">
+                    <div class="card-content">
+                        <div class="card-text-section">
+                            <div class="card-label">
+                                Out of Stock Items</div>
+                            <div class="card-value">{{ page_out_of_stock }}</div>
+                        </div>
+                        <div class="card-icon-section">
+                            <i class="fas fa-times-circle fa-2x card-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="inventory-table-section">
+        <div class="table-header">
+            <h6 class="table-title">All Products Inventory</h6>
+            <div class="search-section no-print">
+                <form action="{% url 'inventory_list' %}" method="GET" class="search-form">
+                    <div class="search-input-group">
+                        <input type="text" name="search" value="{{ search_query }}" placeholder="Search products..." aria-label="Search" class="search-input">
+                    </div>
+                    <div class="search-buttons">
+                        <button type="submit" class="search-btn">
+                            <i class="fas fa-search fa-sm"></i> Search
+                        </button>
+                        <a href="{% url 'inventory_list' %}" class="reset-btn">Reset</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="table-container">
+            {% if inventory_data %}
+            <div class="table-responsive">
+                <table width="100%" cellspacing="0" id="inventoryTable" class="inventory-table">
+                    <thead class="table-head">
+                        <tr class="header-row">
+                            <th class="th-product-name">Product Name</th>
+                            <th class="th-company">Company</th>
+                            <th class="th-packing">Packing</th>
+                            <th class="th-category">Category</th>
+                            <th class="th-batch">Batches & Stock</th>
+                            <th class="th-expiry">Expiry Dates</th>
+                            <th class="th-mrp">Avg. MRP</th>
+                            <th class="th-rates">Batch Rates (A/B/C)</th>
+                            <th class="th-value">Stock Value</th>
+                            <th class="th-status">Status</th>
+                            <th class="th-actions no-print">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTableBody">
+                        {% for item in inventory_data %}
+                        <tr class="inventory-row" data-product-id="{{ item.product.productid }}">
+                            <td class="td-product-name">
+                                <a href="{% url 'product_detail' item.product.productid %}" class="product-link">
+                                    {{ item.product.product_name|truncatechars:40 }}
+                                </a>
+                            </td>
+                            <td class="td-company">{{ item.product.product_company|truncatechars:20 }}</td>
+                            <td class="td-packing">{{ item.product.product_packing }}</td>
+                            <td class="td-category">{{ item.product.product_category|default:"N/A" }}</td>
+                            <td class="td-batch">
+                                {% if item.batches_info %}
+                                    <div class="batches-container" style="max-height: 120px; overflow-y: auto; min-width: 150px;">
+                                        {% for batch in item.batches_info %}
+                                            <div class="batch-item" style="margin-bottom: 5px; padding: 3px 6px; background: #f8f9fa; border-radius: 3px; font-size: 12px; border-left: 3px solid #007bff;">
+                                                <strong>{{ batch.batch_no }}</strong>
+                                                <span class="{% if batch.stock <= 0 %}text-danger{% elif batch.stock <= 10 %}text-warning{% else %}text-success{% endif %}" style="margin-left: 8px;">
+                                                    ({{ batch.stock|floatformat:0 }})
+                                                </span>
+                                                {% if batch.expiry %}
+                                                    <br><small class="text-muted">Exp: {{ batch.expiry|expiry_mmyyyy }}</small>
+                                                {% endif %}
+                                                <br><small class="text-info">MRP: ₹{{ batch.mrp|floatformat:2 }}</small>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted">No Batches</span>
+                                {% endif %}
+                            </td>
+                            <td class="td-expiry">
+                                {% if item.batches_info %}
+                                    <div class="expiry-container" style="max-height: 120px; overflow-y: auto;">
+                                        {% for batch in item.batches_info %}
+                                            <div style="margin-bottom: 3px; font-size: 12px;">
+                                                {% if batch.expiry %}
+                                                    {{ batch.expiry|expiry_mmyyyy }}
+                                                {% else %}
+                                                    <span class="text-muted">N/A</span>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td class="td-mrp">₹{{ item.avg_mrp|floatformat:2 }}</td>
+                            <td class="td-rates">
+                                {% if item.batches_info %}
+                                    <div class="rates-container" style="max-height: 120px; overflow-y: auto;">
+                                        {% for batch in item.batches_info %}
+                                            <div style="margin-bottom: 3px; font-size: 12px; padding: 2px 4px; background: #f8f9fa; border-radius: 3px;">
+                                                <strong>{{ batch.batch_no }}</strong><br>
+                                                {% if batch.rates.rate_A > 0 or batch.rates.rate_B > 0 or batch.rates.rate_C > 0 %}
+                                                    <small class="text-primary">
+                                                        {% if batch.rates.rate_A > 0 %}A: ₹{{ batch.rates.rate_A|floatformat:0 }}<br>{% endif %}
+                                                        {% if batch.rates.rate_B > 0 %}B: ₹{{ batch.rates.rate_B|floatformat:0 }}<br>{% endif %}
+                                                        {% if batch.rates.rate_C > 0 %}C: ₹{{ batch.rates.rate_C|floatformat:0 }}{% endif %}
+                                                    </small>
+                                                {% else %}
+                                                    <small class="text-muted">No rates</small>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted">No batches</span>
+                                {% endif %}
+                            </td>
+                            <td class="td-value">₹{{ item.stock_value|floatformat:2 }}</td>
+                            <td class="td-status">
+                                {% if item.current_stock <= 0 %}
+                                <span class="status-badge out-of-stock">{{ item.status }}</span>
+                                {% elif item.current_stock < 10 %}
+                                <span class="status-badge low-stock">{{ item.status }}</span>
+                                {% else %}
+                                <span class="status-badge in-stock">{{ item.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="td-actions no-print">
+                                <div class="action-buttons" role="group">
+                                    <a href="{% url 'product_detail' item.product.productid %}" class="action-btn view-btn" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'update_product' item.product.productid %}" class="action-btn edit-btn" title="Edit Product">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-foot">
+                        <tr class="total-row">
+                            <td colspan="8" class="total-label">Total Inventory Value:</td>
+                            <td class="total-value">₹{{ page_total_value|floatformat:2 }}</td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            
+            <!-- Load More Button -->
+            {% if has_more %}
+            <div class="load-more-container no-print" style="text-align: center; margin: 30px 0; padding: 20px;">
+                <button id="loadMoreBtn" class="load-more-btn" 
+                        data-next-offset="{{ next_offset }}" 
+                        data-search="{{ search_query }}" 
+                        style="background: #007bff; color: white; border: none; padding: 12px 30px; border-radius: 5px; font-size: 16px; cursor: pointer; transition: all 0.3s ease;">
+                    <i class="fas fa-plus-circle"></i> Load More Products (50)
+                </button>
+                <div class="load-more-info" style="margin-top: 10px; color: #666; font-size: 14px;">
+                    Showing {{ inventory_data|length }} of {{ total_products }} products
+                </div>
+                <div class="load-more-stats" style="margin-top: 5px; color: #888; font-size: 12px;">
+                    Stats will update as you load more products
+                </div>
+            </div>
+            {% else %}
+            <div class="load-more-info" style="text-align: center; margin: 20px 0; color: #666; font-size: 14px;">
+                All {{ total_products }} products loaded
+            </div>
+            {% endif %}
+            
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-info-circle empty-state-icon"></i>
+                {% if search_query %}
+                <span class="empty-state-text">No products found with the current search.</span>
+                <a href="{% url 'inventory_list' %}" class="empty-state-link clear-search-link">Clear search</a> to see all products.
+                {% else %}
+                <span class="empty-state-text">No products found.</span> <a href="{% url 'add_product' %}" class="empty-state-link add-product-link">Add some products</a> to see inventory.
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading inventory...</div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Show loading overlay on page navigation
+        function showLoading() {
+            $('#loadingOverlay').show();
+        }
+        
+        // Hide loading overlay
+        function hideLoading() {
+            $('#loadingOverlay').hide();
+        }
+        
+        // Show loading on form submit
+        $('form').on('submit', function() {
+            showLoading();
+        });
+        
+        // Hide loading when page is fully loaded
+        $(window).on('load', function() {
+            hideLoading();
+        });
+        
+        // Load More functionality with stats update
+        $('#loadMoreBtn').on('click', function() {
+            const btn = $(this);
+            const nextOffset = btn.data('next-offset');
+            const searchQuery = btn.data('search');
+            
+            // Show loading state
+            btn.prop('disabled', true);
+            btn.html('<i class="fas fa-spinner fa-spin"></i> Loading...');
+            showLoading();
+            
+            // Make AJAX request
+            $.ajax({
+                url: window.location.pathname,
+                method: 'GET',
+                data: {
+                    offset: nextOffset,
+                    search: searchQuery
+                },
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Append new rows to table
+                        $('#inventoryTableBody').append(response.html);
+                        
+                        // Update summary cards with cumulative stats
+                        if (response.batch_stats) {
+                            updateSummaryCards(response.batch_stats);
+                        }
+                        
+                        // Update table footer total
+                        updateTableFooter(response.batch_stats.total_value);
+                        
+                        // Update button state
+                        if (response.has_more) {
+                            btn.data('next-offset', response.next_offset);
+                            btn.html('<i class="fas fa-plus-circle"></i> Load More Products (50)');
+                            btn.prop('disabled', false);
+                            
+                            // Update info
+                            $('.load-more-info').html(`Showing ${$('#inventoryTableBody tr').length} of ${response.total_count} products`);
+                        } else {
+                            // No more products
+                            btn.closest('.load-more-container').html(`
+                                <div class="load-more-info" style="text-align: center; color: #666; font-size: 14px;">
+                                    All ${response.total_count} products loaded
+                                </div>
+                            `);
+                        }
+                        
+                        // Highlight search terms in new content
+                        highlightNewContent();
+                    } else {
+                        alert('Error loading more products: ' + (response.error || 'Unknown error'));
+                        btn.html('<i class="fas fa-plus-circle"></i> Load More Products (50)');
+                        btn.prop('disabled', false);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Error loading more products: ' + error);
+                    btn.html('<i class="fas fa-plus-circle"></i> Load More Products (50)');
+                    btn.prop('disabled', false);
+                },
+                complete: function() {
+                    hideLoading();
+                }
+            });
+        });
+        
+        // Function to update summary cards
+        function updateSummaryCards(batchStats) {
+            // Get current values
+            const currentValue = parseFloat($('.inventory-value-card .card-value').text().replace('₹', '').replace(',', '')) || 0;
+            const currentOutOfStock = parseInt($('.out-of-stock-card .card-value').text()) || 0;
+            const currentLowStock = parseInt($('.low-stock-card .card-value').text()) || 0;
+            
+            // Update with new cumulative values
+            const newTotalValue = currentValue + batchStats.total_value;
+            const newOutOfStock = currentOutOfStock + batchStats.out_of_stock;
+            const newLowStock = currentLowStock + batchStats.low_stock;
+            
+            // Update the cards with animation
+            $('.inventory-value-card .card-value').fadeOut(200, function() {
+                $(this).text('₹' + newTotalValue.toFixed(2)).fadeIn(200);
+            });
+            
+            $('.out-of-stock-card .card-value').fadeOut(200, function() {
+                $(this).text(newOutOfStock).fadeIn(200);
+            });
+            
+            $('.low-stock-card .card-value').fadeOut(200, function() {
+                $(this).text(newLowStock).fadeIn(200);
+            });
+        }
+        
+        // Function to update table footer total
+        function updateTableFooter(batchValue) {
+            const currentFooterValue = parseFloat($('.total-value').text().replace('₹', '').replace(',', '')) || 0;
+            const newFooterValue = currentFooterValue + batchValue;
+            
+            $('.total-value').fadeOut(200, function() {
+                $(this).text('₹' + newFooterValue.toFixed(2)).fadeIn(200);
+            });
+        }
+        
+        // Search form - reload page on search
+        $('form').on('submit', function() {
+            const submitBtn = $(this).find('button[type="submit"]');
+            submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Searching...');
+            submitBtn.prop('disabled', true);
+            showLoading();
+        });
+        
+        // Highlight search terms in results
+        function highlightSearchTerms() {
+            const searchQuery = '{{ search_query|escapejs }}';
+            if (searchQuery) {
+                $('#inventoryTableBody tr').each(function() {
+                    const row = $(this);
+                    const productName = row.find('td:first-child a');
+                    const company = row.find('td:nth-child(2)');
+                    
+                    // Simple highlighting
+                    [productName, company].forEach(function(element) {
+                        const text = element.text();
+                        const highlightedText = text.replace(
+                            new RegExp(searchQuery, 'gi'),
+                            '<mark>$&</mark>'
+                        );
+                        element.html(highlightedText);
+                    });
+                });
+            }
+        }
+        
+        // Function to highlight search terms in newly loaded content
+        function highlightNewContent() {
+            const searchQuery = '{{ search_query|escapejs }}';
+            if (searchQuery) {
+                $('#inventoryTableBody tr:not(.highlighted)').each(function() {
+                    const row = $(this);
+                    const productName = row.find('td:first-child a');
+                    const company = row.find('td:nth-child(2)');
+                    
+                    [productName, company].forEach(function(element) {
+                        const text = element.text();
+                        const highlightedText = text.replace(
+                            new RegExp(searchQuery, 'gi'),
+                            '<mark>$&</mark>'
+                        );
+                        element.html(highlightedText);
+                    });
+                    
+                    row.addClass('highlighted');
+                });
+            }
+        }
+        
+        // Initial highlighting
+        highlightSearchTerms();
+        
+        // Load More button hover effect
+        $(document).on('mouseenter', '#loadMoreBtn', function() {
+            $(this).css('background', '#0056b3');
+        }).on('mouseleave', '#loadMoreBtn', function() {
+            $(this).css('background', '#007bff');
+        });
+    });
+</script>
+{% endblock %}

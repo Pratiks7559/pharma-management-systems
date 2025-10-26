@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/receipt_form.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="receipt-form-container">
+    <div class="receipt-form-wrapper">
+        <div class="receipt-form-card">
+            <div class="receipt-form-header">
+                <h5 class="receipt-form-title">{{ title }}</h5>
+            </div>
+            <div class="receipt-form-body">
+                <form method="POST" class="receipt-form">
+                    {% csrf_token %}
+                    
+                    <div class="receipt-form-row">
+                        <div class="receipt-form-col">
+                            <div class="receipt-form-group">
+                                <label for="{{ form.receipt_date.id_for_label }}" class="receipt-form-label">Receipt Date</label>
+                                {{ form.receipt_date }}
+                                {% if form.receipt_date.errors %}
+                                    <div class="receipt-form-error">{{ form.receipt_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="receipt-form-col">
+                            <div class="receipt-form-group">
+                                <label for="{{ form.receipt_amount.id_for_label }}" class="receipt-form-label">Amount</label>
+                                {{ form.receipt_amount }}
+                                {% if form.receipt_amount.errors %}
+                                    <div class="receipt-form-error">{{ form.receipt_amount.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="receipt-form-row">
+                        <div class="receipt-form-col">
+                            <div class="receipt-form-group">
+                                <label for="{{ form.receipt_method.id_for_label }}" class="receipt-form-label">Receipt Method</label>
+                                {{ form.receipt_method }}
+                                {% if form.receipt_method.errors %}
+                                    <div class="receipt-form-error">{{ form.receipt_method.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="receipt-form-col">
+                            <div class="receipt-form-group">
+                                <label for="{{ form.receipt_reference.id_for_label }}" class="receipt-form-label">Reference Number</label>
+                                {{ form.receipt_reference }}
+                                {% if form.receipt_reference.errors %}
+                                    <div class="receipt-form-error">{{ form.receipt_reference.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="receipt-form-group">
+                        <label for="{{ form.receipt_description.id_for_label }}" class="receipt-form-label">Description</label>
+                        {{ form.receipt_description }}
+                        {% if form.receipt_description.errors %}
+                            <div class="receipt-form-error">{{ form.receipt_description.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="receipt-form-actions">
+                        <a href="{% url 'receipt_list' %}" class="receipt-form-back-btn">
+                            <i class="fas fa-arrow-left"></i> Back to Receipts
+                        </a>
+                        <button type="submit" class="receipt-form-save-btn">
+                            <i class="fas fa-save"></i> Save Receipt
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+

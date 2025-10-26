@@ -6,104 +6,21 @@
     <title>{{ title }}</title>
     {% load static %}
     {% load custom_filters %}
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="{% static 'css/style.css' %}" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        @media print {
-            body {
-                font-size: 12px;
-                color: #000;
-                background-color: #fff;
-                margin: 0;
-                padding: 0;
-            }
-            .container {
-                width: 100%;
-                max-width: 100%;
-                padding: 5mm;
-                margin: 0;
-            }
-            .print-only {
-                display: block !important;
-            }
-            .no-print {
-                display: none !important;
-            }
-            .card {
-                border: none !important;
-                box-shadow: none !important;
-            }
-            .card-header {
-                background-color: transparent !important;
-                border-bottom: 1px solid #000;
-                font-weight: bold;
-            }
-            .table {
-                width: 100%;
-                border-collapse: collapse;
-            }
-            .table th, .table td {
-                border: 1px solid #000;
-                padding: 3px;
-            }
-            .table th {
-                background-color: #f1f1f1;
-            }
-            @page {
-                size: A4;
-                margin: 10mm;
-            }
-            .bill-header {
-                text-align: center;
-                margin-bottom: 20px;
-            }
-            .pharmacy-name {
-                font-size: 18px;
-                font-weight: bold;
-            }
-            .bill-info {
-                margin-bottom: 15px;
-                font-size: 11px;
-            }
-            .bill-total {
-                font-weight: bold;
-                font-size: 14px;
-            }
-            .bill-note {
-                font-size: 10px;
-                margin-top: 20px;
-                font-style: italic;
-            }
-            .col-print-1 {width:8%;  float:left;}
-            .col-print-2 {width:16%; float:left;}
-            .col-print-3 {width:25%; float:left;}
-            .col-print-4 {width:33%; float:left;}
-            .col-print-5 {width:42%; float:left;}
-            .col-print-6 {width:50%; float:left;}
-            .col-print-7 {width:58%; float:left;}
-            .col-print-8 {width:66%; float:left;}
-            .col-print-9 {width:75%; float:left;}
-            .col-print-10{width:83%; float:left;}
-            .col-print-11{width:92%; float:left;}
-            .col-print-12{width:100%; float:left;}
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/print_sales_bill.css' %}">
 </head>
 <body>
-    <div class="container mt-4">
+    <div class="print-sales-bill-container">
         <!-- Print Controls - Only visible on screen -->
-        <div class="row mb-4 no-print">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h3 class="mb-3">Print Bill</h3>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-primary" onclick="window.print();">
+        <div class="print-controls-section">
+            <div class="print-controls-wrapper">
+                <div class="print-controls-card">
+                    <div class="print-controls-header">
+                        <h3 class="print-bill-title">Print Bill</h3>
+                        <div class="print-action-buttons">
+                            <button onclick="window.print();" class="print-btn">
                                 <i class="fas fa-print me-2"></i>Print
                             </button>
-                            <a href="{% url 'sales_invoice_detail' pk=invoice.sales_invoice_no %}" class="btn btn-secondary">
+                            <a href="{% url 'sales_invoice_detail' pk=invoice.sales_invoice_no %}" class="back-to-invoice-btn">
                                 <i class="fas fa-arrow-left me-2"></i>Back to Invoice
                             </a>
                         </div>
@@ -113,43 +30,43 @@
         </div>
         
         <!-- Actual Bill Content - Will be printed -->
-        <div class="bill-content">
-            <div class="bill-header">
+        <div class="sales-bill-content">
+            <div class="sales-bill-header">
                 {% if pharmacy %}
-                <div class="pharmacy-name">{{ pharmacy.pharmaname }}</div>
-                <div class="pharmacy-address">{{ pharmacy.pharmaweburl }}</div>
-                <div class="pharmacy-contact">
+                <div class="pharmacy-name-display">{{ pharmacy.pharmaname }}</div>
+                <div class="pharmacy-address-display">{{ pharmacy.pharmaweburl }}</div>
+                <div class="pharmacy-contact-info">
                     Proprietor: {{ pharmacy.proprietorname }} | 
                     Contact: {{ pharmacy.proprietorcontact }} | 
                     Email: {{ pharmacy.proprietoremail }}
                 </div>
                 {% else %}
-                <div class="pharmacy-name">PHARMACY MANAGEMENT SYSTEM</div>
-                <div class="pharmacy-address">Your Trusted Healthcare Partner</div>
+                <div class="pharmacy-name-display">PHARMACY MANAGEMENT SYSTEM</div>
+                <div class="pharmacy-address-display">Your Trusted Healthcare Partner</div>
                 {% endif %}
-                <div class="mt-3">
+                <div class="invoice-title-section">
                     <h4>SALES INVOICE</h4>
                 </div>
             </div>
             
-            <div class="row bill-info">
-                <div class="col-print-6">
+            <div class="invoice-details-section">
+                <div class="customer-info-block">
                     <strong>Invoice No:</strong> {{ invoice.sales_invoice_no }}<br>
                     <strong>Date:</strong> {{ invoice.sales_invoice_date }}<br>
                     <strong>Customer:</strong> {{ invoice.customerid.customer_name }}<br>
                     <strong>Address:</strong> {{ invoice.customerid.customer_address }}<br>
                     <strong>Contact:</strong> {{ invoice.customerid.customer_mobile }}
                 </div>
-                <div class="col-print-6 text-end">
+                <div class="license-info-block">
                     <strong>GSTIN:</strong> {{ invoice.customerid.customer_gstno }}<br>
                     <strong>DL No:</strong> {{ invoice.customerid.customer_dlno }}<br>
                 </div>
             </div>
             
-            <div class="table-responsive">
-                <table class="table table-bordered table-sm">
-                    <thead>
-                        <tr>
+            <div class="sales-items-table-section">
+                <table class="sales-items-table">
+                    <thead class="sales-table-header">
+                        <tr class="sales-header-row">
                             <th width="5%">S.No</th>
                             <th width="30%">Description</th>
                             <th width="10%">Batch</th>
@@ -162,71 +79,71 @@
                             <th width="10%">Amount</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="sales-table-body">
                         {% for sale in sales %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>
+                        <tr class="sales-item-row">
+                            <td class="serial-number-cell">{{ forloop.counter }}</td>
+                            <td class="product-description-cell">
                                 {{ sale.product_name }}
-                                <div class="small">{{ sale.product_company }} - {{ sale.product_packing }}</div>
+                                <div class="product-details-small">{{ sale.product_company }} - {{ sale.product_packing }}</div>
                             </td>
-                            <td>{{ sale.product_batch_no }}</td>
-                            <td>{{ sale.product_expiry|date:"m/Y" }}</td>
-                            <td>{{ sale.product_MRP|round_value }}</td>
-                            <td>{{ sale.sale_rate|round_value }}</td>
-                            <td>{{ sale.sale_quantity|round_value }}</td>
-                            <td>
+                            <td class="batch-number-cell">{{ sale.product_batch_no }}</td>
+                            <td class="expiry-date-cell">{{ sale.product_expiry|date:"m/Y" }}</td>
+                            <td class="mrp-cell">{{ sale.product_MRP|currency }}</td>
+                            <td class="rate-cell">{{ sale.sale_rate|currency }}</td>
+                            <td class="quantity-cell">{{ sale.sale_quantity|floatformat:2 }}</td>
+                            <td class="discount-cell">
                                 {% if sale.sale_calculation_mode == 'flat' %}
-                                    {{ sale.sale_discount|round_value }}
+                                    {{ sale.sale_discount|currency }}
                                 {% else %}
-                                    {{ sale.sale_discount|round_value }}%
+                                    {{ sale.sale_discount|floatformat:2 }}%
                                 {% endif %}
                             </td>
-                            <td>{{ sale.sale_igst|round_value }}%</td>
-                            <td class="text-end">{{ sale.sale_total_amount|round_value }}</td>
+                            <td class="gst-cell">{{ sale.sale_igst|floatformat:2 }}%</td>
+                            <td class="amount-cell">{{ sale.sale_total_amount|currency }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
-                    <tfoot>
-                        <tr>
-                            <td colspan="8" class="text-end"><strong>Sub Total:</strong></td>
-                            <td colspan="2" class="text-end">{{ subtotal|round_value }}</td>
+                    <tfoot class="sales-table-footer">
+                        <tr class="subtotal-row">
+                            <td colspan="8" class="total-label-cell"><strong>Sub Total:</strong></td>
+                            <td colspan="2" class="total-amount-cell">{{ subtotal|currency }}</td>
                         </tr>
-                        <tr>
-                            <td colspan="8" class="text-end"><strong>Tax Amount:</strong></td>
-                            <td colspan="2" class="text-end">{{ total_tax|round_value }}</td>
+                        <tr class="tax-amount-row">
+                            <td colspan="8" class="total-label-cell"><strong>Tax Amount:</strong></td>
+                            <td colspan="2" class="total-amount-cell">{{ total_tax|currency }}</td>
                         </tr>
-                        <tr class="bill-total">
-                            <td colspan="8" class="text-end"><strong>Grand Total:</strong></td>
-                            <td colspan="2" class="text-end">{{ total|round_value }}</td>
+                        <tr class="grand-total-row">
+                            <td colspan="8" class="total-label-cell"><strong>Grand Total:</strong></td>
+                            <td colspan="2" class="grand-total-amount-cell">{{ total|currency }}</td>
                         </tr>
-                        <tr>
-                            <td colspan="8" class="text-end"><strong>Amount Paid:</strong></td>
-                            <td colspan="2" class="text-end">{{ invoice.sales_invoice_paid|round_value }}</td>
+                        <tr class="amount-paid-row">
+                            <td colspan="8" class="total-label-cell"><strong>Amount Paid:</strong></td>
+                            <td colspan="2" class="total-amount-cell">{{ invoice.sales_invoice_paid|currency }}</td>
                         </tr>
-                        <tr>
-                            <td colspan="8" class="text-end"><strong>Balance Due:</strong></td>
-                            <td colspan="2" class="text-end">{{ balance|round_value }}</td>
+                        <tr class="balance-due-row">
+                            <td colspan="8" class="total-label-cell"><strong>Balance Due:</strong></td>
+                            <td colspan="2" class="balance-amount-cell">{{ balance|currency }}</td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
             
-            <div class="row mt-4">
-                <div class="col-print-6">
-                    <div class="bill-note">
+            <div class="bill-footer-section">
+                <div class="terms-conditions-block">
+                    <div class="bill-terms-note">
                         <p>Terms & Conditions:</p>
-                        <ol>
+                        <ol class="terms-list">
                             <li>Goods once sold will not be taken back or exchanged.</li>
                             <li>All disputes are subject to local jurisdiction only.</li>
                             <li>Payment terms: As per agreed terms.</li>
                         </ol>
                     </div>
                 </div>
-                <div class="col-print-6 text-end">
-                    <div class="mt-5">
+                <div class="signature-block">
+                    <div class="authorized-signature">
                         <p>For {{ pharmacy.pharmaname }}</p>
-                        <div class="mt-4">Authorized Signatory</div>
+                        <div class="signature-line">Authorized Signatory</div>
                     </div>
                 </div>
             </div>
@@ -243,3 +160,10 @@
     </script>
 </body>
 </html>
+
+
+
+
+
+
+

@@ -1,62 +1,72 @@
 {% extends 'base.html' %}
+{% load static %}
 {% load custom_filters %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/purchase_confirm_delete.css' %}">
+{% endblock %}
 
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card shadow">
-                <div class="card-header bg-danger text-white">
-                    <h5 class="card-title mb-0">Confirm Purchase Deletion</h5>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <strong>Warning!</strong> Are you sure you want to delete the purchase of <strong>{{ purchase.product_name }}</strong>?
-                        <p class="mt-2">This action cannot be undone.</p>
-                    </div>
-                    
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <tr>
-                                <th>Product:</th>
-                                <td>{{ purchase.product_name }}</td>
-                            </tr>
-                            <tr>
-                                <th>Batch No:</th>
-                                <td>{{ purchase.product_batch_no }}</td>
-                            </tr>
-                            <tr>
-                                <th>Quantity:</th>
-                                <td>{{ purchase.product_quantity }}</td>
-                            </tr>
-                            <tr>
-                                <th>Expiry Date:</th>
-                                <td>{{ purchase.product_expiry }}</td>
-                            </tr>
-                            <tr>
-                                <th>Amount:</th>
-                                <td>{{ purchase.total_amount|currency }}</td>
-                            </tr>
-                        </table>
-                    </div>
-                    
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="d-flex justify-content-between mt-3">
-                            <a href="{% url 'invoice_detail' pk=invoice.invoiceid %}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Cancel
-                            </a>
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fas fa-trash"></i> Delete Purchase
-                            </button>
-                        </div>
-                    </form>
+<div class="purchase-delete-container">
+    <div class="purchase-delete-card">
+        <div class="purchase-delete-header">
+            <h5>Confirm Purchase Deletion</h5>
+        </div>
+        <div class="purchase-delete-body">
+            <div class="warning-alert">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>
+                    <strong>Warning!</strong> Are you sure you want to delete the purchase of <strong>{{ purchase.product_name }}</strong>?
+                    <p>This action cannot be undone.</p>
                 </div>
             </div>
+            
+            <div class="purchase-details">
+                <table>
+                    <tr>
+                        <th>Product:</th>
+                        <td>{{ purchase.product_name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Batch No:</th>
+                        <td>{{ purchase.product_batch_no }}</td>
+                    </tr>
+                    <tr>
+                        <th>Quantity:</th>
+                        <td>{{ purchase.product_quantity }}</td>
+                    </tr>
+                    <tr>
+                        <th>Expiry Date:</th>
+                        <td>{{ purchase.product_expiry }}</td>
+                    </tr>
+                    <tr>
+                        <th>Amount:</th>
+                        <td>{{ purchase.total_amount|currency }}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="delete-actions">
+                    <a href="{% url 'invoice_detail' pk=invoice.invoiceid %}" class="btn-cancel">
+                        <i class="fas fa-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn-delete">
+                        <i class="fas fa-trash"></i> Delete Purchase
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 {% endblock %}
+
+
+
+
+
+
+

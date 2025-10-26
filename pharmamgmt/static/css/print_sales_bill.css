@@ -1,0 +1,370 @@
+/* Print Sales Bill Styles */
+.print-sales-bill-container {
+    max-width: 100%;
+    margin: 0 auto;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Print Controls Section */
+.print-controls-section {
+    background: #f8f9fa;
+    padding: 20px 0;
+    margin-bottom: 20px;
+}
+
+.print-controls-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+.print-controls-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 20px;
+}
+
+.print-controls-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.print-bill-title {
+    color: #2c3e50;
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.print-action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.print-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.print-btn:hover {
+    background: #218838;
+}
+
+.back-to-invoice-btn {
+    background: #6c757d;
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.back-to-invoice-btn:hover {
+    background: #5a6268;
+    color: white;
+    text-decoration: none;
+}
+
+/* Sales Bill Content */
+.sales-bill-content {
+    max-width: 210mm;
+    margin: 0 auto;
+    background: white;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.sales-bill-header {
+    text-align: center;
+    border-bottom: 2px solid #2c3e50;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.pharmacy-name-display {
+    font-size: 24px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.pharmacy-address-display {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.pharmacy-contact-info {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.invoice-title-section h4 {
+    background: #2c3e50;
+    color: white;
+    padding: 8px 20px;
+    margin: 10px 0 0 0;
+    border-radius: 5px;
+    font-size: 18px;
+}
+
+/* Invoice Details Section */
+.invoice-details-section {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 5px;
+}
+
+.customer-info-block,
+.license-info-block {
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.license-info-block {
+    text-align: right;
+}
+
+/* Sales Items Table */
+.sales-items-table-section {
+    margin-bottom: 20px;
+}
+
+.sales-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.sales-table-header {
+    background: #2c3e50;
+    color: white;
+}
+
+.sales-header-row th {
+    padding: 10px 5px;
+    text-align: center;
+    border: 1px solid #ddd;
+    font-weight: 600;
+}
+
+.sales-table-body .sales-item-row {
+    border-bottom: 1px solid #ddd;
+}
+
+.sales-item-row:nth-child(even) {
+    background: #f8f9fa;
+}
+
+.serial-number-cell,
+.batch-number-cell,
+.expiry-date-cell,
+.mrp-cell,
+.rate-cell,
+.quantity-cell,
+.discount-cell,
+.gst-cell,
+.amount-cell {
+    padding: 8px 5px;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+.product-description-cell {
+    padding: 8px 5px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+.product-details-small {
+    font-size: 10px;
+    color: #666;
+    margin-top: 2px;
+}
+
+.amount-cell {
+    text-align: right;
+    font-weight: 600;
+}
+
+/* Table Footer */
+.sales-table-footer {
+    background: #f8f9fa;
+}
+
+.subtotal-row,
+.tax-amount-row,
+.amount-paid-row,
+.balance-due-row {
+    border-top: 1px solid #ddd;
+}
+
+.grand-total-row {
+    background: #2c3e50;
+    color: white;
+    font-weight: bold;
+}
+
+.total-label-cell {
+    padding: 8px 5px;
+    text-align: right;
+    border: 1px solid #ddd;
+    font-weight: 600;
+}
+
+.total-amount-cell,
+.grand-total-amount-cell,
+.balance-amount-cell {
+    padding: 8px 5px;
+    text-align: right;
+    border: 1px solid #ddd;
+    font-weight: 600;
+}
+
+.grand-total-amount-cell {
+    font-size: 14px;
+}
+
+.balance-amount-cell {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* Bill Footer */
+.bill-footer-section {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+}
+
+.terms-conditions-block {
+    flex: 2;
+    padding-right: 20px;
+}
+
+.bill-terms-note {
+    font-size: 12px;
+    color: #666;
+}
+
+.terms-list {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.terms-list li {
+    margin-bottom: 5px;
+}
+
+.signature-block {
+    flex: 1;
+    text-align: center;
+}
+
+.authorized-signature {
+    font-size: 14px;
+    margin-top: 40px;
+}
+
+.signature-line {
+    border-top: 1px solid #333;
+    margin-top: 50px;
+    padding-top: 5px;
+    font-weight: 600;
+}
+
+/* Print Styles */
+@media print {
+    .print-controls-section {
+        display: none !important;
+    }
+    
+    .sales-bill-content {
+        box-shadow: none;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .print-sales-bill-container {
+        margin: 0;
+        padding: 0;
+    }
+    
+    body {
+        margin: 0;
+        padding: 0;
+    }
+    
+    .sales-items-table {
+        font-size: 11px;
+    }
+    
+    .pharmacy-name-display {
+        font-size: 20px;
+    }
+    
+    .invoice-title-section h4 {
+        font-size: 16px;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .print-controls-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .invoice-details-section {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .license-info-block {
+        text-align: left;
+    }
+    
+    .bill-footer-section {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .terms-conditions-block {
+        padding-right: 0;
+    }
+    
+    .sales-items-table {
+        font-size: 10px;
+    }
+    
+    .sales-header-row th,
+    .serial-number-cell,
+    .batch-number-cell,
+    .expiry-date-cell,
+    .mrp-cell,
+    .rate-cell,
+    .quantity-cell,
+    .discount-cell,
+    .gst-cell,
+    .amount-cell,
+    .product-description-cell {
+        padding: 5px 3px;
+    }
+}

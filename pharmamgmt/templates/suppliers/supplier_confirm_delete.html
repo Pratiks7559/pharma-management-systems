@@ -1,34 +1,47 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/supplier_confirm_delete.css' %}">
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-danger text-white">
-                    <h5 class="mb-0">Confirm Delete</h5>
+<div class="supplier-delete-container">
+    <div class="supplier-delete-wrapper">
+        <div class="supplier-delete-card">
+            <div class="supplier-delete-header">
+                <div class="supplier-delete-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
                 </div>
-                <div class="card-body">
-                    <p class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        Are you sure you want to delete the supplier <strong>{{ supplier.supplier_name }}</strong>?
-                    </p>
-                    <p>This action cannot be undone. All data related to this supplier will be permanently removed from the system.</p>
-                    
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="d-flex justify-content-end mt-3">
-                            <a href="{% url 'supplier_detail' pk=supplier.supplierid %}" class="btn btn-secondary me-2">
-                                <i class="fas fa-times me-2"></i>Cancel
-                            </a>
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fas fa-trash me-2"></i>Delete
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                <h5 class="supplier-delete-title">Confirm Delete</h5>
+            </div>
+            <div class="supplier-delete-body">
+                <p class="supplier-delete-warning">
+                    Are you sure you want to delete the supplier <strong>{{ supplier.supplier_name }}</strong>?
+                </p>
+                <p class="supplier-delete-info">This action cannot be undone. All data related to this supplier will be permanently removed from the system.</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="supplier-delete-actions">
+                        <a href="{% url 'supplier_detail' pk=supplier.supplierid %}" class="supplier-delete-btn supplier-delete-btn-cancel">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="supplier-delete-btn supplier-delete-btn-delete">
+                            <i class="fas fa-trash me-2"></i>Delete
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
+
+
+
+
+
+
+
+

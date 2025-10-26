@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/receipt_confirm_delete.css' %}">
+{% endblock %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="receipt-delete-container">
+    <div class="receipt-delete-wrapper">
+        <div class="receipt-delete-row">
+            <div class="receipt-delete-col">
+                <div class="receipt-delete-header">
+                    <h3 class="receipt-delete-title">{{ title }}</h3>
+                </div>
+                <div class="receipt-delete-content">
+                    <div class="receipt-delete-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Warning!</strong> This action cannot be undone.
+                    </div>
+                    
+                    <p class="receipt-delete-question">Are you sure you want to delete this receipt?</p>
+                    
+                    <div class="receipt-delete-details-section">
+                        <div class="receipt-delete-details-card">
+                            <h5 class="receipt-delete-details-title">Receipt Details:</h5>
+                            <ul class="receipt-delete-details-list">
+                                <li class="receipt-delete-detail-item"><strong>Date:</strong> {{ receipt.receipt_date|date:"d-m-Y" }}</li>
+                                <li class="receipt-delete-detail-item"><strong>Amount:</strong> ₹{{ receipt.receipt_amount|floatformat:2 }}</li>
+                                <li class="receipt-delete-detail-item"><strong>Method:</strong> {{ receipt.get_receipt_method_display }}</li>
+                                <li class="receipt-delete-detail-item"><strong>Description:</strong> {{ receipt.receipt_description|default:"-" }}</li>
+                                <li class="receipt-delete-detail-item"><strong>Reference:</strong> {{ receipt.receipt_reference|default:"-" }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <form method="post" class="receipt-delete-form">
+                        {% csrf_token %}
+                        <div class="receipt-delete-actions">
+                            <a href="{% url 'receipt_list' %}" class="receipt-delete-cancel-btn">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="receipt-delete-confirm-btn">
+                                <i class="fas fa-trash"></i> Delete Receipt
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+

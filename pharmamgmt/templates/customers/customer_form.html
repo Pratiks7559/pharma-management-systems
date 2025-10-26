@@ -1,177 +1,146 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/customer_form.css' %}">
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-10">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">{% if customer %}Update{% else %}Add{% endif %} Customer</h5>
-                </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.customer_name.id_for_label }}">Customer Name*</label>
-                                    {{ form.customer_name }}
-                                    {% if form.customer_name.errors %}
-                                        <div class="text-danger">{{ form.customer_name.errors }}</div>
-                                    {% endif %}
-                                </div>
+<div class="customer-form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h5 class="form-title">{% if customer %}Update{% else %}Add{% endif %} Customer</h5>
+        </div>
+        <div class="form-body">
+            <form method="post" class="customer-form">
+                    {% csrf_token %}
+                    
+                        <div class="form-row">
+                            <div class="form-group required">
+                                <label for="{{ form.customer_name.id_for_label }}" class="field-label">Customer Name</label>
+                                {{ form.customer_name }}
+                                {% if form.customer_name.errors %}<div class="error-message">{{ form.customer_name.errors }}</div>{% endif %}
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.customer_type.id_for_label }}">Customer Type*</label>
-                                    {{ form.customer_type }}
-                                    {% if form.customer_type.errors %}
-                                        <div class="text-danger">{{ form.customer_type.errors }}</div>
-                                    {% endif %}
-                                </div>
+                            <div class="form-group required">
+                                <label for="{{ form.customer_type.id_for_label }}" class="field-label">Customer Type</label>
+                                {{ form.customer_type }}
+                                {% if form.customer_type.errors %}<div class="error-message">{{ form.customer_type.errors }}</div>{% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ form.customer_mobile.id_for_label }}" class="field-label">Mobile Number</label>
+                                {{ form.customer_mobile }}
+                                {% if form.customer_mobile.errors %}<div class="error-message">{{ form.customer_mobile.errors }}</div>{% endif %}
                             </div>
                         </div>
                         
-                        <div class="form-group mb-3">
-                            <label for="{{ form.customer_address.id_for_label }}">Address</label>
-                            {{ form.customer_address }}
-                            {% if form.customer_address.errors %}
-                                <div class="text-danger">{{ form.customer_address.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.customer_mobile.id_for_label }}">Mobile Number</label>
-                                    {{ form.customer_mobile }}
-                                    {% if form.customer_mobile.errors %}
-                                        <div class="text-danger">{{ form.customer_mobile.errors }}</div>
-                                    {% endif %}
-                                </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="{{ form.customer_whatsapp.id_for_label }}" class="field-label">WhatsApp Number</label>
+                                {{ form.customer_whatsapp }}
+                                {% if form.customer_whatsapp.errors %}<div class="error-message">{{ form.customer_whatsapp.errors }}</div>{% endif %}
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.customer_whatsapp.id_for_label }}">WhatsApp Number</label>
-                                    {{ form.customer_whatsapp }}
-                                    {% if form.customer_whatsapp.errors %}
-                                        <div class="text-danger">{{ form.customer_whatsapp.errors }}</div>
-                                    {% endif %}
-                                </div>
+                            <div class="form-group">
+                                <label for="{{ form.customer_emailid.id_for_label }}" class="field-label">Email Address</label>
+                                {{ form.customer_emailid }}
+                                {% if form.customer_emailid.errors %}<div class="error-message">{{ form.customer_emailid.errors }}</div>{% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ form.customer_spoc.id_for_label }}" class="field-label">Contact Person</label>
+                                {{ form.customer_spoc }}
+                                {% if form.customer_spoc.errors %}<div class="error-message">{{ form.customer_spoc.errors }}</div>{% endif %}
                             </div>
                         </div>
                         
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.customer_emailid.id_for_label }}">Email Address</label>
-                                    {{ form.customer_emailid }}
-                                    {% if form.customer_emailid.errors %}
-                                        <div class="text-danger">{{ form.customer_emailid.errors }}</div>
-                                    {% endif %}
-                                </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="{{ form.customer_address.id_for_label }}" class="field-label">Address</label>
+                                {{ form.customer_address }}
+                                {% if form.customer_address.errors %}<div class="error-message">{{ form.customer_address.errors }}</div>{% endif %}
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.customer_spoc.id_for_label }}">Contact Person (SPOC)</label>
-                                    {{ form.customer_spoc }}
-                                    {% if form.customer_spoc.errors %}
-                                        <div class="text-danger">{{ form.customer_spoc.errors }}</div>
-                                    {% endif %}
-                                </div>
+                            <div class="form-group">
+                                <label for="{{ form.customer_dlno.id_for_label }}" class="field-label">Drug License</label>
+                                {{ form.customer_dlno }}
+                                {% if form.customer_dlno.errors %}<div class="error-message">{{ form.customer_dlno.errors }}</div>{% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ form.customer_gstno.id_for_label }}" class="field-label">GST Number</label>
+                                {{ form.customer_gstno }}
+                                {% if form.customer_gstno.errors %}<div class="error-message">{{ form.customer_gstno.errors }}</div>{% endif %}
                             </div>
                         </div>
                         
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.customer_dlno.id_for_label }}">Drug License Number</label>
-                                    {{ form.customer_dlno }}
-                                    {% if form.customer_dlno.errors %}
-                                        <div class="text-danger">{{ form.customer_dlno.errors }}</div>
-                                    {% endif %}
-                                </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="{{ form.customer_food_license_no.id_for_label }}" class="field-label">Food License</label>
+                                {{ form.customer_food_license_no }}
+                                {% if form.customer_food_license_no.errors %}<div class="error-message">{{ form.customer_food_license_no.errors }}</div>{% endif %}
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.customer_gstno.id_for_label }}">GST Number</label>
-                                    {{ form.customer_gstno }}
-                                    {% if form.customer_gstno.errors %}
-                                        <div class="text-danger">{{ form.customer_gstno.errors }}</div>
-                                    {% endif %}
-                                </div>
+                            <div class="form-group required">
+                                <label for="{{ form.customer_credit_days.id_for_label }}" class="field-label">Credit Days</label>
+                                {{ form.customer_credit_days }}
+                                {% if form.customer_credit_days.errors %}<div class="error-message">{{ form.customer_credit_days.errors }}</div>{% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ form.customer_bank.id_for_label }}" class="field-label">Bank Name</label>
+                                {{ form.customer_bank }}
+                                {% if form.customer_bank.errors %}<div class="error-message">{{ form.customer_bank.errors }}</div>{% endif %}
                             </div>
                         </div>
                         
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.customer_credit_days.id_for_label }}">Credit Days*</label>
-                                    {{ form.customer_credit_days }}
-                                    {% if form.customer_credit_days.errors %}
-                                        <div class="text-danger">{{ form.customer_credit_days.errors }}</div>
-                                    {% endif %}
-                                </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="{{ form.customer_bankaccountno.id_for_label }}" class="field-label">Account Number</label>
+                                {{ form.customer_bankaccountno }}
+                                {% if form.customer_bankaccountno.errors %}<div class="error-message">{{ form.customer_bankaccountno.errors }}</div>{% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ form.customer_bankifsc.id_for_label }}" class="field-label">IFSC Code</label>
+                                {{ form.customer_bankifsc }}
+                                {% if form.customer_bankifsc.errors %}<div class="error-message">{{ form.customer_bankifsc.errors }}</div>{% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ form.customer_upi.id_for_label }}" class="field-label">UPI ID</label>
+                                {{ form.customer_upi }}
+                                {% if form.customer_upi.errors %}<div class="error-message">{{ form.customer_upi.errors }}</div>{% endif %}
                             </div>
                         </div>
                         
-                        <h5 class="mt-4 mb-3">Bank Details</h5>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.customer_bank.id_for_label }}">Bank Name</label>
-                                    {{ form.customer_bank }}
-                                    {% if form.customer_bank.errors %}
-                                        <div class="text-danger">{{ form.customer_bank.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.customer_bankaccountno.id_for_label }}">Account Number</label>
-                                    {{ form.customer_bankaccountno }}
-                                    {% if form.customer_bankaccountno.errors %}
-                                        <div class="text-danger">{{ form.customer_bankaccountno.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.customer_bankifsc.id_for_label }}">IFSC Code</label>
-                                    {{ form.customer_bankifsc }}
-                                    {% if form.customer_bankifsc.errors %}
-                                        <div class="text-danger">{{ form.customer_bankifsc.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.customer_upi.id_for_label }}">UPI ID</label>
-                                    {{ form.customer_upi }}
-                                    {% if form.customer_upi.errors %}
-                                        <div class="text-danger">{{ form.customer_upi.errors }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group mt-4">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>{% if customer %}Update{% else %}Save{% endif %} Customer
-                            </button>
-                            <a href="{% url 'customer_list' %}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left me-2"></i>Back to Customers
-                            </a>
-                        </div>
-                    </form>
-                </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary submit-btn">
+                            <i class="fas fa-save"></i>{% if customer %}Update{% else %}Save{% endif %} Customer
+                        </button>
+                        <a href="{% url 'customer_list' %}" class="btn btn-secondary back-btn">
+                            <i class="fas fa-arrow-left"></i>Back to Customers
+                        </a>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Enhanced auto focus with multiple attempts
+        function focusFirstInput() {
+            const firstInput = document.querySelector('.customer-form input[type="text"]') || 
+                              document.querySelector('input[name*="customer_name"]');
+            
+            if (firstInput) {
+                firstInput.focus();
+                console.log('✓ Customer name field focused:', firstInput.name);
+                return true;
+            } else {
+                console.error('❌ Customer input field not found');
+                return false;
+            }
+        }
+        
+        // Try multiple times with increasing delays
+        setTimeout(focusFirstInput, 100);
+        setTimeout(focusFirstInput, 300);
+        setTimeout(focusFirstInput, 500);
+    });
+</script>
 {% endblock %}

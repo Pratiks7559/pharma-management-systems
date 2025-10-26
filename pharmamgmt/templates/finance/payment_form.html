@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/payment_form2.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="payment-form-container">
+    <div class="payment-form-wrapper">
+        <div class="payment-form-card">
+            <div class="payment-form-header">
+                <h5 class="payment-form-title">{{ title }}</h5>
+            </div>
+            <div class="payment-form-body">
+                <form method="POST" class="payment-form">
+                    {% csrf_token %}
+                    
+                    <div class="payment-form-row">
+                        <div class="payment-form-col">
+                            <div class="payment-form-group">
+                                <label for="{{ form.payment_date.id_for_label }}" class="payment-form-label">Payment Date</label>
+                                {{ form.payment_date }}
+                                {% if form.payment_date.errors %}
+                                    <div class="payment-form-error">{{ form.payment_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="payment-form-col">
+                            <div class="payment-form-group">
+                                <label for="{{ form.payment_amount.id_for_label }}" class="payment-form-label">Amount</label>
+                                {{ form.payment_amount }}
+                                {% if form.payment_amount.errors %}
+                                    <div class="payment-form-error">{{ form.payment_amount.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="payment-form-row">
+                        <div class="payment-form-col">
+                            <div class="payment-form-group">
+                                <label for="{{ form.payment_method.id_for_label }}" class="payment-form-label">Payment Method</label>
+                                {{ form.payment_method }}
+                                {% if form.payment_method.errors %}
+                                    <div class="payment-form-error">{{ form.payment_method.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="payment-form-col">
+                            <div class="payment-form-group">
+                                <label for="{{ form.payment_reference.id_for_label }}" class="payment-form-label">Reference Number</label>
+                                {{ form.payment_reference }}
+                                {% if form.payment_reference.errors %}
+                                    <div class="payment-form-error">{{ form.payment_reference.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="payment-form-group">
+                        <label for="{{ form.payment_description.id_for_label }}" class="payment-form-label">Description</label>
+                        {{ form.payment_description }}
+                        {% if form.payment_description.errors %}
+                            <div class="payment-form-error">{{ form.payment_description.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="payment-form-actions">
+                        <a href="{% url 'payment_list' %}" class="payment-form-back-btn">
+                            <i class="fas fa-arrow-left"></i> Back to Payments
+                        </a>
+                        <button type="submit" class="payment-form-save-btn">
+                            <i class="fas fa-save"></i> Save Payment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+
