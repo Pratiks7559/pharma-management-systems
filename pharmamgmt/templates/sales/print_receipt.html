@@ -218,7 +218,9 @@
             <div class="invoice-info-right text-right">
                 <div><strong>Invoice No:</strong> {{ invoice.sales_invoice_no }}</div>
                 <div><strong>Date:</strong> {{ invoice.sales_invoice_date|date:"d-m-Y" }}</div>
-                <div><strong>Time:</strong> {% now "H:i" %}</div>
+                {% if invoice.created_at %}
+                <div><strong>Time:</strong> {{ invoice.created_at|date:"h:i A" }}</div>
+                {% endif %}
             </div>
         </div>
         
@@ -297,7 +299,7 @@
         <div class="receipt-footer">
             <p><strong>Thank you for your business!</strong></p>
             <p>This is a computer-generated receipt and does not require a signature.</p>
-            <p style="margin-top: 5px; font-size: 9px;">Printed on: {% now "d-m-Y H:i:s" %}</p>
+            <p style="margin-top: 5px; font-size: 9px;">Printed on: {% now "d-m-Y" %} at {% now "H:i:s" %}</p>
         </div>
     </div>
     

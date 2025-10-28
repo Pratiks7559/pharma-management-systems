@@ -506,7 +506,7 @@
     transform: translateY(-1px);
 }
 
-/* Batch Modal Styles - Compact */
+/* Batch Selection Modal - Compact */
 .batch-modal-overlay {
     position: fixed;
     top: 0;
@@ -515,25 +515,25 @@
     height: 100%;
     background: rgba(0, 0, 0, 0.7);
     display: flex;
-    align-items: center;
     justify-content: center;
-    z-index: 1000;
+    align-items: center;
+    z-index: 10000;
 }
 
 .batch-modal-content {
-    background: white !important;
-    color: #495057 !important;
+    background: white;
     border-radius: 8px;
     width: 90%;
     max-width: 500px;
     max-height: 70vh;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     overflow: hidden;
 }
 
 .batch-modal-header {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-    color: white;
     padding: 10px 15px;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -542,6 +542,7 @@
 .batch-modal-header h3 {
     margin: 0;
     font-size: 1rem;
+    font-weight: 600;
 }
 
 .batch-modal-close {
@@ -551,8 +552,13 @@
     font-size: 1.2rem;
     cursor: pointer;
     padding: 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 50%;
-    transition: background 0.2s ease;
+    transition: background 0.2s;
 }
 
 .batch-modal-close:hover {
@@ -561,52 +567,56 @@
 
 .batch-modal-body {
     padding: 10px;
-    max-height: 300px;
-    overflow-y: auto;
+}
+
+.batch-search {
+    margin-bottom: 10px;
 }
 
 .batch-search input {
     width: 100%;
     padding: 8px;
-    border: 1px solid #e9ecef;
+    border: 1px solid #e0e0e0;
     border-radius: 4px;
-    margin-bottom: 8px;
     font-size: 0.8rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.batch-search input:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.1);
+}
+
+.batch-list {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
 }
 
 .batch-item {
-    padding: 8px;
-    border: 1px solid #e9ecef !important;
-    border-radius: 4px;
-    margin-bottom: 4px;
+    padding: 8px 10px;
+    border-bottom: 1px solid #f0f0f0;
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-size: 0.75rem;
-    background: white !important;
-    color: #212529 !important;
+}
+
+.batch-item:last-child {
+    border-bottom: none;
 }
 
 .batch-item:hover {
-    border-color: #28a745 !important;
-    background: #d4edda !important;
-    color: #212529 !important;
+    background: #f8f9fa;
 }
 
 .batch-item.batch-selected {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
-    color: white !important;
-    border-color: #28a745 !important;
-    transform: translateX(5px);
-    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
-}
-
-.batch-item.batch-unavailable {
-    opacity: 0.6;
-    background: #f8f9fa !important;
-    color: #6c757d !important;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
 }
 
 .batch-info {
@@ -616,93 +626,61 @@
 .batch-no {
     font-size: 0.8rem;
     margin-bottom: 2px;
-    font-weight: 700;
-}
-
-.batch-item .batch-no {
-    color: #212529 !important;
-}
-
-.batch-item:hover .batch-no {
-    color: #212529 !important;
-}
-
-.batch-item.batch-selected .batch-no {
-    color: #ffffff !important;
+    font-weight: 600;
+    color: red;
 }
 
 .batch-details {
     display: flex;
     gap: 8px;
-    font-size: 0.7rem;
     margin-bottom: 2px;
-}
-
-.batch-item .batch-details {
-    color: #6c757d !important;
-}
-
-.batch-item:hover .batch-details {
-    color: #495057 !important;
+    font-size: 0.7rem;
 }
 
 .batch-item.batch-selected .batch-details {
-    color: rgba(255, 255, 255, 0.9) !important;
+    opacity: 0.9;
 }
 
 .batch-rates {
-    display: flex;
-    gap: 4px;
     font-size: 0.65rem;
-    font-weight: 600;
-}
-
-.batch-item .batch-rates {
-    color: #212529 !important;
-}
-
-.batch-item:hover .batch-rates {
-    color: #212529 !important;
+    font-weight: 500;
 }
 
 .batch-item.batch-selected .batch-rates {
-    color: rgba(255, 255, 255, 0.95) !important;
-}
-
-.status-available {
-    color: #28a745 !important;
-    font-weight: 600;
-    font-size: 0.7rem;
-}
-
-.batch-item.batch-selected .status-available {
-    color: #d4edda !important;
-}
-
-.status-unavailable {
-    color: #dc3545 !important;
-    font-weight: 600;
-    font-size: 0.7rem;
-}
-
-.batch-item.batch-selected .status-unavailable {
-    color: #f8d7da !important;
+    opacity: 0.95;
 }
 
 .batch-modal-footer {
+    padding: 8px 10px;
     background: #f8f9fa;
-    padding: 8px;
-    text-align: center;
-    border-top: 1px solid #e9ecef;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .batch-shortcuts {
-    margin-bottom: 8px;
-}
-
-.batch-shortcuts small {
     color: #6c757d;
     font-size: 0.7rem;
+}
+
+/* Scrollbar styling for batch list */
+.batch-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.batch-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 2px;
+}
+
+.batch-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 2px;
+}
+
+.batch-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }
 
 /* Quick Search Modal - Compact */

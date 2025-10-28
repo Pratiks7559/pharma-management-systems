@@ -1206,7 +1206,7 @@ small {
     font-size: 0.7rem;
 }
 
-/* Batch Modal Styles - Compact */
+/* Batch Selection Modal - Compact */
 .batch-modal-overlay {
     position: fixed;
     top: 0;
@@ -1215,9 +1215,9 @@ small {
     height: 100%;
     background: rgba(0, 0, 0, 0.7);
     display: flex;
-    align-items: center;
     justify-content: center;
-    z-index: 1000;
+    align-items: center;
+    z-index: 10000;
 }
 
 .batch-modal-content {
@@ -1226,13 +1226,14 @@ small {
     width: 90%;
     max-width: 500px;
     max-height: 70vh;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     overflow: hidden;
 }
 
 .batch-modal-header {
+    padding: 10px 15px;
     background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
     color: white;
-    padding: 10px 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1241,6 +1242,7 @@ small {
 .batch-modal-header h3 {
     margin: 0;
     font-size: 1rem;
+    font-weight: 600;
 }
 
 .batch-modal-close {
@@ -1250,8 +1252,13 @@ small {
     font-size: 1.2rem;
     cursor: pointer;
     padding: 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 50%;
-    transition: background 0.2s ease;
+    transition: background 0.2s;
 }
 
 .batch-modal-close:hover {
@@ -1260,24 +1267,37 @@ small {
 
 .batch-modal-body {
     padding: 10px;
-    max-height: 300px;
-    overflow-y: auto;
+}
+
+.batch-search {
+    margin-bottom: 10px;
 }
 
 .batch-search input {
     width: 100%;
     padding: 8px;
-    border: 1px solid #e9ecef;
+    border: 1px solid #e0e0e0;
     border-radius: 4px;
-    margin-bottom: 8px;
     font-size: 0.8rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.batch-search input:focus {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.1);
+}
+
+.batch-list {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
 }
 
 .batch-item {
-    padding: 8px;
-    border: 1px solid #e9ecef;
-    border-radius: 4px;
-    margin-bottom: 4px;
+    padding: 8px 10px;
+    border-bottom: 1px solid #f0f0f0;
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
@@ -1286,22 +1306,17 @@ small {
     font-size: 0.75rem;
 }
 
+.batch-item:last-child {
+    border-bottom: none;
+}
+
 .batch-item:hover {
-    border-color: #dc2626;
     background: #f8f9fa;
 }
 
 .batch-item.batch-selected {
-    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
-    color: white !important;
-    border-color: #dc2626 !important;
-    transform: translateX(5px);
-    box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
-}
-
-.batch-item.batch-unavailable {
-    opacity: 0.6;
-    background: #f8f9fa;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: rgb(255, 255, 255);
 }
 
 .batch-info {
@@ -1312,49 +1327,59 @@ small {
     font-size: 0.8rem;
     margin-bottom: 2px;
     font-weight: 600;
+    color: green !important;
 }
 
 .batch-details {
     display: flex;
     gap: 8px;
-    font-size: 0.7rem;
-    color: #6c757d;
     margin-bottom: 2px;
+    font-size: 0.7rem;
+}
+
+.batch-item.batch-selected .batch-details {
+    opacity: 0.9;
 }
 
 .batch-rates {
-    display: flex;
-    gap: 4px;
     font-size: 0.65rem;
-    font-weight: 600;
+    font-weight: 500;
 }
 
-.status-available {
-    color: #28a745;
-    font-weight: 600;
-    font-size: 0.7rem;
-}
-
-.status-unavailable {
-    color: #dc3545;
-    font-weight: 600;
-    font-size: 0.7rem;
+.batch-item.batch-selected .batch-rates {
+    opacity: 0.95;
 }
 
 .batch-modal-footer {
+    padding: 8px 10px;
     background: #f8f9fa;
-    padding: 8px;
-    text-align: center;
-    border-top: 1px solid #e9ecef;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .batch-shortcuts {
-    margin-bottom: 8px;
-}
-
-.batch-shortcuts small {
     color: #6c757d;
     font-size: 0.7rem;
+}
+
+.batch-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.batch-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 2px;
+}
+
+.batch-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 2px;
+}
+
+.batch-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }
 
 .btn {
@@ -1696,7 +1721,7 @@ small {
 }
 
 .batch-item.batch-selected {
-    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+    background: linear-gradient(135deg, #d77979 0%, #d35d5d 100%) !important;
     color: white !important;
 }
 
@@ -1711,7 +1736,7 @@ small {
 .batch-item.batch-selected .batch-no,
 .batch-item.batch-selected .batch-details,
 .batch-item.batch-selected .batch-rates {
-    color: white !important;
+    color:rgb(0, 255, 8) !important;
 }
 
 .batch-details {
