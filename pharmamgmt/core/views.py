@@ -1844,6 +1844,37 @@ def print_sales_bill(request, pk):
     return render(request, 'sales/print_sales_bill.html', context)
 
 @login_required
+def print_receipt(request, pk):
+    """Print receipt in landscape format with pharmacy details"""
+    invoice = get_object_or_404(SalesInvoiceMaster, sales_invoice_no=pk)
+    
+    # Get all sales under this invoice
+    sales = SalesMaster.objects.filter(sales_invoice_no=pk)
+    
+    # Get pharmacy details - fetch all fields explicitly
+    pharmacy = None
+    try:
+        pharmacy = Pharmacy_Details.objects.first()
+        if pharmacy:
+            print(f"Pharmacy found: {pharmacy.pharmaname}")
+            print(f"Proprietor: {pharmacy.proprietorname}")
+            print(f"Contact: {pharmacy.proprietorcontact}")
+    except Pharmacy_Details.DoesNotExist:
+        print("No pharmacy details found in database")
+        pharmacy = None
+    except Exception as e:
+        print(f"Error fetching pharmacy details: {e}")
+        pharmacy = None
+    
+    context = {
+        'invoice': invoice,
+        'sales': sales,
+        'pharmacy': pharmacy,
+        'title': f'Receipt - Invoice #{invoice.sales_invoice_no}'
+    }
+    return render(request, 'sales/print_receipt.html', context)
+
+@login_required
 def add_sale(request, invoice_id):
     invoice = get_object_or_404(SalesInvoiceMaster, sales_invoice_no=invoice_id)
     
@@ -2484,6 +2515,7 @@ def add_sales_invoice_with_products(request):
                 success_msg = f"Sales Invoice #{invoice.sales_invoice_no} with {sales_created_count} products added successfully!"
                 print(success_msg)
                 messages.success(request, success_msg)
+                # Redirect to invoice detail page after creating invoice
                 return redirect('sales_invoice_detail', pk=invoice.sales_invoice_no)
             else:
                 # Form validation failed

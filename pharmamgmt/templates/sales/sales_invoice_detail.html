@@ -11,6 +11,9 @@
     <button type="button" class="edit-invoice-action-btn" data-bs-toggle="modal" data-bs-target="#editSalesInvoiceModal">
         <i class="fas fa-edit me-2"></i>Edit Invoice
     </button>
+    <a href="{% url 'print_receipt' pk=invoice.sales_invoice_no %}" target="_blank" class="print-bill-action-btn" title="Print Receipt (Ctrl+P)">
+        <i class="fas fa-receipt me-2"></i>Print Receipt (Ctrl+P)
+    </a>
     <a href="{% url 'print_sales_bill' pk=invoice.sales_invoice_no %}" target="_blank" class="print-bill-action-btn">
         <i class="fas fa-print me-2"></i>Print Bill
     </a>
@@ -1616,8 +1619,9 @@ function hideEditCustomerRateInfo() {
     selectedEditCustomerRateType = 'A'; // Reset to default
 }
 
-// Keyboard shortcut Ctrl+E for edit
+// Keyboard shortcuts
 document.addEventListener('keydown', function(e) {
+    // Ctrl+E for edit
     if (e.ctrlKey && e.key === 'e') {
         e.preventDefault();
         document.getElementById('editSalesInvoiceModal').style.display = 'block';
@@ -1628,6 +1632,13 @@ document.addEventListener('keydown', function(e) {
                 invoiceDateField.select();
             }
         }, 300);
+    }
+    
+    // Ctrl+P for print receipt
+    if (e.ctrlKey && e.key === 'p') {
+        e.preventDefault();
+        const printReceiptUrl = "{% url 'print_receipt' pk=invoice.sales_invoice_no %}";
+        window.open(printReceiptUrl, '_blank');
     }
 });
 </script>

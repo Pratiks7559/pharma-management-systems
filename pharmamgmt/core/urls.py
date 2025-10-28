@@ -68,6 +68,7 @@ urlpatterns = [
     path('sales/<str:pk>/', views.sales_invoice_detail, name='sales_invoice_detail'),
     path('sales/<str:pk>/edit/', views.edit_sales_invoice, name='edit_sales_invoice'),
     path('sales/<str:pk>/print/', views.print_sales_bill, name='print_sales_bill'),
+    path('sales/<str:pk>/print-receipt/', views.print_receipt, name='print_receipt'),
     path('sales/<str:pk>/delete/', views.delete_sales_invoice, name='delete_sales_invoice'),
     path('sales/<str:invoice_id>/add-sale/', views.add_sale, name='add_sale'),
     path('sales/<str:invoice_id>/edit-sale/<int:sale_id>/', views.edit_sale, name='edit_sale'),
