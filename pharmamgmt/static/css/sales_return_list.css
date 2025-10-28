@@ -753,42 +753,109 @@
     }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    .sr-list-container {
-        background-color: #1a1a1a;
-    }
-    
-    .sr-list-header,
-    .sr-list-search-form,
-    .sr-list-table-container,
-    .sr-list-nav {
-        background: #2d2d2d;
-        color: #ffffff;
-    }
-    
-    .sr-list-search-input {
-        background: #3d3d3d;
-        border-color: #555;
-        color: #ffffff;
-    }
-    
-    .sr-list-table th {
-        background: #1a1a1a;
-        color: #ffffff;
-    }
-    
-    .sr-list-table tbody tr:hover {
-        background: #3d3d3d;
-    }
-    
-    .sr-list-table a {
-        color: #66b3ff;
-    }
-    
-    .sr-list-table a:hover {
-        color: #4da6ff;
-    }
+/* Force Light Theme - Override System Dark Mode */
+.sr-list-container,
+.sr-list-container * {
+    color-scheme: light !important;
+}
+
+.sr-list-container {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+}
+
+.sr-list-header,
+.sr-list-search-form,
+.sr-list-table-container,
+.sr-list-nav {
+    background: white !important;
+    color: #212529 !important;
+}
+
+.sr-list-title {
+    color: #495057 !important;
+}
+
+.sr-list-search-input,
+.sr-list-search-input-compact,
+.sr-date-input {
+    background: white !important;
+    border-color: #ddd !important;
+    color: #212529 !important;
+}
+
+.sr-list-table th {
+    background: #f8f9fa !important;
+    color: #495057 !important;
+}
+
+.sr-list-table td {
+    color: #212529 !important;
+    background: white !important;
+}
+
+.sr-list-table tbody tr:hover {
+    background: #f8f9fa !important;
+}
+
+.sr-list-table a {
+    color: #007bff !important;
+}
+
+.sr-list-table a:hover {
+    color: #0056b3 !important;
+}
+
+.sr-list-btn {
+    color: white !important;
+}
+
+.sr-list-btn-outline-primary {
+    color: #007bff !important;
+    background: transparent !important;
+}
+
+.sr-list-btn-outline-primary:hover {
+    background: #007bff !important;
+    color: white !important;
+}
+
+.sr-list-btn-outline-danger {
+    color: #dc3545 !important;
+    background: transparent !important;
+}
+
+.sr-list-btn-outline-danger:hover {
+    background: #dc3545 !important;
+    color: white !important;
+}
+
+.sr-list-empty {
+    color: #6c757d !important;
+    background: white !important;
+}
+
+.sr-list-empty-text {
+    color: #6c757d !important;
+}
+
+.sr-list-page-link {
+    color: #007bff !important;
+    background: white !important;
+}
+
+.sr-list-page-link:hover {
+    background: #e9ecef !important;
+    color: #0056b3 !important;
+}
+
+.sr-list-page-active .sr-list-page-link {
+    background: #007bff !important;
+    color: white !important;
+}
+
+.sr-date-label {
+    color: #666 !important;
 }
 /* Delete Modal Styles */
 .delete-modal {

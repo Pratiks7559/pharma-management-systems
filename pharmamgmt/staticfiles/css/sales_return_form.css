@@ -41,10 +41,12 @@
 }
 
 .sr-return-number {
-    background: rgba(255, 255, 255, 0.2);
+
+    background: green;
+    color: red;
     padding: 4px 12px;
     border-radius: 12px;
-    font-size: 0.8rem;
+    font-size: 1.2rem;
     font-weight: 500;
 }
 

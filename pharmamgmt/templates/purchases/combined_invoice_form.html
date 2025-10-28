@@ -14,7 +14,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="ci-main-container">
+<div class="ci-light-protect ci-main-container">
     <div class="ci-wrapper-card">
         <div class="ci-page-header">
             <h5 class="ci-main-title">Add Purchase Invoice with Products</h5>
@@ -1319,6 +1319,15 @@ function selectBatch(batchNo, rowIndex, batchData) {
         row.querySelector('.purchase-rate').value = batchData.purchase_rate || '';
         
         calculateRowTotal(rowIndex);
+        
+        // Auto-focus on QTY field after batch selection
+        setTimeout(() => {
+            const qtyField = row.querySelector('.qty');
+            if (qtyField) {
+                qtyField.focus();
+                qtyField.select();
+            }
+        }, 100);
     }
     closeBatchModal();
 }

@@ -2225,7 +2225,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
-/* Batch Modal Styles - Exact Copy from Purchase Section */
+/* Batch Modal Styles - Dark Theme Compatible */
 .batch-modal-overlay {
     position: fixed;
     top: 0;
@@ -2241,7 +2241,8 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .batch-modal-content {
-    background: white;
+    background: white !important;
+    color: #212529 !important;
     border-radius: 12px;
     width: 90%;
     max-width: 600px;
@@ -2251,18 +2252,23 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .batch-modal-header {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-    color: white;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+    color: white !important;
     padding: 1.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
+.batch-modal-header h3 {
+    color: white !important;
+    margin: 0;
+}
+
 .batch-modal-close {
     background: none;
     border: none;
-    color: white;
+    color: white !important;
     font-size: 1.5rem;
     cursor: pointer;
     padding: 0.5rem;
@@ -2278,6 +2284,7 @@ document.addEventListener('DOMContentLoaded', function() {
     padding: 1.5rem;
     max-height: 400px;
     overflow-y: auto;
+    background: white !important;
 }
 
 .batch-search input {
@@ -2287,11 +2294,13 @@ document.addEventListener('DOMContentLoaded', function() {
     border-radius: 8px;
     margin-bottom: 1rem;
     font-size: 1rem;
+    background: white !important;
+    color: #212529 !important;
 }
 
 .batch-item {
     padding: 1rem;
-    border: 2px solid #e9ecef;
+    border: 2px solid #e9ecef !important;
     border-radius: 8px;
     margin-bottom: 0.5rem;
     cursor: pointer;
@@ -2299,19 +2308,22 @@ document.addEventListener('DOMContentLoaded', function() {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: white !important;
+    color: #212529 !important;
 }
 
-.batch-item:hover,
-.batch-item.batch-selected {
-    border-color: #007bff;
-    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+.batch-item:hover {
+    border-color: #007bff !important;
+    background: #e3f2fd !important;
+    color: #212529 !important;
     transform: translateX(5px);
     box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
 }
 
 .batch-item.batch-selected {
-    border-color: #28a745;
-    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border-color: #28a745 !important;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    color: white !important;
     box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
 }
 
@@ -2322,17 +2334,75 @@ document.addEventListener('DOMContentLoaded', function() {
 .batch-no {
     font-size: 1.1rem;
     margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.batch-item .batch-no {
+    color: #212529 !important;
+}
+
+.batch-item:hover .batch-no {
+    color: #212529 !important;
+}
+
+.batch-item.batch-selected .batch-no {
+    /* color: #ffffff !important; */
 }
 
 .batch-details {
     display: flex;
     gap: 1rem;
     font-size: 0.9rem;
-    color: #6c757d;
+}
+
+.batch-item .batch-details {
+    color: #6c757d !important;
+}
+
+.batch-item:hover .batch-details {
+    color: #495057 !important;
+}
+
+.batch-item.batch-selected .batch-details {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.batch-rates {
+    font-weight: 600;
+}
+
+.batch-item .batch-rates {
+    color: #212529 !important;
+}
+
+.batch-item:hover .batch-rates {
+    color: #212529 !important;
+}
+
+.batch-item.batch-selected .batch-rates {
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.batch-status .status-available {
+    color: #28a745 !important;
+    font-weight: 600;
+}
+
+.batch-item.batch-selected .status-available {
+    color: #d4edda !important;
+}
+
+.batch-status .status-unavailable {
+    color: #dc3545 !important;
+    font-weight: 600;
+}
+
+.batch-item.batch-selected .status-unavailable {
+    color: #f8d7da !important;
 }
 
 .batch-modal-footer {
-    background: #f8f9fa;
+    background: #f8f9fa !important;
     padding: 1rem 1.5rem;
     border-top: 1px solid #e9ecef;
     display: flex;
@@ -2341,9 +2411,13 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .batch-shortcuts {
-    color: #6c757d;
+    color: #6c757d !important;
     font-weight: 500;
     font-size: 0.85rem;
+}
+
+.batch-modal-footer small {
+    color: #6c757d !important;
 }
 
 /* Enhanced Stock Validation Styles */

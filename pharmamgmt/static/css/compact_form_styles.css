@@ -38,6 +38,7 @@
     padding: 2px 4px !important;
     font-size: 0.75rem !important;
     min-width: 60px;
+    color-scheme: light; 
 }
 
 /* Compact buttons - only within invoice form */

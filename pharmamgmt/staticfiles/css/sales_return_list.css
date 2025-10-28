@@ -37,21 +37,24 @@
     margin: 0;
 }
 
+/* Search Form Styles */
 .sr-list-search-row {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 15px;
-    align-items: end;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 10px 0;
 }
 
 .sr-list-search-col {
-    display: flex;
-    flex-direction: column;
+    flex: 0 0 auto;
 }
 
 .sr-list-search-col-btn {
     display: flex;
-    gap: 10px;
+    gap: 6px;
+    align-items: center;
+    flex: 0 0 auto;
 }
 
 .sr-list-search-input {
@@ -67,6 +70,66 @@
     outline: none;
     border-color: #007bff;
     box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+}
+
+/* Compact Search Input - Higher specificity */
+.sr-list-search-form .sr-list-search-input-compact {
+    width: 200px !important;
+    height: 32px !important;
+    font-size: 13px !important;
+    padding: 4px 8px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    box-sizing: border-box;
+}
+
+.sr-list-search-form .sr-list-search-input-compact:focus {
+    outline: none;
+    border-color: #007bff !important;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25) !important;
+}
+
+/* Date Filter Styles */
+.sr-list-search-form .sr-list-date-filter {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+.sr-list-search-form .sr-date-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #666;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.sr-list-search-form .sr-date-input {
+    width: 120px !important;
+    height: 32px !important;
+    font-size: 12px !important;
+    padding: 4px 6px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.sr-list-search-form .sr-date-input:focus {
+    outline: none;
+    border-color: #007bff !important;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25) !important;
+}
+
+/* Compact Button Styles */
+.sr-list-search-form .sr-btn-compact {
+    height: 32px !important;
+    padding: 4px 12px !important;
+    font-size: 13px !important;
+    line-height: 1.2 !important;
+    box-sizing: border-box;
 }
 
 .sr-list-btn {
@@ -281,8 +344,28 @@
 
 @media (max-width: 992px) {
     .sr-list-search-row {
-        grid-template-columns: 1fr;
+        flex-direction: column;
+        align-items: stretch;
         gap: 12px;
+    }
+    
+    .sr-list-search-col,
+    .sr-list-date-filter,
+    .sr-list-search-col-btn {
+        width: 100%;
+    }
+    
+    .sr-list-search-form .sr-list-search-input-compact {
+        width: 100% !important;
+    }
+    
+    .sr-list-date-filter {
+        justify-content: space-between;
+    }
+    
+    .sr-list-search-form .sr-date-input {
+        flex: 1;
+        max-width: 140px !important;
     }
     
     .sr-list-search-col-btn {
@@ -321,8 +404,28 @@
     }
     
     .sr-list-search-row {
-        grid-template-columns: 1fr;
-        gap: 15px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .sr-list-search-col,
+    .sr-list-date-filter,
+    .sr-list-search-col-btn {
+        width: 100%;
+    }
+    
+    .sr-list-search-form .sr-list-search-input-compact {
+        width: 100% !important;
+    }
+    
+    .sr-list-date-filter {
+        justify-content: space-between;
+    }
+    
+    .sr-list-search-form .sr-date-input {
+        flex: 1;
+        max-width: 140px !important;
     }
     
     .sr-list-search-col-btn {
@@ -685,5 +788,242 @@
     
     .sr-list-table a:hover {
         color: #4da6ff;
+    }
+}
+/* Delete Modal Styles */
+.delete-modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.delete-modal-content {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    width: 90%;
+    max-width: 400px;
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.delete-modal-header {
+    padding: 20px 20px 10px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.delete-modal-header h3 {
+    margin: 0;
+    color: #dc3545;
+    font-size: 18px;
+}
+
+.delete-modal-close {
+    font-size: 24px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.delete-modal-close:hover {
+    color: #000;
+}
+
+.delete-modal-body {
+    padding: 20px;
+}
+
+.delete-modal-body p {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.delete-warning {
+    color: #dc3545;
+    font-size: 14px;
+    font-style: italic;
+}
+
+.delete-modal-footer {
+    padding: 10px 20px 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn-cancel {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-cancel:hover {
+    background-color: #5a6268;
+}
+
+.btn-delete {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
+}
+
+.keyboard-hint {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 1rem 0;
+    font-size: 12px;
+    color: #6c757d;
+    text-align: center;
+}
+
+.keyboard-hint kbd {
+    background: #e9ecef;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: monospace;
+}
+
+/* Modal responsive styles */
+@media (max-width: 480px) {
+    .delete-modal-content {
+        width: 95%;
+        margin: 10px;
+    }
+    
+    .delete-modal-header {
+        padding: 15px 15px 8px;
+    }
+    
+    .delete-modal-header h3 {
+        font-size: 16px;
+    }
+    
+    .delete-modal-body {
+        padding: 15px;
+    }
+    
+    .delete-modal-footer {
+        padding: 8px 15px 15px;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .btn-cancel,
+    .btn-delete {
+        width: 100%;
+        padding: 10px 16px;
+    }
+}
+.delete-modal-icon {
+    color: #ef4444;
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+/* Hide modal by default */
+.delete-modal {
+    display: none;
+}
+
+.delete-modal.show {
+    display: flex;
+}
+/* Override Global CSS - Highest Priority */
+.sr-list-search-form input[type="text"].sr-list-search-input-compact,
+.sr-list-search-form input.sr-list-search-input-compact {
+    width: 200px !important;
+    height: 32px !important;
+    font-size: 13px !important;
+    padding: 4px 8px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    box-sizing: border-box !important;
+    min-height: auto !important;
+}
+
+.sr-list-search-form input[type="date"].sr-date-input,
+.sr-list-search-form input.sr-date-input {
+    width: 120px !important;
+    height: 32px !important;
+    font-size: 12px !important;
+    padding: 4px 6px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    box-sizing: border-box !important;
+    min-height: auto !important;
+}
+
+.sr-list-search-form button.sr-btn-compact,
+.sr-list-search-form .sr-btn-compact {
+    height: 32px !important;
+    padding: 4px 12px !important;
+    font-size: 13px !important;
+    line-height: 1.2 !important;
+    box-sizing: border-box !important;
+    min-height: auto !important;
+}
+
+/* Mobile Overrides */
+@media (max-width: 992px) {
+    .sr-list-search-form input[type="text"].sr-list-search-input-compact,
+    .sr-list-search-form input.sr-list-search-input-compact {
+        width: 100% !important;
+    }
+    
+    .sr-list-search-form input[type="date"].sr-date-input,
+    .sr-list-search-form input.sr-date-input {
+        flex: 1 !important;
+        max-width: 140px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .sr-list-search-form input[type="text"].sr-list-search-input-compact,
+    .sr-list-search-form input.sr-list-search-input-compact {
+        width: 100% !important;
+    }
+    
+    .sr-list-search-form input[type="date"].sr-date-input,
+    .sr-list-search-form input.sr-date-input {
+        flex: 1 !important;
+        max-width: 140px !important;
     }
 }

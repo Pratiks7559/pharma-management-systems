@@ -62,14 +62,16 @@
 .customer-detail-bank-card,
 .customer-detail-financial-card,
 .customer-detail-sales-card {
-    background-color: white;
+    background-color: white !important;
+    color: #1e293b !important;
     border-radius: 0.5rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     overflow: hidden;
 }
 
 .customer-detail-card-header {
-    background-color: #f8fafc;
+    background-color: #f8fafc !important;
+    color: #1e293b !important;
     padding: 0.5rem 1rem;
     border-bottom: 1px solid #e2e8f0;
 }
@@ -78,23 +80,25 @@
     margin: 0;
     font-size: 1.125rem;
     font-weight: 600;
-    color: #1e293b;
+    color: #1e293b !important;
 }
 
 .customer-detail-card-body {
     padding: 0.75rem;
+    background-color: white !important;
+    color: #1e293b !important;
 }
 
 .customer-detail-name {
     margin: 0 0 0.5rem 0;
     font-size: 1.5rem;
     font-weight: 700;
-    color: #1e293b;
+    color: #1e293b !important;
 }
 
 .customer-detail-type {
     margin: 0 0 1rem 0;
-    color: #64748b;
+    color: #64748b !important;
     font-size: 1rem;
 }
 
@@ -124,18 +128,18 @@
 
 .customer-detail-info-label {
     font-weight: 600;
-    color: #475569;
+    color: #475569 !important;
     min-width: 120px;
 }
 
 .customer-detail-info-value {
-    color: #1e293b;
+    color: #1e293b !important;
     font-weight: 500;
 }
 
 .customer-detail-address {
     margin-top: 0.25rem;
-    color: #64748b;
+    color: #64748b !important;
     line-height: 1.5;
 }
 
@@ -152,7 +156,8 @@
 .customer-detail-stat-item {
     text-align: center;
     padding: 0.5rem;
-    background-color: #f8fafc;
+    background-color: #f8fafc !important;
+    color: #1e293b !important;
     border-radius: 0.5rem;
 }
 
@@ -160,7 +165,7 @@
     margin: 0 0 0.5rem 0;
     font-size: 0.875rem;
     font-weight: 500;
-    color: #64748b;
+    color: #64748b !important;
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -169,7 +174,7 @@
     margin: 0;
     font-size: 1.25rem;
     font-weight: 700;
-    color: #1e293b;
+    color: #1e293b !important;
 }
 
 .customer-detail-balance {
@@ -212,7 +217,7 @@
 }
 
 .customer-detail-sales-thead {
-    background-color: #f8fafc;
+    background-color: #f8fafc !important;
 }
 
 .customer-detail-sales-header-row {
@@ -224,13 +229,13 @@
     text-align: left;
     font-size: 0.75rem;
     font-weight: 600;
-    color: #475569;
+    color: #475569 !important;
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 
 .customer-detail-sales-tbody {
-    background-color: white;
+    background-color: white !important;
 }
 
 .customer-detail-sales-row {
@@ -239,13 +244,13 @@
 }
 
 .customer-detail-sales-row:hover {
-    background-color: #f8fafc;
+    background-color: #f8fafc !important;
 }
 
 .customer-detail-sales-td {
     padding: 0.5rem 0.75rem;
     font-size: 0.75rem;
-    color: #1e293b;
+    color: #1e293b !important;
 }
 
 .customer-detail-balance-due {

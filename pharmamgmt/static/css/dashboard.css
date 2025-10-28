@@ -1,4 +1,18 @@
 /* Modern Dashboard Styles */
+/* Force light theme: Disable system dark mode adjustments */
+:root {
+  color-scheme: light only;
+}
+
+/* Prevent browser or OS dark mode color adjustments */
+html, body {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  forced-color-adjust: none;
+  -webkit-color-scheme: light;
+  color-scheme: light;
+}
+
 .dashboard-container {
     padding: 12px;
     /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */

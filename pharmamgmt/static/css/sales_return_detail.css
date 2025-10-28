@@ -544,3 +544,363 @@
         -moz-osx-font-smoothing: grayscale;
     }
 }
+
+/* Additional Modal Fixes */
+.modal-dialog .form-control {
+    background-color: white !important;
+    color: #212529 !important;
+}
+
+.modal-dialog .form-label,
+.modal-dialog label {
+    color: #495057 !important;
+    font-weight: 500;
+}
+
+.modal-dialog .btn-primary {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+    color: white !important;
+}
+
+.modal-dialog .btn-secondary {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    color: white !important;
+}
+
+/* Batch Selection Modal in Edit Dialog - Force Light Theme */
+.batch-modal-overlay,
+.batch-selection-modal,
+#batchModal,
+.batch-modal {
+    color-scheme: light !important;
+}
+
+.batch-modal-overlay {
+    background: rgba(0, 0, 0, 0.7) !important;
+}
+
+.batch-modal-content,
+.batch-selection-content {
+    background: white !important;
+    color: #212529 !important;
+}
+
+.batch-modal-header,
+.batch-selection-header {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+    color: white !important;
+}
+
+.batch-modal-header h3,
+.batch-modal-header h4,
+.batch-selection-header h3,
+.batch-selection-header h4 {
+    color: white !important;
+}
+
+.batch-modal-close,
+.batch-close {
+    color: white !important;
+    background: none !important;
+}
+
+.batch-modal-body,
+.batch-selection-body {
+    background: white !important;
+    color: #212529 !important;
+}
+
+.batch-search input,
+.batch-filter input {
+    background: white !important;
+    border-color: #e0e0e0 !important;
+    color: #212529 !important;
+}
+
+.batch-list,
+.batch-items {
+    background: white !important;
+}
+
+.batch-item {
+    background: white !important;
+    color: #212529 !important;
+    border-color: #f0f0f0 !important;
+}
+
+.batch-item:hover {
+    background: #fee2e2 !important;
+}
+
+.batch-item.batch-selected,
+.batch-item.selected {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+    color: white !important;
+    border-color: #dc2626 !important;
+}
+
+.batch-no {
+    color: #212529 !important;
+}
+
+.batch-item.batch-selected .batch-no,
+.batch-item.selected .batch-no {
+    color: white !important;
+}
+
+.batch-details {
+    color: #6c757d !important;
+}
+
+.batch-item.batch-selected .batch-details,
+.batch-item.selected .batch-details {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.batch-rates {
+    color: #212529 !important;
+}
+
+.batch-item.batch-selected .batch-rates,
+.batch-item.selected .batch-rates {
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.batch-modal-footer,
+.batch-selection-footer {
+    background: #f8f9fa !important;
+    border-top: 1px solid #e0e0e0 !important;
+    color: #212529 !important;
+}
+
+.batch-shortcuts {
+    color: #6c757d !important;
+}
+
+.batch-modal-footer .btn,
+.batch-selection-footer .btn {
+    color: white !important;
+}
+
+.status-available {
+    color: #28a745 !important;
+}
+
+.batch-item.batch-selected .status-available {
+    color: #d4edda !important;
+}
+
+.status-unavailable {
+    color: #dc3545 !important;
+}
+
+.batch-item.batch-selected .status-unavailable {
+    color: #f8d7da !important;
+}
+
+/* Force Light Theme - Override System Dark Mode */
+.sr-detail-container,
+.sr-detail-container * {
+    color-scheme: light !important;
+}
+
+.sr-detail-container {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+}
+
+.sr-detail-header,
+.sr-detail-card,
+.sr-detail-info-card {
+    background: white !important;
+    color: #212529 !important;
+}
+
+.sr-detail-title {
+    color: #495057 !important;
+}
+
+.sr-detail-btn {
+    color: white !important;
+}
+
+.sr-detail-info-card {
+    background: #f8f9fa !important;
+}
+
+.sr-detail-info-title {
+    color: #495057 !important;
+}
+
+.sr-detail-info-table td:first-child {
+    color: #6c757d !important;
+}
+
+.sr-detail-info-table td:last-child {
+    color: #495057 !important;
+}
+
+.sr-detail-section-title {
+    color: #495057 !important;
+}
+
+.sr-detail-items-table,
+.sr-detail-payments-table {
+    background: white !important;
+    color: #212529 !important;
+}
+
+.sr-detail-items-table th,
+.sr-detail-payments-table th {
+    background: #f8f9fa !important;
+    color: #495057 !important;
+}
+
+.sr-detail-items-table td,
+.sr-detail-payments-table td {
+    color: #212529 !important;
+    background: white !important;
+}
+
+.sr-detail-btn-outline-primary {
+    color: #007bff !important;
+    background: transparent !important;
+}
+
+.sr-detail-btn-outline-primary:hover {
+    background: #007bff !important;
+    color: white !important;
+}
+
+.sr-detail-btn-outline-danger {
+    color: #dc3545 !important;
+    background: transparent !important;
+}
+
+.sr-detail-btn-outline-danger:hover {
+    background: #dc3545 !important;
+    color: white !important;
+}
+
+.sr-detail-empty-state {
+    background: #f8f9fa !important;
+    color: #6c757d !important;
+}
+
+.sr-detail-empty-text {
+    color: #6c757d !important;
+}
+
+/* Edit Dialog Box - Force Light Theme */
+.modal,
+.modal-dialog,
+.modal-content,
+.modal * {
+    color-scheme: light !important;
+}
+
+.modal-content {
+    background: white !important;
+    color: #212529 !important;
+}
+
+.modal-header {
+    background: #f8f9fa !important;
+    color: #212529 !important;
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+.modal-title {
+    color: #212529 !important;
+}
+
+.modal-body {
+    background: white !important;
+    color: #212529 !important;
+}
+
+.modal-body label {
+    color: #495057 !important;
+}
+
+.modal-body input,
+.modal-body select,
+.modal-body textarea {
+    background: white !important;
+    border-color: #ced4da !important;
+    color: #212529 !important;
+}
+
+.modal-body input:focus,
+.modal-body select:focus,
+.modal-body textarea:focus {
+    background: white !important;
+    border-color: #80bdff !important;
+    color: #212529 !important;
+}
+
+.modal-footer {
+    background: #f8f9fa !important;
+    border-top: 1px solid #dee2e6 !important;
+}
+
+.modal-footer .btn {
+    color: white !important;
+}
+
+.close {
+    color: #000 !important;
+    opacity: 0.5;
+}
+
+.close:hover {
+    color: #000 !important;
+    opacity: 0.75;
+}
+
+/* Edit Form Specific */
+.edit-form label,
+.form-group label {
+    color: #495057 !important;
+}
+
+.edit-form input,
+.edit-form select,
+.edit-form textarea,
+.form-group input,
+.form-group select,
+.form-group textarea {
+    background: white !important;
+    border: 1px solid #ced4da !important;
+    color: #212529 !important;
+}
+
+.edit-form .form-control:disabled,
+.form-group .form-control:disabled {
+    background: #e9ecef !important;
+    color: #6c757d !important;
+}
+
+/* Dialog Overlay */
+.modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Form validation states */
+.modal-body .is-invalid {
+    border-color: #dc3545 !important;
+}
+
+.modal-body .is-valid {
+    border-color: #28a745 !important;
+}
+
+.modal-body .invalid-feedback {
+    color: #dc3545 !important;
+}
+
+.modal-body .valid-feedback {
+    color: #28a745 !important;
+}

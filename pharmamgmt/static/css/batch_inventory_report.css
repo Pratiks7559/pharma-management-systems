@@ -64,7 +64,8 @@
 
 /* Card section */
 .batch-report-card {
-    background: white;
+    background: white !important;
+    color: #5a5c69 !important;
     border-radius: 8px;
     box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
     border: 1px solid #e3e6f0;
@@ -197,7 +198,8 @@
 .batch-inventory-table {
     width: 100%;
     border-collapse: collapse;
-    background: white;
+    background: white !important;
+    color: #5a5c69 !important;
     margin: 0;
 }
 
@@ -227,7 +229,7 @@
 }
 
 .batch-inventory-table tbody tr:hover {
-    background-color: #f8f9fc;
+    background-color: #f8f9fc !important;
 }
 
 .batch-zero-stock-row {
@@ -241,7 +243,7 @@
 .batch-inventory-table td {
     padding: 12px;
     font-size: 14px;
-    color: #5a5c69;
+    color: #5a5c69 !important;
     border-right: 1px solid #e3e6f0;
 }
 

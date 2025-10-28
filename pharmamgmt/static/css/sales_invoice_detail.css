@@ -109,7 +109,8 @@
 
 /* Invoice Info Card */
 .invoice-info-card {
-    background: white;
+    background: white !important;
+    color: #495057 !important;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     overflow: hidden;
@@ -459,6 +460,8 @@
 
 .invoice-info-body {
     padding: 20px;
+    background: white !important;
+    color: #495057 !important;
 }
 
 .invoice-basic-details {
@@ -540,7 +543,8 @@
 
 /* Payment Status Card */
 .payment-status-card {
-    background: white;
+    background: white !important;
+    color: #495057 !important;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     overflow: hidden;
@@ -627,7 +631,8 @@
 
 /* Payment History Card */
 .payment-history-card {
-    background: white;
+    background: white !important;
+    color: #495057 !important;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     overflow: hidden;
@@ -702,7 +707,7 @@
 .payment-history-table-body .payment-history-row td {
     padding: 12px 15px;
     border-bottom: 1px solid #dee2e6;
-    color: #495057;
+    color: #495057 !important;
 }
 
 .payment-date-cell,
@@ -725,7 +730,8 @@
 }
 
 .products-card {
-    background: white;
+    background: white !important;
+    color: #495057 !important;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     overflow: hidden;
@@ -806,7 +812,7 @@
 .products-table-body .product-row td {
     padding: 12px 10px;
     border-bottom: 1px solid #dee2e6;
-    color: #495057;
+    color: #495057 !important;
     font-size: 0.875rem;
 }
 
@@ -1408,7 +1414,8 @@
 }
 
 .batch-modal-content {
-    background: white;
+    background: white !important;
+    color: #495057 !important;
     border-radius: 12px;
     width: 90%;
     max-width: 600px;
@@ -1466,6 +1473,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: white !important;
+    color: #495057 !important;
 }
 
 .batch-item:hover,
@@ -1494,13 +1503,14 @@
 .batch-no {
     font-size: 1.1rem;
     margin-bottom: 0.5rem;
+    color: #495057 !important;
 }
 
 .batch-details {
     display: flex;
     gap: 1rem;
     font-size: 0.9rem;
-    color: #6c757d;
+    color: #6c757d !important;
     margin-bottom: 2px;
 }
 

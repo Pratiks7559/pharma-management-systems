@@ -27,6 +27,21 @@
     
     <!-- Page specific CSS -->
     {% block extra_css %}{% endblock %}
+    
+    <!-- Critical Input Fix Only -->
+    <style>
+    input, textarea, select {
+        background-color: #ffffff !important;
+        color: #1f2937 !important;
+        -webkit-text-fill-color: #1f2937 !important;
+    }
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus {
+        -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+        -webkit-text-fill-color: #1f2937 !important;
+    }
+    </style>
 </head>
 <body class="body-gradient">
     <!-- Loading Screen -->

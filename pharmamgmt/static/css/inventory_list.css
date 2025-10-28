@@ -117,7 +117,8 @@
 }
 
 .summary-card {
-    background: white;
+    background: white !important;
+    color: #2c3e50 !important;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     overflow: hidden;
@@ -172,7 +173,8 @@
 
 /* Table Section */
 .inventory-table-section {
-    background: white;
+    background: white !important;
+    color: #2c3e50 !important;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     overflow: hidden;
@@ -276,12 +278,13 @@
 }
 
 .inventory-row:hover {
-    background: #f8f9fa;
+    background: #f8f9fa !important;
 }
 
 .inventory-row td {
     padding: 12px 8px;
     vertical-align: middle;
+    color: #5a5c69 !important;
 }
 
 .product-link {

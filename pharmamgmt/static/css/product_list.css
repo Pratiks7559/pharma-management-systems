@@ -99,7 +99,8 @@
 }
 
 .product-list-wrapper {
-    background: white;
+    background: white !important;
+    color: #495057 !important;
     border-radius: 0.5rem;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     overflow: hidden;
@@ -288,7 +289,7 @@
 }
 
 .product-list-tbody {
-    background-color: white;
+    background-color: white !important;
 }
 
 .product-list-row {
@@ -297,7 +298,7 @@
 }
 
 .product-list-row:hover {
-    background-color: #f8f9fa;
+    background-color: #f8f9fa !important;
 }
 
 .product-list-id-cell,
@@ -311,11 +312,12 @@
 .product-list-actions-cell {
     padding: 0.75rem;
     vertical-align: middle;
+    color: #495057 !important;
 }
 
 .product-list-id-cell {
     font-weight: 500;
-    color: #007bff;
+    color: #007bff !important;
 }
 
 .product-list-name-cell {
@@ -325,7 +327,7 @@
 }
 
 .product-list-company-cell {
-    color: #6c757d;
+    color: #6c757d !important;
 }
 
 .product-list-batch-cell {

@@ -107,3 +107,4 @@ mere pharamamgmt ke roejct mee ye kya ho raha hai page pr bg colour and uske upp
 cd "c:\pharmaproject pratk\WebsiteHostingService\WebsiteHostingService\WebsiteHostingService\pharmamgmt"
 cd "c:\pharmaproject pratk\WebsiteHostingService\WebsiteHostingService\WebsiteHostingService\pharmamgmt"
 
+tum mera full code anylse karo html with their css files muze dark and light theme ke hisab se ek aisa change do ki machine theme kuch bhi ho code ke kisi css pr ,visiblity ,click and all pr change nhi hoga,css ek dusre pe collapse nhi honge,ui style change nhi hoga.

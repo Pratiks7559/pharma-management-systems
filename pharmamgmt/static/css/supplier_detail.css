@@ -60,37 +60,41 @@
 .supplier-detail-bank-card,
 .supplier-detail-financial-card,
 .supplier-detail-history-card {
-    background: white;
+    background: white !important;
+    color: #212529 !important;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     overflow: hidden;
 }
 
 .supplier-detail-card-header {
-    background-color: #f8f9fa;
+    background-color: #f8f9fa !important;
+    color: #495057 !important;
     padding: 10px 15px;
     border-bottom: 1px solid #dee2e6;
 }
 
 .supplier-detail-card-title {
     margin: 0;
-    color: #495057;
+    color: #495057 !important;
     font-size: 1.1rem;
     font-weight: 600;
 }
 
 .supplier-detail-card-body {
     padding: 15px;
+    background-color: white !important;
+    color: #212529 !important;
 }
 
 .supplier-detail-name {
-    color: #2c3e50;
+    color: #2c3e50 !important;
     margin-bottom: 5px;
     font-size: 1.5rem;
 }
 
 .supplier-detail-type {
-    color: #6c757d;
+    color: #6c757d !important;
     margin-bottom: 20px;
     font-style: italic;
 }
@@ -121,22 +125,22 @@
 
 .supplier-detail-info-label {
     font-weight: 600;
-    color: #495057;
+    color: #495057 !important;
     min-width: 120px;
 }
 
 .supplier-detail-info-value {
-    color: #212529;
+    color: #212529 !important;
 }
 
 .supplier-detail-info-strong {
     font-weight: 600;
-    color: #495057;
+    color: #495057 !important;
 }
 
 .supplier-detail-address {
     margin-top: 5px;
-    color: #6c757d;
+    color: #6c757d !important;
     line-height: 1.4;
 }
 
@@ -153,12 +157,13 @@
 .supplier-detail-stat-item {
     text-align: center;
     padding: 12px;
-    background-color: #f8f9fa;
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
     border-radius: 6px;
 }
 
 .supplier-detail-stat-label {
-    color: #6c757d;
+    color: #6c757d !important;
     font-size: 0.9rem;
     margin-bottom: 10px;
 }
@@ -212,14 +217,14 @@
 }
 
 .supplier-detail-table-head {
-    background-color: #f8f9fa;
+    background-color: #f8f9fa !important;
 }
 
 .supplier-detail-table-th {
     padding: 8px;
     text-align: left;
     font-weight: 600;
-    color: #495057;
+    color: #495057 !important;
     border-bottom: 2px solid #dee2e6;
     font-size: 0.9rem;
 }
@@ -229,10 +234,11 @@
     border-bottom: 1px solid #dee2e6;
     vertical-align: middle;
     font-size: 0.9rem;
+    color: #212529 !important;
 }
 
 .supplier-detail-table-row:hover {
-    background-color: #f8f9fa;
+    background-color: #f8f9fa !important;
 }
 
 .supplier-detail-action-btn {

@@ -15,7 +15,8 @@
 }
 
 .invoice-card {
-    background: white;
+    background: white !important;
+    color: #495057 !important;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     overflow: hidden;
@@ -520,7 +521,8 @@
 }
 
 .batch-modal-content {
-    background: white;
+    background: white !important;
+    color: #495057 !important;
     border-radius: 8px;
     width: 90%;
     max-width: 500px;
@@ -574,7 +576,7 @@
 
 .batch-item {
     padding: 8px;
-    border: 1px solid #e9ecef;
+    border: 1px solid #e9ecef !important;
     border-radius: 4px;
     margin-bottom: 4px;
     cursor: pointer;
@@ -583,16 +585,28 @@
     justify-content: space-between;
     align-items: center;
     font-size: 0.75rem;
+    background: white !important;
+    color: #212529 !important;
 }
 
 .batch-item:hover {
-    border-color: #007bff;
-    background: #f8f9fa;
+    border-color: #28a745 !important;
+    background: #d4edda !important;
+    color: #212529 !important;
+}
+
+.batch-item.batch-selected {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    color: white !important;
+    border-color: #28a745 !important;
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
 }
 
 .batch-item.batch-unavailable {
     opacity: 0.6;
-    background: #f8f9fa;
+    background: #f8f9fa !important;
+    color: #6c757d !important;
 }
 
 .batch-info {
@@ -602,15 +616,38 @@
 .batch-no {
     font-size: 0.8rem;
     margin-bottom: 2px;
-    font-weight: 600;
+    font-weight: 700;
+}
+
+.batch-item .batch-no {
+    color: #212529 !important;
+}
+
+.batch-item:hover .batch-no {
+    color: #212529 !important;
+}
+
+.batch-item.batch-selected .batch-no {
+    color: #ffffff !important;
 }
 
 .batch-details {
     display: flex;
     gap: 8px;
     font-size: 0.7rem;
-    color: #6c757d;
     margin-bottom: 2px;
+}
+
+.batch-item .batch-details {
+    color: #6c757d !important;
+}
+
+.batch-item:hover .batch-details {
+    color: #495057 !important;
+}
+
+.batch-item.batch-selected .batch-details {
+    color: rgba(255, 255, 255, 0.9) !important;
 }
 
 .batch-rates {
@@ -620,16 +657,36 @@
     font-weight: 600;
 }
 
+.batch-item .batch-rates {
+    color: #212529 !important;
+}
+
+.batch-item:hover .batch-rates {
+    color: #212529 !important;
+}
+
+.batch-item.batch-selected .batch-rates {
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
 .status-available {
-    color: #28a745;
+    color: #28a745 !important;
     font-weight: 600;
     font-size: 0.7rem;
 }
 
+.batch-item.batch-selected .status-available {
+    color: #d4edda !important;
+}
+
 .status-unavailable {
-    color: #dc3545;
+    color: #dc3545 !important;
     font-weight: 600;
     font-size: 0.7rem;
+}
+
+.batch-item.batch-selected .status-unavailable {
+    color: #f8d7da !important;
 }
 
 .batch-modal-footer {
@@ -663,7 +720,8 @@
 }
 
 .quick-search-content {
-    background: white;
+    background: white !important;
+    color: #495057 !important;
     border-radius: 8px;
     width: 90%;
     max-width: 400px;
@@ -722,7 +780,8 @@
     margin-bottom: 4px;
     cursor: pointer;
     transition: all 0.2s ease;
-    background: #f8f9fa;
+    background: #f8f9fa !important;
+    color: #495057 !important;
 }
 
 .quick-result-item:hover,
@@ -734,14 +793,14 @@
 
 .quick-result-item .product-name {
     font-weight: 600;
-    color: #495057;
+    color: #495057 !important;
     margin-bottom: 2px;
     font-size: 0.8rem;
 }
 
 .quick-result-item .product-company {
     font-size: 0.7rem;
-    color: #6c757d;
+    color: #6c757d !important;
     font-weight: 500;
 }
 

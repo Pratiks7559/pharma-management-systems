@@ -1507,3 +1507,270 @@ small {
     transform: none;
     box-shadow: none;
 }
+
+/* Force Light Theme - Override System Dark Mode */
+.sr-compact-container,
+.sr-compact-container * {
+    color-scheme: light !important;
+}
+
+.sr-compact-container {
+    background: #f8f9fa !important;
+    color: #212529 !important;
+}
+
+.sr-card,
+.sr-details-section,
+.sr-products-header,
+.sr-products-table-container,
+.sr-total-section,
+.quick-search-content,
+.batch-modal-content {
+    background: white !important;
+    color: #212529 !important;
+}
+
+.sr-title,
+.sr-section-title,
+.sr-products-title {
+    color: #495057 !important;
+}
+
+.sr-return-number {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+}
+
+.sr-field-label {
+    color: #374151 !important;
+}
+
+.sr-form-group input,
+.sr-form-group select,
+.product-select,
+.batch-no,
+.expiry,
+.mrp,
+.return-rate,
+.return-quantity,
+.discount,
+.gst,
+.quick-search-input input,
+.batch-search input {
+    background: white !important;
+    border-color: #e5e7eb !important;
+    color: #212529 !important;
+}
+
+.sr-form-group .sr-text-muted {
+    color: #6c757d !important;
+    background: #f8f9fa !important;
+}
+
+.sr-customer-rate-info {
+    background: #d4edda !important;
+}
+
+.sr-customer-rate-text {
+    color: #155724 !important;
+}
+
+.sr-form-error {
+    color: #dc3545 !important;
+}
+
+.sr-form-preview-alert {
+    background: #d1ecf1 !important;
+    color: #0c5460 !important;
+}
+
+.sr-keyboard-shortcuts {
+    color: #6c757d !important;
+    background: rgba(108, 117, 125, 0.1) !important;
+}
+
+.sr-table-header {
+    background: linear-gradient(135deg, #495057 0%, #6c757d 100%) !important;
+    color: white !important;
+}
+
+.sr-header-row th {
+    color: white !important;
+}
+
+.sr-table-body td {
+    color: #212529 !important;
+    background: white !important;
+}
+
+.sr-table-body tr:hover {
+    background: #f8f9fa !important;
+}
+
+.sr-table-body tr.table-success {
+    background: #d4edda !important;
+}
+
+.row-total {
+    color: #28a745 !important;
+    background: #d4edda !important;
+}
+
+.sr-total-label {
+    color: #495057 !important;
+}
+
+.sr-total-amount {
+    color: #28a745 !important;
+}
+
+.info-box {
+    background: #f0f9ff !important;
+    color: #0c4a6e !important;
+}
+
+.info-box strong {
+    color: #0369a1 !important;
+}
+
+.info-box span {
+    color: #0c4a6e !important;
+}
+
+small {
+    color: #6b7280 !important;
+}
+
+.quick-search-header small {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.quick-result-item {
+    background: #f8f9fa !important;
+    color: #212529 !important;
+}
+
+.quick-result-item:hover,
+.quick-result-item.selected {
+    background: #fee2e2 !important;
+}
+
+.quick-result-item .product-name {
+    color: #495057 !important;
+}
+
+.quick-result-item .product-company {
+    color: #6c757d !important;
+}
+
+.quick-hint,
+.no-results {
+    color: #6c757d !important;
+}
+
+.no-results {
+    color: #dc3545 !important;
+}
+
+.quick-search-footer {
+    background: #f8f9fa !important;
+}
+
+.quick-search-footer small {
+    color: #6c757d !important;
+}
+
+.batch-modal-body,
+.batch-modal-footer {
+    background: white !important;
+    color: #212529 !important;
+}
+
+.batch-item {
+    background: white !important;
+    color: #212529 !important;
+}
+
+.batch-item:hover {
+    background: #f8f9fa !important;
+}
+
+.batch-item.batch-selected {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+    color: white !important;
+}
+
+.batch-item.batch-unavailable {
+    background: #f8f9fa !important;
+}
+
+.batch-no {
+    color: #495057 !important;
+}
+
+.batch-item.batch-selected .batch-no,
+.batch-item.batch-selected .batch-details,
+.batch-item.batch-selected .batch-rates {
+    color: white !important;
+}
+
+.batch-details {
+    color: #6c757d !important;
+}
+
+.batch-rates {
+    color: #212529 !important;
+}
+
+.status-available {
+    color: #28a745 !important;
+}
+
+.status-unavailable {
+    color: #dc3545 !important;
+}
+
+.batch-shortcuts small {
+    color: #6c757d !important;
+}
+
+.stock-info {
+    background: #d1ecf1 !important;
+    color: #0c5460 !important;
+}
+
+.rate-indicator {
+    background: #f0fdf4 !important;
+    color: #059669 !important;
+}
+
+.loading-indicator {
+    color: #6b7280 !important;
+}
+
+.customer-reminder {
+    background: #fef3c7 !important;
+    color: #92400e !important;
+}
+
+.quick-tip {
+    background: #f0fdf4 !important;
+    color: #059669 !important;
+}
+
+.batch-confirmation {
+    background: #ecfdf5 !important;
+    color: #047857 !important;
+}
+
+.btn {
+    color: white !important;
+}
+
+.btn-secondary {
+    color: white !important;
+}
+
+.sr-back-btn {
+    color: white !important;
+}

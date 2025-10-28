@@ -1,4 +1,5 @@
 /* Combined Invoice Form Styles - Optimized for Compact Layout */
+
 .ci-main-container {
     padding: 10px;
     background-color: #f8f9fa;
@@ -196,6 +197,7 @@
     border: 1px solid #ced4da;
     border-radius: 3px;
     font-size: 0.8rem;
+    color-scheme: light; 
 }
 
 .ci-table-body input:focus,
