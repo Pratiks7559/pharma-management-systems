@@ -7,6 +7,33 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/sales_return_detail.css' %}">
 <style>
+/* THEME PROTECTION - Keeps existing CSS safe from theme changes */
+.sr-detail-container {
+    isolation: isolate !important;
+    contain: layout style !important;
+}
+
+/* Protect from theme interference */
+.sr-detail-container * {
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    color-scheme: light !important;
+}
+
+/* Maintain display properties */
+.sr-detail-header, .sr-detail-actions { display: flex !important; }
+.sr-detail-info-section { display: grid !important; }
+table, .sr-detail-items-table, .sr-detail-payments-table, .sr-detail-info-table { display: table !important; }
+thead, tbody, tfoot { display: table-row-group !important; }
+tr { display: table-row !important; }
+th, td { display: table-cell !important; }
+.sr-detail-btn { display: inline-block !important; cursor: pointer !important; }
+
+/* Additional theme protection */
+@media (prefers-color-scheme: dark) {
+    .sr-detail-container * { color-scheme: light !important; }
+}
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -480,16 +507,15 @@
 }
 .sr-detail-btn {
     color: rgb(253, 3, 253) !important;
-
 }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="sr-detail-container">
-    <div class="sr-detail-header">
-        <h1 class="sr-detail-title">{{ title }}</h1>
-        <div class="sr-detail-actions">
+    <div class="sr-detail-header" style="display: flex !important; visibility: visible !important; opacity: 1 !important; background: white !important; padding: 20px !important; margin-bottom: 20px !important; border: 1px solid #ddd !important; border-radius: 8px !important;">
+        <h1 class="sr-detail-title" style="display: block !important; visibility: visible !important; opacity: 1 !important; color: #212529 !important; font-size: 1.5rem !important; font-weight: bold !important; margin: 0 !important;">{{ title }}</h1>
+        <div class="sr-detail-actions" style="display: flex !important; visibility: visible !important; opacity: 1 !important; gap: 10px !important; flex-wrap: wrap !important;">
             <button type="button" class="sr-detail-btn sr-detail-btn-primary" onclick="openEditSalesReturnModal()">
                 <i class="sr-detail-edit-icon"></i> Edit Return
             </button>
@@ -508,12 +534,12 @@
         </div>
     </div>
     
-    <div class="sr-detail-card">
+    <div class="sr-detail-card" style="display: block !important; visibility: visible !important; opacity: 1 !important; background: white !important; padding: 20px !important; border: 1px solid #ddd !important; border-radius: 8px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;">
         <!-- Return Info -->
-        <div class="sr-detail-info-section">
+        <div class="sr-detail-info-section" style="display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 20px !important; margin-bottom: 30px !important; visibility: visible !important; opacity: 1 !important;">
             <div class="sr-detail-info-card">
-                <h6 class="sr-detail-info-title">Return Information</h6>
-                <table class="sr-detail-info-table">
+                <h6 class="sr-detail-info-title" style="display: block !important; visibility: visible !important; opacity: 1 !important; color: #212529 !important; font-weight: bold !important; margin-bottom: 15px !important;">Return Information</h6>
+                <table class="sr-detail-info-table" style="display: table !important; visibility: visible !important; opacity: 1 !important; width: 100% !important; border-collapse: collapse !important;">
                     <tr><td>Return No:</td><td>{{ return_invoice.return_sales_invoice_no }}</td></tr>
                     <tr><td>Date:</td><td>{{ return_invoice.return_sales_invoice_date|date:"d-m-Y" }}</td></tr>
                     <tr><td>Customer:</td><td>{{ return_invoice.return_sales_customerid.customer_name }}</td></tr>
@@ -521,8 +547,8 @@
                 </table>
             </div>
             <div class="sr-detail-info-card">
-                <h6 class="sr-detail-info-title">Financial Summary</h6>
-                <table class="sr-detail-info-table">
+                <h6 class="sr-detail-info-title" style="display: block !important; visibility: visible !important; opacity: 1 !important; color: #212529 !important; font-weight: bold !important; margin-bottom: 15px !important;">Financial Summary</h6>
+                <table class="sr-detail-info-table" style="display: table !important; visibility: visible !important; opacity: 1 !important; width: 100% !important; border-collapse: collapse !important;">
                     <tr><td>Items Total:</td><td>₹{{ items_total|floatformat:2 }}</td></tr>
                     <tr><td>Charges:</td><td>₹{{ return_invoice.return_sales_charges|floatformat:2 }}</td></tr>
                     <tr><td>Return Total:</td><td>₹{{ return_invoice.return_sales_invoice_total|floatformat:2 }}</td></tr>
@@ -533,7 +559,7 @@
         </div>
 
         <!-- Return Items -->
-        <h5 class="sr-detail-section-title">Return Items</h5>
+        <h5 class="sr-detail-section-title" style="display: block !important; visibility: visible !important; opacity: 1 !important; color: #212529 !important; font-size: 1.25rem !important; font-weight: bold !important; margin: 30px 0 15px 0 !important; padding-bottom: 10px !important; border-bottom: 2px solid #007bff !important;">Return Items</h5>
         {% if return_items %}
         <div class="sr-detail-table-responsive">
             <table class="sr-detail-items-table">
@@ -601,7 +627,7 @@
         {% endif %}
 
         <!-- Payments Section -->
-        <h5 class="sr-detail-section-title">Refund Payments</h5>
+        <h5 class="sr-detail-section-title" style="display: block !important; visibility: visible !important; opacity: 1 !important; color: #212529 !important; font-size: 1.25rem !important; font-weight: bold !important; margin: 30px 0 15px 0 !important; padding-bottom: 10px !important; border-bottom: 2px solid #007bff !important;">Refund Payments</h5>
         {% if payments %}
         <div class="sr-detail-table-responsive">
             <table class="sr-detail-payments-table">
@@ -1147,12 +1173,13 @@ function openQuickProductSearchForEdit() {
 }
 
 function quickSearchProductsForEdit(event) {
-    const searchTerm = event.target.value;
+    const originalSearchTerm = event.target.value;
+    const searchTerm = originalSearchTerm.toLowerCase();
     const resultsDiv = document.getElementById('quickResultsEdit');
     
     if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(event.key)) return;
     
-    if (searchTerm.length < 2) {
+    if (originalSearchTerm.length < 2) {
         resultsDiv.innerHTML = '<div class="quick-hint">Type at least 2 characters...</div>';
         return;
     }
@@ -1163,23 +1190,43 @@ function quickSearchProductsForEdit(event) {
         company: '{{ product.product_company|escapejs }}'
     },{% endfor %}];
     
-    const originalSearchTerm = event.target.value;
-    const searchLower = searchTerm.toLowerCase();
-    
+    // Filter products that START with the search term (first 2+ letters)
     const filtered = products.filter(p => {
-        const nameMatch = p.name.includes(originalSearchTerm) || p.name.toLowerCase().includes(searchLower);
-        const companyMatch = p.company.includes(originalSearchTerm) || p.company.toLowerCase().includes(searchLower);
-        return nameMatch || companyMatch;
+        // Primary filter: starts with search term (case-sensitive first, then case-insensitive)
+        const exactStartsName = p.name.startsWith(originalSearchTerm);
+        const exactStartsCompany = p.company.startsWith(originalSearchTerm);
+        const startsName = p.name.toLowerCase().startsWith(searchTerm);
+        const startsCompany = p.company.toLowerCase().startsWith(searchTerm);
+        
+        return exactStartsName || exactStartsCompany || startsName || startsCompany;
     }).sort((a, b) => {
-        const aExactMatch = a.name.includes(originalSearchTerm) || a.company.includes(originalSearchTerm);
-        const bExactMatch = b.name.includes(originalSearchTerm) || b.company.includes(originalSearchTerm);
-        if (aExactMatch && !bExactMatch) return -1;
-        if (!aExactMatch && bExactMatch) return 1;
+        // Priority scoring for "starts with" matches
+        let aScore = 0;
+        let bScore = 0;
+        
+        // Exact case "starts with" gets highest priority (100 points)
+        if (a.name.startsWith(originalSearchTerm)) aScore += 100;
+        if (a.company.startsWith(originalSearchTerm)) aScore += 90;
+        if (b.name.startsWith(originalSearchTerm)) bScore += 100;
+        if (b.company.startsWith(originalSearchTerm)) bScore += 90;
+        
+        // Case-insensitive "starts with" gets medium priority (50 points)
+        if (a.name.toLowerCase().startsWith(searchTerm)) aScore += 50;
+        if (a.company.toLowerCase().startsWith(searchTerm)) aScore += 40;
+        if (b.name.toLowerCase().startsWith(searchTerm)) bScore += 50;
+        if (b.company.toLowerCase().startsWith(searchTerm)) bScore += 40;
+        
+        // Sort by score (higher score first)
+        if (aScore !== bScore) {
+            return bScore - aScore;
+        }
+        
+        // If scores are equal, sort alphabetically
         return a.name.localeCompare(b.name);
-    }).slice(0, 8);
+    });
     
     if (filtered.length === 0) {
-        resultsDiv.innerHTML = '<div class="no-results">No products found</div>';
+        resultsDiv.innerHTML = '<div class="no-results">No products starting with "' + originalSearchTerm + '" found</div>';
         return;
     }
     

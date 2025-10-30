@@ -1788,7 +1788,8 @@ function openQuickProductSearch() {
 }
 
 function quickSearchProducts(event) {
-    const searchTerm = event.target.value.toLowerCase();
+    const originalSearchTerm = event.target.value;
+    const searchTerm = originalSearchTerm.toLowerCase();
     const resultsDiv = document.getElementById('quickResults');
     
     // Skip navigation keys - handled in keydown event
@@ -1797,7 +1798,7 @@ function quickSearchProducts(event) {
     }
     
     // Handle search input
-    if (searchTerm.length < 2) {
+    if (originalSearchTerm.length < 2) {
         resultsDiv.innerHTML = '<div class="quick-hint">Type at least 2 characters...</div>';
         return;
     }
@@ -1809,31 +1810,43 @@ function quickSearchProducts(event) {
         company: '{{ product.product_company|escapejs }}'
     },{% endfor %}];
     
-    // Case-sensitive search based on original input
-    const originalSearchTerm = event.target.value;
-    
+    // Filter products that START with the search term (first 2+ letters)
     const filtered = products.filter(p => {
-        // Check if search term matches case-sensitively
-        const nameMatch = p.name.includes(originalSearchTerm) || p.name.toLowerCase().includes(searchTerm);
-        const companyMatch = p.company.includes(originalSearchTerm) || p.company.toLowerCase().includes(searchTerm);
+        // Primary filter: starts with search term (case-sensitive first, then case-insensitive)
+        const exactStartsName = p.name.startsWith(originalSearchTerm);
+        const exactStartsCompany = p.company.startsWith(originalSearchTerm);
+        const startsName = p.name.toLowerCase().startsWith(searchTerm);
+        const startsCompany = p.company.toLowerCase().startsWith(searchTerm);
         
-        // Prioritize exact case matches
-        const exactCaseMatch = p.name.includes(originalSearchTerm) || p.company.includes(originalSearchTerm);
-        
-        return nameMatch || companyMatch;
+        return exactStartsName || exactStartsCompany || startsName || startsCompany;
     }).sort((a, b) => {
-        // Sort by exact case match first, then alphabetically
-        const aExactMatch = a.name.includes(originalSearchTerm) || a.company.includes(originalSearchTerm);
-        const bExactMatch = b.name.includes(originalSearchTerm) || b.company.includes(originalSearchTerm);
+        // Priority scoring for "starts with" matches
+        let aScore = 0;
+        let bScore = 0;
         
-        if (aExactMatch && !bExactMatch) return -1;
-        if (!aExactMatch && bExactMatch) return 1;
+        // Exact case "starts with" gets highest priority (100 points)
+        if (a.name.startsWith(originalSearchTerm)) aScore += 100;
+        if (a.company.startsWith(originalSearchTerm)) aScore += 90;
+        if (b.name.startsWith(originalSearchTerm)) bScore += 100;
+        if (b.company.startsWith(originalSearchTerm)) bScore += 90;
         
+        // Case-insensitive "starts with" gets medium priority (50 points)
+        if (a.name.toLowerCase().startsWith(searchTerm)) aScore += 50;
+        if (a.company.toLowerCase().startsWith(searchTerm)) aScore += 40;
+        if (b.name.toLowerCase().startsWith(searchTerm)) bScore += 50;
+        if (b.company.toLowerCase().startsWith(searchTerm)) bScore += 40;
+        
+        // Sort by score (higher score first)
+        if (aScore !== bScore) {
+            return bScore - aScore;
+        }
+        
+        // If scores are equal, sort alphabetically
         return a.name.localeCompare(b.name);
-    }).slice(0, 8); // Show more results
+    });
     
     if (filtered.length === 0) {
-        resultsDiv.innerHTML = '<div class="no-results">No products found</div>';
+        resultsDiv.innerHTML = '<div class="no-results">No products starting with "' + originalSearchTerm + '" found</div>';
         return;
     }
     

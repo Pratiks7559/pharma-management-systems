@@ -638,14 +638,15 @@ function openQuickProductSearch() {
 }
 function quickSearchProducts(event) {
     const originalSearchTerm = event.target.value;
+    const searchTerm = originalSearchTerm.toLowerCase();
     const resultsDiv = document.getElementById('quickResults');
     
     if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(event.key)) {
         return;
     }
     
-    if (originalSearchTerm.length < 1) {
-        resultsDiv.innerHTML = '<div class="quick-hint">Type to search products...</div>';
+    if (originalSearchTerm.length < 2) {
+        resultsDiv.innerHTML = '<div class="quick-hint">Type at least 2 characters...</div>';
         return;
     }
     
@@ -655,61 +656,43 @@ function quickSearchProducts(event) {
         company: '{{ product.product_company|escapejs }}'
     },{% endfor %}];
     
-    const searchTerm = originalSearchTerm.trim();
-    const isUpperCase = /^[A-Z]/.test(searchTerm.charAt(0));
-    
-    const scoredProducts = products.map(p => {
-        const productName = p.name;
-        const searchLower = searchTerm.toLowerCase();
-        const nameLower = productName.toLowerCase();
+    // Filter products that START with the search term (first 2+ letters)
+    const filtered = products.filter(p => {
+        // Primary filter: starts with search term (case-sensitive first, then case-insensitive)
+        const exactStartsName = p.name.startsWith(originalSearchTerm);
+        const exactStartsCompany = p.company.startsWith(originalSearchTerm);
+        const startsName = p.name.toLowerCase().startsWith(searchTerm);
+        const startsCompany = p.company.toLowerCase().startsWith(searchTerm);
         
-        let score = 0;
-        let matches = false;
+        return exactStartsName || exactStartsCompany || startsName || startsCompany;
+    }).sort((a, b) => {
+        // Priority scoring for "starts with" matches
+        let aScore = 0;
+        let bScore = 0;
         
-        if (isUpperCase) {
-            // Only show products that start with uppercase letter
-            if (/^[A-Z]/.test(productName)) {
-                if (productName.startsWith(searchTerm)) {
-                    score = 1000;
-                    matches = true;
-                } else if (nameLower.startsWith(searchLower)) {
-                    score = 800;
-                    matches = true;
-                } else if (productName.includes(searchTerm)) {
-                    score = 600;
-                    matches = true;
-                } else if (nameLower.includes(searchLower)) {
-                    score = 400;
-                    matches = true;
-                }
-            }
-        } else {
-            // Only show products that start with lowercase letter
-            if (/^[a-z]/.test(productName)) {
-                if (nameLower.startsWith(searchLower)) {
-                    score = 900;
-                    matches = true;
-                } else if (nameLower.includes(searchLower)) {
-                    score = 500;
-                    matches = true;
-                }
-            }
+        // Exact case "starts with" gets highest priority (100 points)
+        if (a.name.startsWith(originalSearchTerm)) aScore += 100;
+        if (a.company.startsWith(originalSearchTerm)) aScore += 90;
+        if (b.name.startsWith(originalSearchTerm)) bScore += 100;
+        if (b.company.startsWith(originalSearchTerm)) bScore += 90;
+        
+        // Case-insensitive "starts with" gets medium priority (50 points)
+        if (a.name.toLowerCase().startsWith(searchTerm)) aScore += 50;
+        if (a.company.toLowerCase().startsWith(searchTerm)) aScore += 40;
+        if (b.name.toLowerCase().startsWith(searchTerm)) bScore += 50;
+        if (b.company.toLowerCase().startsWith(searchTerm)) bScore += 40;
+        
+        // Sort by score (higher score first)
+        if (aScore !== bScore) {
+            return bScore - aScore;
         }
         
-        if (matches) {
-            score += Math.max(0, 100 - productName.length);
-        }
-        
-        return { ...p, score, matches };
-    })
-    .filter(p => p.matches)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 8);
-    
-    const filtered = scoredProducts;
+        // If scores are equal, sort alphabetically
+        return a.name.localeCompare(b.name);
+    });
     
     if (filtered.length === 0) {
-        resultsDiv.innerHTML = '<div class="no-results">No products found</div>';
+        resultsDiv.innerHTML = '<div class="no-results">No products starting with "' + originalSearchTerm + '" found</div>';
         return;
     }
     
