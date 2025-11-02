@@ -26,10 +26,10 @@
             </a>
             <div class="export-buttons no-print">
                 <a href="{% url 'export_inventory_pdf' %}" class="export-btn export-pdf">
-                    <i class="fas fa-file-pdf"></i> PDF
+                    <i class="fas fa-file-pdf"></i> PDF(Ctrl+Q)
                 </a>
                 <a href="{% url 'export_inventory_excel' %}" class="export-btn export-excel">
-                    <i class="fas fa-file-csv"></i> CSV/Excel
+                    <i class="fas fa-file-csv"></i> CSV/Excel(Ctrl+E)
                 </a>
                 <button onclick="window.print()" class="export-btn export-print">
                     <i class="fas fa-print"></i> Print (Ctrl+P)
@@ -113,9 +113,9 @@
         <div class="table-header">
             <h6 class="table-title">All Products Inventory</h6>
             <div class="search-section no-print">
-                <form action="{% url 'inventory_list' %}" method="GET" class="search-form">
+                <form action="{% url 'inventory_list' %}" method="GET" class="search-form" id="searchForm">
                     <div class="search-input-group">
-                        <input type="text" name="search" value="{{ search_query }}" placeholder="Search products..." aria-label="Search" class="search-input">
+                        <input type="text" name="search" id="searchInput" value="{{ search_query }}" placeholder="Search products..." aria-label="Search" class="search-input" autocomplete="off">
                     </div>
                     <div class="search-buttons">
                         <button type="submit" class="search-btn">
@@ -296,6 +296,64 @@
 
 <script>
     $(document).ready(function() {
+        // Fix cursor position in search input
+        $('#searchInput').on('focus', function() {
+            const input = this;
+            const len = input.value.length;
+            setTimeout(function() {
+                input.setSelectionRange(len, len);
+            }, 0);
+        });
+        
+        // PDF download and auto-open with Ctrl+Q shortcut
+        function downloadAndOpenPDF(pdfUrl) {
+            fetch(pdfUrl)
+                .then(response => response.blob())
+                .then(blob => {
+                    // Create download link
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = downloadUrl;
+                    link.download = 'inventory_report.pdf';
+                    link.click();
+                    
+                    // Auto open after download
+                    setTimeout(() => {
+                        window.open(downloadUrl, '_blank');
+                        window.URL.revokeObjectURL(downloadUrl);
+                    }, 1000);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // Fallback to direct open
+                    window.open(pdfUrl, '_blank');
+                });
+        }
+        
+        $('.export-pdf').on('click', function(e) {
+            e.preventDefault();
+            const pdfUrl = $(this).attr('href');
+            downloadAndOpenPDF(pdfUrl);
+        });
+        
+        // Keyboard shortcuts
+        $(document).on('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'q') {
+                e.preventDefault();
+                const pdfUrl = $('.export-pdf').attr('href');
+                if (pdfUrl) {
+                    downloadAndOpenPDF(pdfUrl);
+                }
+            }
+            if (e.ctrlKey && e.key === 'e') {
+                e.preventDefault();
+                const excelUrl = $('.export-excel').attr('href');
+                if (excelUrl) {
+                    window.location.href = excelUrl;
+                }
+            }
+        });
+        
         // Show loading overlay on page navigation
         function showLoading() {
             $('#loadingOverlay').show();

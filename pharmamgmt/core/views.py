@@ -329,20 +329,52 @@ def pharmacy_details(request):
 # Product views
 @login_required
 def product_list(request):
-    products = ProductMaster.objects.all().order_by('product_name')
+    # Get sorting parameter (default: productid to show newest last)
+    sort_by = request.GET.get('sort', 'productid')
+    
+    if sort_by == 'name':
+        products = ProductMaster.objects.all().order_by('product_name')
+    else:
+        products = ProductMaster.objects.all().order_by('productid')
 
-    # Search functionality
-    search_query = request.GET.get('search', '')
+    # Enhanced search functionality
+    search_query = request.GET.get('search', '').strip()
     if search_query:
-        products = products.filter(
-            Q(product_name__icontains=search_query) | 
-            Q(product_company__icontains=search_query) |
-            Q(product_salt__icontains=search_query) |
-            Q(product_barcode__icontains=search_query)
-        )
+        # Split search query into words for better matching
+        search_words = search_query.split()
+        
+        # Start with all products
+        search_filter = Q()
+        
+        # For each word, create OR conditions across all fields
+        for word in search_words:
+            word_filter = (
+                Q(product_name__icontains=word) |
+                Q(product_company__icontains=word) |
+                Q(product_salt__icontains=word) |
+                Q(product_packing__icontains=word) |
+                Q(product_category__icontains=word) |
+                Q(product_barcode__icontains=word)
+            )
+            search_filter &= word_filter  # AND between words
+        
+        products = products.filter(search_filter)
+        
+        # Sort by relevance: exact matches first, then startswith, then contains
+        products = sorted(products, key=lambda p: (
+            not p.product_name.lower().startswith(search_query.lower()),
+            not search_query.lower() in p.product_name.lower(),
+            p.product_name.lower()
+        ))
+        
+        # Convert back to queryset for pagination
+        product_ids = [p.productid for p in products]
+        products = ProductMaster.objects.filter(productid__in=product_ids)
+        # Preserve the sorted order
+        products = sorted(products, key=lambda p: product_ids.index(p.productid))
     
     # Pagination first to limit the number of products processed
-    paginator = Paginator(products, 50)  # 50 products per page
+    paginator = Paginator(products, 30)  # 30 products per page
     page_number = request.GET.get('page')
     products_page = paginator.get_page(page_number)
     
@@ -383,6 +415,7 @@ def product_list(request):
     context = {
         'products': products_page,
         'search_query': search_query,
+        'sort_by': sort_by,
         'title': 'Product List'
     }
     return render(request, 'products/product_list.html', context)
@@ -3952,19 +3985,19 @@ def inventory_list(request):
     from django.http import JsonResponse
 
     # Get search query and offset
-    search_query = request.GET.get('search', '')
+    search_query = request.GET.get('search', '').strip()
     offset = int(request.GET.get('offset', 0))
     limit = 50  # Reduced for better performance
 
     # Base query for products
     products_query = ProductMaster.objects.all().order_by('product_name')
     
-    # Apply search filter
+    # Enhanced search filter - startswith only
     if search_query:
         products_query = products_query.filter(
-            Q(product_name__icontains=search_query) | 
-            Q(product_company__icontains=search_query) |
-            Q(product_category__icontains=search_query)
+            Q(product_name__istartswith=search_query) |
+            Q(product_company__istartswith=search_query) |
+            Q(product_salt__istartswith=search_query)
         )
     
     # Get total count for "More" button logic

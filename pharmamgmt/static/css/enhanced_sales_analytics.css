@@ -280,12 +280,12 @@ canvas {
     gap: 8px;
     text-decoration: none;
     font-size: 0.9rem;
-    background: rgba(255,255,255,0.2) !important;
+    /* background: rgba(255,255,255,0.2) !important; */
     color: white !important;
 }
 
 .btn-action.btn-primary {
-    background: rgba(255,255,255,0.2) !important;
+    /* background: rgba(255,255,255,0.2) !important; */
     color: white !important;
     border: 1px solid rgba(255,255,255,0.3) !important;
 }
@@ -1244,13 +1244,47 @@ canvas {
 }
 
 .btn-action.btn-primary {
-    background: rgba(255,255,255,0.25) !important;
+    /* background: rgba(255,255,255,0.25) !important; */
     border: 1px solid rgba(255,255,255,0.4) !important;
 }
 
 .btn-action.btn-primary:hover {
     background: rgba(255,255,255,0.35) !important;
     border-color: rgba(255,255,255,0.5) !important;
+}
+
+/* Sales Invoice Table - View Button Fix */
+#salesTable tbody td a[href*="sales_invoice_detail"],
+#salesTable tbody td a.btn-action,
+table.analytics-table tbody td a.btn-action,
+table.analytics-table tbody td a.btn-primary,
+.analytics-table tbody tr td:last-child a {
+    padding: 6px 12px !important;
+    font-size: 0.8rem !important;
+    background: #2563eb !important;
+    color: white !important;
+    border: 2px solid #2563eb !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+    min-width: 70px !important;
+    justify-content: center !important;
+}
+
+#salesTable tbody td a[href*="sales_invoice_detail"]:hover,
+#salesTable tbody td a.btn-action:hover,
+table.analytics-table tbody td a.btn-action:hover,
+table.analytics-table tbody td a.btn-primary:hover,
+.analytics-table tbody tr td:last-child a:hover {
+    background: #1e40af !important;
+    color: white !important;
+    border-color: #1e40af !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4) !important;
 }
 
 /* Analyze Button - Maximum Visibility */
@@ -1284,6 +1318,31 @@ form button[type="submit"].btn-action:hover {
 
 .table-container::-webkit-scrollbar-thumb:hover {
     background: #64748b !important;
+}
+
+/* Action Column View Button */
+.analytics-table td a.btn-action,
+.analytics-table td .btn-action {
+    padding: 6px 12px !important;
+    font-size: 0.8rem !important;
+    background: white !important;
+    color: #2563eb !important;
+    border: 2px solid #2563eb !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+}
+
+.analytics-table td a.btn-action:hover,
+.analytics-table td .btn-action:hover {
+    background: #2563eb !important;
+    color: white !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3) !important;
 }
 
 /* Accessibility */

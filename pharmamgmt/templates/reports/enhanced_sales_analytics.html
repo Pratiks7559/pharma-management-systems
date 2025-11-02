@@ -41,12 +41,41 @@ table.dataTable tbody tr:hover {
     .print-content, .print-content * { visibility: visible; }
     .print-content { position: absolute; left: 0; top: 0; width: 100%; }
     .action-buttons, .date-range-section, .sidebar-container, .navbar { display: none !important; }
-    .analytics-header { background: #2563eb !important; -webkit-print-color-adjust: exact; }
-    .kpi-card { border: 1px solid #e5e7eb !important; page-break-inside: avoid; }
-    .chart-container canvas { max-height: 300px !important; }
-    .analytics-table { font-size: 10px !important; }
-    .analytics-table th, .analytics-table td { padding: 4px !important; }
-    @page { margin: 0.5in; size: A4; }
+    .analytics-header { background: #2563eb !important; -webkit-print-color-adjust: exact; padding: 15px !important; }
+    .analytics-title { font-size: 20px !important; }
+    .analytics-subtitle { font-size: 12px !important; }
+    
+    /* KPI Cards */
+    .kpi-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 8px !important; margin-bottom: 15px !important; }
+    .kpi-card { border: 1px solid #e5e7eb !important; page-break-inside: avoid; padding: 8px !important; }
+    .kpi-title { font-size: 11px !important; }
+    .kpi-value { font-size: 16px !important; }
+    .kpi-subtitle { font-size: 9px !important; }
+    
+    /* Charts Section */
+    .charts-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 15px !important; page-break-inside: avoid; margin: 20px 0 !important; }
+    .chart-card { page-break-inside: avoid; border: 1px solid #e5e7eb !important; padding: 10px !important; }
+    .chart-header { margin-bottom: 10px !important; }
+    .chart-title { font-size: 13px !important; }
+    .chart-container { height: 280px !important; position: relative !important; }
+    .chart-container canvas { display: none !important; }
+    .chart-container .print-chart-image { display: block !important; width: 100% !important; height: auto !important; max-height: 280px !important; object-fit: contain !important; }
+    
+    /* Tables */
+    .data-section { page-break-inside: avoid; margin: 15px 0 !important; }
+    .section-header { margin-bottom: 10px !important; }
+    .section-title { font-size: 14px !important; }
+    .section-subtitle { font-size: 10px !important; }
+    .analytics-table { font-size: 9px !important; }
+    .analytics-table th, .analytics-table td { padding: 3px !important; }
+    .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, 
+    .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate { display: none !important; }
+    
+    /* Analysis Grid */
+    .analysis-grid { display: block !important; page-break-inside: avoid; }
+    .analysis-card { page-break-inside: avoid; margin-bottom: 15px !important; }
+    
+    @page { margin: 0.4in; size: A4 portrait; }
 }
 </style>
 {% endblock %}
@@ -69,13 +98,13 @@ table.dataTable tbody tr:hover {
                 <i class="fas fa-sync-alt"></i> Refresh Data
             </button>
             <button onclick="exportToPDF()" class="btn-action btn-warning">
-                <i class="fas fa-file-pdf"></i> Export PDF
+                <i class="fas fa-file-pdf"></i> Export PDF(ctrl+P)
             </button>
             <button onclick="exportToExcel()" class="btn-action btn-info">
-                <i class="fas fa-file-excel"></i> Export Excel
+                <i class="fas fa-file-excel"></i> Export Excel(ctrl+E)
             </button>
             <button onclick="printReport()" class="btn-action btn-primary">
-                <i class="fas fa-print"></i> Print Report
+                <i class="fas fa-print"></i> Print Report(ctrl+Q)
             </button>
         </div>
     </div>
@@ -308,7 +337,7 @@ table.dataTable tbody tr:hover {
                         </td>
                         <td data-label="Action">
                             <a href="{% url 'sales_invoice_detail' pk=invoice.sales_invoice_no %}" 
-                               class="btn-action btn-primary" style="padding: 4px 8px; font-size: 0.8rem;">
+                               class="btn-action btn-primary">
                                 <i class="fas fa-eye"></i> View
                             </a>
                         </td>
@@ -551,9 +580,13 @@ document.addEventListener('keydown', function(e) {
                 e.preventDefault();
                 exportToPDF();
                 break;
-            case 'x':
+            case 'e':
                 e.preventDefault();
                 exportToExcel();
+                break;
+            case 'q':
+                e.preventDefault();
+                printReport();
                 break;
         }
     }
@@ -906,47 +939,53 @@ window.addEventListener('load', hideLoading);
 
 // Enhanced Print Function
 function printReport() {
-    // Capture all charts as images before printing
-    const charts = document.querySelectorAll('canvas');
+    // Capture all charts as high-quality images
+    const charts = document.querySelectorAll('.chart-container canvas');
     const chartImages = [];
     
-    charts.forEach((canvas, index) => {
-        const imgData = canvas.toDataURL('image/png');
-        const img = document.createElement('img');
-        img.src = imgData;
-        img.style.maxWidth = '100%';
-        img.style.height = 'auto';
-        img.className = 'print-chart-image';
-        chartImages.push({ canvas, img });
+    charts.forEach((canvas) => {
+        try {
+            // Convert to high-quality PNG
+            const imgData = canvas.toDataURL('image/png', 1.0);
+            const img = document.createElement('img');
+            img.src = imgData;
+            img.className = 'print-chart-image';
+            img.style.display = 'none';
+            img.style.width = '100%';
+            img.style.height = 'auto';
+            img.style.maxHeight = '280px';
+            img.style.objectFit = 'contain';
+            
+            // Insert after canvas
+            canvas.parentNode.insertBefore(img, canvas.nextSibling);
+            chartImages.push({ canvas, img });
+        } catch (e) {
+            console.error('Chart conversion error:', e);
+        }
     });
     
-    // Replace canvases with images for printing
-    chartImages.forEach(({ canvas, img }) => {
-        canvas.style.display = 'none';
-        canvas.parentNode.appendChild(img);
-    });
-    
-    // Add print timestamp
+    // Add print info
     const printInfo = document.createElement('div');
+    printInfo.className = 'print-info';
     printInfo.innerHTML = `
-        <div style="text-align: center; margin: 20px 0; padding: 10px; border-top: 2px solid #e5e7eb; font-size: 12px; color: #6b7280;">
-            <p><strong>Report Generated:</strong> ${new Date().toLocaleString()}</p>
-            <p><strong>Period:</strong> ${document.getElementById('start_date').value} to ${document.getElementById('end_date').value}</p>
+        <div style="text-align: center; margin: 20px 0; padding: 10px; border-top: 2px solid #e5e7eb; font-size: 11px; color: #6b7280; page-break-inside: avoid;">
+            <p style="margin: 3px 0;"><strong>Report Generated:</strong> ${new Date().toLocaleString('en-IN')}</p>
+            <p style="margin: 3px 0;"><strong>Analysis Period:</strong> ${document.getElementById('start_date').value} to ${document.getElementById('end_date').value}</p>
+            <p style="margin: 3px 0;"><strong>System:</strong> Pharma Management - Sales Analytics</p>
         </div>
     `;
     document.querySelector('.print-content').appendChild(printInfo);
     
-    // Print
-    window.print();
-    
-    // Restore canvases after printing
+    // Wait for images to load then print
     setTimeout(() => {
-        chartImages.forEach(({ canvas, img }) => {
-            canvas.style.display = 'block';
-            img.remove();
-        });
-        printInfo.remove();
-    }, 1000);
+        window.print();
+        
+        // Cleanup after print
+        setTimeout(() => {
+            chartImages.forEach(({ img }) => img.remove());
+            printInfo.remove();
+        }, 500);
+    }, 300);
 }
 
 

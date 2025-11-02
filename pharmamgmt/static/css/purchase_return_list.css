@@ -207,7 +207,7 @@
 }
 
 .btn-success {
-    background-color: #28a745;
+    /* background-color: #28a745; */
     color: white;
 }
 
@@ -685,11 +685,11 @@
 }
 
 .btn {
-    color: white !important;
+    /* color: rgb(224, 71, 71)!important; */
 }
 
 .btn-outline-secondary {
-    color: #6c757d !important;
+    /* color: #6c757d !important; */
     background-color: transparent !important;
 }
 

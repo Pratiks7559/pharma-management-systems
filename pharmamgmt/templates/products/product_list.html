@@ -9,13 +9,14 @@
 .product-list-page-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 15px;
+    gap: 10px;
     align-items: center;
     margin: 20px 0;
     padding: 15px;
     background: #f8f9fa;
     border-radius: 8px;
     border: 1px solid #e9ecef;
+    justify-content: flex-start;
 }
 
 .product-list-add-btn,
@@ -44,6 +45,7 @@
 
 .product-list-bulk-upload-btn {
     background: #28a745;
+    flex-shrink: 0;
 }
 
 .product-list-bulk-upload-btn:hover {
@@ -53,7 +55,7 @@
 .product-list-export-buttons {
     display: flex;
     gap: 10px;
-    margin-left: auto;
+    flex-wrap: wrap;
 }
 
 .product-list-export-btn {
@@ -408,6 +410,10 @@
                     <i class="fas fa-plus"></i>
                     Add Products
                 </a>
+                <a href="{% url 'bulk_upload_products' %}" class="product-list-header-add-btn" style="background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); margin-left: 10px;">
+                    <i class="fas fa-file-upload"></i>
+                    Bulk Upload
+                </a>
             </div>
         </div>
         
@@ -582,6 +588,16 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Fix cursor position in search input
+    const searchInput = document.querySelector('.product-list-search-input');
+    if (searchInput) {
+        searchInput.addEventListener('focus', function() {
+            const len = this.value.length;
+            setTimeout(() => {
+                this.setSelectionRange(len, len);
+            }, 0);
+        });
+    }
     // Make delete buttons focusable
     const deleteButtons = document.querySelectorAll('.delete-btn');
     deleteButtons.forEach(btn => {

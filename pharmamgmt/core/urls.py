@@ -2,6 +2,7 @@ from django.urls import path, include
 from . import views
 from .combined_invoice_view import add_invoice_with_products, get_existing_batches, cleanup_duplicate_batches
 from .low_stock_views import low_stock_update, update_low_stock_item, bulk_update_low_stock, get_batch_suggestions
+from .bulk_upload_views import bulk_upload_products, download_product_template
 
 urlpatterns = [
     # Authentication
@@ -25,7 +26,8 @@ urlpatterns = [
     # Products
     path('products/', views.product_list, name='product_list'),
     path('products/add/', views.add_product, name='add_product'),
-    path('products/bulk-upload/', views.bulk_upload_products, name='bulk_upload_products'),
+    path('products/bulk-upload/', bulk_upload_products, name='bulk_upload_products'),
+    path('products/download-template/', download_product_template, name='download_product_template'),
     path('products/<int:pk>/', views.product_detail, name='product_detail'),
     path('products/<int:pk>/update/', views.update_product, name='update_product'),
     path('products/<int:pk>/delete/', views.delete_product, name='delete_product'),
