@@ -276,3 +276,9 @@
 2025-10-27 22:16:47,049 - core.combined_invoice_view - INFO - Product paracetamol added to invoice
 2025-10-27 22:16:47,055 - core.combined_invoice_view - INFO - Updating invoice total from 2.02 to 2.0
 2025-10-27 22:16:47,057 - core.combined_invoice_view - INFO - Invoice 22 created successfully with 1 products
+2025-11-03 20:27:21,612 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['V5tUPmAdn1NffUTpysUaBxNuJpIXiKs2auzI81RhsWgIf8IQ77nApUQ9Mv4ywFap'], 'invoice_no': ['1'], 'invoice_date': ['03112025'], 'supplierid': ['2'], 'scroll_no': ['2'], 'transport_charges': ['0'], 'invoice_total': ['1.01'], 'products_data': ['[{"productid":"3377","batch_no":"1","expiry":"12-2027","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","igst":"1","calculation_mode":"flat","rate_A":"1","rate_B":"1","rate_C":"1"}]']}>
+2025-11-03 20:27:21,619 - core.combined_invoice_view - INFO - Products data received: [{"productid":"3377","batch_no":"1","expiry":"12-2027","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","igst":"1","calculation_mode":"flat","rate_A":"1","rate_B":"1","rate_C":"1"}]
+2025-11-03 20:27:21,624 - core.combined_invoice_view - INFO - Invoice created with ID: 97
+2025-11-03 20:27:21,633 - core.combined_invoice_view - INFO - Product paracetamol added to invoice
+2025-11-03 20:27:21,641 - core.combined_invoice_view - INFO - Updating invoice total from 1.01 to 1.0
+2025-11-03 20:27:21,644 - core.combined_invoice_view - INFO - Invoice 1 created successfully with 1 products

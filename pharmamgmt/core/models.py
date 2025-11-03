@@ -94,7 +94,6 @@ class InvoiceMaster(models.Model):
     invoice_no=models.CharField(max_length=20)
     invoice_date=models.DateField(null=False, blank=False, default=timezone.now)
     supplierid=models.ForeignKey(SupplierMaster, on_delete=models.CASCADE)
-    scroll_no=models.CharField(max_length=50, blank=True, null=True, help_text='Manual scroll number for invoice tracking')
     transport_charges=models.FloatField()
     invoice_total=models.FloatField(null=False, blank=False)
     invoice_paid=models.FloatField(null=False, blank=False, default=0)

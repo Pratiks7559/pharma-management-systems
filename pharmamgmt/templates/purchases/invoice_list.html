@@ -61,7 +61,6 @@
                 <thead class="purchase-invoice-thead">
                     <tr class="purchase-invoice-header-row">
                         <th class="purchase-invoice-header-cell purchase-invoice-number-header">Invoice #</th>
-                        <th class="purchase-invoice-header-cell purchase-scroll-number-header">Scroll No</th>
                         <th class="purchase-invoice-header-cell purchase-date-header">Date</th>
                         <th class="purchase-invoice-header-cell purchase-supplier-header">Supplier</th>
                         <th class="purchase-invoice-header-cell purchase-total-header">Total</th>
@@ -79,7 +78,6 @@
                                 {{ invoice.invoice_no }}
                             </a>
                         </td>
-                        <td class="purchase-invoice-cell purchase-scroll-number-cell">{{ invoice.scroll_no|default:"-" }}</td>
                         <td class="purchase-invoice-cell purchase-date-cell">{{ invoice.invoice_date|date:"d M, Y" }}</td>
                         <td class="purchase-invoice-cell purchase-supplier-cell">{{ invoice.supplierid.supplier_name }}</td>
                         <td class="purchase-invoice-cell purchase-total-cell purchase-amount-display">{{ invoice.invoice_total|currency }}</td>
@@ -120,7 +118,7 @@
                     </tr>
                     {% empty %}
                     <tr class="purchase-invoice-empty-row">
-                        <td colspan="9" class="purchase-invoice-empty-cell">No invoices found.</td>
+                        <td colspan="8" class="purchase-invoice-empty-cell">No invoices found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>

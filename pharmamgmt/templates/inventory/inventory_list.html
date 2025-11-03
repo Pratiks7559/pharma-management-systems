@@ -8,6 +8,203 @@
 <link rel="stylesheet" href="{% static 'css/inventory_list.css' %}">
 <link rel="stylesheet" href="{% static 'css/batch_inventory_report.css' %}">
 <link rel="stylesheet" href="{% static 'css/datewise_inventory_report.css' %}">
+<style>
+/* Print Styles - Optimized Inventory Report */
+@media print {
+    /* Reset */
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 0; }
+    body * { visibility: hidden; }
+    .inventory-container, .inventory-container * { visibility: visible; }
+    .inventory-container { position: absolute; left: 0; top: 0; width: 100%; }
+    
+    /* Hide Elements */
+    .no-print, .inventory-actions, .search-section, .action-buttons,
+    .sidebar-container, .navbar, .load-more-container, .th-actions, .td-actions { display: none !important; }
+    
+    /* Header - Compact */
+    .inventory-header { 
+        background: linear-gradient(135deg, #6366f1, #8b5cf6) !important; 
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        color: white !important;
+        padding: 12px 15px !important;
+        margin-bottom: 10px !important;
+        border-radius: 0 !important;
+    }
+    .inventory-title { 
+        font-size: 18px !important; 
+        margin: 0 !important;
+        color: white !important;
+        text-align: center !important;
+    }
+    
+    /* Summary Cards - Compact */
+    .summary-cards-container { 
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 6px !important;
+        margin-bottom: 10px !important;
+        page-break-inside: avoid;
+    }
+    .summary-card { 
+        border: 1px solid #e5e7eb !important;
+        border-radius: 4px !important;
+        padding: 6px 8px !important;
+        page-break-inside: avoid;
+        background: white !important;
+    }
+    .total-products-card { border-left: 3px solid #6366f1 !important; }
+    .inventory-value-card { border-left: 3px solid #10b981 !important; }
+    .low-stock-card { border-left: 3px solid #f59e0b !important; }
+    .out-of-stock-card { border-left: 3px solid #ef4444 !important; }
+    
+    .card-content { display: flex !important; justify-content: space-between !important; align-items: center !important; }
+    .card-label { font-size: 9px !important; font-weight: 600 !important; color: #6b7280 !important; margin-bottom: 2px !important; }
+    .card-value { font-size: 14px !important; font-weight: bold !important; color: #111827 !important; }
+    .card-icon { font-size: 16px !important; opacity: 0.2 !important; }
+    
+    /* Table Header - Compact */
+    .table-header { 
+        background: #f3f4f6 !important;
+        padding: 6px 10px !important;
+        border-radius: 4px !important;
+        margin-bottom: 6px !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    .table-title { 
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        color: #374151 !important;
+        margin: 0 !important;
+    }
+    
+    /* Table - Ultra Compact */
+    .table-container { page-break-inside: auto; }
+    .inventory-table { 
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 7px !important;
+        page-break-inside: auto;
+    }
+    .inventory-table thead { 
+        background: #6366f1 !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        display: table-header-group;
+    }
+    .inventory-table th { 
+        padding: 4px 2px !important;
+        font-size: 8px !important;
+        font-weight: 600 !important;
+        text-align: left !important;
+        border: 1px solid #4f46e5 !important;
+        line-height: 1.2 !important;
+    }
+    .inventory-table td { 
+        padding: 3px 2px !important;
+        font-size: 7px !important;
+        border: 1px solid #e5e7eb !important;
+        vertical-align: top !important;
+        line-height: 1.3 !important;
+    }
+    .inventory-table tbody tr { page-break-inside: avoid; page-break-after: auto; }
+    .inventory-table tbody tr:nth-child(even) { 
+        background: #f9fafb !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    /* Batch Info - Compact */
+    .batches-container, .expiry-container, .rates-container { 
+        max-height: none !important;
+        overflow: visible !important;
+        font-size: 7px !important;
+    }
+    .batch-item { 
+        margin-bottom: 2px !important;
+        padding: 1px 3px !important;
+        background: #f3f4f6 !important;
+        border-radius: 2px !important;
+        font-size: 6.5px !important;
+        border-left: 2px solid #6366f1 !important;
+        line-height: 1.2 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    .batch-item strong { font-size: 7px !important; }
+    .batch-item small { font-size: 6px !important; }
+    
+    /* Status Badges - Compact */
+    .status-badge { 
+        padding: 2px 4px !important;
+        border-radius: 2px !important;
+        font-size: 7px !important;
+        font-weight: 600 !important;
+        display: inline-block !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    .status-badge.in-stock { background: #d1fae5 !important; color: #065f46 !important; }
+    .status-badge.low-stock { background: #fef3c7 !important; color: #92400e !important; }
+    .status-badge.out-of-stock { background: #fee2e2 !important; color: #991b1b !important; }
+    
+    /* Table Footer - Fixed at bottom */
+    .table-foot { 
+        background: #f3f4f6 !important;
+        font-weight: bold !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        page-break-inside: avoid !important;
+        display: table-footer-group !important;
+    }
+    .table-foot td { 
+        padding: 6px 2px !important;
+        font-size: 9px !important;
+        border: 2px solid #6366f1 !important;
+    }
+    .total-label { 
+        text-align: right !important;
+        font-weight: 700 !important;
+        color: #374151 !important;
+    }
+    .total-value { 
+        font-weight: 700 !important;
+        color: #6366f1 !important;
+        font-size: 10px !important;
+    }
+    
+    /* Links */
+    .product-link { color: #6366f1 !important; text-decoration: none !important; }
+    
+    /* Text Colors */
+    .text-danger { color: #dc2626 !important; }
+    .text-warning { color: #f59e0b !important; }
+    .text-success { color: #10b981 !important; }
+    .text-muted { color: #9ca3af !important; }
+    .text-info { color: #3b82f6 !important; }
+    .text-primary { color: #6366f1 !important; }
+    
+    /* Page Settings - Optimized */
+    @page { 
+        margin: 0.3in 0.25in;
+        size: A4 landscape;
+    }
+    
+    /* Print Footer */
+    .print-footer {
+        margin-top: 10px !important;
+        text-align: center !important;
+        font-size: 8px !important;
+        color: #6b7280 !important;
+        padding: 6px !important;
+        border-top: 1px solid #e5e7eb !important;
+        page-break-inside: avoid !important;
+    }
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -29,15 +226,14 @@
                     <i class="fas fa-file-pdf"></i> PDF(Ctrl+Q)
                 </a>
                 <a href="{% url 'export_inventory_excel' %}" class="export-btn export-excel">
-                    <i class="fas fa-file-csv"></i> CSV/Excel(Ctrl+E)
+                    <i class="fas fa-file-csv"></i>Excel(Ctrl+E)
                 </a>
-                <button onclick="window.print()" class="export-btn export-print">
+                <button onclick="printInventoryReport()" class="export-btn export-print">
                     <i class="fas fa-print"></i> Print (Ctrl+P)
                 </button>
             </div>
         </div>
     </div>
-
     <!-- Summary Cards -->
     <div class="summary-cards-container">
         <div class="summary-card total-products-card">
@@ -288,12 +484,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- Loading Overlay -->
-<div class="loading-overlay" id="loadingOverlay">
-    <div class="loading-spinner"></div>
-    <div class="loading-text">Loading inventory...</div>
-</div>
-
 <script>
     $(document).ready(function() {
         // Fix cursor position in search input
@@ -352,27 +542,32 @@
                     window.location.href = excelUrl;
                 }
             }
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                printInventoryReport();
+            }
         });
         
-        // Show loading overlay on page navigation
-        function showLoading() {
-            $('#loadingOverlay').show();
-        }
+        // Enhanced Print Function
+        window.printInventoryReport = function() {
+            // Add print timestamp
+            const printInfo = $('<div class="print-footer"></div>');
+            printInfo.html(`
+                <strong>Report Generated:</strong> ${new Date().toLocaleString('en-IN')} | 
+                <strong>Total Products:</strong> {{ total_products }} | 
+                <strong>System:</strong> Pharma Inventory Management
+            `);
+            $('.inventory-container').append(printInfo);
+            
+            // Print
+            setTimeout(() => {
+                window.print();
+                // Remove print info after print
+                setTimeout(() => printInfo.remove(), 500);
+            }, 100);
+        };
         
-        // Hide loading overlay
-        function hideLoading() {
-            $('#loadingOverlay').hide();
-        }
-        
-        // Show loading on form submit
-        $('form').on('submit', function() {
-            showLoading();
-        });
-        
-        // Hide loading when page is fully loaded
-        $(window).on('load', function() {
-            hideLoading();
-        });
+
         
         // Load More functionality with stats update
         $('#loadMoreBtn').on('click', function() {
@@ -383,7 +578,6 @@
             // Show loading state
             btn.prop('disabled', true);
             btn.html('<i class="fas fa-spinner fa-spin"></i> Loading...');
-            showLoading();
             
             // Make AJAX request
             $.ajax({
@@ -438,9 +632,6 @@
                     alert('Error loading more products: ' + error);
                     btn.html('<i class="fas fa-plus-circle"></i> Load More Products (50)');
                     btn.prop('disabled', false);
-                },
-                complete: function() {
-                    hideLoading();
                 }
             });
         });
@@ -486,7 +677,6 @@
             const submitBtn = $(this).find('button[type="submit"]');
             submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Searching...');
             submitBtn.prop('disabled', true);
-            showLoading();
         });
         
         // Highlight search terms in results
@@ -536,6 +726,21 @@
         
         // Initial highlighting
         highlightSearchTerms();
+        
+        // Make print function globally available
+        window.printInventoryReport = window.printInventoryReport || function() {
+            const printInfo = $('<div class="print-footer"></div>');
+            printInfo.html(`
+                <strong>Report Generated:</strong> ${new Date().toLocaleString('en-IN')} | 
+                <strong>Total Products:</strong> {{ total_products }} | 
+                <strong>System:</strong> Pharma Inventory Management
+            `);
+            $('.inventory-container').append(printInfo);
+            setTimeout(() => {
+                window.print();
+                setTimeout(() => printInfo.remove(), 500);
+            }, 100);
+        };
         
         // Load More button hover effect
         $(document).on('mouseenter', '#loadMoreBtn', function() {

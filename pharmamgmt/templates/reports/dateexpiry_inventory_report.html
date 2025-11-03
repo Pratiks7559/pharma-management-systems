@@ -5,6 +5,134 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% load static %}{% static 'css/dateexpiry_inventory_report.css' %}">
+<style>
+/* Print Styles - Optimized Expiry Report */
+@media print {
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 0; }
+    body * { visibility: hidden; }
+    .date-report-container, .date-report-container * { visibility: visible; }
+    .date-report-container { position: absolute; left: 0; top: 0; width: 100%; }
+    
+    .no-print, .date-report-actions, .date-filter-form,
+    .sidebar-container, .navbar, .date-alert-close { display: none !important; }
+    
+    .date-report-header { 
+        background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+        color: white !important; padding: 12px 15px !important;
+        margin-bottom: 10px !important; border-radius: 0 !important;
+    }
+    .date-report-title { font-size: 18px !important; margin: 0 !important; color: white !important; text-align: center !important; }
+    
+    .date-report-card { border: 1px solid #e5e7eb !important; border-radius: 4px !important; margin-bottom: 10px !important; }
+    .date-report-card-header { 
+        background: #f3f4f6 !important; padding: 8px 12px !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .date-report-card-title { font-size: 14px !important; font-weight: 600 !important; margin: 0 !important; }
+    .date-report-card-subtitle { font-size: 10px !important; color: #6b7280 !important; }
+    
+    .date-info-alert { 
+        background: #fef3c7 !important; border: 1px solid #f59e0b !important;
+        padding: 6px 10px !important; margin-bottom: 8px !important; font-size: 9px !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    
+    .date-inventory-table { 
+        width: 100% !important; border-collapse: collapse !important;
+        font-size: 7px !important; page-break-inside: auto;
+    }
+    .date-table-header { 
+        background: #6366f1 !important; color: white !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+        display: table-header-group;
+    }
+    .date-inventory-table th { 
+        padding: 4px 2px !important; font-size: 8px !important;
+        font-weight: 600 !important; text-align: left !important;
+        border: 1px solid #4f46e5 !important; line-height: 1.2 !important;
+    }
+    .date-inventory-table td { 
+        padding: 3px 2px !important; font-size: 7px !important;
+        border: 1px solid #e5e7eb !important; vertical-align: top !important;
+        line-height: 1.3 !important;
+    }
+    .date-inventory-table tbody tr { page-break-inside: avoid; page-break-after: auto; }
+    .date-inventory-table tbody tr:nth-child(even) { 
+        background: #f9fafb !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    
+    .date-expiry-heading { 
+        font-weight: bold !important;
+        page-break-inside: avoid !important;
+        page-break-after: avoid !important;
+    }
+    .date-expiry-heading td { 
+        padding: 5px 2px !important;
+        font-size: 8px !important;
+        font-weight: 700 !important;
+    }
+    .date-expired { 
+        background: #fee2e2 !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .date-expiring-soon { 
+        background: #fef3c7 !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .date-expiring-warning { 
+        background: #fef9c3 !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .date-expiring-later { 
+        background: #d1fae5 !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .date-no-expiry { 
+        background: #e5e7eb !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    
+    .date-expiry-days { 
+        font-size: 7px !important;
+        color: #6b7280 !important;
+        font-weight: normal !important;
+    }
+    .date-expiry-value { 
+        text-align: right !important;
+        font-weight: 700 !important;
+        color: #6366f1 !important;
+    }
+    
+    .expired-product { 
+        background: #fee2e2 !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .expiring-soon { 
+        background: #fef3c7 !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .expiring-warning { 
+        background: #fef9c3 !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    
+    .date-table-footer { 
+        background: #f3f4f6 !important; font-weight: bold !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+        display: table-footer-group !important; page-break-inside: avoid !important;
+    }
+    .date-table-footer td { 
+        padding: 6px 2px !important; font-size: 9px !important;
+        border: 2px solid #6366f1 !important;
+    }
+    .date-total-label { text-align: right !important; font-weight: 700 !important; color: #374151 !important; }
+    
+    @page { margin: 0.3in 0.25in; size: A4 landscape; }
+}
+</style>
 {% endblock %}
 
 {% block content %}

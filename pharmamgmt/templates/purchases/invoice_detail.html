@@ -61,12 +61,7 @@
                         <span class="invoice-detail-info-label">Date:</span>
                         <span class="invoice-detail-info-value">{{ invoice.invoice_date }}</span>
                     </div>
-                    {% if invoice.scroll_no %}
-                    <div class="invoice-detail-info-item">
-                        <span class="invoice-detail-info-label">Scroll No:</span>
-                        <span class="invoice-detail-info-value">{{ invoice.scroll_no }}</span>
-                    </div>
-                    {% endif %}
+
                 </div>
                 
                 <div class="invoice-detail-info-card">
@@ -293,10 +288,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label for="scroll_no">Scroll No:</label>
-                        <input type="text" id="scroll_no" name="scroll_no" value="{{ invoice.scroll_no }}">
-                    </div>
+
                     <div class="form-group">
                         <label for="transport_charges">Transport Charges:</label>
                         <input type="number" id="transport_charges" name="transport_charges" value="{{ invoice.transport_charges }}" step="0.01">

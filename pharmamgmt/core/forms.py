@@ -168,7 +168,6 @@ class InvoiceForm(forms.ModelForm):
     invoice_no = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
     invoice_date = forms.CharField(widget=DateInput())
     supplierid = forms.ModelChoiceField(queryset=SupplierMaster.objects.all(), widget=forms.Select(attrs={'class': 'form-control'}))
-    scroll_no = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter scroll number'}))
     transport_charges = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), initial=0)
     invoice_total = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     
@@ -197,7 +196,7 @@ class InvoiceForm(forms.ModelForm):
     
     class Meta:
         model = InvoiceMaster
-        fields = ['invoice_no', 'invoice_date', 'supplierid', 'scroll_no', 'transport_charges', 'invoice_total']
+        fields = ['invoice_no', 'invoice_date', 'supplierid', 'transport_charges', 'invoice_total']
 
 class InvoicePaymentForm(forms.ModelForm):
     payment_date = forms.DateField(widget=DateInput(attrs={'class': 'form-control'}))
