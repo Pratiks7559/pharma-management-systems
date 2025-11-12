@@ -1261,11 +1261,12 @@ function navigateResultsEdit(direction) {
 function quickSelectEditReturnProduct(productId, productName) {
     const tbody = document.getElementById('editReturnProductRows');
     const row = document.createElement('tr');
-    row.id = `editReturnRow_${editReturnProductRowIndex}`;
+    const currentRowIndex = editReturnProductRowIndex;
+    row.id = `editReturnRow_${currentRowIndex}`;
     
     row.innerHTML = `
         <td>
-            <select class="form-control form-control-sm product-select" onchange="focusBatchInput(${editReturnProductRowIndex})" required>
+            <select class="form-control form-control-sm product-select" onchange="focusBatchInput(${currentRowIndex})" required>
                 <option value="">Select Product</option>
                 {% for product in products %}
                 <option value="{{ product.productid }}" ${productId == {{ product.productid }} ? 'selected' : ''}>{{ product.product_name }} - {{ product.product_company }}</option>
@@ -1274,32 +1275,31 @@ function quickSelectEditReturnProduct(productId, productName) {
             <input type="hidden" class="product-id" value="${productId}">
         </td>
         <td>
-            <input type="text" class="form-control form-control-sm batch-no" placeholder="Click to select batch" onclick="showBatchSelectionForEdit(${editReturnProductRowIndex})" required>
+            <input type="text" class="form-control form-control-sm batch-no" placeholder="Click to select batch" onclick="showBatchSelectionForEdit(${currentRowIndex})" required>
         </td>
         <td><input type="text" class="form-control form-control-sm expiry" placeholder="MM-YYYY" maxlength="7" required></td>
         <td><input type="number" class="form-control form-control-sm mrp" step="0.01" required></td>
-        <td><input type="number" class="form-control form-control-sm return-rate" step="0.01" onchange="calculateEditReturnRowTotal(${editReturnProductRowIndex})" required></td>
+        <td><input type="number" class="form-control form-control-sm return-rate" step="0.01" onchange="calculateEditReturnRowTotal(${currentRowIndex})" required></td>
         <td>
-            <input type="number" class="form-control form-control-sm return-qty" step="0.01" oninput="validateEditReturnStock(${editReturnProductRowIndex})" required>
+            <input type="number" class="form-control form-control-sm return-qty" step="0.01" oninput="validateEditReturnStock(${currentRowIndex})" required>
             <div class="stock-info-edit" style="display: none;"></div>
             <div class="stock-error-edit" style="display: none;"></div>
         </td>
-        <td><input type="number" class="form-control form-control-sm discount" step="0.01" onchange="calculateEditReturnRowTotal(${editReturnProductRowIndex})"></td>
-        <td><input type="number" class="form-control form-control-sm gst" step="0.01" onchange="calculateEditReturnRowTotal(${editReturnProductRowIndex})"></td>
+        <td><input type="number" class="form-control form-control-sm discount" step="0.01" onchange="calculateEditReturnRowTotal(${currentRowIndex})"></td>
+        <td><input type="number" class="form-control form-control-sm gst" step="0.01" onchange="calculateEditReturnRowTotal(${currentRowIndex})"></td>
         <td><input type="text" class="form-control form-control-sm reason" maxlength="200"></td>
         <td><span class="edit-return-row-total">0.00</span></td>
-        <td><button type="button" class="btn btn-sm btn-danger" onclick="removeEditReturnProductRow(${editReturnProductRowIndex})"><i class="fas fa-trash"></i></button></td>
+        <td><button type="button" class="btn btn-sm btn-danger" onclick="removeEditReturnProductRow(${currentRowIndex})"><i class="fas fa-trash"></i></button></td>
     `;
     
     tbody.appendChild(row);
-    const currentRowIndex = editReturnProductRowIndex;
     editReturnProductRowIndex++;
     closeQuickSearchEdit();
     
-    // Focus on batch input after product selection
+    // Auto-open batch selector after product selection
     setTimeout(() => {
-        focusBatchInput(currentRowIndex);
-    }, 100);
+        showBatchSelectionForEdit(currentRowIndex);
+    }, 300);
 }
 
 function showBatchSelectionForEdit(rowIndex) {

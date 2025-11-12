@@ -236,8 +236,10 @@ body.select2-open {
                                 </div>
                                 <div class="ci-form-column">
                                     <div class="ci-field-group">
-                                        <label for="{{ invoice_form.invoice_date.id_for_label }}" class="ci-field-label">Invoice Date*</label>
-                                        {{ invoice_form.invoice_date }}
+                                        <label for="invoice_date" class="ci-field-label">Invoice Date*</label>
+                                        <input type="date" name="invoice_date" id="invoice_date" class="ci-form-input" 
+                                               value="{{ invoice_form.invoice_date.value|default:'' }}" 
+                                               title="Enter invoice date" required>
                                     </div>
                                 </div>
                             </div>
@@ -743,7 +745,7 @@ function formatExpiryDate(input) {
     }
 }
 
-// Set current date in YYYY-MM-DD format (HTML5 date input format)
+// Set current date in YYYY-MM-DD format for HTML5 date input
 function setCurrentDate() {
     const today = new Date();
     const year = today.getFullYear();
@@ -751,18 +753,9 @@ function setCurrentDate() {
     const day = String(today.getDate()).padStart(2, '0');
     const dateString = `${year}-${month}-${day}`;
     
-    const invoiceDateInput = document.querySelector('input[name*="invoice_date"]');
-    if (invoiceDateInput) {
+    const invoiceDateInput = document.querySelector('input[name="invoice_date"]');
+    if (invoiceDateInput && !invoiceDateInput.value) {
         invoiceDateInput.value = dateString;
-        invoiceDateInput.setAttribute('data-original-value', dateString);
-        // Make it read-write by default
-        invoiceDateInput.removeAttribute('readonly');
-        
-        // Add placeholder and title for user guidance
-        invoiceDateInput.setAttribute('placeholder', 'YYYY-MM-DD or DDMM');
-        invoiceDateInput.setAttribute('title', 'Enter date in YYYY-MM-DD format or use DDMM shortcut (e.g., 1510 for 15th Oct)');
-        
-        console.log('Set invoice date to:', dateString);
     }
 }
 
@@ -978,96 +971,9 @@ function duplicateLastProductRow() {
     }
 }
 
-// Enhanced date input handling with shortcuts
+// Enhanced date input handling
 document.addEventListener('DOMContentLoaded', function() {
     setCurrentDate();
-    
-    // Handle regular date inputs
-    const dateInputs = document.querySelectorAll('input[type="date"]');
-    dateInputs.forEach(input => {
-        // Store original placeholder behavior
-        input.setAttribute('placeholder', 'DD/MM/YYYY or DDMM or DDMMYY');
-        
-        // Handle keyboard shortcuts
-        input.addEventListener('keydown', function(e) {
-            // Ctrl+T for today's date
-            if (e.ctrlKey && e.key.toLowerCase() === 't') {
-                e.preventDefault();
-                setCurrentDate();
-                return;
-            }
-            
-            // Ctrl+Y for yesterday
-            if (e.ctrlKey && e.key.toLowerCase() === 'y') {
-                e.preventDefault();
-                const yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 1);
-                const year = yesterday.getFullYear();
-                const month = String(yesterday.getMonth() + 1).padStart(2, '0');
-                const day = String(yesterday.getDate()).padStart(2, '0');
-                this.value = `${year}-${month}-${day}`;
-                return;
-            }
-            
-            // Ctrl+M for tomorrow
-            if (e.ctrlKey && e.key.toLowerCase() === 'm') {
-                e.preventDefault();
-                const tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                const year = tomorrow.getFullYear();
-                const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
-                const day = String(tomorrow.getDate()).padStart(2, '0');
-                this.value = `${year}-${month}-${day}`;
-                return;
-            }
-        });
-        
-        // Handle quick date entry on blur
-        input.addEventListener('blur', function() {
-            if (this.value && this.value.length < 10) {
-                handleDateShortcuts(this, this.value);
-            }
-        });
-        
-        // Add change event for DDMM format conversion
-        input.addEventListener('change', function() {
-            const value = this.value;
-            if (value && value.length === 4 && /^\d{4}$/.test(value)) {
-                // Convert DDMM to YYYY-MM-DD
-                const day = value.substring(0, 2);
-                const month = value.substring(2, 4);
-                const year = new Date().getFullYear();
-                
-                try {
-                    const date = new Date(year, month - 1, day);
-                    if (date.getDate() == day && date.getMonth() == month - 1) {
-                        this.value = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-                    }
-                } catch (e) {
-                    // Invalid date, keep original value
-                }
-            }
-        });
-        
-        // Handle Enter key for quick date formatting
-        input.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                if (this.value && this.value.length < 10) {
-                    handleDateShortcuts(this, this.value);
-                }
-                // Move to next input
-                const inputs = Array.from(document.querySelectorAll('input, select'));
-                const currentIndex = inputs.indexOf(this);
-                if (currentIndex < inputs.length - 1) {
-                    inputs[currentIndex + 1].focus();
-                }
-            }
-        });
-        
-        // Add tooltip for shortcuts
-        input.setAttribute('title', 'Shortcuts: Ctrl+T (Today), Ctrl+Y (Yesterday), Ctrl+M (Tomorrow)\nQuick entry: Type DDMM or DDMMYY and press Enter');
-    });
     
     // Handle expiry date inputs with MM-YYYY format - ONLY for expiry fields
     document.addEventListener('input', function(e) {

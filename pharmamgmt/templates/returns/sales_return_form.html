@@ -487,14 +487,6 @@ function fillProductInRow(row, productId) {
         
         const rowIndex = row.id.replace('productRow_', '');
         loadProductDetails(productSelect, rowIndex);
-        
-        setTimeout(() => {
-            const batchField = row.querySelector('.batch-no');
-            if (batchField) {
-                batchField.focus();
-                batchField.select();
-            }
-        }, 300);
     }
 }
 
@@ -691,60 +683,10 @@ function filterBatches() {
 function loadProductDetails(productSelect, rowIndex) {
     if (!productSelect.value) return;
     
-    // Fetch available batches for the selected product
-    fetch(`/api/product-batch-selector/?product_id=${productSelect.value}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.batches.length > 0) {
-                const row = document.getElementById(`productRow_${rowIndex}`);
-                const firstBatch = data.batches[0]; // Use first available batch
-                
-                // Auto-fill all fields with MM-YYYY expiry format
-                row.querySelector('.batch-no').value = firstBatch.batch_no;
-                row.querySelector('.expiry').value = firstBatch.expiry; // Already in MM-YYYY format from backend
-                row.querySelector('.mrp').value = firstBatch.mrp;
-                
-                // Set rate based on customer type
-                let selectedRate = firstBatch.mrp; // Default fallback
-                if (firstBatch.rates && selectedCustomerRateType === 'A' && firstBatch.rates.rate_A > 0) {
-                    selectedRate = firstBatch.rates.rate_A;
-                } else if (firstBatch.rates && selectedCustomerRateType === 'B' && firstBatch.rates.rate_B > 0) {
-                    selectedRate = firstBatch.rates.rate_B;
-                } else if (firstBatch.rates && selectedCustomerRateType === 'C' && firstBatch.rates.rate_C > 0) {
-                    selectedRate = firstBatch.rates.rate_C;
-                }
-                
-                row.querySelector('.return-rate').value = selectedRate;
-                row.querySelector('.return-quantity').value = '1';
-                row.querySelector('.discount').value = '0';
-                row.querySelector('.gst').value = '12';
-                
-                // Show stock info
-                const stockInfo = document.createElement('small');
-                stockInfo.className = 'text-success stock-info';
-                stockInfo.innerHTML = `<i class="fas fa-info-circle"></i> Stock: ${firstBatch.stock} | Rate ${selectedCustomerRateType}: ₹${selectedRate}`;
-                
-                const existingInfo = row.querySelector('.stock-info');
-                if (existingInfo) existingInfo.remove();
-                
-                row.querySelector('.return-quantity').parentNode.appendChild(stockInfo);
-                
-                // Trigger calculation
-                calculateRowTotal(rowIndex);
-                
-                // Auto-focus on batch input after product selection
-                setTimeout(() => {
-                    const batchInput = row.querySelector('.batch-no');
-                    if (batchInput) {
-                        batchInput.focus();
-                        batchInput.select();
-                    }
-                }, 150);
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching product batches:', error);
-        });
+    // Auto-open batch selector after product selection
+    setTimeout(() => {
+        showBatchSelectionDialog(productSelect.value, rowIndex);
+    }, 300);
 }
 
 // Load batch rate based on customer type with enhanced matching

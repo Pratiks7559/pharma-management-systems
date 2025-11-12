@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Receipt - Invoice #{{ invoice.sales_invoice_no }}</title>
+    <title>Purchase Receipt - Invoice #{{ invoice.invoice_no }}</title>
     <style>
         @page {
-            size: A4 landscape;
-            margin: 10mm;
+            size: A8 landscape;
+            margin: 5mm;
         }
         
         @media print {
@@ -28,8 +28,8 @@
         
         body {
             font-family: 'Arial', sans-serif;
-            font-size: 11px;
-            line-height: 1.4;
+            font-size: 14px;
+            line-height: 1.5;
             color: #000;
             background: #fff;
         }
@@ -50,7 +50,7 @@
         }
         
         .pharmacy-name {
-            font-size: 20px;
+            font-size: 24px;
             font-weight: bold;
             text-transform: uppercase;
             margin-bottom: 5px;
@@ -58,7 +58,7 @@
         }
         
         .pharmacy-details {
-            font-size: 10px;
+            font-size: 13px;
             line-height: 1.6;
         }
         
@@ -88,7 +88,7 @@
             width: 100%;
             border-collapse: collapse;
             margin: 10px 0;
-            font-size: 10px;
+            font-size: 13px;
         }
         
         .products-table th {
@@ -132,11 +132,11 @@
             display: flex;
             justify-content: space-between;
             padding: 5px 0;
-            font-size: 12px;
+            font-size: 15px;
         }
         
         .total-row.grand-total {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
             color: #2c3e50;
             border-top: 2px solid #2c3e50;
@@ -147,7 +147,7 @@
         .receipt-footer {
             margin-top: 20px;
             text-align: center;
-            font-size: 10px;
+            font-size: 12px;
             padding-top: 10px;
             border-top: 1px solid #dee2e6;
         }
@@ -157,7 +157,7 @@
             top: 20px;
             right: 20px;
             padding: 12px 24px;
-            background: #007bff;
+            background: #28a745;
             color: white;
             border: none;
             border-radius: 5px;
@@ -169,7 +169,7 @@
         }
         
         .print-button:hover {
-            background: #0056b3;
+            background: #218838;
         }
         
         .print-button:active {
@@ -207,17 +207,20 @@
         <!-- Invoice Info -->
         <div class="invoice-info">
             <div class="invoice-info-left">
-                <div><strong>Customer:</strong> {{ invoice.customerid.customer_name }}</div>
-                {% if invoice.customerid.customer_mobile %}
-                    <div><strong>Contact:</strong> {{ invoice.customerid.customer_mobile }}</div>
+                <div><strong>Supplier:</strong> {{ invoice.supplierid.supplier_name }}</div>
+                {% if invoice.supplierid.supplier_mobile %}
+                    <div><strong>Contact:</strong> {{ invoice.supplierid.supplier_mobile }}</div>
                 {% endif %}
-                {% if invoice.customerid.customer_address %}
-                    <div><strong>Address:</strong> {{ invoice.customerid.customer_address }}</div>
+                {% if invoice.supplierid.supplier_address %}
+                    <div><strong>Address:</strong> {{ invoice.supplierid.supplier_address }}</div>
+                {% endif %}
+                {% if invoice.supplierid.supplier_type %}
+                    <div><strong>Type:</strong> {{ invoice.supplierid.supplier_type }}</div>
                 {% endif %}
             </div>
             <div class="invoice-info-right text-right">
-                <div><strong>Invoice No:</strong> {{ invoice.sales_invoice_no }}</div>
-                <div><strong>Date:</strong> {{ invoice.sales_invoice_date|date:"d-m-Y" }}</div>
+                <div><strong>Invoice No:</strong> {{ invoice.invoice_no }}</div>
+                <div><strong>Date:</strong> {{ invoice.invoice_date|date:"d-m-Y" }}</div>
                 {% if invoice.created_at %}
                 <div><strong>Time:</strong> {{ invoice.created_at|date:"h:i A" }}</div>
                 {% endif %}
@@ -229,41 +232,43 @@
             <thead>
                 <tr>
                     <th style="width: 5%;">Sr.</th>
-                    <th style="width: 30%;">Product Name</th>
-                    <th style="width: 12%;">Batch No</th>
-                    <th style="width: 10%;">Expiry</th>
+                    <th style="width: 28%;">Product Name</th>
+                    <th style="width: 10%;">Batch No</th>
+                    <th style="width: 9%;">Expiry</th>
                     <th style="width: 8%;" class="text-right">MRP</th>
                     <th style="width: 8%;" class="text-right">Rate</th>
                     <th style="width: 7%;" class="text-right">Qty</th>
                     <th style="width: 8%;" class="text-right">Discount</th>
-                    <th style="width: 12%;" class="text-right">Total</th>
+                    <th style="width: 6%;" class="text-right">GST%</th>
+                    <th style="width: 11%;" class="text-right">Total</th>
                 </tr>
             </thead>
             <tbody>
-                {% for sale in sales %}
+                {% for purchase in purchases %}
                 <tr>
                     <td class="text-center">{{ forloop.counter }}</td>
                     <td>
-                        <strong>{{ sale.product_name }}</strong><br>
-                        <small>{{ sale.product_company }} - {{ sale.product_packing }}</small>
+                        <strong>{{ purchase.product_name }}</strong><br>
+                        <small>{{ purchase.product_company }} - {{ purchase.product_packing }}</small>
                     </td>
-                    <td>{{ sale.product_batch_no }}</td>
-                    <td>{{ sale.product_expiry }}</td>
-                    <td class="text-right">₹{{ sale.product_MRP|floatformat:2 }}</td>
-                    <td class="text-right">₹{{ sale.sale_rate|floatformat:2 }}</td>
-                    <td class="text-right">{{ sale.sale_quantity|floatformat:2 }}</td>
+                    <td>{{ purchase.product_batch_no }}</td>
+                    <td>{{ purchase.product_expiry }}</td>
+                    <td class="text-right">₹{{ purchase.product_MRP|floatformat:2 }}</td>
+                    <td class="text-right">₹{{ purchase.product_purchase_rate|floatformat:2 }}</td>
+                    <td class="text-right">{{ purchase.product_quantity|floatformat:2 }}</td>
                     <td class="text-right">
-                        {% if sale.sale_calculation_mode == 'flat' %}
-                            ₹{{ sale.sale_discount|floatformat:2 }}
+                        {% if purchase.purchase_calculation_mode == 'flat' %}
+                            ₹{{ purchase.product_discount_got|floatformat:2 }}
                         {% else %}
-                            {{ sale.sale_discount }}%
+                            {{ purchase.product_discount_got }}%
                         {% endif %}
                     </td>
-                    <td class="text-right"><strong>₹{{ sale.sale_total_amount|floatformat:2 }}</strong></td>
+                    <td class="text-right">{{ purchase.IGST }}%</td>
+                    <td class="text-right"><strong>₹{{ purchase.total_amount|floatformat:2 }}</strong></td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="9" class="text-center">No products in this invoice</td>
+                    <td colspan="10" class="text-center">No products in this invoice</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -272,22 +277,22 @@
         <!-- Total Section -->
         <div class="total-section">
             <div class="total-row">
-                <span>Subtotal:</span>
-                <span>₹{{ invoice.sales_invoice_total|floatformat:2 }}</span>
+                <span>Products Subtotal:</span>
+                <span>₹{{ purchases_total|floatformat:2 }}</span>
             </div>
-            {% if invoice.sales_transport_charges %}
+            {% if invoice.transport_charges %}
             <div class="total-row">
                 <span>Transport Charges:</span>
-                <span>₹{{ invoice.sales_transport_charges|floatformat:2 }}</span>
+                <span>₹{{ invoice.transport_charges|floatformat:2 }}</span>
             </div>
             {% endif %}
             <div class="total-row grand-total">
                 <span>GRAND TOTAL:</span>
-                <span>₹{{ invoice.sales_invoice_total|floatformat:2 }}</span>
+                <span>₹{{ invoice.invoice_total|floatformat:2 }}</span>
             </div>
             <div class="total-row">
                 <span>Amount Paid:</span>
-                <span>₹{{ invoice.sales_invoice_paid|floatformat:2 }}</span>
+                <span>₹{{ invoice.invoice_paid|floatformat:2 }}</span>
             </div>
             <div class="total-row" style="color: {% if invoice.balance_due > 0 %}#dc3545{% else %}#28a745{% endif %}; font-weight: bold;">
                 <span>Balance Due:</span>
@@ -297,7 +302,7 @@
         
         <!-- Footer -->
         <div class="receipt-footer">
-            <p><strong>Thank you for your business!</strong></p>
+            <p><strong>Purchase Receipt</strong></p>
             <p style="margin-top: 5px; font-size: 9px;">Printed on: {% now "d-m-Y" %} at {% now "H:i:s" %}</p>
             <div style="margin-top: 30px; text-align: right; padding-right: 50px;">
                 <div style="border-top: 1px solid #000; width: 200px; display: inline-block;"></div>

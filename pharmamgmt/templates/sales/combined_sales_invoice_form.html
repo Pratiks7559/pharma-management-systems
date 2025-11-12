@@ -22,9 +22,10 @@
                         <div class="invoice-details-section">
                             <div class="form-row">
                                 <div class="form-group required">
-                                    <label for="{{ invoice_form.sales_invoice_date.id_for_label }}" class="field-label">Invoice Date</label>
-                                    {{ invoice_form.sales_invoice_date }}
-                                    <!-- <small class="text-muted">📅 Enter in DDMMYYYY format (e.g., 15122024 for 15th Dec 2024) or use date picker</small> -->
+                                    <label for="sales_invoice_date" class="field-label">Invoice Date</label>
+                                    <input type="date" name="sales_invoice_date" id="sales_invoice_date" class="form-control" 
+                                           value="{{ invoice_form.sales_invoice_date.value|default:'' }}" 
+                                           title="Enter invoice date" required>
                                 </div>
                                 <div class="form-group required">
                                     <div class="customer-field-header">
@@ -178,25 +179,6 @@
                     <div class="customer-form-col">
                         <label class="customer-form-label">Credit Days*</label>
                         <input type="number" name="customer_credit_days" class="customer-form-input" value="0" required>
-                    </div>
-                    <div class="customer-form-col">
-                        <label class="customer-form-label">Bank Name</label>
-                        <input type="text" name="customer_bank" class="customer-form-input">
-                    </div>
-                </div>
-                
-                <div class="customer-form-row">
-                    <div class="customer-form-col">
-                        <label class="customer-form-label">Account Number</label>
-                        <input type="text" name="customer_bankaccountno" class="customer-form-input">
-                    </div>
-                    <div class="customer-form-col">
-                        <label class="customer-form-label">IFSC Code</label>
-                        <input type="text" name="customer_bankifsc" class="customer-form-input">
-                    </div>
-                    <div class="customer-form-col">
-                        <label class="customer-form-label">UPI ID</label>
-                        <input type="text" name="customer_upi" class="customer-form-input">
                     </div>
                 </div>
             </form>
@@ -1015,61 +997,8 @@ document.getElementById('combinedSalesInvoiceForm').addEventListener('submit', f
 function loadProductDetails(productSelect, rowIndex) {
     if (!productSelect.value) return;
     
-    // Fetch available batches for the selected product
-    fetch(`/api/product-batch-selector/?product_id=${productSelect.value}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.batches.length > 0) {
-                const row = document.getElementById(`productRow_${rowIndex}`);
-                const firstBatch = data.batches[0]; // Use first available batch
-                
-                // Auto-fill all fields with MM-YYYY expiry format
-                row.querySelector('.batch-no').value = firstBatch.batch_no;
-                row.querySelector('.expiry').value = firstBatch.expiry; // Already in MM-YYYY format from backend
-                row.querySelector('.mrp').value = firstBatch.mrp;
-                
-                // Set rate based on customer type
-                let selectedRate = firstBatch.mrp; // Default fallback
-                if (firstBatch.rates && selectedCustomerRateType === 'A' && firstBatch.rates.rate_A > 0) {
-                    selectedRate = firstBatch.rates.rate_A;
-                } else if (firstBatch.rates && selectedCustomerRateType === 'B' && firstBatch.rates.rate_B > 0) {
-                    selectedRate = firstBatch.rates.rate_B;
-                } else if (firstBatch.rates && selectedCustomerRateType === 'C' && firstBatch.rates.rate_C > 0) {
-                    selectedRate = firstBatch.rates.rate_C;
-                }
-                
-                row.querySelector('.rate').value = selectedRate;
-                row.querySelector('.quantity').value = '1';
-                row.querySelector('.discount').value = '0';
-                row.querySelector('.igst').value = '12';
-                
-                // Show stock info
-                const stockInfo = document.createElement('small');
-                stockInfo.className = 'text-success stock-info';
-                stockInfo.innerHTML = `<i class="fas fa-info-circle"></i> Stock: ${firstBatch.stock} | Rate ${selectedCustomerRateType}: ₹${selectedRate}`;
-                
-                const existingInfo = row.querySelector('.stock-info');
-                if (existingInfo) existingInfo.remove();
-                
-                row.querySelector('.quantity').parentNode.appendChild(stockInfo);
-                
-                // Trigger calculation and stock validation
-                calculateRowTotal(rowIndex);
-                
-                // Auto-focus on quantity field after batch is loaded
-                setTimeout(() => {
-                    const quantityField = row.querySelector('.quantity');
-                    if (quantityField) {
-                        quantityField.focus();
-                        quantityField.select();
-                    }
-                    validateStockAndCalculate(rowIndex);
-                }, 200);
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching product batches:', error);
-        });
+    // Auto-open batch selection modal
+    showBatchSelectionDialog(productSelect.value, rowIndex);
 }
 
 // Debounced batch input handler to prevent excessive API calls
@@ -1336,10 +1265,15 @@ function createBatchSelectionModal(batches, rowIndex) {
     // Add modal to page
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     
-    // Initialize batch selection after modal is added
+    // Initialize batch selection after modal is added with focus on first batch
     setTimeout(() => {
         initializeBatchSelection();
-    }, 50);
+        // Focus on batch list for keyboard navigation
+        const batchList = document.getElementById('batchList');
+        if (batchList) {
+            batchList.focus();
+        }
+    }, 100);
 }
 
 // Separate function to handle batch selection initialization
@@ -1353,8 +1287,8 @@ function initializeBatchSelection() {
         return;
     }
     
-    // Focus on search input first
-    searchInput.focus();
+    // Focus on batch list instead of search input for immediate keyboard navigation
+    batchList.focus();
     
     // Global keydown handler for the entire modal
     function handleModalKeydown(e) {
@@ -1577,12 +1511,11 @@ function setCurrentDate() {
     const dateField = document.querySelector('[name="sales_invoice_date"]');
     if (dateField && !dateField.value) {
         const today = new Date();
-        const day = String(today.getDate()).padStart(2, '0');
-        const month = String(today.getMonth() + 1).padStart(2, '0');
         const year = today.getFullYear();
-        const ddmmyyyyFormat = day + month + year;
-        dateField.value = ddmmyyyyFormat;
-        console.log('✓ Invoice date auto-filled in DDMMYYYY format:', ddmmyyyyFormat);
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        dateField.value = `${year}-${month}-${day}`;
+        console.log('✓ Invoice date auto-filled:', dateField.value);
     }
 }
 
@@ -1940,52 +1873,9 @@ function fillProductInRow(row, productId, productName, productCompany) {
     if (productSelect) {
         productSelect.value = productId;
         
-        // Trigger the change event to load product details
+        // Trigger the change event to auto-open batch modal
         const rowIndex = row.id.split('_')[1];
         loadProductDetails(productSelect, rowIndex);
-        
-        // Focus on batch no field after a short delay with special styling
-        setTimeout(() => {
-            const batchField = row.querySelector('.batch-no');
-            if (batchField) {
-                console.log('✅ Quick Search: Focusing on Batch Number field');
-                batchField.focus();
-                batchField.select();
-                batchField.classList.add('auto-focused');
-                
-                // Add visual indicator
-                const indicator = document.createElement('small');
-                indicator.className = 'batch-focus-indicator';
-                indicator.innerHTML = '📦 Enter Batch Number';
-                indicator.style.cssText = `
-                    position: absolute;
-                    top: -25px;
-                    left: 0;
-                    background: #28a745;
-                    color: white;
-                    padding: 4px 8px;
-                    border-radius: 4px;
-                    font-size: 0.75rem;
-                    font-weight: 600;
-                    z-index: 1000;
-                    animation: fadeInOut 2s ease-in-out;
-                `;
-                
-                const batchCell = batchField.closest('td');
-                batchCell.style.position = 'relative';
-                batchCell.appendChild(indicator);
-                
-                // Remove indicator and class after animation
-                setTimeout(() => {
-                    batchField.classList.remove('auto-focused');
-                    if (indicator.parentNode) {
-                        indicator.remove();
-                    }
-                }, 2000);
-            } else {
-                console.log('❌ Quick Search: Batch field not found');
-            }
-        }, 500);
     }
 }
 

@@ -80,29 +80,6 @@
                                 {{ form.customer_credit_days }}
                                 {% if form.customer_credit_days.errors %}<div class="error-message">{{ form.customer_credit_days.errors }}</div>{% endif %}
                             </div>
-                            <div class="form-group">
-                                <label for="{{ form.customer_bank.id_for_label }}" class="field-label">Bank Name</label>
-                                {{ form.customer_bank }}
-                                {% if form.customer_bank.errors %}<div class="error-message">{{ form.customer_bank.errors }}</div>{% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="{{ form.customer_bankaccountno.id_for_label }}" class="field-label">Account Number</label>
-                                {{ form.customer_bankaccountno }}
-                                {% if form.customer_bankaccountno.errors %}<div class="error-message">{{ form.customer_bankaccountno.errors }}</div>{% endif %}
-                            </div>
-                            <div class="form-group">
-                                <label for="{{ form.customer_bankifsc.id_for_label }}" class="field-label">IFSC Code</label>
-                                {{ form.customer_bankifsc }}
-                                {% if form.customer_bankifsc.errors %}<div class="error-message">{{ form.customer_bankifsc.errors }}</div>{% endif %}
-                            </div>
-                            <div class="form-group">
-                                <label for="{{ form.customer_upi.id_for_label }}" class="field-label">UPI ID</label>
-                                {{ form.customer_upi }}
-                                {% if form.customer_upi.errors %}<div class="error-message">{{ form.customer_upi.errors }}</div>{% endif %}
-                            </div>
                         </div>
                         
                     <div class="form-actions">

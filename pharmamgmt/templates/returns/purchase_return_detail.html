@@ -1019,11 +1019,12 @@ function quickSearchProductsForEdit(event) {
 function quickSelectEditReturnProduct(productId, productName) {
     const tbody = document.getElementById('editReturnProductRows');
     const row = document.createElement('tr');
-    row.id = `editReturnRow_${editReturnProductRowIndex}`;
+    const currentRowIndex = editReturnProductRowIndex;
+    row.id = `editReturnRow_${currentRowIndex}`;
     
     row.innerHTML = `
         <td>
-            <button type="button" class="btn btn-sm btn-info" onclick="openBatchSelectorForEdit(${editReturnProductRowIndex})" title="Select Batch (Alt+W)">
+            <button type="button" class="btn btn-sm btn-info" onclick="openBatchSelectorForEdit(${currentRowIndex})" title="Select Batch (Alt+W)">
                 <i class="fas fa-box"></i> <small>Alt+W</small>
             </button>
             <input type="hidden" class="product-id" value="${productId}">
@@ -1032,30 +1033,27 @@ function quickSelectEditReturnProduct(productId, productName) {
         <td><input type="text" class="form-control form-control-sm batch-no" placeholder="Enter batch number"></td>
         <td><input type="text" class="form-control form-control-sm expiry" placeholder="Auto-filled"></td>
         <td><input type="number" class="form-control form-control-sm mrp" step="0.01" placeholder="Auto-filled"></td>
-        <td><input type="number" class="form-control form-control-sm return-rate" step="0.01" onchange="calculateEditReturnRowTotal(${editReturnProductRowIndex})" placeholder="Return rate" required></td>
+        <td><input type="number" class="form-control form-control-sm return-rate" step="0.01" onchange="calculateEditReturnRowTotal(${currentRowIndex})" placeholder="Return rate" required></td>
         <td>
-            <input type="number" class="form-control form-control-sm return-qty" step="0.01" oninput="validateEditReturnStock(${editReturnProductRowIndex})" onchange="validateEditReturnStock(${editReturnProductRowIndex})" placeholder="Quantity" required>
+            <input type="number" class="form-control form-control-sm return-qty" step="0.01" oninput="validateEditReturnStock(${currentRowIndex})" onchange="validateEditReturnStock(${currentRowIndex})" placeholder="Quantity" required>
             <div class="stock-info-edit" style="display: none;"></div>
             <div class="stock-error-edit" style="display: none;"></div>
         </td>
-        <td><input type="number" class="form-control form-control-sm scheme" step="0.01" onchange="calculateEditReturnRowTotal(${editReturnProductRowIndex})" placeholder="Scheme"></td>
-        <td><input type="number" class="form-control form-control-sm charges" step="0.01" onchange="calculateEditReturnRowTotal(${editReturnProductRowIndex})" placeholder="Charges"></td>
+        <td><input type="number" class="form-control form-control-sm scheme" step="0.01" onchange="calculateEditReturnRowTotal(${currentRowIndex})" placeholder="Scheme"></td>
+        <td><input type="number" class="form-control form-control-sm charges" step="0.01" onchange="calculateEditReturnRowTotal(${currentRowIndex})" placeholder="Charges"></td>
         <td><input type="text" class="form-control form-control-sm reason" maxlength="200" placeholder="Return reason"></td>
         <td><span class="edit-return-row-total">0.00</span></td>
-        <td><button type="button" class="btn btn-sm btn-danger" onclick="removeEditReturnProductRow(${editReturnProductRowIndex})"><i class="fas fa-trash"></i></button></td>
+        <td><button type="button" class="btn btn-sm btn-danger" onclick="removeEditReturnProductRow(${currentRowIndex})"><i class="fas fa-trash"></i></button></td>
     `;
     
     tbody.appendChild(row);
     editReturnProductRowIndex++;
     closeQuickSearchEdit();
     
-    // Focus on batch number input field
+    // Auto-open batch selector after product is added
     setTimeout(() => {
-        const batchInput = row.querySelector('.batch-no');
-        if (batchInput) {
-            batchInput.focus();
-        }
-    }, 100);
+        openBatchSelectorForEdit(currentRowIndex);
+    }, 300);
 }
 
 function closeQuickSearchEdit() {
@@ -1112,30 +1110,10 @@ function loadEditReturnProductInfo(rowIndex, productId) {
     const row = document.getElementById(`editReturnRow_${rowIndex}`);
     row.querySelector('.product-id').value = productId;
     
-    fetch(`/get-product-info/?product_id=${productId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) return;
-            
-            if (row) {
-                row.querySelector('.batch-no').value = data.last_batch_no || '';
-                row.querySelector('.expiry').value = data.last_expiry || '';
-                row.querySelector('.mrp').value = data.last_mrp || '';
-                row.querySelector('.return-rate').value = data.last_purchase_rate || '';
-                
-                // Show stock info if available
-                if (data.last_stock) {
-                    const stockInfo = row.querySelector('.stock-info-edit');
-                    if (stockInfo) {
-                        stockInfo.innerHTML = `<small class="text-success"><i class="fas fa-info-circle"></i> Available Stock: ${data.last_stock}</small>`;
-                        stockInfo.style.display = 'block';
-                    }
-                }
-                
-                calculateEditReturnRowTotal(rowIndex);
-            }
-        })
-        .catch(error => console.error('Error:', error));
+    // Auto-open batch selector after product selection
+    setTimeout(() => {
+        openBatchSelectorForEdit(rowIndex);
+    }, 300);
 }
 
 // Keyboard shortcuts

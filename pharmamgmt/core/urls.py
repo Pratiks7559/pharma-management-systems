@@ -54,6 +54,7 @@ urlpatterns = [
     path('invoices/add-with-products/', views.add_invoice_with_products, name='add_invoice_with_products'),
 
     path('invoices/<int:pk>/', views.invoice_detail, name='invoice_detail'),
+    path('invoices/<int:invoice_id>/print-receipt/', views.print_purchase_receipt, name='print_purchase_receipt'),
     path('invoices/<int:pk>/edit/', views.edit_invoice, name='edit_invoice'),
     path('invoices/<int:pk>/delete/', views.delete_invoice, name='delete_invoice'),
     path('invoices/<int:invoice_id>/add-purchase/', views.add_purchase, name='add_purchase'),
@@ -106,6 +107,7 @@ urlpatterns = [
     path('api/sales-invoice-items/', views.get_sales_invoice_items, name='get_sales_invoice_items'), 
     # Inventory
     path('inventory/', views.inventory_list, name='inventory_list'),
+    path('api/inventory-search-suggestions/', views.inventory_search_suggestions, name='inventory_search_suggestions'),
     
     # Reports
     path('reports/inventory/batch/', views.batch_inventory_report, name='batch_inventory_report'),

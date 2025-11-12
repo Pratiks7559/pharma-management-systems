@@ -154,15 +154,11 @@ class CustomerForm(forms.ModelForm):
     customer_dlno = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
     customer_gstno = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
     customer_food_license_no = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    customer_bank = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    customer_bankaccountno = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    customer_bankifsc = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    customer_upi = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
     customer_credit_days = forms.IntegerField(widget=forms.NumberInput(attrs={'class': 'form-control'}))
     
     class Meta:
         model = CustomerMaster
-        fields = ['customer_name', 'customer_type', 'customer_address', 'customer_mobile', 'customer_whatsapp', 'customer_emailid', 'customer_spoc', 'customer_dlno', 'customer_gstno', 'customer_food_license_no', 'customer_bank', 'customer_bankaccountno', 'customer_bankifsc', 'customer_upi', 'customer_credit_days']
+        fields = ['customer_name', 'customer_type', 'customer_address', 'customer_mobile', 'customer_whatsapp', 'customer_emailid', 'customer_spoc', 'customer_dlno', 'customer_gstno', 'customer_food_license_no', 'customer_credit_days']
 
 class InvoiceForm(forms.ModelForm):
     invoice_no = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))

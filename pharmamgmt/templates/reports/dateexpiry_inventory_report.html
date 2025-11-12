@@ -159,10 +159,12 @@
                         <input type="text" name="search" value="{{ search_query }}" placeholder="Search..." aria-label="Search" class="date-filter-input">
                     </div>
                     <div class="date-filter-group">
-                        <input type="date" name="expiry_from" value="{{ expiry_from }}" placeholder="From Date" class="date-filter-input">
+                        <label style="font-size: 0.85rem; margin-bottom: 2px; color: #6b7280;">From Entry Date:</label>
+                        <input type="date" name="expiry_from" value="{{ expiry_from }}" placeholder="From Date" class="date-filter-input" title="Filter by purchase entry date (when expiry was added)">
                     </div>
                     <div class="date-filter-group">
-                        <input type="date" name="expiry_to" value="{{ expiry_to }}" placeholder="To Date" class="date-filter-input">
+                        <label style="font-size: 0.85rem; margin-bottom: 2px; color: #6b7280;">To Entry Date:</label>
+                        <input type="date" name="expiry_to" value="{{ expiry_to }}" placeholder="To Date" class="date-filter-input" title="Filter by purchase entry date (when expiry was added)">
                     </div>
                     <div class="date-filter-actions">
                         <button type="submit" class="date-filter-btn date-filter-btn-primary">

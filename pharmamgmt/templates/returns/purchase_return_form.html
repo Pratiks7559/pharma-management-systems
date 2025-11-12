@@ -42,8 +42,10 @@
                         </div>
                         <div class="ci-form-column">
                             <div class="ci-field-group">
-                                <label for="{{ form.returninvoice_date.id_for_label }}" class="ci-field-label required">Return Date*</label>
-                                {{ form.returninvoice_date }}
+                                <label for="returninvoice_date" class="ci-field-label required">Return Date*</label>
+                                <input type="date" name="returninvoice_date" id="returninvoice_date" class="form-control" 
+                                       value="{{ form.returninvoice_date.value|default:'' }}" 
+                                       title="Enter return date" required>
                                 {% if form.returninvoice_date.errors %}
                                     <div class="invalid-feedback d-block">{{ form.returninvoice_date.errors }}</div>
                                 {% endif %}
@@ -387,12 +389,11 @@ function setCurrentReturnDate() {
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
-    const dateString = `${day}${month}${year}`; // DDMMYYYY format
+    const dateString = `${year}-${month}-${day}`;
     
-    const returnDateInput = document.querySelector('input[name*="returninvoice_date"]');
-    if (returnDateInput) {
+    const returnDateInput = document.querySelector('input[name="returninvoice_date"]');
+    if (returnDateInput && !returnDateInput.value) {
         returnDateInput.value = dateString;
-        returnDateInput.removeAttribute('readonly');
     }
 }
 
@@ -449,6 +450,11 @@ function loadReturnProductInfo(rowIndex, productId) {
                 }
                 
                 calculateReturnRowTotal(rowIndex);
+                
+                // Auto-open batch selector after product selection
+                setTimeout(() => {
+                    showReturnBatchSelector(productId, rowIndex);
+                }, 300);
             }
         })
         .catch(error => {
@@ -758,14 +764,6 @@ function fillReturnProductInRow(row, productId) {
         
         const rowIndex = row.id.split('_')[1];
         loadReturnProductInfo(rowIndex, productId);
-        
-        setTimeout(() => {
-            const batchField = row.querySelector('.batch-no');
-            if (batchField) {
-                batchField.focus();
-                batchField.select();
-            }
-        }, 500);
     }
 }
 

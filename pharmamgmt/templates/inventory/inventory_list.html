@@ -7,7 +7,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/inventory_list.css' %}">
 <link rel="stylesheet" href="{% static 'css/batch_inventory_report.css' %}">
-<link rel="stylesheet" href="{% static 'css/datewise_inventory_report.css' %}">
+<link rel="stylesheet" href="{% static 'css/dateexpiry_inventory_report.css' %}">
 <style>
 /* Print Styles - Optimized Inventory Report */
 @media print {
@@ -310,8 +310,9 @@
             <h6 class="table-title">All Products Inventory</h6>
             <div class="search-section no-print">
                 <form action="{% url 'inventory_list' %}" method="GET" class="search-form" id="searchForm">
-                    <div class="search-input-group">
+                    <div class="search-input-group" style="position: relative;">
                         <input type="text" name="search" id="searchInput" value="{{ search_query }}" placeholder="Search products..." aria-label="Search" class="search-input" autocomplete="off">
+                        <div id="searchSuggestions" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; border-top: none; max-height: 300px; overflow-y: auto; z-index: 1000; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
                     </div>
                     <div class="search-buttons">
                         <button type="submit" class="search-btn">
@@ -486,6 +487,88 @@
 {% block extra_js %}
 <script>
     $(document).ready(function() {
+        // Autocomplete search suggestions with keyboard navigation
+        let searchTimeout, selectedIndex = -1;
+        
+        $('#searchInput').on('input', function() {
+            const query = $(this).val().trim();
+            clearTimeout(searchTimeout);
+            selectedIndex = -1;
+            
+            if (query.length < 2) {
+                $('#searchSuggestions').hide().empty();
+                return;
+            }
+            
+            searchTimeout = setTimeout(function() {
+                $.ajax({
+                    url: '{% url "inventory_search_suggestions" %}',
+                    data: { q: query },
+                    success: function(data) {
+                        const suggestions = data.suggestions;
+                        if (suggestions.length > 0) {
+                            let html = '';
+                            suggestions.forEach(function(item, idx) {
+                                html += `<div class="suggestion-item" data-index="${idx}" style="padding: 10px; cursor: pointer; border-bottom: 1px solid #eee;">${item}</div>`;
+                            });
+                            $('#searchSuggestions').html(html).show();
+                            
+                            $('.suggestion-item').on('click', function() {
+                                const text = $(this).text().split(' - ')[0];
+                                $('#searchInput').val(text);
+                                $('#searchSuggestions').hide();
+                                $('#searchForm').submit();
+                            }).on('mouseenter', function() {
+                                $('.suggestion-item').css('background', 'white');
+                                $(this).css('background', '#f0f0f0');
+                                selectedIndex = $(this).data('index');
+                            });
+                        } else {
+                            $('#searchSuggestions').hide();
+                        }
+                    }
+                });
+            }, 300);
+        });
+        
+        // Keyboard navigation
+        $('#searchInput').on('keydown', function(e) {
+            const items = $('.suggestion-item');
+            if (!items.length) return;
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedIndex = (selectedIndex + 1) % items.length;
+                updateSelection(items);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedIndex = selectedIndex <= 0 ? items.length - 1 : selectedIndex - 1;
+                updateSelection(items);
+            } else if (e.key === 'Enter' && selectedIndex >= 0) {
+                e.preventDefault();
+                const text = items.eq(selectedIndex).text().split(' - ')[0];
+                $('#searchInput').val(text);
+                $('#searchSuggestions').hide();
+                $('#searchForm').submit();
+            } else if (e.key === 'Escape') {
+                $('#searchSuggestions').hide();
+            }
+        });
+        
+        function updateSelection(items) {
+            items.css('background', 'white');
+            if (selectedIndex >= 0) {
+                items.eq(selectedIndex).css('background', '#e3f2fd');
+                items.eq(selectedIndex)[0].scrollIntoView({ block: 'nearest' });
+            }
+        }
+        
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.search-input-group').length) {
+                $('#searchSuggestions').hide();
+            }
+        });
+        
         // Fix cursor position in search input
         $('#searchInput').on('focus', function() {
             const input = this;

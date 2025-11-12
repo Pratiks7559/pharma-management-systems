@@ -1083,13 +1083,10 @@ document.addEventListener('keydown', function(e) {
         openEditInvoiceModal();
     }
     
-    // Ctrl+P for add payment
+    // Ctrl+P for print receipt
     if (e.ctrlKey && e.key === 'p') {
         e.preventDefault();
-        const balance = {{ invoice.balance_due }};
-        if (balance > 0) {
-            openAddPaymentDialog();
-        }
+        window.open('{% url "print_purchase_receipt" invoice_id=invoice.invoiceid %}', '_blank');
     }
 });
 
@@ -1829,7 +1826,7 @@ window.addEventListener('load', function() {
     </div>
     <div style="display: flex; align-items: center; gap: 5px;">
         <span style="background: #374151; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 0.7rem;">Ctrl+P</span>
-        <span>Print receipt</span>
+        <span>Print Receipt</span>
     </div>
     <!-- <div style="display: flex; align-items: center; gap: 5px;">
         <span style="background: #374151; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 0.7rem;">Alt+W</span>

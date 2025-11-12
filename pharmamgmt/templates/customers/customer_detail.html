@@ -82,29 +82,6 @@
             </div>
         </div>
         
-        <div class="customer-detail-bank-card">
-            <div class="customer-detail-card-header">
-                <h5 class="customer-detail-card-title">Bank Details</h5>
-            </div>
-            <div class="customer-detail-card-body">
-                <ul class="customer-detail-bank-list">
-                    <li class="customer-detail-bank-item">
-                        <i class="fas fa-university me-2"></i><strong>Bank Name:</strong> {{ customer.customer_bank }}
-                    </li>
-                    <li class="customer-detail-bank-item">
-                        <i class="fas fa-credit-card me-2"></i><strong>Account Number:</strong> {{ customer.customer_bankaccountno }}
-                    </li>
-                    <li class="customer-detail-bank-item">
-                        <i class="fas fa-code me-2"></i><strong>IFSC Code:</strong> {{ customer.customer_bankifsc }}
-                    </li>
-                    {% if customer.customer_upi %}
-                    <li class="customer-detail-bank-item">
-                        <i class="fas fa-mobile-alt me-2"></i><strong>UPI ID:</strong> {{ customer.customer_upi }}
-                    </li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
     </div>
     
     <div class="customer-detail-financial-section">
@@ -247,24 +224,6 @@
                     <div class="form-group">
                         <label>GST Number</label>
                         <input type="text" name="customer_gstno" value="{{ customer.customer_gstno }}">
-                    </div>
-                    <div class="form-group">
-                        <label>Bank Name</label>
-                        <input type="text" name="customer_bank" value="{{ customer.customer_bank }}">
-                    </div>
-                    <div class="form-group">
-                        <label>Account Number</label>
-                        <input type="text" name="customer_bankaccountno" value="{{ customer.customer_bankaccountno }}">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>IFSC Code</label>
-                        <input type="text" name="customer_bankifsc" value="{{ customer.customer_bankifsc }}">
-                    </div>
-                    <div class="form-group">
-                        <label>UPI ID</label>
-                        <input type="text" name="customer_upi" value="{{ customer.customer_upi }}">
                     </div>
                     <div class="form-group full-width">
                         <label>Address</label>

@@ -80,10 +80,6 @@ class CustomerMaster(models.Model):
     customer_dlno=models.CharField(max_length=30, blank=True, default='NA')
     customer_gstno=models.CharField(max_length=20, blank=True, default='NA')
     customer_food_license_no=models.CharField(max_length=30, blank=True, default='NA')
-    customer_bank=models.CharField(max_length=200,blank=True, default='NA')
-    customer_bankaccountno=models.CharField(max_length=30,blank=True, default='NA')
-    customer_bankifsc=models.CharField(max_length=20, blank=True, default='NA')
-    customer_upi=models.CharField(max_length=50, blank=True)
     customer_credit_days=models.IntegerField(blank=True, default=0)
     
     def __str__(self):

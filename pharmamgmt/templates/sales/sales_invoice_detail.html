@@ -883,68 +883,10 @@ function loadEditProductDetails(productSelect, rowIndex) {
     
     console.log(`🔄 Loading edit product details for row ${rowIndex}, customer rate type: ${selectedEditCustomerRateType}`);
     
-    fetch(`/api/product-batch-selector/?product_id=${productSelect.value}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.batches.length > 0) {
-                const row = document.getElementById(`editProductRow_${rowIndex}`);
-                const firstBatch = data.batches[0];
-                
-                // Auto-fill fields
-                row.querySelector('.batch-no').value = firstBatch.batch_no;
-                row.querySelector('.expiry').value = firstBatch.expiry;
-                row.querySelector('.mrp').value = firstBatch.mrp;
-                
-                // Set rate based on customer type with proper fallback
-                let selectedRate = firstBatch.mrp; // Default fallback
-                let rateSource = 'MRP (Fallback)';
-                
-                if (firstBatch.rates) {
-                    if (selectedEditCustomerRateType === 'A' && firstBatch.rates.rate_A > 0) {
-                        selectedRate = firstBatch.rates.rate_A;
-                        rateSource = 'Rate A';
-                    } else if (selectedEditCustomerRateType === 'B' && firstBatch.rates.rate_B > 0) {
-                        selectedRate = firstBatch.rates.rate_B;
-                        rateSource = 'Rate B';
-                    } else if (selectedEditCustomerRateType === 'C' && firstBatch.rates.rate_C > 0) {
-                        selectedRate = firstBatch.rates.rate_C;
-                        rateSource = 'Rate C';
-                    }
-                }
-                
-                console.log(`💰 Edit Rate Applied: ${rateSource} = ₹${selectedRate}`);
-                
-                row.querySelector('.rate').value = selectedRate;
-                row.querySelector('.quantity').value = '1';
-                row.querySelector('.discount').value = '0';
-                row.querySelector('.igst').value = '12';
-                
-                // Show enhanced stock info with rate source
-                const stockInfo = document.createElement('small');
-                stockInfo.className = 'text-success stock-info';
-                stockInfo.innerHTML = `<i class="fas fa-info-circle"></i> Stock: ${firstBatch.stock} | Applied: ${rateSource} = ₹${selectedRate}`;
-                
-                const existingInfo = row.querySelector('.stock-info');
-                if (existingInfo) existingInfo.remove();
-                
-                row.querySelector('.quantity').parentNode.appendChild(stockInfo);
-                
-                calculateEditRowTotal(row);
-                
-                // Focus on quantity field
-                setTimeout(() => {
-                    const quantityField = row.querySelector('.quantity');
-                    if (quantityField) {
-                        quantityField.focus();
-                        quantityField.select();
-                    }
-                    validateEditStockAndCalculate(rowIndex);
-                }, 200);
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching product batches:', error);
-        });
+    // Auto-open batch selector after product selection
+    setTimeout(() => {
+        showEditBatchSelectionDialog(productSelect.value, rowIndex);
+    }, 300);
 }
 
 // Comprehensive stock validation for edit modal - exact copy from combined invoice
@@ -1306,23 +1248,6 @@ function fillEditProductInRow(row, productId) {
         if (rowIndex) {
             loadEditProductDetails(productSelect, rowIndex);
         }
-        
-        // Focus on batch field after product details are loaded
-        setTimeout(() => {
-            const batchField = row.querySelector('.batch-no');
-            if (batchField) {
-                batchField.focus();
-                batchField.select();
-                
-                // Add visual indicator
-                batchField.style.backgroundColor = '#d4edda';
-                batchField.style.borderColor = '#28a745';
-                setTimeout(() => {
-                    batchField.style.backgroundColor = '';
-                    batchField.style.borderColor = '';
-                }, 2000);
-            }
-        }, 600);
     }
 }
 

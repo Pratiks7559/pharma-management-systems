@@ -799,11 +799,7 @@ def add_customer(request):
                     customer_dlno=request.POST.get('customer_dlno'),
                     customer_gstno=request.POST.get('customer_gstno'),
                     customer_food_license_no=request.POST.get('customer_food_license_no'),
-                    customer_credit_days=int(request.POST.get('customer_credit_days', 0)),
-                    customer_bank=request.POST.get('customer_bank'),
-                    customer_bankaccountno=request.POST.get('customer_bankaccountno'),
-                    customer_bankifsc=request.POST.get('customer_bankifsc'),
-                    customer_upi=request.POST.get('customer_upi', '')
+                    customer_credit_days=int(request.POST.get('customer_credit_days', 0))
                 )
                 
                 return JsonResponse({
@@ -1906,6 +1902,26 @@ def print_receipt(request, pk):
         'title': f'Receipt - Invoice #{invoice.sales_invoice_no}'
     }
     return render(request, 'sales/print_receipt.html', context)
+
+@login_required
+def print_purchase_receipt(request, invoice_id):
+    """Print purchase receipt in landscape format with pharmacy and supplier details"""
+    invoice = get_object_or_404(InvoiceMaster, invoiceid=invoice_id)
+    purchases = PurchaseMaster.objects.filter(product_invoiceid=invoice_id)
+    purchases_total = purchases.aggregate(total=Sum('total_amount'))['total'] or 0
+    pharmacy = None
+    try:
+        pharmacy = Pharmacy_Details.objects.first()
+    except:
+        pharmacy = None
+    context = {
+        'invoice': invoice,
+        'purchases': purchases,
+        'purchases_total': purchases_total,
+        'pharmacy': pharmacy,
+        'title': f'Purchase Receipt - Invoice #{invoice.invoice_no}'
+    }
+    return render(request, 'purchases/print_purchase_receipt.html', context)
 
 @login_required
 def add_sale(request, invoice_id):
@@ -4193,8 +4209,8 @@ def dateexpiry_inventory_report(request):
 
     # Get filter parameters
     search_query = request.GET.get('search', '')
-    expiry_from = request.GET.get('expiry_from', '')
-    expiry_to = request.GET.get('expiry_to', '')
+    expiry_from = request.GET.get('expiry_from', '')  # Entry date from
+    expiry_to = request.GET.get('expiry_to', '')  # Entry date to
 
     # Base query for all purchase batches with stock > 0
     batch_query = PurchaseMaster.objects.select_related('productid').annotate(
@@ -4227,19 +4243,24 @@ def dateexpiry_inventory_report(request):
             Q(productid__product_company__icontains=search_query)
         )
 
+    # Filter by purchase entry date (when expiry was added)
     if expiry_from:
         try:
-            from_date = datetime.strptime(expiry_from, '%Y-%m-%d').date()
-            batch_query = batch_query.filter(product_expiry__gte=from_date)
+            from_date = datetime.strptime(expiry_from, '%Y-%m-%d')
+            from django.utils import timezone
+            from_date_aware = timezone.make_aware(from_date)
+            batch_query = batch_query.filter(purchase_entry_date__gte=from_date_aware)
         except (ValueError, TypeError):
-            pass  # Ignore invalid date format
+            pass
 
     if expiry_to:
         try:
-            to_date = datetime.strptime(expiry_to, '%Y-%m-%d').date()
-            batch_query = batch_query.filter(product_expiry__lte=to_date)
+            to_date = datetime.strptime(expiry_to, '%Y-%m-%d')
+            from django.utils import timezone
+            to_date_aware = timezone.make_aware(to_date.replace(hour=23, minute=59, second=59))
+            batch_query = batch_query.filter(purchase_entry_date__lte=to_date_aware)
         except (ValueError, TypeError):
-            pass  # Ignore invalid date format
+            pass
 
     # Group and process data in Python
     grouped_data = defaultdict(list)
@@ -10106,3 +10127,19 @@ def export_products_html(request):
     response = HttpResponse(html_content, content_type='text/html')
     response['Content-Disposition'] = 'attachment; filename="products_report.html"'
     return response
+
+
+@login_required
+def inventory_search_suggestions(request):
+    query = request.GET.get('q', '').strip()
+    if len(query) < 2:
+        return JsonResponse({'suggestions': []})
+    
+    products = ProductMaster.objects.filter(
+        Q(product_name__istartswith=query) |
+        Q(product_company__istartswith=query) |
+        Q(product_salt__istartswith=query)
+    ).values('product_name', 'product_company')[:10]
+    
+    suggestions = [f"{p['product_name']} - {p['product_company']}" for p in products]
+    return JsonResponse({'suggestions': list(set(suggestions))})

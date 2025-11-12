@@ -634,7 +634,8 @@
     display: flex;
     gap: 8px;
     margin-bottom: 2px;
-    font-size: 0.7rem;
+    font-size: 0.8rem;
+    color:red ;
 }
 
 .batch-item.batch-selected .batch-details {
@@ -642,8 +643,9 @@
 }
 
 .batch-rates {
-    font-size: 0.65rem;
+    font-size: 0.68rem;
     font-weight: 500;
+    color: red;
 }
 
 .batch-item.batch-selected .batch-rates {

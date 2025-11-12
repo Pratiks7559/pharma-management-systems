@@ -288,3 +288,32 @@
 2025-11-03 21:11:11,226 - core.combined_invoice_view - INFO - Product paracetamol added to invoice
 2025-11-03 21:11:11,231 - core.combined_invoice_view - INFO - Updating invoice total from 1.01 to 1.0
 2025-11-03 21:11:11,234 - core.combined_invoice_view - INFO - Invoice 1 created successfully with 1 products
+2025-11-07 22:06:37,418 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['gycA0hXhIfqmnyL5WH5gvfYSdUK4DrgRvXiojWelNaTPnMAwvmyGjC1xg06FRmYe'], 'invoice_no': ['111'], 'invoice_date': ['07112025'], 'supplierid': ['2'], 'transport_charges': ['0'], 'invoice_total': ['1.01'], 'products_data': ['[{"productid":"3377","batch_no":"c453","expiry":"12-2045","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","igst":"1","calculation_mode":"flat","rate_A":"1","rate_B":"1","rate_C":"1"}]']}>
+2025-11-07 22:06:37,431 - core.combined_invoice_view - INFO - Products data received: [{"productid":"3377","batch_no":"c453","expiry":"12-2045","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","igst":"1","calculation_mode":"flat","rate_A":"1","rate_B":"1","rate_C":"1"}]
+2025-11-07 22:06:37,443 - core.combined_invoice_view - INFO - Invoice created with ID: 100
+2025-11-07 22:06:37,452 - core.combined_invoice_view - INFO - Product paracetamol added to invoice
+2025-11-07 22:06:37,460 - core.combined_invoice_view - INFO - Updating invoice total from 1.01 to 1.0
+2025-11-07 22:06:37,463 - core.combined_invoice_view - INFO - Invoice 111 created successfully with 1 products
+2025-11-11 13:15:14,244 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['IIFWHkLpYb2dlCvRa4vUbLTB6GsoQg3bQjKqkK5T7j4Bz2oDS21Uj8k5AKIBFv2K'], 'invoice_no': ['INV3345'], 'invoice_date': ['11112025'], 'supplierid': ['2'], 'transport_charges': ['0'], 'invoice_total': ['1.00'], 'products_data': ['[{"productid":"3377","batch_no":"M123","expiry":"10-2027","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","igst":"0","calculation_mode":"flat","rate_A":"1","rate_B":"1","rate_C":"1"}]']}>
+2025-11-11 13:15:14,253 - core.combined_invoice_view - INFO - Products data received: [{"productid":"3377","batch_no":"M123","expiry":"10-2027","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","igst":"0","calculation_mode":"flat","rate_A":"1","rate_B":"1","rate_C":"1"}]
+2025-11-11 13:15:14,257 - core.combined_invoice_view - INFO - Invoice created with ID: 101
+2025-11-11 13:15:14,261 - core.combined_invoice_view - INFO - Product paracetamol added to invoice
+2025-11-11 13:15:14,268 - core.combined_invoice_view - INFO - Invoice INV3345 created successfully with 1 products
+2025-11-11 14:15:17,012 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['DNmdK9pzli3KtD4QVgf5Dy3rCpyyourqLorHnzJ3uq58H3XCDeL5LVuV6tOLdJqZ'], 'invoice_no': ['23146576876'], 'invoice_date': ['11112025'], 'supplierid': ['2'], 'transport_charges': ['0'], 'invoice_total': ['1470.00'], 'products_data': ['[{"productid":"2735","batch_no":"1234","expiry":"03-2027","mrp":"90","purchase_rate":"14","quantity":"100","scheme":"0","discount":"0","igst":"5","calculation_mode":"flat","rate_A":"15","rate_B":"16","rate_C":"17"}]']}>
+2025-11-11 14:15:17,022 - core.combined_invoice_view - INFO - Products data received: [{"productid":"2735","batch_no":"1234","expiry":"03-2027","mrp":"90","purchase_rate":"14","quantity":"100","scheme":"0","discount":"0","igst":"5","calculation_mode":"flat","rate_A":"15","rate_B":"16","rate_C":"17"}]
+2025-11-11 14:15:17,025 - core.combined_invoice_view - INFO - Invoice created with ID: 103
+2025-11-11 14:15:17,033 - core.combined_invoice_view - INFO - Product REBICID DSR CAP 10 CAP added to invoice
+2025-11-11 14:15:17,038 - core.combined_invoice_view - INFO - Updating invoice total from 1470.0 to 1400.0
+2025-11-11 14:15:17,040 - core.combined_invoice_view - INFO - Invoice 23146576876 created successfully with 1 products
+2025-11-11 19:23:22,612 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['lviVhE8i4LIDd29mtwi9umE9PZXfnkbKt6npU4sMdTK1rs28buO9CJ5Dj3dsczaj'], 'invoice_no': ['1'], 'invoice_date': ['11112025'], 'supplierid': ['2'], 'transport_charges': ['0'], 'invoice_total': ['1.01'], 'products_data': ['[{"productid":"3368","batch_no":"1020","expiry":"12-2029","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","igst":"1","calculation_mode":"flat","rate_A":"1","rate_B":"1","rate_C":"1"}]']}>
+2025-11-11 19:23:22,625 - core.combined_invoice_view - INFO - Products data received: [{"productid":"3368","batch_no":"1020","expiry":"12-2029","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","igst":"1","calculation_mode":"flat","rate_A":"1","rate_B":"1","rate_C":"1"}]
+2025-11-11 19:23:22,630 - core.combined_invoice_view - INFO - Invoice created with ID: 104
+2025-11-11 19:23:22,635 - core.combined_invoice_view - INFO - Product shilajit added to invoice
+2025-11-11 19:23:22,639 - core.combined_invoice_view - INFO - Updating invoice total from 1.01 to 1.0
+2025-11-11 19:23:22,642 - core.combined_invoice_view - INFO - Invoice 1 created successfully with 1 products
+2025-11-11 21:02:37,782 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['KY4nniMGRzJb4ttm9SxsPwEP25cTxtInSz9R0I6a0HLziTm8RQ3sXT5jw9s6mIHW'], 'invoice_no': ['11'], 'invoice_date': ['2025-11-11'], 'supplierid': ['2'], 'transport_charges': ['0'], 'invoice_total': ['1.01'], 'products_data': ['[{"productid":"2755","batch_no":"33","expiry":"12-2030","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","igst":"1","calculation_mode":"flat","rate_A":"1","rate_B":"1","rate_C":"1"}]']}>
+2025-11-11 21:02:37,793 - core.combined_invoice_view - INFO - Products data received: [{"productid":"2755","batch_no":"33","expiry":"12-2030","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","igst":"1","calculation_mode":"flat","rate_A":"1","rate_B":"1","rate_C":"1"}]
+2025-11-11 21:02:37,796 - core.combined_invoice_view - INFO - Invoice created with ID: 105
+2025-11-11 21:02:37,802 - core.combined_invoice_view - INFO - Product RESTUSS SYP 100ML added to invoice
+2025-11-11 21:02:37,808 - core.combined_invoice_view - INFO - Updating invoice total from 1.01 to 1.0
+2025-11-11 21:02:37,811 - core.combined_invoice_view - INFO - Invoice 11 created successfully with 1 products
