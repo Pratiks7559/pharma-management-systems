@@ -6,17 +6,24 @@
     <title>Purchase Receipt - Invoice #{{ invoice.invoice_no }}</title>
     <style>
         @page {
-            size: A8 landscape;
-            margin: 5mm;
+            size: A8 portrait;
+            margin: 8mm;
         }
         
         @media print {
             body {
                 margin: 0;
                 padding: 0;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
             }
             .no-print {
                 display: none !important;
+            }
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
         }
         
@@ -27,39 +34,46 @@
         }
         
         body {
-            font-family: 'Arial', sans-serif;
-            font-size: 14px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 11px;
             line-height: 1.5;
-            color: #000;
-            background: #fff;
+            color: #1a1a1a;
+           
         }
         
         .receipt-container {
             width: 100%;
             max-width: 297mm;
             margin: 0 auto;
-            padding: 10px;
+            padding: 15px;
             background: white;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            border-radius: 8px;
         }
         
         .receipt-header {
             text-align: center;
-            border-bottom: 2px solid #000;
-            padding-bottom: 10px;
-            margin-bottom: 10px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            padding: 15px;
+            margin: -15px -15px 15px -15px;
+            border-radius: 8px 8px 0 0;
+            color: white;
         }
         
         .pharmacy-name {
-            font-size: 24px;
-            font-weight: bold;
+            font-size: 22px;
+            font-weight: 700;
             text-transform: uppercase;
-            margin-bottom: 5px;
-            color: #2c3e50;
+            margin-bottom: 8px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            letter-spacing: 1px;
         }
         
         .pharmacy-details {
-            font-size: 13px;
+            font-size: 10px;
             line-height: 1.6;
+            color: rgba(255,255,255,0.95);
         }
         
         .pharmacy-details div {
@@ -69,10 +83,11 @@
         .invoice-info {
             display: flex;
             justify-content: space-between;
-            margin: 10px 0;
-            padding: 8px;
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
+            margin: 15px 0;
+            padding: 12px;
+            background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
+            border-radius: 6px;
+            border-left: 4px solid #11998e;
         }
         
         .invoice-info-left, .invoice-info-right {
@@ -92,17 +107,22 @@
         }
         
         .products-table th {
-            background: #2c3e50;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
             color: white;
-            padding: 8px 5px;
+            padding: 10px 6px;
             text-align: left;
-            font-weight: bold;
-            border: 1px solid #000;
+            font-weight: 600;
+            border: none;
+            text-transform: uppercase;
+            font-size: 9px;
+            letter-spacing: 0.5px;
         }
         
         .products-table td {
-            padding: 6px 5px;
-            border: 1px solid #dee2e6;
+            padding: 8px 6px;
+            border: 1px solid #e0f2f1;
+            border-left: none;
+            border-right: none;
         }
         
         .products-table tbody tr:nth-child(even) {
@@ -123,25 +143,29 @@
         
         .total-section {
             margin-top: 15px;
-            padding: 10px;
-            background: #f8f9fa;
-            border: 2px solid #2c3e50;
+            padding: 15px;
+            background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
+            border-radius: 6px;
+            border-left: 4px solid #11998e;
         }
         
         .total-row {
             display: flex;
             justify-content: space-between;
             padding: 5px 0;
-            font-size: 15px;
+            font-size: 12px;
         }
         
         .total-row.grand-total {
-            font-size: 18px;
-            font-weight: bold;
-            color: #2c3e50;
-            border-top: 2px solid #2c3e50;
-            padding-top: 8px;
-            margin-top: 5px;
+            font-size: 16px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            border-top: 2px solid #11998e;
+            padding-top: 10px;
+            margin-top: 8px;
         }
         
         .receipt-footer {
@@ -239,7 +263,8 @@
                     <th style="width: 8%;" class="text-right">Rate</th>
                     <th style="width: 7%;" class="text-right">Qty</th>
                     <th style="width: 8%;" class="text-right">Discount</th>
-                    <th style="width: 6%;" class="text-right">GST%</th>
+                    <th style="width: 5%;" class="text-right">CGST%</th>
+                    <th style="width: 5%;" class="text-right">SGST%</th>
                     <th style="width: 11%;" class="text-right">Total</th>
                 </tr>
             </thead>
@@ -263,12 +288,13 @@
                             {{ purchase.product_discount_got }}%
                         {% endif %}
                     </td>
-                    <td class="text-right">{{ purchase.IGST }}%</td>
+                    <td class="text-right">{{ purchase.CGST }}%</td>
+                    <td class="text-right">{{ purchase.SGST }}%</td>
                     <td class="text-right"><strong>₹{{ purchase.total_amount|floatformat:2 }}</strong></td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="10" class="text-center">No products in this invoice</td>
+                    <td colspan="11" class="text-center">No products in this invoice</td>
                 </tr>
                 {% endfor %}
             </tbody>

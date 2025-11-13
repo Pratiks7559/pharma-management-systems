@@ -189,45 +189,32 @@ def generate_sales_invoice_pdf(invoice):
     return None
 
 
-def generate_sales_invoice_number():
+def generate_sales_invoice_number(series_id=None):
     """
-    Generate sales invoice number in ABC00000000000 format (13 characters total)
-    ABC prefix + 11 digit sequential number
+    Generate next sales invoice number using series
     """
-    from .models import SalesInvoiceMaster
+    from .models import InvoiceSeries
     
-    # Get the latest sales invoice with ABC format
-    latest_invoices = SalesInvoiceMaster.objects.filter(
-        sales_invoice_no__startswith='ABC'
-    ).order_by('-sales_invoice_no')
-    
-    if latest_invoices.exists():
-        latest_number = latest_invoices.first().sales_invoice_no
+    if series_id:
         try:
-            # Extract the numeric part (remove ABC prefix)
-            sequence = int(latest_number[3:]) + 1
-        except (ValueError, IndexError):
-            # If extraction fails, start from 1
-            sequence = 1
-    else:
-        # Check if there are any old format invoices and start from next number
-        all_invoices = SalesInvoiceMaster.objects.all().order_by('-sales_invoice_no')
-        if all_invoices.exists():
-            # Try to get the highest numeric value from existing invoices
-            max_sequence = 0
-            for invoice in all_invoices:
-                try:
-                    num = int(invoice.sales_invoice_no)
-                    if num > max_sequence:
-                        max_sequence = num
-                except ValueError:
-                    continue
-            sequence = max_sequence + 1
-        else:
-            sequence = 1
+            series = InvoiceSeries.objects.get(series_id=series_id, is_active=True)
+            return series.get_next_invoice_number()
+        except InvoiceSeries.DoesNotExist:
+            pass
     
-    # Create the new sales invoice number (ABC + 11 digits with leading zeros)
-    return f"ABC{sequence:011d}"
+    # Fallback to default ABC series
+    try:
+        default_series = InvoiceSeries.objects.get(series_name='ABC', is_active=True)
+        return default_series.get_next_invoice_number()
+    except InvoiceSeries.DoesNotExist:
+        # Create default series if it doesn't exist
+        default_series = InvoiceSeries.objects.create(
+            series_name='ABC',
+            series_prefix='ABC',
+            current_number=1,
+            is_active=True
+        )
+        return default_series.get_next_invoice_number()
 
 
 def get_avg_mrp(product_id):

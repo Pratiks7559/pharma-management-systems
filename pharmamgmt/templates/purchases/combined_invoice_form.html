@@ -230,7 +230,7 @@ body.select2-open {
                             <div class="ci-form-row">
                                 <div class="ci-form-column">
                                     <div class="ci-field-group">
-                                        <label for="{{ invoice_form.invoice_no.id_for_label }}" class="ci-field-label">Invoice No*</label>
+                                        <label for="{{ invoice_form.invoice_no.id_for_label }}" class="ci-field-label">Invoice No* (Max 20 chars)</label>
                                         {{ invoice_form.invoice_no }}
                                     </div>
                                 </div>
@@ -300,7 +300,8 @@ body.select2-open {
                                             <th class="ci-th-purchase-rate">Purchase Rate</th>
                                             <th class="ci-th-qty">Qty</th>
                                             <th class="ci-th-discount">Discount</th>
-                                            <th class="ci-th-gst">GST %</th>
+                                            <th class="ci-th-cgst">CGST %</th>
+                                            <th class="ci-th-sgst">SGST %</th>
                                             <th class="ci-th-rate-a">Rate A</th>
                                             <th class="ci-th-rate-b">Rate B</th>
                                             <th class="ci-th-rate-c">Rate C</th>
@@ -643,7 +644,8 @@ function addProductRow() {
         <td><input type="number" class="purchase-rate" step="0.01" placeholder="Rate" min="0.01" onchange="calculateRowTotal(${productRowIndex})" required></td>
         <td><input type="number" class="qty" placeholder="Qty" min="0.01" step="0.01" onchange="calculateRowTotal(${productRowIndex})" required></td>
         <td><input type="number" class="discount" step="0.01" placeholder="Discount" min="0" onchange="calculateRowTotal(${productRowIndex})"></td>
-        <td><input type="number" class="gst-rate" step="0.01" placeholder="GST %" min="0" max="100" onchange="calculateRowTotal(${productRowIndex})"></td>
+        <td><input type="number" class="cgst-rate" step="0.01" placeholder="CGST %" min="0" max="50" value="2.5" onchange="calculateRowTotal(${productRowIndex})"></td>
+        <td><input type="number" class="sgst-rate" step="0.01" placeholder="SGST %" min="0" max="50" value="2.5" onchange="calculateRowTotal(${productRowIndex})"></td>
         <td><input type="number" class="rate-a" step="0.01" placeholder="Rate A" min="0"></td>
         <td><input type="number" class="rate-b" step="0.01" placeholder="Rate B" min="0"></td>
         <td><input type="number" class="rate-c" step="0.01" placeholder="Rate C" min="0"></td>
@@ -690,12 +692,14 @@ function calculateRowTotal(rowIndex) {
     const rate = parseFloat(row.querySelector('.purchase-rate').value) || 0;
     const qty = parseFloat(row.querySelector('.qty').value) || 0;
     const discount = parseFloat(row.querySelector('.discount').value) || 0;
-    const gstRate = parseFloat(row.querySelector('.gst-rate').value) || 0;
+    const cgstRate = parseFloat(row.querySelector('.cgst-rate').value) || 0;
+    const sgstRate = parseFloat(row.querySelector('.sgst-rate').value) || 0;
     
     const subtotal = rate * qty;
     const afterDiscount = subtotal - discount;
-    const gstAmount = (afterDiscount * gstRate) / 100;
-    const total = afterDiscount + gstAmount;
+    const cgstAmount = (afterDiscount * cgstRate) / 100;
+    const sgstAmount = (afterDiscount * sgstRate) / 100;
+    const total = afterDiscount + cgstAmount + sgstAmount;
     
     row.querySelector('.row-total').textContent = total.toFixed(2);
     calculateInvoiceTotal();
@@ -767,6 +771,8 @@ function validateInvoiceForm() {
     const invoiceNo = document.querySelector('input[name*="invoice_no"]')?.value?.trim();
     if (!invoiceNo) {
         errors.push('Invoice number is required');
+    } else if (invoiceNo.length > 20) {
+        errors.push('Invoice number must be 20 characters or less');
     }
     
     // Check invoice date
@@ -1037,7 +1043,8 @@ function loadProductInfo(rowIndex, productId) {
             row.querySelector('.expiry').value = '';
             row.querySelector('.mrp').value = '';
             row.querySelector('.purchase-rate').value = '';
-            row.querySelector('.gst-rate').value = '';
+            row.querySelector('.cgst-rate').value = '';
+            row.querySelector('.sgst-rate').value = '';
             row.querySelector('.rate-a').value = '';
             row.querySelector('.rate-b').value = '';
             row.querySelector('.rate-c').value = '';
@@ -1104,7 +1111,8 @@ function collectProductsData() {
             const purchaseRate = row.querySelector('.purchase-rate')?.value?.trim() || '0';
             const quantity = row.querySelector('.qty')?.value?.trim() || '0';
             const discount = row.querySelector('.discount')?.value?.trim() || '0';
-            const gstRate = row.querySelector('.gst-rate')?.value?.trim() || '0';
+            const cgstRate = row.querySelector('.cgst-rate')?.value?.trim() || '0';
+            const sgstRate = row.querySelector('.sgst-rate')?.value?.trim() || '0';
             const rateA = row.querySelector('.rate-a')?.value?.trim() || '0';
             const rateB = row.querySelector('.rate-b')?.value?.trim() || '0';
             const rateC = row.querySelector('.rate-c')?.value?.trim() || '0';
@@ -1118,7 +1126,8 @@ function collectProductsData() {
                 quantity: quantity,
                 scheme: '0',
                 discount: discount,
-                igst: gstRate,
+                cgst: cgstRate,
+                sgst: sgstRate,
                 calculation_mode: 'flat',
                 rate_A: rateA,
                 rate_B: rateB,
@@ -1475,6 +1484,8 @@ function selectBatch(batchNo, rowIndex, batchData) {
         row.querySelector('.expiry').value = expiry;
         row.querySelector('.mrp').value = batchData.mrp;
         row.querySelector('.purchase-rate').value = batchData.purchase_rate || '';
+        row.querySelector('.cgst-rate').value = '9';
+        row.querySelector('.sgst-rate').value = '9';
         
         calculateRowTotal(rowIndex);
         

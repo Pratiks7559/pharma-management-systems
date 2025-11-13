@@ -6,16 +6,7 @@
 <link rel="stylesheet" href="{% static 'css/purchases.css' %}">
 {% endblock %}
 
-{% block page_actions %}
-<div class="purchase-page-actions">
-    <a href="{% url 'add_invoice_with_products' %}" class="purchase-action-btn purchase-add-products-btn">
-        <i class="fas fa-plus me-2 purchase-icon"></i>Add Invoice with Products
-    </a>
-    <a href="{% url 'add_invoice' %}" class="purchase-action-btn purchase-add-invoice-btn">
-        <i class="fas fa-file-invoice me-2 purchase-icon"></i>Add Invoice Only
-    </a>
-</div>
-{% endblock %}
+{% block page_actions %}{% endblock %}
 
 {% block content %}
 <div class="purchase-invoice-container">

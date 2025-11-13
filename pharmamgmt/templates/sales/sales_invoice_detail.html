@@ -169,7 +169,8 @@
                                 <th class="rate-header">Rate</th>
                                 <th class="quantity-header">Qty</th>
                                 <th class="discount-header">Discount</th>
-                                <th class="gst-header">GST %</th>
+                                <th class="cgst-header">CGST %</th>
+                                <th class="sgst-header">SGST %</th>
                                 <th class="total-header">Total</th>
                                 <th class="actions-header">Actions</th>
                             </tr>
@@ -195,7 +196,8 @@
                                         {{ sale.sale_discount }}%
                                     {% endif %}
                                 </td>
-                                <td class="gst-cell">{{ sale.sale_igst }}%</td>
+                                <td class="cgst-cell">{{ sale.sale_cgst }}%</td>
+                                <td class="sgst-cell">{{ sale.sale_sgst }}%</td>
                                 <td class="total-cell">{{ sale.sale_total_amount|currency }}</td>
                                 <td class="actions-cell">
                                     <div class="product-actions">
@@ -207,13 +209,13 @@
                             </tr>
                             {% empty %}
                             <tr class="no-products-row">
-                                <td colspan="10" class="no-products-cell">No products added to this invoice</td>
+                                <td colspan="11" class="no-products-cell">No products added to this invoice</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                         <tfoot class="products-table-footer">
                             <tr class="total-row">
-                                <td colspan="9" class="total-label-cell"><strong>Total:</strong></td>
+                                <td colspan="10" class="total-label-cell"><strong>Total:</strong></td>
                                 <td class="total-value-cell">{{ invoice.sales_invoice_total|currency }}</td>
                             </tr>
                         </tfoot>
@@ -278,7 +280,8 @@
                                         <th>Rate</th>
                                         <th>Qty</th>
                                         <th>Discount</th>
-                                        <th>GST %</th>
+                                        <th>CGST %</th>
+                                        <th>SGST %</th>
                                         <th>Total</th>
                                         <th>Action</th>
                                     </tr>
@@ -310,7 +313,8 @@
                                             <div class="stock-error" style="display: none; color: #dc3545; font-size: 0.75rem; margin-top: 4px;"></div>
                                         </td>
                                         <td><input type="number" class="form-control discount" name="discount" value="{{ sale.sale_discount }}" step="0.01" min="0"></td>
-                                        <td><input type="number" class="form-control igst" name="igst" value="{{ sale.sale_igst }}" step="0.01" min="0"></td>
+                                        <td><input type="number" class="form-control cgst" name="cgst" value="{{ sale.sale_cgst }}" step="0.01" min="0"></td>
+                                        <td><input type="number" class="form-control sgst" name="sgst" value="{{ sale.sale_sgst }}" step="0.01" min="0"></td>
                                         <td><input type="number" class="form-control total" name="total" value="{{ sale.sale_total_amount }}" readonly></td>
                                         <td><button type="button" class="btn btn-danger btn-sm remove-product"><i class="fas fa-trash"></i></button></td>
                                     </tr>
@@ -515,7 +519,8 @@ document.getElementById('addEditProductRow').addEventListener('click', function(
             <div class="stock-error" style="display: none; color: #dc3545; font-size: 0.75rem; margin-top: 4px;"></div>
         </td>
         <td><input type="number" class="form-control discount" name="discount" step="0.01" min="0" value="0"></td>
-        <td><input type="number" class="form-control igst" name="igst" step="0.01" min="0" value="12"></td>
+        <td><input type="number" class="form-control cgst" name="cgst" step="0.01" min="0" value="2.5"></td>
+        <td><input type="number" class="form-control sgst" name="sgst" step="0.01" min="0" value="2.5"></td>
         <td><input type="number" class="form-control total" name="total" readonly></td>
         <td><button type="button" class="btn btn-danger btn-sm remove-product"><i class="fas fa-trash"></i></button></td>
     `;
@@ -551,11 +556,12 @@ function addEditRowEventListeners(row) {
     const quantityInput = row.querySelector('.quantity');
     const rateInput = row.querySelector('.rate');
     const discountInput = row.querySelector('.discount');
-    const igstInput = row.querySelector('.igst');
+    const cgstInput = row.querySelector('.cgst');
+    const sgstInput = row.querySelector('.sgst');
     const batchInput = row.querySelector('.batch-no');
     
     // Add calculation listeners
-    [rateInput, discountInput, igstInput].forEach(input => {
+    [rateInput, discountInput, cgstInput, sgstInput].forEach(input => {
         if (input) {
             input.addEventListener('input', function() {
                 calculateEditRowTotal(row);
@@ -647,7 +653,8 @@ function fillEditBatchDetails(data, rowIndex) {
     
     row.querySelector('.quantity').value = '1';
     row.querySelector('.discount').value = '0';
-    row.querySelector('.igst').value = '12';
+    row.querySelector('.cgst').value = '2.5';
+    row.querySelector('.sgst').value = '2.5';
     
     // Set rate based on customer type with proper fallback
     let selectedRate = data.mrp || 0;
@@ -698,11 +705,12 @@ function calculateEditRowTotal(row) {
     const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
     const rate = parseFloat(row.querySelector('.rate').value) || 0;
     const discount = parseFloat(row.querySelector('.discount').value) || 0;
-    const igst = parseFloat(row.querySelector('.igst').value) || 0;
+    const cgst = parseFloat(row.querySelector('.cgst').value) || 0;
+    const sgst = parseFloat(row.querySelector('.sgst').value) || 0;
     
     const basePrice = quantity * rate;
     const discountedAmount = basePrice - discount; // Assuming flat discount
-    const total = discountedAmount * (1 + (igst / 100));
+    const total = discountedAmount * (1 + ((cgst + sgst) / 100));
     
     row.querySelector('.total').value = total.toFixed(2);
 }
@@ -761,7 +769,8 @@ document.getElementById('saveEditSalesInvoice').addEventListener('click', functi
                 sale_rate: row.querySelector('.rate').value,
                 quantity: quantityInput.value,
                 discount: row.querySelector('.discount').value,
-                igst: row.querySelector('.igst').value,
+                cgst: row.querySelector('.cgst').value,
+                sgst: row.querySelector('.sgst').value,
                 calculation_mode: 'flat',
                 rate_applied: selectedEditCustomerRateType
             });
@@ -1461,7 +1470,8 @@ function selectEditBatch(batchNo, rowIndex, batchData) {
         row.querySelector('.rate').value = selectedRate;
         row.querySelector('.quantity').value = '1';
         row.querySelector('.discount').value = '0';
-        row.querySelector('.igst').value = '12';
+        row.querySelector('.cgst').value = '2.5';
+        row.querySelector('.sgst').value = '2.5';
         
         calculateEditRowTotal(row);
         

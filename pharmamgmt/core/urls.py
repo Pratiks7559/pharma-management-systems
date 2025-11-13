@@ -3,7 +3,7 @@ from . import views
 from .combined_invoice_view import add_invoice_with_products, get_existing_batches, cleanup_duplicate_batches
 from .low_stock_views import low_stock_update, update_low_stock_item, bulk_update_low_stock, get_batch_suggestions
 from .bulk_upload_views import bulk_upload_products, download_product_template
-
+from core.bulk_upload_view import bulk_upload_invoices
 urlpatterns = [
     # Authentication
     path('login/', views.login_view, name='login'),
@@ -104,7 +104,12 @@ urlpatterns = [
     
     # Sales Return API endpoints
     path('api/sales-invoices-for-customer/', views.get_sales_invoices_for_customer, name='get_sales_invoices_for_customer'),
-    path('api/sales-invoice-items/', views.get_sales_invoice_items, name='get_sales_invoice_items'), 
+    path('api/sales-invoice-items/', views.get_sales_invoice_items, name='get_sales_invoice_items'),
+    
+    # Invoice Series URLs
+    path('api/add-invoice-series/', views.add_invoice_series, name='add_invoice_series'),
+    path('api/get-invoice-series/', views.get_invoice_series, name='get_invoice_series'),
+    path('api/get-next-invoice-number/', views.get_next_invoice_number, name='get_next_invoice_number'), 
     # Inventory
     path('inventory/', views.inventory_list, name='inventory_list'),
     path('api/inventory-search-suggestions/', views.inventory_search_suggestions, name='inventory_search_suggestions'),
@@ -180,7 +185,7 @@ path('export/financial/pdf/', views.export_financial_pdf, name='export_financial
     path('receipts/export-pdf/', views.export_receipts_pdf, name='export_receipts_pdf'),
     path('receipts/export-excel/', views.export_receipts_excel, name='export_receipts_excel'),
     
-
-
+    path('bulk-upload-invoices/', bulk_upload_invoices, name='bulk_upload_invoices'),
 ]
+
 

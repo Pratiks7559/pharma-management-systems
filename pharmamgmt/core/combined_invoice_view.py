@@ -123,28 +123,33 @@ def add_invoice_with_products(request):
                             
                             # Validate and normalize expiry date to MM-YYYY format
                             try:
+                                import re
+                                expiry = expiry.strip()
+                                
                                 # Handle different input formats and convert to MM-YYYY
                                 if len(expiry) == 4 and expiry.isdigit():
-                                    # MMYY format - convert to MM-YYYY
                                     month = expiry[:2]
                                     year = '20' + expiry[2:4]
                                     expiry = f"{month}-{year}"
                                 elif len(expiry) == 6 and expiry.isdigit():
-                                    # MMYYYY format - convert to MM-YYYY
                                     month = expiry[:2]
                                     year = expiry[2:6]
                                     expiry = f"{month}-{year}"
                                 elif '/' in expiry:
-                                    # MM/YYYY format - convert to MM-YYYY
                                     expiry = expiry.replace('/', '-')
                                 elif len(expiry) == 7 and expiry.count('-') == 1:
-                                    # Already in MM-YYYY format - validate it
                                     pass
+                                elif not expiry:
+                                    raise ValueError("Empty expiry date")
                                 else:
-                                    raise ValueError("Invalid format")
+                                    digits = re.sub(r'[^0-9]', '', expiry)
+                                    if len(digits) == 4:
+                                        expiry = f"{digits[:2]}-20{digits[2:4]}"
+                                    elif len(digits) == 6:
+                                        expiry = f"{digits[:2]}-{digits[2:6]}"
+                                    else:
+                                        raise ValueError("Invalid format")
                                 
-                                # Validate MM-YYYY format
-                                import re
                                 if not re.match(r'^(0[1-9]|1[0-2])-\d{4}$', expiry):
                                     raise ValueError("Invalid MM-YYYY format")
                                 
@@ -154,11 +159,11 @@ def add_invoice_with_products(request):
                                 
                                 if month < 1 or month > 12:
                                     raise ValueError("Invalid month")
-                                if year < 2020 or year > 2050:
+                                if year < 2020 or year > 2100:
                                     raise ValueError("Invalid year")
                                 
-                            except (ValueError, IndexError):
-                                errors.append(f"Row {i+1}: Invalid expiry date format for {product.product_name}. Use MM-YYYY format (e.g., 12-2025).")
+                            except (ValueError, IndexError) as e:
+                                errors.append(f"Row {i+1}: Invalid expiry date format for {product.product_name}. Use MM-YYYY format (e.g., 12-2025). Got: '{product_data.get('expiry', '')}'. Error: {str(e)}")
                                 continue
                             
                             # Convert and validate numeric fields
@@ -168,7 +173,8 @@ def add_invoice_with_products(request):
                                 quantity = float(product_data.get('quantity', 0))
                                 scheme = float(product_data.get('scheme', 0))
                                 discount = float(product_data.get('discount', 0))
-                                igst = float(product_data.get('igst', 0))
+                                cgst = float(product_data.get('cgst', 0))
+                                sgst = float(product_data.get('sgst', 0))
                             except (ValueError, TypeError) as e:
                                 errors.append(f"Row {i+1}: Invalid numeric values for {product.product_name}: {e}")
                                 continue
@@ -197,7 +203,8 @@ def add_invoice_with_products(request):
                             purchase.product_quantity = quantity
                             purchase.product_scheme = scheme
                             purchase.product_discount_got = discount
-                            purchase.IGST = igst
+                            purchase.CGST = cgst
+                            purchase.SGST = sgst
                             purchase.purchase_calculation_mode = product_data.get('calculation_mode', 'flat')
                             
                             # Calculate actual rate

@@ -7,24 +7,6 @@
 {% endblock %}
 
 {% block page_actions %}
-<div class="purchase-detail-page-actions">
-    <a href="{% url 'add_purchase' invoice_id=invoice.invoiceid %}" class="purchase-detail-action-btn purchase-detail-add-product-btn">
-        <i class="fas fa-plus purchase-detail-action-icon"></i>Add Product
-    </a>
-    {% if invoice.balance_due > 0 %}
-    <button type="button" onclick="openAddPaymentDialog()" class="purchase-detail-action-btn purchase-detail-add-payment-btn">
-        <i class="fas fa-money-bill-wave purchase-detail-action-icon"></i>Add Payment
-    </button>
-    {% endif %}
-    {% if request.user.user_type == 'admin' %}
-    <a href="{% url 'delete_invoice' pk=invoice.invoiceid %}" class="purchase-detail-action-btn purchase-detail-delete-btn">
-        <i class="fas fa-trash purchase-detail-action-icon"></i>Delete Invoice
-    </a>
-    {% endif %}
-    <a href="{% url 'invoice_list' %}" class="purchase-detail-action-btn purchase-detail-back-btn">
-        <i class="fas fa-arrow-left purchase-detail-action-icon"></i>Back to Invoices
-    </a>
-</div>
 {% endblock %}
 
 {% block content %}
@@ -172,7 +154,8 @@
                             <th>Rate</th>
                             <th>Qty</th>
                             <th>Discount</th>
-                            <th>GST %</th>
+                            <th>CGST %</th>
+                            <th>SGST %</th>
                             <th>Total</th>
                             <th>Actions</th>
                         </tr>
@@ -198,7 +181,8 @@
                                     {{ purchase.product_discount_got }}%
                                 {% endif %}
                             </td>
-                            <td>{{ purchase.IGST }}%</td>
+                            <td>{{ purchase.CGST }}%</td>
+                            <td>{{ purchase.SGST }}%</td>
                             <td>{{ purchase.total_amount|currency }}</td>
                             <td>
                                 <div class="action-buttons">
@@ -210,30 +194,30 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="10" class="no-data">No products added to this invoice</td>
+                            <td colspan="11" class="no-data">No products added to this invoice</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                     <tfoot class="table-footer">
                         <tr>
-                            <td colspan="9" style="font-weight: 600;"><strong>Sum of Products:</strong></td>
+                            <td colspan="10" style="font-weight: 600;"><strong>Sum of Products:</strong></td>
                             <td style="font-weight: 600;">{{ purchases_total|currency }}</td>
                         </tr>
                         <tr>
-                            <td colspan="9" style="font-weight: 600;"><strong>Invoice Total:</strong></td>
+                            <td colspan="10" style="font-weight: 600;"><strong>Invoice Total:</strong></td>
                             <td style="font-weight: 600;">{{ invoice.invoice_total|currency }}</td>
                         </tr>
                         <tr>
-                            <td colspan="9" style="font-weight: 600;"><strong>Transport Charges (Additional):</strong></td>
+                            <td colspan="10" style="font-weight: 600;"><strong>Transport Charges (Additional):</strong></td>
                             <td style="font-weight: 600;">{{ invoice.transport_charges|currency }}</td>
                         </tr>
                         <tr class="grand-total-row">
-                            <td colspan="9" style="font-weight: 700; color: #2c3e50;"><strong>Grand Total (Invoice + Transport):</strong></td>
+                            <td colspan="10" style="font-weight: 700; color: #2c3e50;"><strong>Grand Total (Invoice + Transport):</strong></td>
                             <td style="font-weight: 700; color: #2c3e50;">{{ invoice.invoice_total|add:invoice.transport_charges|currency }}</td>
                         </tr>
                         {% if has_pending_entries %}
                         <tr class="pending-entries-row">
-                            <td colspan="9">
+                            <td colspan="10">
                                 <strong>Pending Entries:</strong>
                                 <div style="font-size: 0.8rem; color: #e74c3c;">
                                     {% if invoice_pending > 0 %}
@@ -316,6 +300,16 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+function openEditInvoiceModal() {
+    document.getElementById('editInvoiceModal').style.display = 'block';
+    loadExistingProducts();
+}
+
+function closeEditInvoiceModal() {
+    document.getElementById('editInvoiceModal').style.display = 'none';
+}
+</script>
 <style>
 .modal {
     position: fixed;
@@ -563,15 +557,6 @@
 <script>
 let productCounter = 0;
 
-function openEditInvoiceModal() {
-    document.getElementById('editInvoiceModal').style.display = 'block';
-    loadExistingProducts();
-}
-
-function closeEditInvoiceModal() {
-    document.getElementById('editInvoiceModal').style.display = 'none';
-}
-
 // Handle form submission
 document.addEventListener('DOMContentLoaded', function() {
     const editForm = document.getElementById('editInvoiceForm');
@@ -593,7 +578,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const rateInput = row.querySelector('input[name*="[purchase_rate]"]');
                 const qtyInput = row.querySelector('input[name*="[quantity]"]');
                 const discountInput = row.querySelector('input[name*="[discount]"]');
-                const gstInput = row.querySelector('input[name*="[gst]"]');
+                const cgstInput = row.querySelector('input[name*="[cgst]"]');
+                const sgstInput = row.querySelector('input[name*="[sgst]"]');
                 const rateAInput = row.querySelector('input[name*="[rate_a]"]');
                 const rateBInput = row.querySelector('input[name*="[rate_b]"]');
                 const rateCInput = row.querySelector('input[name*="[rate_c]"]');
@@ -607,7 +593,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         purchase_rate: rateInput ? parseFloat(rateInput.value) || 0 : 0,
                         quantity: qtyInput ? parseFloat(qtyInput.value) || 0 : 0,
                         discount: discountInput ? parseFloat(discountInput.value) || 0 : 0,
-                        igst: gstInput ? parseFloat(gstInput.value) || 0 : 0,
+                        cgst: cgstInput ? parseFloat(cgstInput.value) || 0 : 0,
+                        sgst: sgstInput ? parseFloat(sgstInput.value) || 0 : 0,
                         rate_A: rateAInput ? parseFloat(rateAInput.value) || 0 : 0,
                         rate_B: rateBInput ? parseFloat(rateBInput.value) || 0 : 0,
                         rate_C: rateCInput ? parseFloat(rateCInput.value) || 0 : 0,
@@ -680,48 +667,13 @@ function loadExistingProducts() {
         product_quantity: {{ purchase.product_quantity }},
         product_discount_got: {{ purchase.product_discount_got }},
         purchase_calculation_mode: '{{ purchase.purchase_calculation_mode }}',
-        IGST: {{ purchase.IGST }},
-        rate_A: 0,
-        rate_B: 0,
-        rate_C: 0
+        CGST: {{ purchase.CGST }},
+        SGST: {{ purchase.SGST }},
+        rate_A: {{ purchase.rate_A|default:0 }},
+        rate_B: {{ purchase.rate_B|default:0 }},
+        rate_C: {{ purchase.rate_C|default:0 }}
     });
     {% endfor %}
-    
-    // After all products are loaded, fetch their rates
-    setTimeout(() => {
-        {% for purchase in purchases %}
-        fetchAndUpdateRates({{ purchase.productid.productid }}, '{{ purchase.product_batch_no|escapejs }}');
-        {% endfor %}
-    }, 100);
-}
-
-function fetchAndUpdateRates(productId, batchNo) {
-    fetch(`/api/get-batch-rates/?product_id=${productId}&batch_no=${encodeURIComponent(batchNo)}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Find the product row and update rate fields
-                const productRows = document.querySelectorAll('.product-row');
-                productRows.forEach(row => {
-                    const productSelect = row.querySelector('select[name*="[productid]"]');
-                    const batchInput = row.querySelector('input[name*="[batch_no]"]');
-                    
-                    if (productSelect && batchInput && 
-                        productSelect.value == productId && 
-                        batchInput.value === batchNo) {
-                        
-                        const rateAInput = row.querySelector('input[name*="[rate_a]"]');
-                        const rateBInput = row.querySelector('input[name*="[rate_b]"]');
-                        const rateCInput = row.querySelector('input[name*="[rate_c]"]');
-                        
-                        if (rateAInput) rateAInput.value = data.rates.rate_A || 0;
-                        if (rateBInput) rateBInput.value = data.rates.rate_B || 0;
-                        if (rateCInput) rateCInput.value = data.rates.rate_C || 0;
-                    }
-                });
-            }
-        })
-        .catch(error => console.log('Rate fetch error:', error));
 }
 
 function addNewProduct() {
@@ -774,8 +726,12 @@ function addProductRow(data = {}) {
                 <input type="number" name="products[${productId}][discount]" value="${data.product_discount_got || ''}" step="0.01">
             </div>
             <div class="form-group">
-                <label>GST %:</label>
-                <input type="number" name="products[${productId}][gst]" value="${data.IGST || ''}" step="0.01">
+                <label>CGST %:</label>
+                <input type="number" name="products[${productId}][cgst]" value="${data.CGST || '2.5'}" step="0.01">
+            </div>
+            <div class="form-group">
+                <label>SGST %:</label>
+                <input type="number" name="products[${productId}][sgst]" value="${data.SGST || '2.5'}" step="0.01">
             </div>
             <div class="form-group">
                 <label>Rate A:</label>

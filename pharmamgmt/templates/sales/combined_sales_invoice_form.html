@@ -28,6 +28,23 @@
                                            title="Enter invoice date" required>
                                 </div>
                                 <div class="form-group required">
+                                    <div class="invoice-series-header">
+                                        <label for="invoice_series" class="field-label">Invoice Series</label>
+                                        <button type="button" class="btn btn-sm btn-outline-primary add-series-btn" onclick="openAddSeriesDialog()">
+                                            <i class="fas fa-plus"></i> Add Series
+                                        </button>
+                                    </div>
+                                    <select name="invoice_series" id="invoice_series" class="form-control" onchange="updateInvoicePreview()" required>
+                                        <option value="">Select Series</option>
+                                        {% for series in invoice_series %}
+                                        <option value="{{ series.series_id }}">{{ series.series_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div id="invoicePreview" class="invoice-preview" style="display: none;">
+                                        <small class="preview-text"></small>
+                                    </div>
+                                </div>
+                                <div class="form-group required">
                                     <div class="customer-field-header">
                                         <label for="{{ invoice_form.customerid.id_for_label }}" class="field-label">Customer</label>
                                         <button type="button" class="btn btn-sm btn-outline-primary add-customer-btn" onclick="openCustomerDialog()">
@@ -72,7 +89,8 @@
                                                 <th class="rate-col">Rate</th>
                                                 <th class="qty-col">Qty</th>
                                                 <th class="discount-col">Discount</th>
-                                                <th class="igst-col">IGST%</th>
+                                                <th class="cgst-col">CGST%</th>
+                                                <th class="sgst-col">SGST%</th>
                                                 <th class="total-col">Total</th>
                                                 <th class="action-col">Action</th>
                                             </tr>
@@ -186,6 +204,33 @@
         <div class="customer-dialog-footer">
             <button type="button" class="customer-dialog-btn customer-dialog-btn-secondary" onclick="closeCustomerDialog()">Cancel</button>
             <button type="button" class="customer-dialog-btn customer-dialog-btn-primary" onclick="saveCustomer()">Save Customer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Series Dialog Modal -->
+<div id="addSeriesDialog" class="series-dialog-overlay" style="display: none;">
+    <div class="series-dialog-content">
+        <div class="series-dialog-header">
+            <h3><i class="fas fa-plus-circle"></i> Add New Invoice Series</h3>
+            <button type="button" class="series-dialog-close" onclick="closeAddSeriesDialog()">&times;</button>
+        </div>
+        <div class="series-dialog-body">
+            <form id="addSeriesForm" class="series-dialog-form">
+                {% csrf_token %}
+                <div class="series-form-row">
+                    <div class="series-form-col">
+                        <label class="series-form-label">Series Name*</label>
+                        <input type="text" name="series_name" id="seriesNameInput" class="series-form-input" 
+                               placeholder="e.g., ABC, XYZ, INV" maxlength="10" required>
+                        <small class="series-help-text">Maximum 10 characters, will be converted to uppercase</small>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="series-dialog-footer">
+            <button type="button" class="series-dialog-btn series-dialog-btn-secondary" onclick="closeAddSeriesDialog()">Cancel</button>
+            <button type="button" class="series-dialog-btn series-dialog-btn-primary" onclick="saveInvoiceSeries()">Add Series</button>
         </div>
     </div>
 </div>
@@ -334,6 +379,170 @@
         margin: 10px;
     }
 }
+
+/* Series Dialog Styles */
+.series-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.series-dialog-content {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.series-dialog-header {
+    padding: 20px;
+    border-bottom: 1px solid #e5e5e5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+}
+
+.series-dialog-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 18px;
+}
+
+.series-dialog-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.series-dialog-close:hover {
+    color: #000;
+}
+
+.series-dialog-body {
+    padding: 20px;
+}
+
+.series-form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.series-form-col {
+    flex: 1;
+}
+
+.series-form-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333;
+    font-size: 14px;
+}
+
+.series-form-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+    text-transform: uppercase;
+}
+
+.series-form-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.series-help-text {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+    display: block;
+}
+
+.series-dialog-footer {
+    padding: 20px;
+    border-top: 1px solid #e5e5e5;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    background: #f8f9fa;
+    border-radius: 0 0 8px 8px;
+}
+
+.series-dialog-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.series-dialog-btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.series-dialog-btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.series-dialog-btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.series-dialog-btn-secondary:hover {
+    background-color: #545b62;
+}
+
+.invoice-series-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.add-series-btn {
+    font-size: 12px;
+    padding: 4px 8px;
+}
+
+.invoice-preview {
+    margin-top: 8px;
+    padding: 8px;
+    background: #e8f5e9;
+    border-radius: 4px;
+    border-left: 3px solid #4caf50;
+}
+
+.preview-text {
+    color: #2e7d32;
+    font-weight: 500;
+}
 </style>
 
 <script>
@@ -428,7 +637,8 @@ function addProductRow() {
             <div class="stock-error" style="display: none; color: #dc3545; font-size: 0.75rem; margin-top: 4px; padding: 2px 4px; background: #f8d7da; border-radius: 3px; border-left: 3px solid #dc3545;"></div>
         </td>
         <td class="discount-cell"><input type="number" class="discount form-control" step="0.01" placeholder="0.00" min="0" onchange="calculateRowTotal(${productRowIndex})" value="0"></td>
-        <td class="igst-cell"><input type="number" class="igst form-control" step="0.01" placeholder="0.00" min="0" max="100" onchange="calculateRowTotal(${productRowIndex})" value="0"></td>
+        <td class="cgst-cell"><input type="number" class="cgst form-control" step="0.01" placeholder="0.00" min="0" max="100" onchange="calculateRowTotal(${productRowIndex})" value="2.5"></td>
+        <td class="sgst-cell"><input type="number" class="sgst form-control" step="0.01" placeholder="0.00" min="0" max="100" onchange="calculateRowTotal(${productRowIndex})" value="2.5"></td>
         <td class="total-cell"><strong class="row-total">₹0.00</strong></td>
         <td class="action-cell"><button type="button" class="remove-btn btn btn-sm btn-danger" onclick="removeProductRow(${productRowIndex})" title="Remove Product"><i class="fas fa-trash"></i></button></td>
     `;
@@ -645,11 +855,12 @@ function calculateRowTotal(index) {
         const rate = parseFloat(row.querySelector('.rate').value) || 0;
         const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
         const discount = parseFloat(row.querySelector('.discount').value) || 0;
-        const igst = parseFloat(row.querySelector('.igst').value) || 0;
+        const cgst = parseFloat(row.querySelector('.cgst').value) || 0;
+        const sgst = parseFloat(row.querySelector('.sgst').value) || 0;
         
         const baseAmount = rate * quantity;
         const discountedAmount = baseAmount - discount;
-        const totalAmount = discountedAmount * (1 + (igst / 100));
+        const totalAmount = discountedAmount * (1 + ((cgst + sgst) / 100));
         
         row.querySelector('.row-total').textContent = '₹' + totalAmount.toFixed(2);
         calculateGrandTotal();
@@ -708,7 +919,8 @@ document.getElementById('combinedSalesInvoiceForm').addEventListener('submit', f
         const rateInput = row.querySelector('.rate');
         const quantityInput = row.querySelector('.quantity');
         const discountInput = row.querySelector('.discount');
-        const igstInput = row.querySelector('.igst');
+        const cgstInput = row.querySelector('.cgst');
+        const sgstInput = row.querySelector('.sgst');
         
         console.log(`Row ${index + 1}:`, {
             productSelected: productSelect ? productSelect.value : 'No select',
@@ -732,7 +944,8 @@ document.getElementById('combinedSalesInvoiceForm').addEventListener('submit', f
                 sale_rate: parseFloat(rateInput ? rateInput.value : 0) || 0,
                 quantity: parseFloat(quantityInput.value) || 0,
                 discount: parseFloat(discountInput ? discountInput.value : 0) || 0,
-                igst: parseFloat(igstInput ? igstInput.value : 0) || 0,
+                cgst: parseFloat(cgstInput ? cgstInput.value : 0) || 0,
+                sgst: parseFloat(sgstInput ? sgstInput.value : 0) || 0,
                 calculation_mode: 'flat',
                 rate_applied: 'A'
             };
@@ -815,7 +1028,8 @@ function collectProductsData() {
                 sale_rate: row.querySelector('.rate').value,
                 quantity: row.querySelector('.quantity').value,
                 discount: row.querySelector('.discount').value,
-                igst: row.querySelector('.igst').value,
+                cgst: row.querySelector('.cgst').value,
+                sgst: row.querySelector('.sgst').value,
                 calculation_mode: 'flat',
                 rate_applied: 'A'
             });
@@ -1104,7 +1318,8 @@ function fillBatchDetails(data, rowIndex) {
     
     row.querySelector('.quantity').value = '1';
     row.querySelector('.discount').value = '0';
-    row.querySelector('.igst').value = '12';
+    row.querySelector('.cgst').value = '2.5';
+    row.querySelector('.sgst').value = '2.5';
     
     // Set rate based on customer rate type
     let selectedRate = data.mrp || 0;
@@ -1419,7 +1634,8 @@ function selectBatch(batchNo, rowIndex, batchData) {
         row.querySelector('.rate').value = selectedRate;
         row.querySelector('.quantity').value = '1';
         row.querySelector('.discount').value = '0';
-        row.querySelector('.igst').value = '12';
+        row.querySelector('.cgst').value = '2.5';
+        row.querySelector('.sgst').value = '2.5';
         
         // Calculate total and validate stock
         calculateRowTotal(rowIndex);
@@ -2086,12 +2302,149 @@ function setupQuantityValidation() {
     });
 }
 
+// Invoice Series Functions
+function openAddSeriesDialog() {
+    document.getElementById('addSeriesDialog').style.display = 'flex';
+    setTimeout(() => {
+        const seriesInput = document.getElementById('seriesNameInput');
+        if (seriesInput) {
+            seriesInput.focus();
+        }
+    }, 100);
+}
+
+function closeAddSeriesDialog() {
+    document.getElementById('addSeriesDialog').style.display = 'none';
+    document.getElementById('addSeriesForm').reset();
+}
+
+function saveInvoiceSeries() {
+    const form = document.getElementById('addSeriesForm');
+    const formData = new FormData(form);
+    
+    const seriesName = formData.get('series_name');
+    if (!seriesName || seriesName.trim().length === 0) {
+        alert('Please enter a series name.');
+        return;
+    }
+    
+    if (seriesName.length > 10) {
+        alert('Series name must be 10 characters or less.');
+        return;
+    }
+    
+    const saveBtn = document.querySelector('.series-dialog-btn-primary');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+    saveBtn.disabled = true;
+    
+    fetch('/api/add-invoice-series/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const seriesSelect = document.getElementById('invoice_series');
+            const newOption = document.createElement('option');
+            newOption.value = data.series_id;
+            newOption.textContent = data.series_name;
+            newOption.selected = true;
+            seriesSelect.appendChild(newOption);
+            
+            closeAddSeriesDialog();
+            alert(data.message);
+            
+            updateInvoicePreview();
+            
+            // Focus on series dropdown after adding
+            setTimeout(() => {
+                seriesSelect.focus();
+            }, 100);
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while adding the series.');
+    })
+    .finally(() => {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    });
+}
+
+function loadInvoiceSeries() {
+    fetch('/api/get-invoice-series/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const seriesSelect = document.getElementById('invoice_series');
+                // Clear existing options except first
+                while (seriesSelect.children.length > 1) {
+                    seriesSelect.removeChild(seriesSelect.lastChild);
+                }
+                
+                // Add series options
+                data.series.forEach(series => {
+                    const option = document.createElement('option');
+                    option.value = series.series_id;
+                    option.textContent = series.series_name;
+                    seriesSelect.appendChild(option);
+                });
+                
+                // Auto-select ABC if available
+                const abcOption = Array.from(seriesSelect.options).find(opt => opt.textContent === 'ABC');
+                if (abcOption) {
+                    abcOption.selected = true;
+                    updateInvoicePreview();
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading series:', error);
+        });
+}
+
+function updateInvoicePreview() {
+    const seriesSelect = document.getElementById('invoice_series');
+    const previewDiv = document.getElementById('invoicePreview');
+    const previewText = previewDiv.querySelector('.preview-text');
+    
+    if (seriesSelect.value) {
+        fetch(`/api/get-next-invoice-number/?series_id=${seriesSelect.value}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    previewText.innerHTML = `<i class="fas fa-file-invoice"></i> Next Invoice: <strong>${data.invoice_number}</strong>`;
+                    previewDiv.style.display = 'block';
+                } else {
+                    previewDiv.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                previewDiv.style.display = 'none';
+            });
+    } else {
+        previewDiv.style.display = 'none';
+    }
+}
+
 // Initialize page with single product row and current date
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Page loaded, initializing...');
     
     // Auto-fill current date
     setCurrentDate();
+    
+    // Load invoice series on page load
+    loadInvoiceSeries();
     
     // Simple focus on invoice date field
     function focusSalesInvoiceDate() {

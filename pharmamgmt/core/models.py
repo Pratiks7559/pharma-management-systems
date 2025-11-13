@@ -137,7 +137,8 @@ class PurchaseMaster(models.Model):
     product_actual_rate=models.FloatField(default=0.0)
     total_amount=models.FloatField(default=0.0)  
     purchase_entry_date=models.DateTimeField(default=timezone.now)
-    IGST=models.FloatField(default=0.0)
+    CGST=models.FloatField(default=0.0)
+    SGST=models.FloatField(default=0.0)
     purchase_calculation_mode=models.CharField(max_length=5, default='flat') 
     #calculation_mode indicates how discount is calculated by flat-rupees or %-percent
     
@@ -148,6 +149,7 @@ class SalesInvoiceMaster(models.Model):
     sales_invoice_no=models.CharField(primary_key=True, max_length=20)
     sales_invoice_date=models.DateField(null=False, blank=False)
     customerid=models.ForeignKey(CustomerMaster, on_delete=models.CASCADE)
+    invoice_series=models.ForeignKey('InvoiceSeries', on_delete=models.SET_NULL, null=True, blank=True)
     sales_transport_charges=models.FloatField(default=0)
     sales_invoice_paid=models.FloatField(null=False, blank=False, default=0)
     
@@ -180,7 +182,8 @@ class SalesMaster(models.Model):
     sale_quantity=models.FloatField(default=0.0)
     sale_scheme=models.FloatField(default=0.0)
     sale_discount=models.FloatField(default=0.0)
-    sale_igst=models.FloatField(default=0.0)
+    sale_cgst=models.FloatField(default=0.0)
+    sale_sgst=models.FloatField(default=0.0)
     sale_total_amount=models.FloatField(default=0.0)
     sale_entry_date=models.DateTimeField(default=timezone.now)
     rate_applied=models.CharField(max_length=10, blank=True, default='NA')
@@ -299,7 +302,8 @@ class ReturnSalesMaster(models.Model):
     return_sale_quantity=models.FloatField(default=0.0)
     return_sale_scheme=models.FloatField(default=0.0)
     return_sale_discount=models.FloatField(default=0.0)
-    return_sale_igst=models.FloatField(default=0.0)
+    return_sale_cgst=models.FloatField(default=0.0)
+    return_sale_sgst=models.FloatField(default=0.0)
     return_sale_total_amount=models.FloatField(default=0.0)
     return_reason=models.CharField(max_length=200, blank=True, null=True)
     return_sale_entry_date=models.DateTimeField(default=timezone.now)
@@ -360,6 +364,33 @@ class ReceiptMaster(models.Model):
     
     def __str__(self):
         return f"Receipt #{self.receipt_id} - ₹{self.receipt_amount}"
+
+class InvoiceSeries(models.Model):
+    series_id = models.BigAutoField(primary_key=True, auto_created=True)
+    series_name = models.CharField(max_length=10, unique=True)
+    series_prefix = models.CharField(max_length=5, blank=True)
+    current_number = models.IntegerField(default=1)
+    is_active = models.BooleanField(default=True)
+    created_date = models.DateTimeField(default=timezone.now)
+    
+    def __str__(self):
+        return f"{self.series_name} (Current: {self.current_number})"
+    
+    def get_next_invoice_number(self):
+        """Generate next invoice number for this series"""
+        if self.series_prefix:
+            invoice_no = f"{self.series_prefix}-{self.current_number:04d}"
+        else:
+            invoice_no = f"{self.series_name}-{self.current_number:04d}"
+        
+        # Increment counter
+        self.current_number += 1
+        self.save()
+        
+        return invoice_no
+    
+    class Meta:
+        verbose_name_plural = "Invoice Series"
 
 
 

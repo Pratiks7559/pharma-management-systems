@@ -236,7 +236,8 @@ class PurchaseForm(forms.ModelForm):
     product_quantity = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     product_scheme = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     product_discount_got = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
-    IGST = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    CGST = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    SGST = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     CALC_MODE_CHOICES = [
         ('flat', 'Flat Amount'),
         ('perc', 'Percentage'),
@@ -276,7 +277,7 @@ class PurchaseForm(forms.ModelForm):
         model = PurchaseMaster
         fields = ['productid', 'product_batch_no', 'product_expiry', 'product_MRP',
                  'product_purchase_rate', 'product_quantity', 'product_scheme',
-                 'product_discount_got', 'IGST', 'purchase_calculation_mode',
+                 'product_discount_got', 'CGST', 'SGST', 'purchase_calculation_mode',
                  'rate_A', 'rate_B', 'rate_C']
         exclude = ['product_supplierid', 'product_invoiceid', 'product_invoice_no',
                   'product_name', 'product_company', 'product_packing',

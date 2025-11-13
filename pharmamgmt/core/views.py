@@ -18,7 +18,7 @@ from .models import (
     InvoiceMaster, InvoicePaid, PurchaseMaster, SalesInvoiceMaster, SalesMaster,
     SalesInvoicePaid, ProductRateMaster, ReturnInvoiceMaster, PurchaseReturnInvoicePaid,
     ReturnPurchaseMaster, ReturnSalesInvoiceMaster, ReturnSalesInvoicePaid, ReturnSalesMaster,
-    SaleRateMaster, PaymentMaster, ReceiptMaster
+    SaleRateMaster, PaymentMaster, ReceiptMaster, InvoiceSeries
 )
 from .forms import (
     LoginForm, UserRegistrationForm, UserUpdateForm, PharmacyDetailsForm, ProductForm,
@@ -1018,7 +1018,8 @@ def edit_invoice(request, pk):
                             product_quantity=float(product_data.get('quantity', 0)),
                             product_scheme=float(product_data.get('scheme', 0)),
                             product_discount_got=float(product_data.get('discount', 0)),
-                            IGST=float(product_data.get('igst', 0)),
+                            CGST=float(product_data.get('cgst', 0)),
+                            SGST=float(product_data.get('sgst', 0)),
                             purchase_calculation_mode=product_data.get('calculation_mode', 'flat'),
                             product_transportation_charges=0
                         )
@@ -1082,7 +1083,22 @@ def invoice_detail(request, pk):
     invoice = get_object_or_404(InvoiceMaster, invoiceid=pk)
     
     # Get all purchases under this invoice
-    purchases = PurchaseMaster.objects.filter(product_invoiceid=pk)
+    purchases = PurchaseMaster.objects.filter(product_invoiceid=pk).select_related('productid')
+    
+    # Add batch-specific rates to each purchase
+    for purchase in purchases:
+        try:
+            batch_rate = SaleRateMaster.objects.get(
+                productid=purchase.productid,
+                product_batch_no=purchase.product_batch_no
+            )
+            purchase.rate_A = batch_rate.rate_A
+            purchase.rate_B = batch_rate.rate_B
+            purchase.rate_C = batch_rate.rate_C
+        except SaleRateMaster.DoesNotExist:
+            purchase.rate_A = 0
+            purchase.rate_B = 0
+            purchase.rate_C = 0
     
     # Calculate the sum of all purchase entries
     purchases_total = purchases.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
@@ -2232,14 +2248,15 @@ def edit_sales_invoice(request, pk):
                         # Calculate total amount
                         base_price = float(product_data['sale_rate']) * float(product_data['quantity'])
                         discount = float(product_data.get('discount', 0))
-                        igst = float(product_data.get('igst', 0))
+                        cgst = float(product_data.get('cgst', 0))
+                        sgst = float(product_data.get('sgst', 0))
                         
                         if product_data.get('calculation_mode', 'flat') == 'flat':
                             discounted_amount = base_price - discount
                         else:
                             discounted_amount = base_price * (1 - (discount / 100))
                         
-                        total_amount = discounted_amount * (1 + (igst / 100))
+                        total_amount = discounted_amount * (1 + ((cgst + sgst) / 100))
                         
                         # Keep expiry date in MM-YYYY format for SalesMaster
                         expiry_date = product_data.get('expiry', '')
@@ -2271,7 +2288,8 @@ def edit_sales_invoice(request, pk):
                             sale_scheme=float(product_data.get('scheme', 0)),
                             sale_discount=discount,
                             sale_calculation_mode=product_data.get('calculation_mode', 'flat'),
-                            sale_igst=igst,
+                            sale_cgst=cgst,
+                            sale_sgst=sgst,
                             rate_applied=product_data.get('rate_applied', 'A'),
                             sale_total_amount=total_amount
                         )
@@ -2416,7 +2434,16 @@ def add_sales_invoice_with_products(request):
             if invoice_form.is_valid():
                 # Create sales invoice
                 invoice = invoice_form.save(commit=False)
-                invoice.sales_invoice_no = generate_sales_invoice_number()
+                # Get series from form data
+                series_id = request.POST.get('invoice_series')
+                invoice.sales_invoice_no = generate_sales_invoice_number(series_id)
+                
+                # Set series if provided
+                if series_id:
+                    try:
+                        invoice.invoice_series = InvoiceSeries.objects.get(series_id=series_id)
+                    except InvoiceSeries.DoesNotExist:
+                        pass
                 invoice.sales_invoice_paid = 0
                 
                 # Convert date format if needed
@@ -2483,7 +2510,9 @@ def add_sales_invoice_with_products(request):
                             # Calculate total amount
                             base_price = float(product_data['sale_rate']) * sale_quantity
                             discount = float(product_data.get('discount', 0))
-                            igst = float(product_data.get('igst', 0))
+                            cgst = float(product_data.get('cgst', 0))
+                            sgst = float(product_data.get('sgst', 0))
+                            igst = cgst + sgst
                             
                             if product_data.get('calculation_mode', 'flat') == 'flat':
                                 discounted_amount = base_price - discount
@@ -2531,7 +2560,8 @@ def add_sales_invoice_with_products(request):
                                 sale_scheme=float(product_data.get('scheme', 0)),
                                 sale_discount=discount,
                                 sale_calculation_mode=product_data.get('calculation_mode', 'flat'),
-                                sale_igst=igst,
+                                sale_cgst=cgst,
+                                sale_sgst=sgst,
                                 rate_applied=product_data.get('rate_applied', 'A'),
                                 sale_total_amount=total_amount
                             )
@@ -2589,7 +2619,8 @@ def add_sales_invoice_with_products(request):
         'invoice_form': invoice_form,
         'customers': customers,
         'products': products,
-        'preview_invoice_no': generate_sales_invoice_number(),
+        'preview_invoice_no': 'Will be generated based on series selection',
+        'invoice_series': InvoiceSeries.objects.filter(is_active=True).order_by('series_name'),
         'title': 'Add Sales Invoice with Products'
     }
     return render(request, 'sales/combined_sales_invoice_form.html', context)
@@ -3752,6 +3783,83 @@ def get_sales_invoice_items(request):
         })
         
     return JsonResponse(items_list, safe=False)
+
+@login_required
+def add_invoice_series(request):
+    if request.method == 'POST':
+        series_name = request.POST.get('series_name', '').strip().upper()
+        
+        if not series_name:
+            return JsonResponse({'success': False, 'error': 'Series name is required'})
+        
+        if len(series_name) > 10:
+            return JsonResponse({'success': False, 'error': 'Series name must be 10 characters or less'})
+        
+        try:
+            # Check if series already exists
+            if InvoiceSeries.objects.filter(series_name=series_name).exists():
+                return JsonResponse({'success': False, 'error': 'Series already exists'})
+            
+            # Create new series
+            series = InvoiceSeries.objects.create(
+                series_name=series_name,
+                series_prefix=series_name,
+                current_number=1,
+                is_active=True
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'series_id': series.series_id,
+                'series_name': series.series_name,
+                'message': f'Series "{series_name}" added successfully!'
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+@login_required
+def get_invoice_series(request):
+    try:
+        series_list = InvoiceSeries.objects.filter(is_active=True).order_by('series_name')
+        series_data = [{
+            'series_id': series.series_id,
+            'series_name': series.series_name,
+            'current_number': series.current_number
+        } for series in series_list]
+        
+        return JsonResponse({'success': True, 'series': series_data})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+def get_next_invoice_number(request):
+    series_id = request.GET.get('series_id')
+    
+    if not series_id:
+        return JsonResponse({'success': False, 'error': 'Series ID is required'})
+    
+    try:
+        series = InvoiceSeries.objects.get(series_id=series_id, is_active=True)
+        
+        # Generate preview number (don't increment yet)
+        if series.series_prefix:
+            preview_number = f"{series.series_prefix}-{series.current_number:04d}"
+        else:
+            preview_number = f"{series.series_name}-{series.current_number:04d}"
+        
+        return JsonResponse({
+            'success': True,
+            'invoice_number': preview_number,
+            'series_name': series.series_name
+        })
+        
+    except InvoiceSeries.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Series not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
 
 @login_required
 def add_sales_return_payment(request, return_id):

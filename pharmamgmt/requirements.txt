@@ -1,0 +1,31 @@
+# Django Framework
+Django==4.2.7
+
+# Bulk Upload Dependencies
+pandas==2.1.3
+openpyxl==3.1.2
+PyPDF2==3.0.1
+pdfplumber==0.10.3
+
+# Database
+# SQLite is built-in with Python, no additional package needed
+
+# Python Standard Library (no installation needed)
+# - pathlib
+# - os
+# - datetime
+# - json
+# - logging
+
+# Optional: For production deployment
+# gunicorn==21.2.0
+# whitenoise==6.6.0
+
+# Optional: For PostgreSQL (if switching from SQLite)
+# psycopg2-binary==2.9.9
+
+# Optional: For MySQL (if switching from SQLite)
+# mysqlclient==2.2.0
+
+# Development tools (optional)
+# django-debug-toolbar==4.2.0
