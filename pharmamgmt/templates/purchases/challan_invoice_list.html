@@ -1,0 +1,381 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Challan Invoice List{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/challan_invoice_list_modern.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="scil-main-container">
+    <div class="scil-page-header">
+        <h1 class="scil-page-title">Challan Invoice List</h1>
+        <p class="scil-page-subtitle">Manage invoices created from supplier challans</p>
+    </div>
+    
+    <div class="scil-content-card">
+        <!-- Search and Filter Section -->
+        <div class="scil-controls-grid">
+            <div class="scil-search-section">
+                <form method="GET" class="scil-search-form">
+                    <div class="scil-search-wrapper">
+                        <label class="scil-search-label">Search Invoices</label>
+                        <input type="text" name="search" class="scil-search-input" 
+                               placeholder="Search by invoice number or supplier..." 
+                               value="{{ search_query }}" id="scilSearchInput">
+                    </div>
+                    <button type="submit" class="scil-search-button">
+                        <i class="fas fa-search scil-search-icon"></i>
+                        <span class="scil-search-text">Search</span>
+                    </button>
+                </form>
+            </div>
+            <div class="scil-filter-section">
+                <button type="button" class="scil-filter-button" onclick="toggleFilterPanel()">
+                    <i class="fas fa-filter scil-filter-icon"></i>
+                    <span class="scil-filter-text">Filter</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter Panel -->
+        <div class="scil-filter-panel" id="scilFilterPanel">
+            <div class="scil-filter-header">
+                <h3 class="scil-filter-title">Filter Invoices</h3>
+                <button onclick="toggleFilterPanel()" class="scil-filter-close">&times;</button>
+            </div>
+            <div class="scil-filter-body">
+                <div class="scil-filter-group">
+                    <label class="scil-filter-label">Date From:</label>
+                    <input type="date" id="scilFilterDateFrom" class="scil-filter-input">
+                </div>
+                <div class="scil-filter-group">
+                    <label class="scil-filter-label">Date To:</label>
+                    <input type="date" id="scilFilterDateTo" class="scil-filter-input">
+                </div>
+                <div class="scil-filter-group">
+                    <label class="scil-filter-label">Supplier:</label>
+                    <select id="scilFilterSupplier" class="scil-filter-select">
+                        <option value="" class="scil-filter-option">All Suppliers</option>
+                        {% for supplier in suppliers %}
+                        <option value="{{ supplier.supplier_name }}" class="scil-filter-option">{{ supplier.supplier_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="scil-filter-group">
+                    <label class="scil-filter-label">Status:</label>
+                    <select id="scilFilterStatus" class="scil-filter-select">
+                        <option value="" class="scil-filter-option">All</option>
+                        <option value="paid" class="scil-filter-option">Paid</option>
+                        <option value="partial" class="scil-filter-option">Partial</option>
+                        <option value="unpaid" class="scil-filter-option">Unpaid</option>
+                    </select>
+                </div>
+            </div>
+            <div class="scil-filter-footer">
+                <button onclick="applyFilters()" class="scil-filter-apply-btn">Apply</button>
+                <button onclick="resetFilters()" class="scil-filter-reset-btn">Reset</button>
+            </div>
+        </div>
+        
+        <!-- Invoice Table -->
+        <div class="scil-table-container">
+            <table class="scil-data-table">
+                <thead class="scil-table-head">
+                    <tr class="scil-header-row">
+                        <th class="scil-header-cell scil-invoice-col">Invoice No.</th>
+                        <th class="scil-header-cell scil-date-col">Invoice Date</th>
+                        <th class="scil-header-cell scil-supplier-col">Supplier</th>
+                        <th class="scil-header-cell scil-total-col">Total</th>
+                        <th class="scil-header-cell scil-paid-col">Paid</th>
+                        <th class="scil-header-cell scil-balance-col">Balance</th>
+                        <th class="scil-header-cell scil-status-col">Status</th>
+                        <th class="scil-header-cell scil-actions-col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="scil-table-body" id="scilInvoiceTableBody">
+                    {% if invoices %}
+                        {% for invoice in invoices %}
+                        <tr class="scil-data-row">
+                            <td class="scil-data-cell scil-invoice-cell">
+                                <a href="#" class="scil-invoice-link">{{ invoice.invoice_no }}</a>
+                            </td>
+                            <td class="scil-data-cell scil-date-cell">{{ invoice.invoice_date|date:"d M, Y" }}</td>
+                            <td class="scil-data-cell scil-supplier-cell">{{ invoice.supplier_name }}</td>
+                            <td class="scil-data-cell scil-total-cell">₹{{ invoice.total_amount|floatformat:2 }}</td>
+                            <td class="scil-data-cell scil-paid-cell">₹{{ invoice.paid_amount|floatformat:2 }}</td>
+                            <td class="scil-data-cell scil-balance-cell">₹{{ invoice.balance_amount|floatformat:2 }}</td>
+                            <td class="scil-data-cell scil-status-cell">
+                                {% if invoice.balance_amount == 0 %}
+                                    <span class="scil-status-badge scil-status-paid">Paid</span>
+                                {% elif invoice.paid_amount > 0 %}
+                                    <span class="scil-status-badge scil-status-partial">Partial</span>
+                                {% else %}
+                                    <span class="scil-status-badge scil-status-unpaid">Unpaid</span>
+                                {% endif %}
+                            </td>
+                            <td class="scil-data-cell scil-actions-cell">
+                                <div class="scil-action-buttons">
+                                    <a href="{% url 'challan_invoice_detail' invoice.invoice_id %}" class="scil-action-btn scil-view-btn" title="View">
+                                        <i class="fas fa-eye scil-action-icon"></i>
+                                    </a>
+                                    {% if invoice.balance_amount > 0 %}
+                                    <button class="scil-action-btn scil-payment-btn" title="Add Payment" 
+                                            onclick="showPaymentDialog('{{ invoice.invoice_id }}', '{{ invoice.invoice_no }}', '{{ invoice.balance_amount }}')">
+                                        <i class="fas fa-money-bill-wave scil-action-icon"></i>
+                                    </button>
+                                    {% endif %}
+                                    <button class="scil-action-btn scil-delete-btn" title="Delete">
+                                        <i class="fas fa-trash scil-action-icon"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr class="scil-empty-row">
+                            <td colspan="8" class="scil-empty-cell">
+                                <div class="scil-empty-state">
+                                    <i class="fas fa-file-invoice scil-empty-icon"></i>
+                                    <p class="scil-empty-title">No challan invoices found</p>
+                                    <p class="scil-empty-subtitle">Create invoices from supplier challans to see them here</p>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div id="scilPaymentModal" class="scil-modal-overlay">
+    <div class="scil-modal-container">
+        <div class="scil-modal-header">
+            <h3 class="scil-modal-title"><i class="fas fa-money-bill-wave scil-modal-icon"></i> <span class="scil-modal-text">Add Payment</span></h3>
+            <span class="scil-modal-close" onclick="hidePaymentModal()">&times;</span>
+        </div>
+        <div class="scil-modal-body">
+            <form id="scilPaymentForm" class="scil-payment-form">
+                {% csrf_token %}
+                <div class="scil-payment-info">
+                    <p class="scil-info-item"><strong class="scil-info-label">Invoice:</strong> <span id="scilPaymentInvoiceNo" class="scil-info-value"></span></p>
+                    <p class="scil-info-item"><strong class="scil-info-label">Balance Due:</strong> ₹<span id="scilPaymentBalance" class="scil-info-value"></span></p>
+                </div>
+                
+                <div class="scil-form-field">
+                    <label for="scilPaymentDate" class="scil-form-label">Payment Date *</label>
+                    <input type="date" id="scilPaymentDate" name="payment_date" class="scil-form-input" required>
+                </div>
+                
+                <div class="scil-form-field">
+                    <label for="scilPaymentAmount" class="scil-form-label">Payment Amount *</label>
+                    <input type="number" id="scilPaymentAmount" name="payment_amount" class="scil-form-input" 
+                           step="0.01" min="0.01" placeholder="0.00" required>
+                </div>
+                
+                <div class="scil-form-field">
+                    <label for="scilPaymentMethod" class="scil-form-label">Payment Method *</label>
+                    <select id="scilPaymentMethod" name="payment_method" class="scil-form-select" required>
+                        <option value="" class="scil-form-option">Select Payment Method</option>
+                        <option value="Cash" class="scil-form-option">Cash</option>
+                        <option value="Cheque" class="scil-form-option">Cheque</option>
+                        <option value="Bank Transfer" class="scil-form-option">Bank Transfer</option>
+                        <option value="UPI" class="scil-form-option">UPI</option>
+                        <option value="Card" class="scil-form-option">Card</option>
+                    </select>
+                </div>
+                
+                <div class="scil-form-field">
+                    <label for="scilPaymentRef" class="scil-form-label">Reference No.</label>
+                    <input type="text" id="scilPaymentRef" name="payment_reference" class="scil-form-input" 
+                           placeholder="Transaction/Cheque No.">
+                </div>
+                
+                <div class="scil-form-actions">
+                    <button type="button" class="scil-btn-cancel" onclick="hidePaymentModal()">Cancel</button>
+                    <button type="submit" class="scil-btn-save">Add Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+let scilSearchTimeout;
+const scilAllRows = [];
+
+// Store all rows data on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const rows = document.querySelectorAll('#scilInvoiceTableBody tr');
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length > 1) {
+            scilAllRows.push({
+                element: row,
+                invoiceNo: cells[0].textContent.trim(),
+                date: cells[1].textContent.trim(),
+                supplier: cells[2].textContent.trim(),
+                total: cells[3].textContent.trim(),
+                paid: cells[4].textContent.trim(),
+                balance: cells[5].textContent.trim(),
+                status: cells[6].textContent.trim().toLowerCase()
+            });
+        }
+    });
+});
+
+// Search functionality
+document.getElementById('scilSearchInput').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    
+    clearTimeout(scilSearchTimeout);
+    scilSearchTimeout = setTimeout(() => {
+        scilFilterRows(searchTerm);
+    }, 200);
+});
+
+function scilFilterRows(searchTerm) {
+    scilAllRows.forEach(row => {
+        const matches = row.invoiceNo.toLowerCase().includes(searchTerm) ||
+                      row.supplier.toLowerCase().includes(searchTerm);
+        row.element.style.display = matches ? '' : 'none';
+    });
+}
+
+// Filter panel toggle
+function toggleFilterPanel() {
+    const panel = document.getElementById('scilFilterPanel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+// Apply filters
+function applyFilters() {
+    const dateFrom = document.getElementById('scilFilterDateFrom').value;
+    const dateTo = document.getElementById('scilFilterDateTo').value;
+    const supplier = document.getElementById('scilFilterSupplier').value;
+    const status = document.getElementById('scilFilterStatus').value;
+    
+    scilAllRows.forEach(row => {
+        let show = true;
+        
+        // Date filter (simplified - would need proper date parsing in real implementation)
+        if (dateFrom || dateTo) {
+            // This is a simplified version - you'd need proper date parsing
+            const rowDate = new Date(row.date);
+            if (dateFrom && rowDate < new Date(dateFrom)) show = false;
+            if (dateTo && rowDate > new Date(dateTo)) show = false;
+        }
+        
+        // Supplier filter
+        if (supplier && row.supplier !== supplier) show = false;
+        
+        // Status filter
+        if (status && !row.status.includes(status)) show = false;
+        
+        row.element.style.display = show ? '' : 'none';
+    });
+    
+    toggleFilterPanel();
+}
+
+// Reset filters
+function resetFilters() {
+    document.getElementById('scilFilterDateFrom').value = '';
+    document.getElementById('scilFilterDateTo').value = '';
+    document.getElementById('scilFilterSupplier').value = '';
+    document.getElementById('scilFilterStatus').value = '';
+    document.getElementById('scilSearchInput').value = '';
+    
+    // Show all rows
+    scilAllRows.forEach(row => row.element.style.display = '');
+    
+    toggleFilterPanel();
+}
+
+// Payment Modal Functions
+function showPaymentDialog(invoiceId, invoiceNo, balance) {
+    document.getElementById('scilPaymentInvoiceNo').textContent = invoiceNo;
+    document.getElementById('scilPaymentBalance').textContent = parseFloat(balance).toFixed(2);
+    document.getElementById('scilPaymentAmount').value = parseFloat(balance).toFixed(2);
+    document.getElementById('scilPaymentAmount').max = parseFloat(balance).toFixed(2);
+    
+    // Set today's date
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('scilPaymentDate').value = today;
+    
+    // Store invoice ID for form submission
+    document.getElementById('scilPaymentForm').setAttribute('data-invoice-id', invoiceId);
+    
+    document.getElementById('scilPaymentModal').style.display = 'flex';
+    document.getElementById('scilPaymentAmount').focus();
+}
+
+function hidePaymentModal() {
+    document.getElementById('scilPaymentModal').style.display = 'none';
+    document.getElementById('scilPaymentForm').reset();
+}
+
+// Handle payment form submission
+document.getElementById('scilPaymentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const invoiceId = this.getAttribute('data-invoice-id');
+    const formData = new FormData(this);
+    const submitBtn = document.querySelector('.scil-btn-save');
+    
+    // Validate amount
+    const amount = parseFloat(formData.get('payment_amount'));
+    const maxAmount = parseFloat(document.getElementById('scilPaymentAmount').max);
+    
+    if (amount > maxAmount + 0.01) {
+        alert(`Payment amount cannot exceed balance due of ₹${maxAmount.toFixed(2)}`);
+        return;
+    }
+    
+    // Show loading state
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Adding Payment...';
+    
+    // Submit payment
+    fetch(`/challan-invoices/${invoiceId}/add-payment/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            hidePaymentModal();
+            window.location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Payment error:', error);
+        alert('Error adding payment');
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Add Payment';
+    });
+});
+
+// Close modal when clicking outside
+document.getElementById('scilPaymentModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        hidePaymentModal();
+    }
+});
+</script>
+
+{% endblock %}

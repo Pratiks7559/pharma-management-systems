@@ -1769,7 +1769,7 @@ def sales_invoice_list(request):
             messages.error(request, "Invalid date format. Please use YYYY-MM-DD.")
     
     # Pagination
-    paginator = Paginator(invoices, 10)
+    paginator = Paginator(invoices, 15)
     page_number = request.GET.get('page')
     invoices = paginator.get_page(page_number)
     
@@ -1820,6 +1820,10 @@ def sales_invoice_detail(request, pk):
     # Get all sales under this invoice
     sales = SalesMaster.objects.filter(sales_invoice_no=pk)
     
+    # Calculate products total
+    from django.db.models import Sum
+    products_total = sales.aggregate(total=Sum('sale_total_amount'))['total'] or 0
+    
     # Get all payments for this invoice
     payments = SalesInvoicePaid.objects.filter(sales_ip_invoice_no=pk).order_by('-sales_payment_date')
     
@@ -1830,6 +1834,7 @@ def sales_invoice_detail(request, pk):
     context = {
         'invoice': invoice,
         'sales': sales,
+        'products_total': products_total,
         'payments': payments,
         'customers': customers,
         'products': products,
@@ -2290,7 +2295,7 @@ def edit_sales_invoice(request, pk):
                             sale_calculation_mode=product_data.get('calculation_mode', 'flat'),
                             sale_cgst=cgst,
                             sale_sgst=sgst,
-                            rate_applied=product_data.get('rate_applied', 'A'),
+                            rate_applied=product_data.get('rate_applied', rate_letter),
                             sale_total_amount=total_amount
                         )
                         sale.save()
@@ -2457,6 +2462,11 @@ def add_sales_invoice_with_products(request):
                 invoice.save()
                 print("Invoice saved successfully!")
                 
+                # Extract customer rate type for rate_applied
+                customer_rate_type = invoice.customerid.customer_type  # 'TYPE-A', 'TYPE-B', or 'TYPE-C'
+                rate_letter = customer_rate_type.split('-')[1] if '-' in customer_rate_type else 'A'
+                print(f"Customer rate type: {customer_rate_type}, Rate letter: {rate_letter}")
+                
                 # Process products data
                 products_data = request.POST.get('products_data')
                 print(f"Products data received: {products_data}")
@@ -2562,7 +2572,7 @@ def add_sales_invoice_with_products(request):
                                 sale_calculation_mode=product_data.get('calculation_mode', 'flat'),
                                 sale_cgst=cgst,
                                 sale_sgst=sgst,
-                                rate_applied=product_data.get('rate_applied', 'A'),
+                                rate_applied=product_data.get('rate_applied', rate_letter),
                                 sale_total_amount=total_amount
                             )
                             
@@ -3426,12 +3436,17 @@ def add_sales_return(request):
                 return_date_str = request.POST.get('return_sales_invoice_date')
                 return_date = convert_date_format(return_date_str)
                 
+                # Get charges
+                additional_charges = float(request.POST.get('return_sales_charges', 0))
+                transport_charges = float(request.POST.get('transport_charges', 0))
+                
                 # Create return invoice
                 return_invoice = ReturnSalesInvoiceMaster.objects.create(
                     return_sales_invoice_no=preview_id,
                     return_sales_invoice_date=return_date,
                     return_sales_customerid_id=request.POST.get('return_sales_customerid'),
-                    return_sales_charges=float(request.POST.get('return_sales_charges', 0)),
+                    return_sales_charges=additional_charges,
+                    transport_charges=transport_charges,
                     return_sales_invoice_total=0,  # Will be calculated
                     return_sales_invoice_paid=0
                 )
@@ -3532,8 +3547,8 @@ def add_sales_return(request):
                             total_amount += item_total
                             return_items_created += 1
                         
-                        # Update return invoice total
-                        return_invoice.return_sales_invoice_total = total_amount + return_invoice.return_sales_charges
+                        # Update return invoice total (products + additional charges + transport charges)
+                        return_invoice.return_sales_invoice_total = total_amount + return_invoice.return_sales_charges + return_invoice.transport_charges
                         return_invoice.save()
                         
                     except json.JSONDecodeError as e:
@@ -3645,7 +3660,7 @@ def add_sales_return_item(request, return_id):
                 return_sales_invoice_no=return_invoice
             ).aggregate(Sum('return_sale_total_amount'))['return_sale_total_amount__sum'] or 0
             
-            return_invoice.return_sales_invoice_total = total_items + return_invoice.return_sales_charges
+            return_invoice.return_sales_invoice_total = total_items + return_invoice.return_sales_charges + (return_invoice.transport_charges or 0)
             return_invoice.save()
             
             messages.success(request, f"Return item for {return_item.return_product_name} added successfully!")
@@ -3698,7 +3713,7 @@ def edit_sales_return_item(request, return_id, item_id):
                 return_sales_invoice_no=return_invoice
             ).aggregate(Sum('return_sale_total_amount'))['return_sale_total_amount__sum'] or 0
             
-            return_invoice.return_sales_invoice_total = total_items + return_invoice.return_sales_charges
+            return_invoice.return_sales_invoice_total = total_items + return_invoice.return_sales_charges + (return_invoice.transport_charges or 0)
             return_invoice.save()
             
             messages.success(request, f"Return item for {return_item.return_product_name} updated successfully!")
@@ -3738,7 +3753,7 @@ def delete_sales_return_item(request, return_id, item_id):
                 return_sales_invoice_no=return_invoice
             ).aggregate(Sum('return_sale_total_amount'))['return_sale_total_amount__sum'] or 0
             
-            return_invoice.return_sales_invoice_total = total_items + return_invoice.return_sales_charges
+            return_invoice.return_sales_invoice_total = total_items + return_invoice.return_sales_charges + (return_invoice.transport_charges or 0)
             return_invoice.save()
             
             messages.success(request, f"Sales Return item for {product_name} deleted successfully!")
@@ -3821,6 +3836,70 @@ def add_invoice_series(request):
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 @login_required
+def create_sales_invoice_from_challans(request):
+    """Create sales challan invoice from selected customer challans"""
+    from core.models import CustomerChallan, SalesChallanInvoice, InvoiceSeries
+    from django.db import transaction
+    import json
+    
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            series_id = data.get('series_id')
+            invoice_date = data.get('invoice_date')
+            challan_ids = data.get('challan_ids', [])
+            
+            if not series_id or not invoice_date or not challan_ids:
+                return JsonResponse({'success': False, 'error': 'Missing required fields'})
+            
+            with transaction.atomic():
+                # Get invoice series and generate invoice number
+                try:
+                    series = InvoiceSeries.objects.get(series_id=series_id, is_active=True)
+                    invoice_no = series.get_next_invoice_number()
+                except InvoiceSeries.DoesNotExist:
+                    return JsonResponse({'success': False, 'error': 'Invalid invoice series'})
+                
+                # Get selected challans that are not already invoiced
+                challans = CustomerChallan.objects.filter(customer_challan_id__in=challan_ids, is_invoiced=False)
+                if not challans.exists():
+                    return JsonResponse({'success': False, 'error': 'No valid challans found or already invoiced'})
+                
+                # Check if all challans are from same customer
+                customers = set(challan.customer_name.customerid for challan in challans)
+                if len(customers) > 1:
+                    return JsonResponse({'success': False, 'error': 'All challans must be from the same customer'})
+                
+                # Calculate total amount
+                total_amount = sum(challan.challan_total for challan in challans)
+                
+                # Create sales challan invoice
+                sales_challan_invoice = SalesChallanInvoice.objects.create(
+                    invoice_no=invoice_no,
+                    invoice_date=invoice_date,
+                    customer=challans.first().customer_name,
+                    invoice_series=series,
+                    selected_challans=challan_ids,
+                    invoice_total=total_amount,
+                    invoice_paid=0.0
+                )
+                
+                # Mark selected challans as invoiced
+                challans.update(is_invoiced=True)
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': f'Sales Challan Invoice {invoice_no} created successfully!',
+                    'invoice_number': invoice_no,
+                    'invoice_id': sales_challan_invoice.sales_challan_invoice_id
+                })
+                
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+@login_required
 def get_invoice_series(request):
     try:
         series_list = InvoiceSeries.objects.filter(is_active=True).order_by('series_name')
@@ -3846,9 +3925,9 @@ def get_next_invoice_number(request):
         
         # Generate preview number (don't increment yet)
         if series.series_prefix:
-            preview_number = f"{series.series_prefix}-{series.current_number:04d}"
+            preview_number = f"{series.series_prefix}{series.current_number:07d}"
         else:
-            preview_number = f"{series.series_name}-{series.current_number:04d}"
+            preview_number = f"{series.series_name}{series.current_number:07d}"
         
         return JsonResponse({
             'success': True,
@@ -4010,8 +4089,8 @@ def update_sales_return_api(request):
             if new_items:
                 ReturnSalesMaster.objects.bulk_create(new_items)
             
-            # Update total and save
-            return_invoice.return_sales_invoice_total = total_amount + return_charges
+            # Update total and save (products + additional charges + transport charges)
+            return_invoice.return_sales_invoice_total = total_amount + return_charges + transport_charges
             return_invoice.save()
             
             return JsonResponse({
@@ -4237,64 +4316,18 @@ def inventory_list(request):
 @login_required
 def batch_inventory_report(request):
     from django.core.paginator import Paginator
-    from django.db.models import Sum, Avg, Case, When, DecimalField
+    from .fast_inventory import FastInventory
     
-    # Search functionality
     search_query = request.GET.get('search', '')
+    all_inventory_data = FastInventory.get_batch_inventory_data(search_query)
     
-    # Ultra-optimized query - single query with all calculations
-    batches_query = PurchaseMaster.objects.select_related('productid').values(
-        'productid__productid',
-        'productid__product_name',
-        'productid__product_company', 
-        'productid__product_packing',
-        'product_batch_no',
-        'product_expiry'
-    ).annotate(
-        batch_purchased=Sum('product_quantity'),
-        avg_mrp=Avg('product_MRP'),
-        batch_sold=Sum('productid__salesmaster__sale_quantity', 
-                      filter=Q(productid__salesmaster__product_batch_no=F('product_batch_no')))
-    ).annotate(
-        current_stock=Case(
-            When(batch_sold__isnull=True, then=F('batch_purchased')),
-            default=F('batch_purchased') - F('batch_sold')
-        ),
-        stock_value=Case(
-            When(batch_sold__isnull=True, then=F('batch_purchased') * F('avg_mrp')),
-            default=(F('batch_purchased') - F('batch_sold')) * F('avg_mrp'),
-            output_field=DecimalField(max_digits=10, decimal_places=2)
-        )
-    ).filter(
-        current_stock__gt=0
-    ).order_by('productid__product_name', 'product_batch_no')
-    
-    if search_query:
-        batches_query = batches_query.filter(
-            Q(productid__product_name__icontains=search_query) |
-            Q(productid__product_company__icontains=search_query) |
-            Q(product_batch_no__icontains=search_query)
-        )
-    
-    # Pagination with reasonable page size
-    paginator = Paginator(batches_query, 100)
+    # Pagination
+    paginator = Paginator(all_inventory_data, 100)
     page_number = request.GET.get('page')
     batches_page = paginator.get_page(page_number)
     
-    # Process results - all calculations done at DB level
-    inventory_data = []
-    for batch in batches_page:
-        inventory_data.append({
-            'product_id': batch['productid__productid'],
-            'product_name': batch['productid__product_name'],
-            'product_company': batch['productid__product_company'],
-            'product_packing': batch['productid__product_packing'],
-            'batch_no': batch['product_batch_no'],
-            'expiry': batch['product_expiry'],
-            'mrp': batch['avg_mrp'] or 0,
-            'stock': batch['current_stock'] or 0,
-            'value': batch['stock_value'] or 0
-        })
+    # Get inventory data for current page
+    inventory_data = list(batches_page)
     
     # Page-level total value
     page_total_value = sum(item['value'] for item in inventory_data)
@@ -4309,173 +4342,19 @@ def batch_inventory_report(request):
     return render(request, 'reports/batch_inventory_report.html', context)
 
 @login_required
+@login_required
+@login_required
 def dateexpiry_inventory_report(request):
-    from datetime import datetime, timedelta
-    from django.db.models import Sum, F, Case, When, Value, CharField, DateField, FloatField
-    from django.db.models.functions import Coalesce
-    from collections import defaultdict
-
-    # Get filter parameters
+    from .fast_inventory import FastInventory
+    
     search_query = request.GET.get('search', '')
-    expiry_from = request.GET.get('expiry_from', '')  # Entry date from
-    expiry_to = request.GET.get('expiry_to', '')  # Entry date to
-
-    # Base query for all purchase batches with stock > 0
-    batch_query = PurchaseMaster.objects.select_related('productid').annotate(
-        total_sold=Coalesce(
-            Sum('productid__salesmaster__sale_quantity',
-                filter=Q(productid__salesmaster__product_batch_no=F('product_batch_no'))),
-            Value(0.0, output_field=FloatField())
-        ),
-        current_stock=F('product_quantity') - F('total_sold')
-    ).filter(
-        current_stock__gt=0  # Only include batches with stock
-    ).values(
-        'productid__product_name',
-        'productid__product_company',
-        'productid__product_packing',
-        'product_batch_no',
-        'product_expiry',
-        'product_actual_rate',
-        'product_MRP',
-        'current_stock'
-    )
+    expiry_from = request.GET.get('expiry_from', '')
+    expiry_to = request.GET.get('expiry_to', '')
     
-    # Debug: Print first few items to see data structure
-
-
-    # Apply filters at the database level
-    if search_query:
-        batch_query = batch_query.filter(
-            Q(productid__product_name__icontains=search_query) |
-            Q(productid__product_company__icontains=search_query)
-        )
-
-    # Filter by purchase entry date (when expiry was added)
-    if expiry_from:
-        try:
-            from_date = datetime.strptime(expiry_from, '%Y-%m-%d')
-            from django.utils import timezone
-            from_date_aware = timezone.make_aware(from_date)
-            batch_query = batch_query.filter(purchase_entry_date__gte=from_date_aware)
-        except (ValueError, TypeError):
-            pass
-
-    if expiry_to:
-        try:
-            to_date = datetime.strptime(expiry_to, '%Y-%m-%d')
-            from django.utils import timezone
-            to_date_aware = timezone.make_aware(to_date.replace(hour=23, minute=59, second=59))
-            batch_query = batch_query.filter(purchase_entry_date__lte=to_date_aware)
-        except (ValueError, TypeError):
-            pass
-
-    # Group and process data in Python
-    grouped_data = defaultdict(list)
-    today = datetime.now().date()
-    total_value = 0
-
-    for item in batch_query:
-        expiry_date = item['product_expiry']
-        current_stock = item['current_stock']
-        
-        # Skip if no stock
-        if current_stock <= 0:
-            continue
-            
-        # Parse expiry date and convert to MM-YYYY format
-        parsed_expiry_date = None
-        expiry_mmyyyy = None
-        
-        if expiry_date:
-            if isinstance(expiry_date, str):
-                # Try different date formats
-                for fmt in ['%Y-%m-%d', '%d-%m-%Y', '%m-%Y', '%d%m%Y']:
-                    try:
-                        if fmt == '%m-%Y':
-                            # Already in MM-YYYY format
-                            temp_date = datetime.strptime(expiry_date, fmt)
-                            parsed_expiry_date = temp_date.replace(day=1).date()  # Use first day for sorting
-                            expiry_mmyyyy = expiry_date
-                        else:
-                            parsed_expiry_date = datetime.strptime(expiry_date, fmt).date()
-                            expiry_mmyyyy = parsed_expiry_date.strftime('%m-%Y')
-                        break
-                    except (ValueError, TypeError):
-                        continue
-            elif hasattr(expiry_date, 'strftime'):
-                parsed_expiry_date = expiry_date.date() if hasattr(expiry_date, 'date') else expiry_date
-                expiry_mmyyyy = parsed_expiry_date.strftime('%m-%Y')
-            else:
-                parsed_expiry_date = expiry_date
-                if parsed_expiry_date:
-                    expiry_mmyyyy = parsed_expiry_date.strftime('%m-%Y')
-        
-        # Use MM-YYYY format for grouping
-        if not expiry_mmyyyy:
-            group_key = 'No Expiry Date'
-            days_to_expiry = 999999  # Large number for sorting
-            expiry_display = 'No Expiry Date'
-        else:
-            group_key = expiry_mmyyyy
-            # Calculate days to expiry using last day of the month
-            import calendar
-            month, year = map(int, expiry_mmyyyy.split('-'))  # MM-YYYY format
-            last_day = calendar.monthrange(year, month)[1]
-            month_end_date = datetime(year, month, last_day).date()
-            days_to_expiry = (month_end_date - today).days
-            expiry_display = expiry_mmyyyy
-            
-        stock_value = current_stock * (item['product_actual_rate'] or 0)
-        total_value += stock_value
-
-        grouped_data[group_key].append({
-            'product_name': item['productid__product_name'],
-            'product_company': item['productid__product_company'],
-            'product_packing': item['productid__product_packing'],
-            'batch_no': item['product_batch_no'],
-            'quantity': current_stock,
-            'purchase_rate': item['product_actual_rate'] or 0,
-            'mrp': item['product_MRP'] or 0,
-            'value': stock_value,
-            'days_to_expiry': days_to_expiry,
-            'expiry_date': parsed_expiry_date,
-            'expiry_mmyyyy': expiry_mmyyyy,
-            'expiry_display': expiry_display,
-        })
-
-    # Create sorted groups for the template
-    expiry_groups = []
-    for group_key, products_list in grouped_data.items():
-        group_total_value = sum(p['value'] for p in products_list)
-        
-        if group_key == 'No Expiry Date':
-            days_to_expiry = 999999
-            expiry_display = 'No Expiry Date'
-            expiry_date = None
-        else:
-            # group_key is MM-YYYY string
-            month, year = map(int, group_key.split('-'))  # MM-YYYY format
-            import calendar
-            last_day = calendar.monthrange(year, month)[1]
-            month_end_date = datetime(year, month, last_day).date()
-            days_to_expiry = (month_end_date - today).days
-            expiry_display = group_key  # MM-YYYY format
-            expiry_date = month_end_date
-        
-        expiry_groups.append({
-            'expiry_date': expiry_date,
-            'expiry_display': expiry_display,
-            'days_to_expiry': days_to_expiry,
-            'products': products_list,
-            'total_value': group_total_value,
-        })
+    expiry_data, total_value = FastInventory.get_dateexpiry_inventory_data(search_query)
     
-    # Sort by expiry date (earliest first, no expiry last)
-    expiry_groups.sort(key=lambda x: x['days_to_expiry'])
-
     context = {
-        'expiry_data': expiry_groups,
+        'expiry_data': expiry_data,
         'total_value': total_value,
         'search_query': search_query,
         'expiry_from': expiry_from,
@@ -4484,7 +4363,6 @@ def dateexpiry_inventory_report(request):
     }
     return render(request, 'reports/dateexpiry_inventory_report.html', context)
 
-@login_required
 def sales_report(request):
     from datetime import datetime
     from .sales_analytics import SalesAnalytics
@@ -4920,8 +4798,8 @@ def get_product_batch_selector(request):
     try:
         product = ProductMaster.objects.get(productid=product_id)
         
-        # Get all unique batches for this product with stock information
-        batches = PurchaseMaster.objects.filter(
+        # Get all unique batches from both purchases and supplier challans
+        purchase_batches = PurchaseMaster.objects.filter(
             productid=product
         ).values(
             'product_batch_no',
@@ -4929,6 +4807,38 @@ def get_product_batch_selector(request):
             'product_MRP',
             'product_actual_rate'
         ).distinct()
+        
+        challan_batches = SupplierChallanMaster.objects.filter(
+            product_id=product
+        ).values(
+            'product_batch_no',
+            'product_expiry', 
+            'product_mrp',
+            'product_purchase_rate'
+        ).distinct()
+        
+        # Combine batches from both sources
+        all_batches = {}
+        for batch in purchase_batches:
+            key = batch['product_batch_no']
+            all_batches[key] = {
+                'product_batch_no': batch['product_batch_no'],
+                'product_expiry': batch['product_expiry'],
+                'product_MRP': batch['product_MRP'],
+                'product_actual_rate': batch['product_actual_rate']
+            }
+        
+        for batch in challan_batches:
+            key = batch['product_batch_no']
+            if key not in all_batches:
+                all_batches[key] = {
+                    'product_batch_no': batch['product_batch_no'],
+                    'product_expiry': batch['product_expiry'],
+                    'product_MRP': batch['product_mrp'],
+                    'product_actual_rate': batch['product_purchase_rate']
+                }
+        
+        batches = list(all_batches.values())
         
         # Convert expiry date to MM-YYYY format
         def convert_expiry_to_mmyyyy(expiry_input):
@@ -7728,73 +7638,75 @@ def get_batch_details(request):
 
 @login_required
 def get_product_batch_selector(request):
-    """API endpoint for Alt+W batch selection dialog"""
+    """API endpoint for Alt+W batch selection dialog - fetches from both Purchase and Challan"""
     product_id = request.GET.get('product_id')
     
     if not product_id:
         return JsonResponse({'error': 'Product ID is required'}, status=400)
     
     try:
-        # Get all batches for this product with details
-        batches = PurchaseMaster.objects.filter(
-            productid=product_id
-        ).values(
-            'product_batch_no',
-            'product_expiry', 
-            'product_MRP'
-        ).distinct().order_by('product_batch_no')
+        from .models import SupplierChallanMaster
+        batch_dict = {}
         
-        batch_options = []
-        for batch in batches:
-            # Get stock for each batch
-            batch_quantity, is_available = get_batch_stock_status(
-                product_id, batch['product_batch_no']
-            )
+        # 1. Get batches from PurchaseMaster
+        purchase_batches = PurchaseMaster.objects.filter(
+            productid=product_id
+        ).values('product_batch_no', 'product_expiry', 'product_MRP').distinct()
+        
+        for batch in purchase_batches:
+            batch_no = batch['product_batch_no']
+            batch_quantity, is_available = get_batch_stock_status(product_id, batch_no)
             
-            # Get sale rates if available
             try:
-                sale_rate = SaleRateMaster.objects.get(
-                    productid=product_id,
-                    product_batch_no=batch['product_batch_no']
-                )
-                rates = {
-                    'rate_A': float(sale_rate.rate_A or 0),
-                    'rate_B': float(sale_rate.rate_B or 0), 
-                    'rate_C': float(sale_rate.rate_C or 0)
-                }
+                sale_rate = SaleRateMaster.objects.get(productid=product_id, product_batch_no=batch_no)
+                rates = {'rate_A': float(sale_rate.rate_A or 0), 'rate_B': float(sale_rate.rate_B or 0), 'rate_C': float(sale_rate.rate_C or 0)}
             except SaleRateMaster.DoesNotExist:
                 rates = {'rate_A': 0, 'rate_B': 0, 'rate_C': 0}
             
-            # Handle expiry date formatting
-            expiry_display = 'N/A'
-            if batch['product_expiry']:
-                try:
-                    if hasattr(batch['product_expiry'], 'strftime'):
-                        expiry_display = batch['product_expiry'].strftime('%d/%m/%Y')
-                    else:
-                        expiry_display = str(batch['product_expiry'])
-                except:
-                    expiry_display = str(batch['product_expiry'])
+            expiry_display = str(batch['product_expiry']) if batch['product_expiry'] else 'N/A'
             
-            batch_options.append({
-                'batch_no': batch['product_batch_no'],
+            batch_dict[batch_no] = {
+                'batch_no': batch_no,
                 'expiry': expiry_display,
                 'mrp': float(batch['product_MRP'] or 0),
                 'stock': batch_quantity,
                 'is_available': is_available,
                 'rates': rates
-            })
+            }
         
-        return JsonResponse({
-            'success': True,
-            'batches': batch_options
-        })
+        # 2. Get batches from SupplierChallanMaster
+        challan_batches = SupplierChallanMaster.objects.filter(
+            product_id=product_id
+        ).values('product_batch_no', 'product_expiry', 'product_mrp').distinct()
+        
+        for batch in challan_batches:
+            batch_no = batch['product_batch_no']
+            if batch_no in batch_dict:
+                continue
+            
+            batch_quantity, is_available = get_batch_stock_status(product_id, batch_no)
+            
+            try:
+                sale_rate = SaleRateMaster.objects.get(productid=product_id, product_batch_no=batch_no)
+                rates = {'rate_A': float(sale_rate.rate_A or 0), 'rate_B': float(sale_rate.rate_B or 0), 'rate_C': float(sale_rate.rate_C or 0)}
+            except SaleRateMaster.DoesNotExist:
+                rates = {'rate_A': 0, 'rate_B': 0, 'rate_C': 0}
+            
+            expiry_display = str(batch['product_expiry']) if batch['product_expiry'] else 'N/A'
+            
+            batch_dict[batch_no] = {
+                'batch_no': batch_no,
+                'expiry': expiry_display,
+                'mrp': float(batch['product_mrp'] or 0),
+                'stock': batch_quantity,
+                'is_available': is_available,
+                'rates': rates
+            }
+        
+        return JsonResponse({'success': True, 'batches': list(batch_dict.values())})
         
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @login_required
 def search_products_api(request):
@@ -10251,3 +10163,19 @@ def inventory_search_suggestions(request):
     
     suggestions = [f"{p['product_name']} - {p['product_company']}" for p in products]
     return JsonResponse({'suggestions': list(set(suggestions))})
+
+
+@login_required
+def delete_invoice_series(request, series_id):
+    """Delete invoice series"""
+    if request.method == 'POST':
+        try:
+            series = InvoiceSeries.objects.get(series_id=series_id)
+            series_name = series.series_name
+            series.delete()
+            return JsonResponse({'success': True, 'message': f'Series "{series_name}" deleted successfully'})
+        except InvoiceSeries.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Series not found'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})

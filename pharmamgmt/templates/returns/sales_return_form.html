@@ -51,7 +51,13 @@
                         <div class="sr-form-group">
                             <label for="additionalCharges" class="sr-field-label">Additional Charges</label>
                             <input type="number" name="return_sales_charges" id="additionalCharges" class="sr-form-input" 
-                                   value="0" step="0.01" min="0">
+                                   value="0" step="0.01" min="0" onchange="calculateGrandTotal()">
+                        </div>
+                        
+                        <div class="sr-form-group">
+                            <label for="transportCharges" class="sr-field-label">Transport Charges</label>
+                            <input type="number" name="transport_charges" id="transportCharges" class="sr-form-input" 
+                                   value="0" step="0.01" min="0" onchange="calculateGrandTotal()">
                         </div>
                     </div>
                 </div>
@@ -93,8 +99,22 @@
                         
                         <div class="sr-total-section">
                             <div class="sr-total-wrapper">
-                                <div class="sr-grand-total">
-                                    <strong class="sr-total-label">Grand Total: ₹<span id="grandTotal" class="sr-total-amount">0.00</span></strong>
+                                <div class="sr-total-breakdown">
+                                    <div class="sr-total-row">
+                                        <span>Products Total:</span>
+                                        <span>₹<span id="productsTotal">0.00</span></span>
+                                    </div>
+                                    <div class="sr-total-row">
+                                        <span>Additional Charges:</span>
+                                        <span>₹<span id="additionalChargesDisplay">0.00</span></span>
+                                    </div>
+                                    <div class="sr-total-row">
+                                        <span>Transport Charges:</span>
+                                        <span>₹<span id="transportChargesDisplay">0.00</span></span>
+                                    </div>
+                                    <div class="sr-grand-total">
+                                        <strong class="sr-total-label">Grand Total: ₹<span id="grandTotal" class="sr-total-amount">0.00</span></strong>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -204,22 +224,22 @@ function calculateRowTotal(index) {
 
 // Calculate grand total
 function calculateGrandTotal() {
-    let grandTotal = 0;
+    let productsTotal = 0;
     document.querySelectorAll('.row-total').forEach(span => {
         const value = span.textContent.replace('₹', '');
-        grandTotal += parseFloat(value) || 0;
+        productsTotal += parseFloat(value) || 0;
     });
     
-    // Add transport charges if any
+    // Get additional charges and transport charges
     const additionalCharges = parseFloat(document.getElementById('additionalCharges').value) || 0;
-    const finalTotal = grandTotal + additionalCharges;
+    const transportCharges = parseFloat(document.getElementById('transportCharges').value) || 0;
+    const finalTotal = productsTotal + additionalCharges + transportCharges;
     
+    // Update display
+    document.getElementById('productsTotal').textContent = productsTotal.toFixed(2);
+    document.getElementById('additionalChargesDisplay').textContent = additionalCharges.toFixed(2);
+    document.getElementById('transportChargesDisplay').textContent = transportCharges.toFixed(2);
     document.getElementById('grandTotal').textContent = finalTotal.toFixed(2);
-    
-    // Show breakdown if additional charges exist
-    if (additionalCharges > 0) {
-        document.getElementById('grandTotal').innerHTML = `${grandTotal.toFixed(2)} + ${additionalCharges.toFixed(2)} = <strong>${finalTotal.toFixed(2)}</strong>`;
-    }
 }
 
 // This function is now handled by the change event listener above

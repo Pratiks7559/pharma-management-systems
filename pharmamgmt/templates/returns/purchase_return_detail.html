@@ -143,6 +143,7 @@
                 <div class="row">
                     <div class="col-md-8">
                         <div class="summary-details">
+                            {% if return_invoice.return_charges > 0 %}
                             <div class="summary-row">
                                 <span class="summary-label">Items Total:</span>
                                 <span class="summary-value">₹{{ items_total|floatformat:2 }}</span>
@@ -152,9 +153,15 @@
                                 <span class="summary-value">₹{{ return_invoice.return_charges|floatformat:2 }}</span>
                             </div>
                             <div class="summary-row total-row">
+                                <span class="summary-label">Grand Total:</span>
+                                <span class="summary-value">₹{{ return_invoice.returninvoice_total|floatformat:2 }}</span>
+                            </div>
+                            {% else %}
+                            <div class="summary-row total-row">
                                 <span class="summary-label">Total Amount:</span>
                                 <span class="summary-value">₹{{ return_invoice.returninvoice_total|floatformat:2 }}</span>
                             </div>
+                            {% endif %}
                             <div class="summary-row">
                                 <span class="summary-label">Amount Received:</span>
                                 <span class="summary-value">₹{{ return_invoice.returninvoice_paid|floatformat:2 }}</span>

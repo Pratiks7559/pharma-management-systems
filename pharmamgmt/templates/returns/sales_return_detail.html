@@ -550,8 +550,13 @@ th, td { display: table-cell !important; }
                 <h6 class="sr-detail-info-title" style="display: block !important; visibility: visible !important; opacity: 1 !important; color: #212529 !important; font-weight: bold !important; margin-bottom: 15px !important;">Financial Summary</h6>
                 <table class="sr-detail-info-table" style="display: table !important; visibility: visible !important; opacity: 1 !important; width: 100% !important; border-collapse: collapse !important;">
                     <tr><td>Items Total:</td><td>₹{{ items_total|floatformat:2 }}</td></tr>
-                    <tr><td>Charges:</td><td>₹{{ return_invoice.return_sales_charges|floatformat:2 }}</td></tr>
-                    <tr><td>Return Total:</td><td>₹{{ return_invoice.return_sales_invoice_total|floatformat:2 }}</td></tr>
+                    {% if return_invoice.return_sales_charges > 0 %}
+                    <tr><td>Additional Charges:</td><td>₹{{ return_invoice.return_sales_charges|floatformat:2 }}</td></tr>
+                    {% endif %}
+                    {% if return_invoice.transport_charges > 0 %}
+                    <tr><td>Transport Charges:</td><td>₹{{ return_invoice.transport_charges|floatformat:2 }}</td></tr>
+                    {% endif %}
+                    <tr style="background: #f8f9fa;"><td><strong>Grand Total:</strong></td><td><strong>₹{{ return_invoice.return_sales_invoice_total|floatformat:2 }}</strong></td></tr>
                     <tr><td>Refunded:</td><td>₹{{ return_invoice.return_sales_invoice_paid|floatformat:2 }}</td></tr>
                     <tr><td><strong>Balance:</strong></td><td><strong>₹{{ return_invoice.balance_due|floatformat:2 }}</strong></td></tr>
                 </table>
@@ -725,8 +730,12 @@ th, td { display: table-cell !important; }
                         <input type="date" id="editReturnDate" class="form-control" value="{{ return_invoice.return_sales_invoice_date|date:'Y-m-d' }}" required>
                     </div>
                     <div class="edit-return-field">
-                        <label>Return Charges</label>
+                        <label>Additional Charges</label>
                         <input type="number" id="editReturnCharges" class="form-control" value="{{ return_invoice.return_sales_charges }}" step="0.01" min="0" onchange="calculateEditReturnTotal()">
+                    </div>
+                    <div class="edit-return-field">
+                        <label>Transport Charges</label>
+                        <input type="number" id="editTransportCharges" class="form-control" value="{{ return_invoice.transport_charges|default:0 }}" step="0.01" min="0" onchange="calculateEditReturnTotal()">
                     </div>
                 </div>
                 
@@ -957,8 +966,9 @@ function calculateEditReturnTotal() {
         total += parseFloat(span.textContent) || 0;
     });
     
-    const charges = parseFloat(document.getElementById('editReturnCharges').value) || 0;
-    total += charges;
+    const additionalCharges = parseFloat(document.getElementById('editReturnCharges').value) || 0;
+    const transportCharges = parseFloat(document.getElementById('editTransportCharges').value) || 0;
+    total += additionalCharges + transportCharges;
     
     document.getElementById('editReturnTotal').textContent = total.toFixed(2);
 }
@@ -975,6 +985,7 @@ function saveEditSalesReturn() {
     const customerId = document.getElementById('editCustomerId').value;
     const returnDate = document.getElementById('editReturnDate').value;
     const returnCharges = document.getElementById('editReturnCharges').value;
+    const transportCharges = document.getElementById('editTransportCharges').value;
     
     const products = [];
     document.querySelectorAll('#editReturnProductRows tr').forEach(row => {
@@ -1012,6 +1023,7 @@ function saveEditSalesReturn() {
         customer_id: customerId,
         return_date: returnDate,
         return_charges: returnCharges,
+        transport_charges: transportCharges,
         products: products
     };
     

@@ -76,10 +76,10 @@
 
 /* Sales Bill Content */
 .sales-bill-content {
-    max-width: 210mm;
+    max-width: 74mm;
     margin: 0 auto;
     background: white;
-    padding: 20px;
+    padding: 15px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
@@ -91,20 +91,20 @@
 }
 
 .pharmacy-name-display {
-    font-size: 24px;
+    font-size: 28px;
     font-weight: bold;
     color: #2c3e50;
     margin-bottom: 5px;
 }
 
 .pharmacy-address-display {
-    font-size: 14px;
+    font-size: 16px;
     color: #666;
     margin-bottom: 5px;
 }
 
 .pharmacy-contact-info {
-    font-size: 12px;
+    font-size: 14px;
     color: #666;
     margin-bottom: 15px;
 }
@@ -115,7 +115,7 @@
     padding: 8px 20px;
     margin: 10px 0 0 0;
     border-radius: 5px;
-    font-size: 18px;
+    font-size: 20px;
 }
 
 /* Invoice Details Section */
@@ -131,7 +131,7 @@
 .customer-info-block,
 .license-info-block {
     flex: 1;
-    font-size: 14px;
+    font-size: 16px;
     line-height: 1.6;
 }
 
@@ -147,7 +147,7 @@
 .sales-items-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .sales-table-header {
@@ -191,7 +191,7 @@
 }
 
 .product-details-small {
-    font-size: 10px;
+    font-size: 12px;
     color: #666;
     margin-top: 2px;
 }
@@ -236,7 +236,7 @@
 }
 
 .grand-total-amount-cell {
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .balance-amount-cell {
@@ -259,7 +259,7 @@
 }
 
 .bill-terms-note {
-    font-size: 12px;
+    font-size: 14px;
     color: #666;
 }
 
@@ -278,7 +278,7 @@
 }
 
 .authorized-signature {
-    font-size: 14px;
+    font-size: 16px;
     margin-top: 40px;
 }
 
@@ -291,6 +291,11 @@
 
 /* Print Styles */
 @media print {
+    @page {
+        size: A8 landscape;
+        margin: 5mm;
+    }
+    
     .print-controls-section {
         display: none !important;
     }
@@ -312,15 +317,15 @@
     }
     
     .sales-items-table {
-        font-size: 11px;
+        font-size: 14px;
     }
     
     .pharmacy-name-display {
-        font-size: 20px;
+        font-size: 28px;
     }
     
     .invoice-title-section h4 {
-        font-size: 16px;
+        font-size: 20px;
     }
 }
 

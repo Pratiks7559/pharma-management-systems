@@ -46,7 +46,8 @@
 .sales-invoice-list-wrapper {
     max-width: 1200px;
     margin: 0 auto;
-    background: white;
+    background: white !important;
+    color: #495057 !important;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     overflow: hidden;
@@ -163,7 +164,7 @@
 }
 
 .sales-invoice-list-table-body {
-    background: white;
+    background: white !important;
 }
 
 .sales-invoice-list-table-row {
@@ -172,25 +173,27 @@
 }
 
 .sales-invoice-list-table-row:hover {
-    background-color: #f8f9fa;
+    background-color: #f8f9fa !important;
 }
 
 .sales-invoice-list-table-cell {
     padding: 12px;
     vertical-align: middle;
+    color: #495057 !important;
 }
 
 .sales-invoice-list-invoice-number-cell {
     font-weight: 600;
-    color: #007bff;
+    color: #007bff !important;
 }
 
 .sales-invoice-list-date-cell {
-    color: #6c757d;
+    color: #6c757d !important;
 }
 
 .sales-invoice-list-customer-cell {
     font-weight: 500;
+    color: #495057 !important;
 }
 
 .sales-invoice-list-total-cell,
@@ -298,8 +301,8 @@
     width: 40px;
     height: 40px;
     border: 1px solid #dee2e6;
-    background: white;
-    color: #007bff;
+    background: white !important;
+    color: #007bff !important;
     text-decoration: none;
     border-radius: 5px;
     font-size: 0.9rem;

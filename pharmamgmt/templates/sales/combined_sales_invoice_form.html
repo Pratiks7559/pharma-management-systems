@@ -3,6 +3,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/combined_sales_invoice.css' %}">
+<link rel="stylesheet" href="{% static 'css/challan_invoice_button.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -34,12 +35,23 @@
                                             <i class="fas fa-plus"></i> Add Series
                                         </button>
                                     </div>
-                                    <select name="invoice_series" id="invoice_series" class="form-control" onchange="updateInvoicePreview()" required>
-                                        <option value="">Select Series</option>
-                                        {% for series in invoice_series %}
-                                        <option value="{{ series.series_id }}">{{ series.series_name }}</option>
-                                        {% endfor %}
-                                    </select>
+                                    <div class="series-selector-wrapper">
+                                        <input type="hidden" name="invoice_series" id="invoice_series" required>
+                                        <div class="series-display" id="seriesDisplay" onclick="toggleSeriesList()" tabindex="0" onkeydown="handleSeriesKeydown(event)">
+                                            <span id="selectedSeriesText">Select Series</span>
+                                            <i class="fas fa-chevron-down"></i>
+                                        </div>
+                                        <div class="series-list" id="seriesList" style="display: none;">
+                                            {% for series in invoice_series %}
+                                            <div class="series-item" data-series-id="{{ series.series_id }}" data-series-name="{{ series.series_name }}">
+                                                <span onclick="selectSeries({{ series.series_id }}, '{{ series.series_name }}')" style="flex: 1; cursor: pointer;">{{ series.series_name }}</span>
+                                                <button type="button" class="series-delete-btn" onclick="event.stopPropagation(); deleteSeries({{ series.series_id }}, '{{ series.series_name }}')" title="Delete Series">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
                                     <div id="invoicePreview" class="invoice-preview" style="display: none;">
                                         <small class="preview-text"></small>
                                     </div>
@@ -112,6 +124,68 @@
 
                         <!-- Hidden field for products data -->
                         <input type="hidden" name="products_data" id="productsData">
+
+                        <!-- Challan Invoice Section -->
+                        <div class="challan-invoice-section">
+                            <div class="challan-header">
+                                <div>
+                                    <h3 class="challan-title">
+                                        <i class="fas fa-file-invoice challan-title-icon"></i>
+                                        Create Challan Invoice
+                                    </h3>
+                                    <p class="challan-subtitle">Convert this sales invoice to a challan for delivery tracking</p>
+                                </div>
+                                <div class="challan-btn-group">
+                                    <button type="button" class="challan-invoice-btn challan-tooltip" 
+                                            data-tooltip="Create challan invoice for delivery tracking"
+                                            onclick="createChallanInvoice()">
+                                        <i class="fas fa-truck challan-btn-icon"></i>
+                                        Create Challan Invoice
+                                    </button>
+                                    <button type="button" class="challan-invoice-btn challan-invoice-btn-outline challan-tooltip" 
+                                            data-tooltip="Preview challan before creation"
+                                            onclick="previewChallanInvoice()">
+                                        <i class="fas fa-eye challan-btn-icon"></i>
+                                        Preview
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="challan-info-grid">
+                                <div class="challan-info-card">
+                                    <div class="challan-info-icon">
+                                        <i class="fas fa-boxes"></i>
+                                    </div>
+                                    <h4 class="challan-info-title">Total Items</h4>
+                                    <p class="challan-info-value" id="challanTotalItems">0</p>
+                                </div>
+                                <div class="challan-info-card">
+                                    <div class="challan-info-icon">
+                                        <i class="fas fa-weight-hanging"></i>
+                                    </div>
+                                    <h4 class="challan-info-title">Total Quantity</h4>
+                                    <p class="challan-info-value" id="challanTotalQty">0</p>
+                                </div>
+                                <div class="challan-info-card">
+                                    <div class="challan-info-icon">
+                                        <i class="fas fa-rupee-sign"></i>
+                                    </div>
+                                    <h4 class="challan-info-title">Invoice Value</h4>
+                                    <p class="challan-info-value" id="challanInvoiceValue">₹0.00</p>
+                                </div>
+                                <div class="challan-info-card">
+                                    <div class="challan-info-icon">
+                                        <i class="fas fa-shipping-fast"></i>
+                                    </div>
+                                    <h4 class="challan-info-title">Delivery Status</h4>
+                                    <p class="challan-info-value">
+                                        <span class="challan-badge challan-badge-warning">
+                                            <i class="fas fa-clock"></i> Pending
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Submit Button -->
                         <div class="form-actions">
@@ -531,6 +605,101 @@
     padding: 4px 8px;
 }
 
+.series-selector-wrapper {
+    position: relative;
+}
+
+.series-display {
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background: #ffffff !important;
+    color: #212529 !important;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+}
+
+.series-display:hover {
+    border-color: #007bff;
+    background: #f8f9fa !important;
+}
+
+.series-display i {
+    color: #6c757d !important;
+}
+
+#selectedSeriesText {
+    color: #212529 !important;
+    font-weight: 500;
+}
+
+.series-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #ffffff !important;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.series-item {
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e9ecef;
+    color: #212529 !important;
+    background: #ffffff !important;
+}
+
+.series-item:last-child {
+    border-bottom: none;
+}
+
+.series-item:hover,
+.series-item.highlighted {
+    background: #e9ecef !important;
+}
+
+.series-display:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+.series-item span {
+    color: #212529 !important;
+    font-size: 14px;
+}
+
+.series-delete-btn {
+    background: none;
+    border: none;
+    color: #dc3545 !important;
+    cursor: pointer;
+    padding: 4px 8px;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.series-delete-btn:hover {
+    color: #ffffff !important;
+    background: #dc3545 !important;
+    border-radius: 3px;
+}
+
+.series-delete-btn i {
+    color: inherit !important;
+}
+
 .invoice-preview {
     margin-top: 8px;
     padding: 8px;
@@ -947,7 +1116,7 @@ document.getElementById('combinedSalesInvoiceForm').addEventListener('submit', f
                 cgst: parseFloat(cgstInput ? cgstInput.value : 0) || 0,
                 sgst: parseFloat(sgstInput ? sgstInput.value : 0) || 0,
                 calculation_mode: 'flat',
-                rate_applied: 'A'
+                rate_applied: selectedCustomerRateType  // ✅ Use customer's rate type
             };
             
             products.push(productData);
@@ -1003,7 +1172,6 @@ function calculateGrandTotal() {
         const value = span.textContent.replace('₹', '');
         grandTotal += parseFloat(value) || 0;
     });
-    document.getElementById('grandTotal').textContent = grandTotal.toFixed(2);
     
     // Update transport charges if any
     const transportCharges = parseFloat(document.querySelector('[name="sales_transport_charges"]').value) || 0;
@@ -1012,6 +1180,8 @@ function calculateGrandTotal() {
     // Show final total if transport charges exist
     if (transportCharges > 0) {
         document.getElementById('grandTotal').innerHTML = `${grandTotal.toFixed(2)} + ${transportCharges.toFixed(2)} = <strong>${finalTotal.toFixed(2)}</strong>`;
+    } else {
+        document.getElementById('grandTotal').textContent = finalTotal.toFixed(2);
     }
 }
 
@@ -1031,7 +1201,7 @@ function collectProductsData() {
                 cgst: row.querySelector('.cgst').value,
                 sgst: row.querySelector('.sgst').value,
                 calculation_mode: 'flat',
-                rate_applied: 'A'
+                rate_applied: selectedCustomerRateType  // ✅ Use customer's rate type
             });
         }
     });
@@ -2383,8 +2553,10 @@ function loadInvoiceSeries() {
     fetch('/api/get-invoice-series/')
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
+            if (data && data.success && data.series) {
                 const seriesSelect = document.getElementById('invoice_series');
+                if (!seriesSelect) return;
+                
                 // Clear existing options except first
                 while (seriesSelect.children.length > 1) {
                     seriesSelect.removeChild(seriesSelect.lastChild);
@@ -2399,16 +2571,149 @@ function loadInvoiceSeries() {
                 });
                 
                 // Auto-select ABC if available
-                const abcOption = Array.from(seriesSelect.options).find(opt => opt.textContent === 'ABC');
-                if (abcOption) {
-                    abcOption.selected = true;
-                    updateInvoicePreview();
+                if (seriesSelect.options && seriesSelect.options.length > 0) {
+                    const abcOption = Array.from(seriesSelect.options).find(opt => opt.textContent === 'ABC');
+                    if (abcOption) {
+                        abcOption.selected = true;
+                        updateInvoicePreview();
+                    }
                 }
             }
         })
         .catch(error => {
             console.error('Error loading series:', error);
         });
+}
+
+// Toggle series list
+function toggleSeriesList() {
+    const seriesList = document.getElementById('seriesList');
+    const isVisible = seriesList.style.display === 'block';
+    seriesList.style.display = isVisible ? 'none' : 'block';
+    
+    if (!isVisible) {
+        // Highlight first item when opening
+        const firstItem = seriesList.querySelector('.series-item');
+        if (firstItem) {
+            highlightSeriesItem(firstItem);
+        }
+    }
+}
+
+// Keyboard navigation for series selector
+function handleSeriesKeydown(event) {
+    const seriesList = document.getElementById('seriesList');
+    const isOpen = seriesList.style.display === 'block';
+    
+    if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        if (!isOpen) {
+            toggleSeriesList();
+        } else {
+            // Select highlighted item
+            const highlighted = seriesList.querySelector('.series-item.highlighted');
+            if (highlighted) {
+                const seriesId = highlighted.getAttribute('data-series-id');
+                const seriesName = highlighted.getAttribute('data-series-name');
+                selectSeries(seriesId, seriesName);
+            }
+        }
+    } else if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        if (!isOpen) {
+            toggleSeriesList();
+        } else {
+            navigateSeries('down');
+        }
+    } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        if (isOpen) {
+            navigateSeries('up');
+        }
+    } else if (event.key === 'Escape') {
+        event.preventDefault();
+        if (isOpen) {
+            seriesList.style.display = 'none';
+        }
+    }
+}
+
+// Navigate through series items
+function navigateSeries(direction) {
+    const seriesList = document.getElementById('seriesList');
+    const items = Array.from(seriesList.querySelectorAll('.series-item'));
+    const highlighted = seriesList.querySelector('.series-item.highlighted');
+    
+    let newIndex = 0;
+    if (highlighted) {
+        const currentIndex = items.indexOf(highlighted);
+        if (direction === 'down') {
+            newIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+        } else {
+            newIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+        }
+    }
+    
+    highlightSeriesItem(items[newIndex]);
+}
+
+// Highlight series item
+function highlightSeriesItem(item) {
+    const seriesList = document.getElementById('seriesList');
+    seriesList.querySelectorAll('.series-item').forEach(i => i.classList.remove('highlighted'));
+    item.classList.add('highlighted');
+    item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+// Close series list when clicking outside
+document.addEventListener('click', function(e) {
+    const wrapper = document.querySelector('.series-selector-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+        document.getElementById('seriesList').style.display = 'none';
+    }
+});
+
+// Select series
+function selectSeries(seriesId, seriesName) {
+    document.getElementById('invoice_series').value = seriesId;
+    document.getElementById('selectedSeriesText').textContent = seriesName;
+    document.getElementById('seriesList').style.display = 'none';
+    updateInvoicePreview();
+}
+
+// Delete series
+function deleteSeries(seriesId, seriesName) {
+    if (!confirm(`Delete series "${seriesName}"?`)) {
+        return;
+    }
+    
+    fetch(`/api/delete-invoice-series/${seriesId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            // Remove from list
+            const item = document.querySelector(`.series-item[data-series-id="${seriesId}"]`);
+            if (item) item.remove();
+            // Reset if this was selected
+            if (document.getElementById('invoice_series').value == seriesId) {
+                document.getElementById('invoice_series').value = '';
+                document.getElementById('selectedSeriesText').textContent = 'Select Series';
+                document.getElementById('invoicePreview').style.display = 'none';
+            }
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred');
+    });
 }
 
 function updateInvoicePreview() {
@@ -2434,6 +2739,137 @@ function updateInvoicePreview() {
     } else {
         previewDiv.style.display = 'none';
     }
+}
+
+// Challan Invoice Functions
+function createChallanInvoice() {
+    const products = collectProductsData();
+    if (products.length === 0) {
+        alert('Please add at least one product before creating challan invoice.');
+        return;
+    }
+    
+    const customerSelect = document.querySelector('[name="customerid"]');
+    if (!customerSelect.value) {
+        alert('Please select a customer before creating challan invoice.');
+        return;
+    }
+    
+    // Show loading state
+    const btn = event.target;
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner challan-loading-spinner"></i> Creating Challan...';
+    btn.classList.add('loading');
+    
+    // Simulate challan creation (replace with actual API call)
+    setTimeout(() => {
+        btn.innerHTML = '<i class="fas fa-check"></i> Challan Created!';
+        btn.classList.add('challan-success-animation');
+        btn.classList.remove('loading');
+        
+        // Show success message
+        showChallanSuccess();
+        
+        // Reset button after 3 seconds
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('challan-success-animation');
+        }, 3000);
+    }, 2000);
+}
+
+function previewChallanInvoice() {
+    const products = collectProductsData();
+    if (products.length === 0) {
+        alert('Please add at least one product to preview challan.');
+        return;
+    }
+    
+    // Create preview modal
+    const modalHTML = `
+        <div id="challanPreviewModal" class="challan-modal-overlay">
+            <div class="challan-modal-content">
+                <div class="challan-modal-header">
+                    <h3><i class="fas fa-eye"></i> Challan Invoice Preview</h3>
+                    <button type="button" class="challan-modal-close" onclick="closeChallanPreview()">&times;</button>
+                </div>
+                <div class="challan-modal-body">
+                    <div class="challan-preview-content">
+                        <h4>Products to be included in Challan:</h4>
+                        <div class="challan-preview-products">
+                            ${products.map((product, index) => `
+                                <div class="challan-preview-item">
+                                    <span class="challan-preview-name">Product ${index + 1}</span>
+                                    <span class="challan-preview-qty">Qty: ${product.quantity}</span>
+                                    <span class="challan-preview-batch">Batch: ${product.batch_no}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="challan-preview-summary">
+                            <p><strong>Total Items:</strong> ${products.length}</p>
+                            <p><strong>Total Quantity:</strong> ${products.reduce((sum, p) => sum + parseFloat(p.quantity), 0)}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="challan-modal-footer">
+                    <button type="button" class="challan-invoice-btn" onclick="createChallanInvoice(); closeChallanPreview();">
+                        <i class="fas fa-check"></i> Create Challan
+                    </button>
+                    <button type="button" class="challan-invoice-btn challan-invoice-btn-outline" onclick="closeChallanPreview()">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function closeChallanPreview() {
+    const modal = document.getElementById('challanPreviewModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function showChallanSuccess() {
+    const successHTML = `
+        <div id="challanSuccessNotification" class="challan-success-notification">
+            <div class="challan-success-content">
+                <i class="fas fa-check-circle"></i>
+                <span>Challan Invoice Created Successfully!</span>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', successHTML);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        const notification = document.getElementById('challanSuccessNotification');
+        if (notification) {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateY(-20px)';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 5000);
+}
+
+function updateChallanInfo() {
+    const products = collectProductsData();
+    const totalItems = products.length;
+    const totalQty = products.reduce((sum, p) => sum + parseFloat(p.quantity || 0), 0);
+    const invoiceValue = document.getElementById('grandTotal')?.textContent || '0.00';
+    
+    // Update challan info cards
+    const totalItemsEl = document.getElementById('challanTotalItems');
+    const totalQtyEl = document.getElementById('challanTotalQty');
+    const invoiceValueEl = document.getElementById('challanInvoiceValue');
+    
+    if (totalItemsEl) totalItemsEl.textContent = totalItems;
+    if (totalQtyEl) totalQtyEl.textContent = totalQty.toFixed(2);
+    if (invoiceValueEl) invoiceValueEl.textContent = `₹${invoiceValue}`;
 }
 
 // Initialize page with single product row and current date

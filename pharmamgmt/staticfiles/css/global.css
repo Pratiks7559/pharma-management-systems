@@ -255,6 +255,7 @@ textarea:focus,
     padding: 0.75rem;
     text-align: left;
     border-bottom: 1px solid #e5e7eb;
+    color: #ffa700;
 }
 
 .table th {
@@ -619,9 +620,44 @@ textarea:focus,
     .container { max-width: 1140px; }
 }
 
-/* Dark Mode Support - DISABLED FOR CONSISTENT LIGHT THEME */
-/* Dark mode has been disabled to ensure consistent UI across all system themes */
-/* All theme overrides are now handled by theme-override.css */
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    body {
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        color: #f9fafb;
+    }
+    
+    .card {
+        background: #374151;
+        color: #f9fafb;
+    }
+    
+    .card-header,
+    .card-footer {
+        background: #4b5563;
+        border-color: #6b7280;
+    }
+    
+    .table th {
+        background: #4b5563;
+        color: #f9fafb;
+    }
+    
+    .table tbody tr:hover {
+        background: #4b5563;
+    }
+    
+    .form-control {
+        background: #374151;
+        border-color: #6b7280;
+        color: #f9fafb;
+    }
+    
+    .form-control:focus {
+        border-color: #3b82f6;
+        background: #374151;
+    }
+}
 
 /* Date Input Styles - Imported from date_inputs.css */
 @import url('date_inputs.css');

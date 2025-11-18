@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/sales_challan_invoice_list.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/sales_challan_invoice_list.js' %}"></script>
+{% endblock %}
+
+{% block page_actions %}
+<div class="sales-challan-invoice-list-page-actions">
+    <a href="{% url 'customer_challan_list' %}" class="sales-challan-invoice-list-back-btn">
+        <i class="fas fa-arrow-left me-2"></i>Back to Challans
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="sales-challan-invoice-list-container">
+    <div class="sales-challan-invoice-list-wrapper">
+        <div class="sales-challan-invoice-list-header">
+            <h1 class="sales-challan-invoice-list-title">Sales Challan Invoices</h1>
+            <p class="sales-challan-invoice-list-subtitle">Invoices created from customer challans</p>
+        </div>
+
+        <div class="sales-challan-invoice-list-filters">
+            <div class="sales-challan-invoice-list-search-section">
+                <form method="GET" class="sales-challan-invoice-list-search-form">
+                    <input type="text" name="search" placeholder="Search invoices..." value="{{ search_query }}" class="sales-challan-invoice-list-search-input">
+                    <button type="submit" class="sales-challan-invoice-list-search-btn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+            <div class="sales-challan-invoice-list-date-section">
+                <form method="GET" class="sales-challan-invoice-list-date-form">
+                    <input type="date" name="start_date" value="{{ start_date }}" placeholder="Start Date" class="sales-challan-invoice-list-start-date">
+                    <input type="date" name="end_date" value="{{ end_date }}" placeholder="End Date" class="sales-challan-invoice-list-end-date">
+                    <button type="submit" class="sales-challan-invoice-list-filter-btn">
+                        <i class="fas fa-filter"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="sales-challan-invoice-list-table-section">
+            <table class="sales-challan-invoice-list-table">
+                <thead class="sales-challan-invoice-list-table-head">
+                    <tr class="sales-challan-invoice-list-table-header-row">
+                        <th class="sales-challan-invoice-list-table-header sales-challan-invoice-list-invoice-number-header">Invoice No.</th>
+                        <th class="sales-challan-invoice-list-table-header sales-challan-invoice-list-date-header">Invoice Date</th>
+                        <th class="sales-challan-invoice-list-table-header sales-challan-invoice-list-customer-header">Customer</th>
+                        <th class="sales-challan-invoice-list-table-header sales-challan-invoice-list-total-header">Total</th>
+                        <th class="sales-challan-invoice-list-table-header sales-challan-invoice-list-paid-header">Paid</th>
+                        <th class="sales-challan-invoice-list-table-header sales-challan-invoice-list-balance-header">Balance</th>
+                        <th class="sales-challan-invoice-list-table-header sales-challan-invoice-list-status-header">Status</th>
+                        <th class="sales-challan-invoice-list-table-header sales-challan-invoice-list-actions-header">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="sales-challan-invoice-list-table-body">
+                    {% for invoice in invoices %}
+                    <tr class="sales-challan-invoice-list-table-row">
+                        <td class="sales-challan-invoice-list-table-cell sales-challan-invoice-list-invoice-number-cell">{{ invoice.invoice_no }}</td>
+                        <td class="sales-challan-invoice-list-table-cell sales-challan-invoice-list-date-cell">{{ invoice.invoice_date|date:"d-m-Y" }}</td>
+                        <td class="sales-challan-invoice-list-table-cell sales-challan-invoice-list-customer-cell">{{ invoice.customer.customer_name }}</td>
+                        <td class="sales-challan-invoice-list-table-cell sales-challan-invoice-list-total-cell">₹{{ invoice.invoice_total|floatformat:2 }}</td>
+                        <td class="sales-challan-invoice-list-table-cell sales-challan-invoice-list-paid-cell">₹{{ invoice.invoice_paid|floatformat:2 }}</td>
+                        <td class="sales-challan-invoice-list-table-cell sales-challan-invoice-list-balance-cell {% if invoice.balance_due > 0 %}sales-challan-invoice-list-balance-due{% else %}sales-challan-invoice-list-balance-paid{% endif %}">
+                            ₹{{ invoice.balance_due|floatformat:2 }}
+                        </td>
+                        <td class="sales-challan-invoice-list-table-cell sales-challan-invoice-list-status-cell">
+                            {% if invoice.balance_due == 0 %}
+                                <span class="sales-challan-invoice-list-status sales-challan-invoice-list-status-paid">Paid</span>
+                            {% elif invoice.invoice_paid > 0 %}
+                                <span class="sales-challan-invoice-list-status sales-challan-invoice-list-status-partial">Partial</span>
+                            {% else %}
+                                <span class="sales-challan-invoice-list-status sales-challan-invoice-list-status-pending">Unpaid</span>
+                            {% endif %}
+                        </td>
+                        <td class="sales-challan-invoice-list-table-cell sales-challan-invoice-list-actions-cell">
+                            <a href="{% url 'sales_challan_invoice_detail' invoice.sales_challan_invoice_id %}" class="sales-challan-invoice-list-view-btn">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if invoice.balance_due > 0 %}
+                            <button type="button" class="sales-challan-invoice-list-payment-btn" 
+                                    onclick="showSalesChallanPaymentDialog('{{ invoice.sales_challan_invoice_id }}', '{{ invoice.invoice_no }}', '{{ invoice.balance_due }}')" 
+                                    title="Add Payment">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr class="sales-challan-invoice-list-empty-row">
+                        <td colspan="8" class="sales-challan-invoice-list-empty-cell">
+                            <div class="sales-challan-invoice-list-empty-content">
+                                <i class="fas fa-file-invoice sales-challan-invoice-list-empty-icon"></i>
+                                <p>No challan invoices found</p>
+                                <p class="sales-challan-invoice-list-empty-subtitle">Create invoices from customer challans to see them here</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if invoices.has_other_pages %}
+        <nav aria-label="Page navigation" class="sales-challan-invoice-list-pagination-nav">
+            <ul class="sales-challan-invoice-list-pagination">
+                {% if invoices.has_previous %}
+                <li class="sales-challan-invoice-list-pagination-item">
+                    <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if start_date %}&start_date={{ start_date }}&end_date={{ end_date }}{% endif %}" aria-label="First" class="sales-challan-invoice-list-pagination-link sales-challan-invoice-list-pagination-first">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="sales-challan-invoice-list-pagination-item">
+                    <a href="?page={{ invoices.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if start_date %}&start_date={{ start_date }}&end_date={{ end_date }}{% endif %}" aria-label="Previous" class="sales-challan-invoice-list-pagination-link sales-challan-invoice-list-pagination-prev">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="sales-challan-invoice-list-pagination-item sales-challan-invoice-list-pagination-disabled">
+                    <a href="#" aria-label="First" class="sales-challan-invoice-list-pagination-link sales-challan-invoice-list-pagination-first">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="sales-challan-invoice-list-pagination-item sales-challan-invoice-list-pagination-disabled">
+                    <a href="#" aria-label="Previous" class="sales-challan-invoice-list-pagination-link sales-challan-invoice-list-pagination-prev">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for i in invoices.paginator.page_range %}
+                    {% if invoices.number == i %}
+                    <li class="sales-challan-invoice-list-pagination-item sales-challan-invoice-list-pagination-active">
+                        <a href="#" class="sales-challan-invoice-list-pagination-link sales-challan-invoice-list-pagination-current">{{ i }}</a>
+                    </li>
+                    {% elif i > invoices.number|add:'-3' and i < invoices.number|add:'3' %}
+                    <li class="sales-challan-invoice-list-pagination-item">
+                        <a href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}{% if start_date %}&start_date={{ start_date }}&end_date={{ end_date }}{% endif %}" class="sales-challan-invoice-list-pagination-link sales-challan-invoice-list-pagination-number">{{ i }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if invoices.has_next %}
+                <li class="sales-challan-invoice-list-pagination-item">
+                    <a href="?page={{ invoices.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if start_date %}&start_date={{ start_date }}&end_date={{ end_date }}{% endif %}" aria-label="Next" class="sales-challan-invoice-list-pagination-link sales-challan-invoice-list-pagination-next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="sales-challan-invoice-list-pagination-item">
+                    <a href="?page={{ invoices.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if start_date %}&start_date={{ start_date }}&end_date={{ end_date }}{% endif %}" aria-label="Last" class="sales-challan-invoice-list-pagination-link sales-challan-invoice-list-pagination-last">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="sales-challan-invoice-list-pagination-item sales-challan-invoice-list-pagination-disabled">
+                    <a href="#" aria-label="Next" class="sales-challan-invoice-list-pagination-link sales-challan-invoice-list-pagination-next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="sales-challan-invoice-list-pagination-item sales-challan-invoice-list-pagination-disabled">
+                    <a href="#" aria-label="Last" class="sales-challan-invoice-list-pagination-link sales-challan-invoice-list-pagination-last">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Sales Challan Payment Modal -->
+<div id="salesChallanPaymentModal" class="payment-modal" style="display: none;">
+    <div class="payment-modal-content">
+        <div class="payment-modal-header">
+            <h3><i class="fas fa-money-bill-wave"></i> Add Payment</h3>
+            <span class="payment-modal-close" onclick="hideSalesChallanPaymentModal()">&times;</span>
+        </div>
+        <div class="payment-modal-body">
+            <form id="salesChallanPaymentForm" class="payment-form">
+                {% csrf_token %}
+                <div class="payment-info">
+                    <p><strong>Invoice:</strong> <span id="salesChallanPaymentInvoiceNo"></span></p>
+                    <p><strong>Balance Due:</strong> ₹<span id="salesChallanPaymentBalance"></span></p>
+                </div>
+                
+                <div class="payment-field">
+                    <label for="salesChallanPaymentDate" class="payment-label">Payment Date *</label>
+                    <input type="date" id="salesChallanPaymentDate" name="payment_date" class="payment-input" required>
+                </div>
+                
+                <div class="payment-field">
+                    <label for="salesChallanPaymentAmount" class="payment-label">Payment Amount *</label>
+                    <input type="number" id="salesChallanPaymentAmount" name="payment_amount" class="payment-input" 
+                           step="0.01" min="0.01" placeholder="0.00" required>
+                </div>
+                
+                <div class="payment-field">
+                    <label for="salesChallanPaymentMode" class="payment-label">Payment Mode *</label>
+                    <select id="salesChallanPaymentMode" name="payment_method" class="payment-input" required>
+                        <option value="">Select Payment Mode</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Cheque">Cheque</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="UPI">UPI</option>
+                        <option value="Card">Card</option>
+                    </select>
+                </div>
+                
+                <div class="payment-field">
+                    <label for="salesChallanPaymentRef" class="payment-label">Reference No.</label>
+                    <input type="text" id="salesChallanPaymentRef" name="payment_reference" class="payment-input" 
+                           placeholder="Transaction/Cheque No.">
+                </div>
+                
+                <div class="payment-actions">
+                    <button type="button" class="payment-btn-cancel" onclick="hideSalesChallanPaymentModal()">Cancel</button>
+                    <button type="submit" class="payment-btn-save">Add Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}

@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/supplier_ledger.css' %}">
+<style>
+@media print {
+    * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
+    body { margin: 0; padding: 10px; font-family: Arial, sans-serif; font-size: 12px; }
+    .no-print { display: none !important; }
+    .print-only { display: block !important; }
+    .print-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
+    .print-header h1 { margin: 0; font-size: 18px; font-weight: bold; }
+    .print-header h2 { margin: 5px 0; font-size: 14px; }
+    .print-header p { margin: 2px 0; font-size: 11px; }
+    .print-ledger-info { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
+    .print-supplier-info h3 { margin: 0 0 5px 0; font-size: 14px; }
+    .print-supplier-info p { margin: 2px 0; font-size: 11px; }
+    .print-date-info { text-align: right; font-size: 11px; }
+    .print-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+    .print-table th, .print-table td { border: 1px solid #000; padding: 4px; text-align: left; font-size: 10px; }
+    .print-table th { background-color: #f0f0f0; font-weight: bold; text-align: center; }
+    .print-table .text-right { text-align: right; }
+    .print-table .text-center { text-align: center; }
+    .print-summary { display: flex; justify-content: space-between; margin-top: 15px; border-top: 2px solid #000; padding-top: 10px; }
+    .print-summary div { font-size: 12px; font-weight: bold; }
+    .print-footer { text-align: center; margin-top: 20px; font-size: 10px; border-top: 1px solid #ccc; padding-top: 10px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Screen View -->
+<div class="supplier-ledger-container no-print">
+    <!-- Header -->
+    <div class="supplier-ledger-header-card">
+        <div class="supplier-ledger-header-content">
+            <div>
+                <h2 class="supplier-ledger-title">
+                    <i class="fas fa-book"></i> Supplier Ledger
+                </h2>
+                <h4 class="supplier-ledger-name">{{ supplier.supplier_name }}</h4>
+                <p class="supplier-ledger-contact">
+                    <i class="fas fa-phone"></i> {{ supplier.supplier_mobile }} | 
+                    <i class="fas fa-envelope"></i> {{ supplier.supplier_emailid|default:"N/A" }}
+                </p>
+            </div>
+            <div class="supplier-ledger-actions">
+                <select id="supplierSelect" class="supplier-ledger-select" onchange="window.location.href='/ledger/supplier/' + this.value + '/'">
+                    {% for s in suppliers %}
+                    <option value="{{ s.supplierid }}" {% if s.supplierid == supplier.supplierid %}selected{% endif %}>
+                        {{ s.supplier_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <button onclick="printLedger()" class="supplier-ledger-btn supplier-ledger-btn-print">
+                    <i class="fas fa-print"></i> Print
+                </button>
+                <a href="{% url 'supplier_ledger' %}" class="supplier-ledger-btn supplier-ledger-btn-back">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Filter -->
+    <div class="supplier-ledger-filter-card">
+        <form method="get" class="supplier-ledger-filter-form">
+            <div class="supplier-ledger-filter-group">
+                <label class="supplier-ledger-filter-label">Start Date</label>
+                <input type="date" name="start_date" value="{{ request.GET.start_date }}" class="supplier-ledger-filter-input">
+            </div>
+            <div class="supplier-ledger-filter-group">
+                <label class="supplier-ledger-filter-label">End Date</label>
+                <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="supplier-ledger-filter-input">
+            </div>
+            <button type="submit" class="supplier-ledger-filter-btn">
+                <i class="fas fa-filter"></i> Filter
+            </button>
+            <a href="{% url 'supplier_ledger_detail' supplier.supplierid %}" class="supplier-ledger-clear-btn">
+                <i class="fas fa-times"></i> Clear
+            </a>
+        </form>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="supplier-ledger-summary-grid">
+        <div class="supplier-ledger-summary-card supplier-ledger-card-purchases">
+            <div class="supplier-ledger-summary-label">Total Purchases</div>
+            <div class="supplier-ledger-summary-value">₹{{ total_credit|floatformat:2 }}</div>
+        </div>
+        <div class="supplier-ledger-summary-card supplier-ledger-card-paid">
+            <div class="supplier-ledger-summary-label">Total Paid</div>
+            <div class="supplier-ledger-summary-value">₹{{ total_debit|floatformat:2 }}</div>
+        </div>
+        <div class="supplier-ledger-summary-card {% if closing_balance > 0 %}supplier-ledger-card-balance-due{% else %}supplier-ledger-card-balance-credit{% endif %}">
+            <div class="supplier-ledger-summary-label">Balance Due</div>
+            <div class="supplier-ledger-summary-value">₹{{ closing_balance|floatformat:2 }}</div>
+        </div>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="supplier-ledger-table-card">
+        <div class="supplier-ledger-table-wrapper">
+            <table class="supplier-ledger-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Invoice No</th>
+                        <th class="text-right">Debit (Paid)</th>
+                        <th class="text-right">Credit (Purchase)</th>
+                        <th class="text-right">Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if transactions %}
+                        {% for trans in transactions %}
+                        <tr>
+                            <td>{{ trans.date|date:"d-m-Y" }}</td>
+                            <td>
+                                <span class="supplier-ledger-type-badge {% if trans.type == 'Purchase Invoice' %}supplier-ledger-type-purchase{% elif trans.type == 'Payment' %}supplier-ledger-type-payment{% else %}supplier-ledger-type-other{% endif %}">
+                                    {{ trans.type }}
+                                </span>
+                            </td>
+                            <td>{{ trans.reference }}</td>
+                            <td class="text-right supplier-ledger-amount-debit">
+                                {% if trans.debit > 0 %}₹{{ trans.debit|floatformat:2 }}{% else %}-{% endif %}
+                            </td>
+                            <td class="text-right supplier-ledger-amount-credit">
+                                {% if trans.credit > 0 %}₹{{ trans.credit|floatformat:2 }}{% else %}-{% endif %}
+                            </td>
+                            <td class="text-right {% if trans.balance > 0 %}supplier-ledger-balance-positive{% else %}supplier-ledger-balance-negative{% endif %}">
+                                ₹{{ trans.balance|floatformat:2 }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="supplier-ledger-empty">
+                                <i class="fas fa-inbox supplier-ledger-empty-icon"></i>
+                                No transactions found for this period
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+                {% if transactions %}
+                <tfoot>
+                    <tr>
+                        <td colspan="3">TOTAL</td>
+                        <td class="text-right supplier-ledger-amount-debit">₹{{ total_debit|floatformat:2 }}</td>
+                        <td class="text-right supplier-ledger-amount-credit">₹{{ total_credit|floatformat:2 }}</td>
+                        <td class="text-right {% if closing_balance > 0 %}supplier-ledger-balance-positive{% else %}supplier-ledger-balance-negative{% endif %}">
+                            ₹{{ closing_balance|floatformat:2 }}
+                        </td>
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Print View -->
+<div class="print-only" style="display: none;">
+    <!-- Print Header with Pharmacy Details -->
+    <div class="print-header">
+        <h1>{{ pharmacy.pharmaname|default:"PHARMACY NAME" }}</h1>
+        <h2>{{ pharmacy.proprietorname|default:"Proprietor Name" }}</h2>
+        <p>Contact: {{ pharmacy.proprietorcontact|default:"Contact Number" }} | Email: {{ pharmacy.proprietoremail|default:"Email" }}</p>
+        <p>Website: {{ pharmacy.pharmaweburl|default:"Website" }}</p>
+        <h2 style="margin-top: 15px; text-decoration: underline;">SUPPLIER LEDGER</h2>
+    </div>
+
+    <!-- Print Supplier Info -->
+    <div class="print-ledger-info">
+        <div class="print-supplier-info">
+            <h3>Supplier Details:</h3>
+            <p><strong>Name:</strong> {{ supplier.supplier_name }}</p>
+            <p><strong>Mobile:</strong> {{ supplier.supplier_mobile }}</p>
+            <p><strong>Email:</strong> {{ supplier.supplier_emailid|default:"N/A" }}</p>
+            <p><strong>Address:</strong> {{ supplier.supplier_address|default:"N/A" }}</p>
+            <p><strong>GST No:</strong> {{ supplier.supplier_gstno|default:"N/A" }}</p>
+            <p><strong>DL No:</strong> {{ supplier.supplier_dlno|default:"N/A" }}</p>
+        </div>
+        <div class="print-date-info">
+            <p><strong>Print Date:</strong> {{ current_date|date:"d-m-Y" }}</p>
+            <p><strong>Print Time:</strong> {{ current_date|time:"H:i:s" }}</p>
+            {% if request.GET.start_date %}
+            <p><strong>Period:</strong> {{ request.GET.start_date }} to {{ request.GET.end_date }}</p>
+            {% else %}
+            <p><strong>Period:</strong> All Transactions</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Print Transactions Table -->
+    <table class="print-table">
+        <thead>
+            <tr>
+                <th style="width: 12%;">Date</th>
+                <th style="width: 18%;">Transaction Type</th>
+                <th style="width: 20%;">Invoice No.</th>
+                <th style="width: 15%;">Debit (Paid)</th>
+                <th style="width: 15%;">Credit (Purchase)</th>
+                <th style="width: 20%;">Running Balance</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if transactions %}
+                {% for trans in transactions %}
+                <tr>
+                    <td class="text-center">{{ trans.date|date:"d-m-Y" }}</td>
+                    <td>{{ trans.type }}</td>
+                    <td>{{ trans.reference }}</td>
+                    <td class="text-right">
+                        {% if trans.debit > 0 %}₹{{ trans.debit|floatformat:2 }}{% else %}-{% endif %}
+                    </td>
+                    <td class="text-right">
+                        {% if trans.credit > 0 %}₹{{ trans.credit|floatformat:2 }}{% else %}-{% endif %}
+                    </td>
+                    <td class="text-right">₹{{ trans.balance|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="6" class="text-center">No transactions found for this period</td>
+                </tr>
+            {% endif %}
+        </tbody>
+        {% if transactions %}
+        <tfoot>
+            <tr style="font-weight: bold; background-color: #f0f0f0;">
+                <td colspan="3" class="text-center">TOTAL</td>
+                <td class="text-right">₹{{ total_debit|floatformat:2 }}</td>
+                <td class="text-right">₹{{ total_credit|floatformat:2 }}</td>
+                <td class="text-right">₹{{ closing_balance|floatformat:2 }}</td>
+            </tr>
+        </tfoot>
+        {% endif %}
+    </table>
+
+    <!-- Print Summary -->
+    <div class="print-summary">
+        <div>Total Purchases: ₹{{ total_credit|floatformat:2 }}</div>
+        <div>Total Paid: ₹{{ total_debit|floatformat:2 }}</div>
+        <div>Closing Balance: ₹{{ closing_balance|floatformat:2 }}</div>
+    </div>
+
+    <!-- Print Footer -->
+    <div class="print-footer">
+        <p>This is a computer generated ledger statement.</p>
+        <p>Generated on {{ current_date|date:"d-m-Y" }} at {{ current_date|time:"H:i:s" }}</p>
+    </div>
+</div>
+
+<script>
+function printLedger() {
+    window.print();
+}
+</script>
+{% endblock %}

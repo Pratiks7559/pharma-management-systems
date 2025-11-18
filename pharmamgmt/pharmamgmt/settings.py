@@ -72,14 +72,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
         'OPTIONS': {
-            'timeout': 30,  # Increase timeout to 30 seconds
-            'init_command': (
-                'PRAGMA journal_mode=WAL;'
-                'PRAGMA synchronous=NORMAL;'
-                'PRAGMA cache_size=10000;'
-                'PRAGMA temp_store=MEMORY;'
-                'PRAGMA busy_timeout=30000;'  # 30 seconds busy timeout
-            ),
+            'timeout': 30,
         },
     }
 }

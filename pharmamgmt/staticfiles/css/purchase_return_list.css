@@ -207,7 +207,7 @@
 }
 
 .btn-success {
-    background-color: #28a745;
+    /* background-color: #28a745; */
     color: white;
 }
 
@@ -634,33 +634,103 @@
     }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    .purchase-return-list-container {
-        background-color: #1a1a1a;
-        color: #ffffff;
-    }
-    
-    .header-content,
-    .search-card,
-    .returns-table-card {
-        background: #2d2d2d;
-        color: #ffffff;
-    }
-    
-    .search-input-group .form-control {
-        background: #3d3d3d;
-        border-color: #555;
-        color: #ffffff;
-    }
-    
-    .returns-table thead th {
-        background-color: #1a1a1a;
-    }
-    
-    .returns-table tbody tr:hover {
-        background-color: #3d3d3d;
-    }
+/* Force Light Theme - Override System Dark Mode */
+.purchase-return-list-container,
+.purchase-return-list-container * {
+    color-scheme: light !important;
+}
+
+.purchase-return-list-container {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+}
+
+.header-content,
+.search-card,
+.returns-table-card {
+    background: white !important;
+    color: #212529 !important;
+}
+
+.page-title {
+    color: #333 !important;
+}
+
+.search-input-group .form-control {
+    background: white !important;
+    border-color: #e9ecef !important;
+    color: #212529 !important;
+}
+
+.returns-table thead th {
+    background-color: #343a40 !important;
+    color: white !important;
+}
+
+.returns-table tbody td {
+    color: #212529 !important;
+    background: white !important;
+}
+
+.returns-table tbody tr:hover {
+    background-color: #f8f9fa !important;
+}
+
+.return-id-link {
+    color: #007bff !important;
+}
+
+.return-id-link:hover {
+    color: #0056b3 !important;
+}
+
+.btn {
+    /* color: rgb(224, 71, 71)!important; */
+}
+
+.btn-outline-secondary {
+    /* color: #6c757d !important; */
+    background-color: transparent !important;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d !important;
+    color: white !important;
+}
+
+.btn-outline-primary {
+    color: #007bff !important;
+    background-color: transparent !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: #007bff !important;
+    color: white !important;
+}
+
+.empty-state h5,
+.empty-state p {
+    color: #333 !important;
+}
+
+.page-link {
+    color: #007bff !important;
+    background-color: white !important;
+}
+
+.page-link:hover {
+    background-color: #e9ecef !important;
+    color: #0056b3 !important;
+}
+
+.page-item.active .page-link {
+    background-color: #007bff !important;
+    color: white !important;
+}
+
+.page-item.disabled .page-link {
+    color: #6c757d !important;
+    background-color: #fff !important;
 }
 
 /* Animation */

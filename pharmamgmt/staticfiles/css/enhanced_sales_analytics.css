@@ -280,8 +280,14 @@ canvas {
     gap: 8px;
     text-decoration: none;
     font-size: 0.9rem;
-    background: rgb(230, 105, 9);
+    /* background: rgba(255,255,255,0.2) !important; */
+    color: white !important;
+}
 
+.btn-action.btn-primary {
+    /* background: rgba(255,255,255,0.2) !important; */
+    color: white !important;
+    border: 1px solid rgba(255,255,255,0.3) !important;
 }
 
 /* .btn-primary { background: rgba(255,255,255,0.2); color: white; } */
@@ -325,6 +331,12 @@ canvas {
     align-items: end;
 }
 
+.date-controls .form-group:last-child {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
 .form-group {
     display: flex;
     flex-direction: column;
@@ -332,24 +344,27 @@ canvas {
 
 .form-label {
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--text-primary) !important;
     margin-bottom: 8px;
     font-size: 0.9rem;
 }
 
 .form-control {
     padding: 12px 15px;
-    border: 2px solid var(--border-color);
+    border: 2px solid var(--border-color) !important;
     border-radius: var(--border-radius);
     font-size: 1rem;
     transition: var(--transition);
-    background: var(--white);
+    background: white !important;
+    color: #212529 !important;
 }
 
 .form-control:focus {
     outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+    background: white !important;
+    color: #212529 !important;
 }
 
 .quick-ranges {
@@ -1091,15 +1106,243 @@ canvas {
     }
 }
 
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --light-bg: #0f172a;
-        --white: #1e293b;
-        --border-color: #334155;
-        --text-primary: #f1f5f9;
-        --text-secondary: #94a3b8;
-    }
+/* Force Light Theme - Override System Dark Mode */
+.sales-analytics-container,
+.sales-analytics-container * {
+    color-scheme: light !important;
+}
+
+:root {
+    --light-bg: #f8fafc !important;
+    --white: #ffffff !important;
+    --border-color: #e2e8f0 !important;
+    --text-primary: #1e293b !important;
+    --text-secondary: #64748b !important;
+}
+
+.sales-analytics-container {
+    background: #f8fafc !important;
+    color: #1e293b !important;
+}
+
+.analytics-header {
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%) !important;
+    color: white !important;
+}
+
+.analytics-title,
+.analytics-subtitle {
+    color: white !important;
+}
+
+.date-range-section,
+.kpi-card,
+.data-section,
+.chart-card,
+.analysis-card {
+    background: white !important;
+    color: #1e293b !important;
+}
+
+.date-range-title,
+.section-title,
+.chart-title,
+.kpi-title {
+    color: #1e293b !important;
+}
+
+.form-label {
+    color: #1e293b !important;
+}
+
+.form-control {
+    background: white !important;
+    border-color: #e2e8f0 !important;
+    color: #1e293b !important;
+}
+
+.btn-quick {
+    background: white !important;
+    color: #64748b !important;
+    border-color: #e2e8f0 !important;
+}
+
+.btn-quick:hover {
+    background: #2563eb !important;
+    color: white !important;
+    border-color: #2563eb !important;
+}
+
+.btn-action:hover {
+    background: rgba(255,255,255,0.3) !important;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+}
+
+.kpi-value {
+    color: #1e293b !important;
+}
+
+.kpi-subtitle,
+.section-subtitle {
+    color: #64748b !important;
+}
+
+.analytics-table th {
+    background: #f8fafc !important;
+    color: #1e293b !important;
+}
+
+.analytics-table td {
+    color: #1e293b !important;
+    background: white !important;
+}
+
+.analytics-table tbody tr:hover {
+    background: rgba(37, 99, 235, 0.05) !important;
+}
+
+.section-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+}
+
+.dataTables_filter input,
+.dataTables_length select {
+    background: white !important;
+    border-color: #e2e8f0 !important;
+    color: #1e293b !important;
+}
+
+.dataTables_info {
+    color: #64748b !important;
+}
+
+.dataTables_paginate .paginate_button {
+    background: white !important;
+    color: #374151 !important;
+    border-color: #e2e8f0 !important;
+}
+
+.dataTables_paginate .paginate_button:hover,
+.dataTables_paginate .paginate_button.current {
+    background: #2563eb !important;
+    color: white !important;
+    border-color: #2563eb !important;
+}
+
+.empty-row td {
+    color: #64748b !important;
+}
+
+.btn-action,
+.btn-action.btn-primary,
+.btn-action.btn-success,
+.btn-action.btn-warning,
+.btn-action.btn-info {
+    color: white !important;
+}
+
+.btn-action.btn-primary {
+    /* background: rgba(255,255,255,0.25) !important; */
+    border: 1px solid rgba(255,255,255,0.4) !important;
+}
+
+.btn-action.btn-primary:hover {
+    background: rgba(255,255,255,0.35) !important;
+    border-color: rgba(255,255,255,0.5) !important;
+}
+
+/* Sales Invoice Table - View Button Fix */
+#salesTable tbody td a[href*="sales_invoice_detail"],
+#salesTable tbody td a.btn-action,
+table.analytics-table tbody td a.btn-action,
+table.analytics-table tbody td a.btn-primary,
+.analytics-table tbody tr td:last-child a {
+    padding: 6px 12px !important;
+    font-size: 0.8rem !important;
+    background: #2563eb !important;
+    color: white !important;
+    border: 2px solid #2563eb !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+    min-width: 70px !important;
+    justify-content: center !important;
+}
+
+#salesTable tbody td a[href*="sales_invoice_detail"]:hover,
+#salesTable tbody td a.btn-action:hover,
+table.analytics-table tbody td a.btn-action:hover,
+table.analytics-table tbody td a.btn-primary:hover,
+.analytics-table tbody tr td:last-child a:hover {
+    background: #1e40af !important;
+    color: white !important;
+    border-color: #1e40af !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4) !important;
+}
+
+/* Analyze Button - Maximum Visibility */
+button[type="submit"].btn-action.btn-primary,
+.date-controls button[type="submit"],
+form button[type="submit"].btn-action {
+    background: white !important;
+    color: #2563eb !important;
+    border: 2px solid white !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2) !important;
+}
+
+button[type="submit"].btn-action.btn-primary:hover,
+.date-controls button[type="submit"]:hover,
+form button[type="submit"].btn-action:hover {
+    background: #f0f9ff !important;
+    color: #1e40af !important;
+    border-color: #f0f9ff !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: #f8fafc !important;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: #e2e8f0 !important;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: #64748b !important;
+}
+
+/* Action Column View Button */
+.analytics-table td a.btn-action,
+.analytics-table td .btn-action {
+    padding: 6px 12px !important;
+    font-size: 0.8rem !important;
+    background: white !important;
+    color: #2563eb !important;
+    border: 2px solid #2563eb !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+}
+
+.analytics-table td a.btn-action:hover,
+.analytics-table td .btn-action:hover {
+    background: #2563eb !important;
+    color: white !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3) !important;
 }
 
 /* Accessibility */

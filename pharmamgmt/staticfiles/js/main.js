@@ -2,10 +2,13 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Toggle sidebar on mobile
     const sidebarToggler = document.querySelector('#sidebarToggle');
-    if (sidebarToggler) {
+    const sidebar = document.querySelector('.sidebar');
+    const content = document.querySelector('.content');
+    
+    if (sidebarToggler && sidebar && content) {
         sidebarToggler.addEventListener('click', function() {
-            document.querySelector('.sidebar').classList.toggle('active');
-            document.querySelector('.content').classList.toggle('active');
+            sidebar.classList.toggle('active');
+            content.classList.toggle('active');
         });
     }
 

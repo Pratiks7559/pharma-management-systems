@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/sales_challan_invoice_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="sci-detail-container">
+    <div class="sci-detail-wrapper">
+        <div class="sci-detail-card">
+            <header class="sci-detail-header">
+                <h1 class="sci-detail-title">{{ title }}</h1>
+                <nav class="sci-detail-nav">
+                    <a href="{% url 'sales_challan_invoice_list' %}" class="sci-back-btn">
+                        <i class="sci-back-icon fas fa-arrow-left"></i>
+                        <span class="sci-back-text">Back to List</span>
+                    </a>
+                </nav>
+            </header>
+            
+            <main class="sci-detail-content">
+                <!-- Invoice Information Section -->
+                <section class="sci-info-section">
+                    <div class="sci-info-grid">
+                        <div class="sci-invoice-info">
+                            <h2 class="sci-section-title">Invoice Information</h2>
+                            <div class="sci-info-table">
+                                <div class="sci-info-row">
+                                    <span class="sci-info-label">Invoice No:</span>
+                                    <span class="sci-info-value">{{ invoice.invoice_no }}</span>
+                                </div>
+                                <div class="sci-info-row">
+                                    <span class="sci-info-label">Invoice Date:</span>
+                                    <span class="sci-info-value">{{ invoice.invoice_date|date:"d-m-Y" }}</span>
+                                </div>
+                                <div class="sci-info-row">
+                                    <span class="sci-info-label">Customer:</span>
+                                    <span class="sci-info-value">{{ invoice.customer.customer_name }}</span>
+                                </div>
+                                <div class="sci-info-row">
+                                    <span class="sci-info-label">Series:</span>
+                                    <span class="sci-info-value">{{ invoice.invoice_series.series_name|default:"N/A" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="sci-payment-info">
+                            <h2 class="sci-section-title">Payment Information</h2>
+                            <div class="sci-info-table">
+                                <div class="sci-info-row">
+                                    <span class="sci-info-label">Total Amount:</span>
+                                    <span class="sci-info-value sci-amount-total">₹{{ invoice.invoice_total|floatformat:2 }}</span>
+                                </div>
+                                <div class="sci-info-row">
+                                    <span class="sci-info-label">Paid Amount:</span>
+                                    <span class="sci-info-value sci-amount-paid">₹{{ invoice.invoice_paid|floatformat:2 }}</span>
+                                </div>
+                                <div class="sci-info-row">
+                                    <span class="sci-info-label">Balance Due:</span>
+                                    <span class="sci-info-value sci-amount-due">₹{{ invoice.balance_due|floatformat:2 }}</span>
+                                </div>
+                                <div class="sci-info-row">
+                                    <span class="sci-info-label">Payment Status:</span>
+                                    <span class="sci-info-value">
+                                        {% if invoice.balance_due == 0 %}
+                                            <span class="sci-status-badge sci-status-paid">Fully Paid</span>
+                                        {% elif invoice.invoice_paid > 0 %}
+                                            <span class="sci-status-badge sci-status-partial">Partially Paid</span>
+                                        {% else %}
+                                            <span class="sci-status-badge sci-status-unpaid">Unpaid</span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="sci-info-row">
+                                    <span class="sci-info-label">Payment Progress:</span>
+                                    <span class="sci-info-value sci-payment-percentage">{{ payment_percentage|floatformat:1 }}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Payment Progress Section -->
+                <section class="sci-progress-section">
+                    <h2 class="sci-section-title">Payment Progress</h2>
+                    <div class="sci-progress-container">
+                        <div class="sci-progress-bar">
+                            <div class="sci-progress-fill" data-percentage="{{ payment_percentage }}">
+                                <span class="sci-progress-text">{{ payment_percentage|floatformat:1 }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Included Challans Section -->
+                <section class="sci-challans-section">
+                    <h2 class="sci-section-title">Included Challans</h2>
+                    <div class="sci-table-container">
+                        <table class="sci-challans-table">
+                            <thead class="sci-table-header">
+                                <tr class="sci-header-row">
+                                    <th class="sci-header-cell">Challan No</th>
+                                    <th class="sci-header-cell">Challan Date</th>
+                                    <th class="sci-header-cell">Amount</th>
+                                    <th class="sci-header-cell">Transport</th>
+                                    <th class="sci-header-cell">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody class="sci-table-body">
+                                {% for challan in challans %}
+                                <tr class="sci-body-row">
+                                    <td class="sci-body-cell">{{ challan.customer_challan_no }}</td>
+                                    <td class="sci-body-cell">{{ challan.customer_challan_date|date:"d-m-Y" }}</td>
+                                    <td class="sci-body-cell">₹{{ challan.challan_total|floatformat:2 }}</td>
+                                    <td class="sci-body-cell">₹{{ challan.customer_transport_charges|floatformat:2 }}</td>
+                                    <td class="sci-body-cell sci-cell-total">₹{{ challan.challan_total|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr class="sci-empty-row">
+                                    <td class="sci-empty-cell" colspan="5">No challans found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Payment History Section -->
+                <section class="sci-payments-section">
+                    <div class="sci-payments-header">
+                        <h2 class="sci-section-title">Payment History</h2>
+                        {% if invoice.balance_due > 0 %}
+                        <button type="button" class="sci-add-payment-btn" data-modal="addPaymentModal">
+                            <i class="sci-btn-icon fas fa-plus"></i>
+                            <span class="sci-btn-text">Add Payment</span>
+                        </button>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="sci-table-container">
+                        <table class="sci-payments-table">
+                            <thead class="sci-table-header">
+                                <tr class="sci-header-row">
+                                    <th class="sci-header-cell">Date</th>
+                                    <th class="sci-header-cell">Amount</th>
+                                    <th class="sci-header-cell">Method</th>
+                                    <th class="sci-header-cell">Reference</th>
+                                </tr>
+                            </thead>
+                            <tbody class="sci-table-body">
+                                {% for payment in payments %}
+                                <tr class="sci-body-row">
+                                    <td class="sci-body-cell">{{ payment.payment_date|date:"d-m-Y" }}</td>
+                                    <td class="sci-body-cell sci-payment-amount">₹{{ payment.payment_amount|floatformat:2 }}</td>
+                                    <td class="sci-body-cell">{{ payment.payment_method }}</td>
+                                    <td class="sci-body-cell">{{ payment.payment_reference }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr class="sci-empty-row">
+                                    <td class="sci-empty-cell" colspan="4">No payments recorded</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+</div>
+
+<!-- Add Payment Modal -->
+{% if invoice.balance_due > 0 %}
+<div class="sci-modal-overlay" id="addPaymentModal">
+    <div class="sci-modal-container">
+        <div class="sci-modal-content">
+            <header class="sci-modal-header">
+                <h3 class="sci-modal-title">Add Payment</h3>
+                <button type="button" class="sci-modal-close" data-close="modal">
+                    <span class="sci-close-icon">&times;</span>
+                </button>
+            </header>
+            <form id="addPaymentForm" class="sci-payment-form">
+                {% csrf_token %}
+                <div class="sci-modal-body">
+                    <div class="sci-form-group">
+                        <label class="sci-form-label">Payment Date</label>
+                        <input type="date" class="sci-form-input" name="payment_date" required>
+                    </div>
+                    <div class="sci-form-group">
+                        <label class="sci-form-label">Payment Amount</label>
+                        <input type="number" class="sci-form-input" name="payment_amount" 
+                               step="0.01" max="{{ invoice.balance_due }}" required>
+                        <small class="sci-form-help">Maximum: ₹{{ invoice.balance_due|floatformat:2 }}</small>
+                    </div>
+                    <div class="sci-form-group">
+                        <label class="sci-form-label">Payment Method</label>
+                        <select class="sci-form-select" name="payment_method">
+                            <option value="Cash">Cash</option>
+                            <option value="Cheque">Cheque</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="UPI">UPI</option>
+                            <option value="Card">Card</option>
+                        </select>
+                    </div>
+                    <div class="sci-form-group">
+                        <label class="sci-form-label">Reference</label>
+                        <input type="text" class="sci-form-input" name="payment_reference" placeholder="Optional">
+                    </div>
+                </div>
+                <footer class="sci-modal-footer">
+                    <button type="button" class="sci-btn-secondary" data-close="modal">Cancel</button>
+                    <button type="submit" class="sci-btn-primary">Add Payment</button>
+                </footer>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set today's date as default
+    const dateInput = document.querySelector('input[name="payment_date"]');
+    if (dateInput) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+    }
+    
+    // Modal functionality
+    const modal = document.getElementById('addPaymentModal');
+    const openBtn = document.querySelector('[data-modal="addPaymentModal"]');
+    const closeBtns = document.querySelectorAll('[data-close="modal"]');
+    
+    if (openBtn) {
+        openBtn.addEventListener('click', () => modal.style.display = 'flex');
+    }
+    
+    closeBtns.forEach(btn => {
+        btn.addEventListener('click', () => modal.style.display = 'none');
+    });
+    
+    modal?.addEventListener('click', (e) => {
+        if (e.target === modal) modal.style.display = 'none';
+    });
+    
+    // Progress bar animation
+    const progressFill = document.querySelector('.sci-progress-fill');
+    if (progressFill) {
+        const percentage = progressFill.dataset.percentage;
+        progressFill.style.width = percentage + '%';
+    }
+    
+    // Handle payment form submission
+    const paymentForm = document.getElementById('addPaymentForm');
+    if (paymentForm) {
+        paymentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch('{% url "add_sales_challan_invoice_payment" invoice.sales_challan_invoice_id %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(() => {
+                alert('An error occurred while adding payment');
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

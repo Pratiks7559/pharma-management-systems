@@ -50,7 +50,8 @@
 }
 
 .purchase-invoice-detail-card {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: #2c3e50 !important;
     border-radius: 15px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.15);
     backdrop-filter: blur(10px);
@@ -127,6 +128,8 @@
 
 .invoice-detail-body {
     padding: 1rem;
+    background-color: white !important;
+    color: #2c3e50 !important;
 }
 
 .invoice-detail-info-grid {
@@ -137,14 +140,15 @@
 }
 
 .invoice-detail-info-card {
-    background: #f8f9fa;
+    background: #f8f9fa !important;
+    color: #2c3e50 !important;
     padding: 1rem;
     border-radius: 8px;
     border-left: 3px solid #3498db;
 }
 
 .invoice-detail-info-card h6 {
-    color: #2c3e50;
+    color: #2c3e50 !important;
     font-weight: 700;
     margin-bottom: 0.5rem;
     display: flex;
@@ -167,12 +171,12 @@
 
 .invoice-detail-info-label {
     font-weight: 600;
-    color: #6b7280;
+    color: #6b7280 !important;
 }
 
 .invoice-detail-info-value {
     font-weight: 600;
-    color: #2c3e50;
+    color: #2c3e50 !important;
 }
 
 .supplier-link {
@@ -186,7 +190,8 @@
 }
 
 .invoice-detail-summary {
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef) !important;
+    color: #2c3e50 !important;
     padding: 1rem;
     border-radius: 10px;
     margin-bottom: 1rem;
@@ -194,7 +199,7 @@
 }
 
 .invoice-detail-summary h6 {
-    color: #2c3e50;
+    color: #2c3e50 !important;
     font-weight: 700;
     margin-bottom: 0.8rem;
     display: flex;
@@ -213,14 +218,15 @@
 .invoice-detail-summary-item {
     text-align: center;
     padding: 0.8rem;
-    background: white;
+    background: white !important;
+    color: #2c3e50 !important;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .invoice-detail-summary-label {
     font-size: 0.9rem;
-    color: #6b7280;
+    color: #6b7280 !important;
     font-weight: 600;
     margin-bottom: 0.5rem;
 }
@@ -228,7 +234,7 @@
 .invoice-detail-summary-value {
     font-size: 1.2rem;
     font-weight: 700;
-    color: #2c3e50;
+    color: #2c3e50 !important;
 }
 
 .balance-due-pending {
@@ -278,7 +284,7 @@
 }
 
 .invoice-detail-products-header h6 {
-    color: #2c3e50;
+    color: #2c3e50 !important;
     font-weight: 700;
     margin: 0;
     display: flex;
@@ -329,7 +335,8 @@
 .invoice-detail-table {
     width: 100%;
     border-collapse: collapse;
-    background: white;
+    background: white !important;
+    color: #2c3e50 !important;
     border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
@@ -353,10 +360,11 @@
     border-bottom: 1px solid #e1e8ed;
     vertical-align: middle;
     font-size: 0.9rem;
+    color: #2c3e50 !important;
 }
 
 .invoice-detail-table tbody tr:hover {
-    background-color: rgba(52, 152, 219, 0.05);
+    background-color: rgba(52, 152, 219, 0.05) !important;
 }
 
 .action-buttons {
@@ -366,13 +374,14 @@
 
 .no-data {
     text-align: center;
-    color: #6b7280;
+    color: #6b7280 !important;
     font-style: italic;
     padding: 1rem;
 }
 
 .table-footer {
-    background: #f8f9fa;
+    background: #f8f9fa !important;
+    color: #2c3e50 !important;
     font-weight: 600;
 }
 

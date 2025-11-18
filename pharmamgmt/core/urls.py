@@ -1,9 +1,19 @@
 from django.urls import path, include
 from . import views
+from .challan_views import (
+    supplier_challan_list, add_supplier_challan, view_supplier_challan, delete_supplier_challan,
+    customer_challan_list, add_customer_challan, view_customer_challan, delete_customer_challan,
+    get_next_challan_number, add_challan_series, challan_invoice_list, create_invoice_from_challans,
+    challan_invoice_detail, add_challan_invoice_payment, sales_challan_invoice_list,
+    create_customer_invoice_from_challans, sales_challan_invoice_detail, add_sales_challan_invoice_payment
+)
 from .combined_invoice_view import add_invoice_with_products, get_existing_batches, cleanup_duplicate_batches
 from .low_stock_views import low_stock_update, update_low_stock_item, bulk_update_low_stock, get_batch_suggestions
 from .bulk_upload_views import bulk_upload_products, download_product_template
 from core.bulk_upload_view import bulk_upload_invoices
+from .ledger_views import customer_ledger, supplier_ledger
+from .sales2_views import sales2_report, sales2_report_pdf, sales2_report_excel
+from .purchase2_views import purchase2_report, purchase2_report_pdf, purchase2_report_excel
 urlpatterns = [
     # Authentication
     path('login/', views.login_view, name='login'),
@@ -48,8 +58,25 @@ urlpatterns = [
     path('customers/<int:pk>/update/', views.update_customer, name='update_customer'),
     path('customers/<int:pk>/delete/', views.delete_customer, name='delete_customer'),
     
+    # Challan
+    path('challan/supplier/', supplier_challan_list, name='supplier_challan_list'),
+    path('challan/supplier/add/', add_supplier_challan, name='add_supplier_challan'),
+    path('challan/supplier/<int:challan_id>/', view_supplier_challan, name='view_supplier_challan'),
+    path('delete-supplier-challan/<int:challan_id>/', delete_supplier_challan, name='delete_supplier_challan'),
+    path('create-invoice-from-challans/', create_invoice_from_challans, name='create_invoice_from_challans'),
+    path('challan/customer/', customer_challan_list, name='customer_challan_list'),
+    path('challan/customer/add/', add_customer_challan, name='add_customer_challan'),
+    path('challan/customer/<int:challan_id>/', view_customer_challan, name='view_customer_challan'),
+    path('delete-customer-challan/<int:challan_id>/', delete_customer_challan, name='delete_customer_challan'),
+    path('api/get-next-challan-number/', get_next_challan_number, name='get_next_challan_number'),
+    path('api/add-challan-series/', add_challan_series, name='add_challan_series'),
+    path('api/create-invoice-from-challans/', create_customer_invoice_from_challans, name='create_customer_invoice_from_challans'),
+    
     # Purchase Invoices
     path('invoices/', views.invoice_list, name='invoice_list'),
+    path('invoices/challan/', challan_invoice_list, name='challan_invoice_list'),
+    path('invoices/challan/<int:invoice_id>/', challan_invoice_detail, name='challan_invoice_detail'),
+    path('challan-invoices/<int:invoice_id>/add-payment/', add_challan_invoice_payment, name='add_challan_invoice_payment'),
     path('invoices/add/', views.add_invoice, name='add_invoice'),
     path('invoices/add-with-products/', views.add_invoice_with_products, name='add_invoice_with_products'),
 
@@ -66,6 +93,9 @@ urlpatterns = [
     
     # Sales Invoices
     path('sales/', views.sales_invoice_list, name='sales_invoice_list'),
+    path('sales/challan-invoices/', sales_challan_invoice_list, name='sales_challan_invoice_list'),
+    path('sales/challan-invoices/<int:invoice_id>/', sales_challan_invoice_detail, name='sales_challan_invoice_detail'),
+    path('sales/challan-invoices/<int:invoice_id>/add-payment/', add_sales_challan_invoice_payment, name='add_sales_challan_invoice_payment'),
     path('sales/add/', views.add_sales_invoice, name='add_sales_invoice'),
     path('sales/add-with-products/', views.add_sales_invoice_with_products, name='add_sales_invoice_with_products'),
     path('sales/<str:pk>/', views.sales_invoice_detail, name='sales_invoice_detail'),
@@ -109,7 +139,9 @@ urlpatterns = [
     # Invoice Series URLs
     path('api/add-invoice-series/', views.add_invoice_series, name='add_invoice_series'),
     path('api/get-invoice-series/', views.get_invoice_series, name='get_invoice_series'),
-    path('api/get-next-invoice-number/', views.get_next_invoice_number, name='get_next_invoice_number'), 
+    path('api/get-next-invoice-number/', views.get_next_invoice_number, name='get_next_invoice_number'),
+    path('api/delete-invoice-series/<int:series_id>/', views.delete_invoice_series, name='delete_invoice_series'),
+    path('api/create-sales-invoice-from-challans/', views.create_sales_invoice_from_challans, name='create_sales_invoice_from_challans'), 
     # Inventory
     path('inventory/', views.inventory_list, name='inventory_list'),
     path('api/inventory-search-suggestions/', views.inventory_search_suggestions, name='inventory_search_suggestions'),
@@ -119,7 +151,13 @@ urlpatterns = [
     path('reports/inventory/expiry/', views.dateexpiry_inventory_report, name='dateexpiry_inventory_report'),
     path('reports/sales/', views.sales_report, name='sales_report'),
     path('reports/sales/analytics/', views.sales_report, name='enhanced_sales_analytics'),
+    path('reports/sales2/', sales2_report, name='sales2_report'),
+    path('reports/sales2/pdf/', sales2_report_pdf, name='sales2_report_pdf'),
+    path('reports/sales2/excel/', sales2_report_excel, name='sales2_report_excel'),
     path('reports/purchases/', views.purchase_report, name='purchase_report'),
+    path('reports/purchase2/', purchase2_report, name='purchase2_report'),
+    path('reports/purchase2/pdf/', purchase2_report_pdf, name='purchase2_report_pdf'),
+    path('reports/purchase2/excel/', purchase2_report_excel, name='purchase2_report_excel'),
     path('reports/financial/', views.financial_report, name='financial_report'),
     
     # API endpoints for AJAX calls
@@ -184,6 +222,12 @@ path('export/financial/pdf/', views.export_financial_pdf, name='export_financial
     path('receipts/<int:pk>/delete/', views.delete_receipt, name='delete_receipt'),
     path('receipts/export-pdf/', views.export_receipts_pdf, name='export_receipts_pdf'),
     path('receipts/export-excel/', views.export_receipts_excel, name='export_receipts_excel'),
+    
+    # Ledger
+    path('ledger/customer/', customer_ledger, name='customer_ledger'),
+    path('ledger/customer/<int:customer_id>/', customer_ledger, name='customer_ledger_detail'),
+    path('ledger/supplier/', supplier_ledger, name='supplier_ledger'),
+    path('ledger/supplier/<int:supplier_id>/', supplier_ledger, name='supplier_ledger_detail'),
     
     path('bulk-upload-invoices/', bulk_upload_invoices, name='bulk_upload_invoices'),
 ]

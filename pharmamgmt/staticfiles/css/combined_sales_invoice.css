@@ -4,24 +4,19 @@
 .combined-invoice-container {
     padding: 8px;
     background: #f8f9fa;
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
 }
 
 .invoice-wrapper {
     max-width: 1400px;
     margin: 0 auto;
-    height: calc(100vh - 16px);
 }
 
 .invoice-card {
-    background: white;
+    background: white !important;
+    color: #495057 !important;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
 }
 
 /* Header Section */
@@ -29,7 +24,6 @@
     background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
     color: white;
     padding: 12px 20px;
-    flex-shrink: 0;
 }
 
 .header-content {
@@ -53,8 +47,6 @@
 /* Invoice Body */
 .invoice-body {
     padding: 15px 20px;
-    flex: 1;
-    overflow-y: auto;
 }
 
 /* Invoice Details Section */
@@ -245,6 +237,8 @@
 
 .table-wrapper {
     overflow-x: auto;
+    max-height: 400px;
+    overflow-y: auto;
 }
 
 .products-table {
@@ -258,6 +252,9 @@
 .table-header {
     background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
     color: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .header-row th {
@@ -269,6 +266,7 @@
     letter-spacing: 0.3px;
     border-bottom: 2px solid #dee2e6;
     white-space: nowrap;
+    background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
 }
 
 .table-body tr {
@@ -462,7 +460,6 @@
     justify-content: center;
     padding-top: 15px;
     border-top: 1px solid #e9ecef;
-    flex-shrink: 0;
 }
 
 .save-btn {
@@ -505,7 +502,7 @@
     transform: translateY(-1px);
 }
 
-/* Batch Modal Styles - Compact */
+/* Batch Selection Modal - Compact */
 .batch-modal-overlay {
     position: fixed;
     top: 0;
@@ -514,9 +511,9 @@
     height: 100%;
     background: rgba(0, 0, 0, 0.7);
     display: flex;
-    align-items: center;
     justify-content: center;
-    z-index: 1000;
+    align-items: center;
+    z-index: 10000;
 }
 
 .batch-modal-content {
@@ -525,13 +522,14 @@
     width: 90%;
     max-width: 500px;
     max-height: 70vh;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     overflow: hidden;
 }
 
 .batch-modal-header {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-    color: white;
     padding: 10px 15px;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -540,6 +538,7 @@
 .batch-modal-header h3 {
     margin: 0;
     font-size: 1rem;
+    font-weight: 600;
 }
 
 .batch-modal-close {
@@ -549,8 +548,13 @@
     font-size: 1.2rem;
     cursor: pointer;
     padding: 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 50%;
-    transition: background 0.2s ease;
+    transition: background 0.2s;
 }
 
 .batch-modal-close:hover {
@@ -559,24 +563,37 @@
 
 .batch-modal-body {
     padding: 10px;
-    max-height: 300px;
-    overflow-y: auto;
+}
+
+.batch-search {
+    margin-bottom: 10px;
 }
 
 .batch-search input {
     width: 100%;
     padding: 8px;
-    border: 1px solid #e9ecef;
+    border: 1px solid #e0e0e0;
     border-radius: 4px;
-    margin-bottom: 8px;
     font-size: 0.8rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.batch-search input:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.1);
+}
+
+.batch-list {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
 }
 
 .batch-item {
-    padding: 8px;
-    border: 1px solid #e9ecef;
-    border-radius: 4px;
-    margin-bottom: 4px;
+    padding: 8px 10px;
+    border-bottom: 1px solid #f0f0f0;
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
@@ -585,14 +602,17 @@
     font-size: 0.75rem;
 }
 
+.batch-item:last-child {
+    border-bottom: none;
+}
+
 .batch-item:hover {
-    border-color: #007bff;
     background: #f8f9fa;
 }
 
-.batch-item.batch-unavailable {
-    opacity: 0.6;
-    background: #f8f9fa;
+.batch-item.batch-selected {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
 }
 
 .batch-info {
@@ -603,49 +623,62 @@
     font-size: 0.8rem;
     margin-bottom: 2px;
     font-weight: 600;
+    color: red;
 }
 
 .batch-details {
     display: flex;
     gap: 8px;
-    font-size: 0.7rem;
-    color: #6c757d;
     margin-bottom: 2px;
+    font-size: 0.8rem;
+    color:red ;
+}
+
+.batch-item.batch-selected .batch-details {
+    opacity: 0.9;
 }
 
 .batch-rates {
-    display: flex;
-    gap: 4px;
-    font-size: 0.65rem;
-    font-weight: 600;
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: red;
 }
 
-.status-available {
-    color: #28a745;
-    font-weight: 600;
-    font-size: 0.7rem;
-}
-
-.status-unavailable {
-    color: #dc3545;
-    font-weight: 600;
-    font-size: 0.7rem;
+.batch-item.batch-selected .batch-rates {
+    opacity: 0.95;
 }
 
 .batch-modal-footer {
+    padding: 8px 10px;
     background: #f8f9fa;
-    padding: 8px;
-    text-align: center;
-    border-top: 1px solid #e9ecef;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .batch-shortcuts {
-    margin-bottom: 8px;
-}
-
-.batch-shortcuts small {
     color: #6c757d;
     font-size: 0.7rem;
+}
+
+/* Scrollbar styling for batch list */
+.batch-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.batch-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 2px;
+}
+
+.batch-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 2px;
+}
+
+.batch-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }
 
 /* Quick Search Modal - Compact */
@@ -663,7 +696,8 @@
 }
 
 .quick-search-content {
-    background: white;
+    background: white !important;
+    color: #495057 !important;
     border-radius: 8px;
     width: 90%;
     max-width: 400px;
@@ -722,7 +756,8 @@
     margin-bottom: 4px;
     cursor: pointer;
     transition: all 0.2s ease;
-    background: #f8f9fa;
+    background: #f8f9fa !important;
+    color: #495057 !important;
 }
 
 .quick-result-item:hover,
@@ -734,14 +769,14 @@
 
 .quick-result-item .product-name {
     font-weight: 600;
-    color: #495057;
+    color: #495057 !important;
     margin-bottom: 2px;
     font-size: 0.8rem;
 }
 
 .quick-result-item .product-company {
     font-size: 0.7rem;
-    color: #6c757d;
+    color: #6c757d !important;
     font-weight: 500;
 }
 

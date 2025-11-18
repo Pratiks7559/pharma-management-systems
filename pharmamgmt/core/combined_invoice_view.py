@@ -336,94 +336,119 @@ def add_invoice_with_products(request):
 
 @login_required
 def get_existing_batches(request):
-    """API endpoint to get existing batches for a product with correct stock calculation"""
+    """API endpoint to get batches from both Purchase and Supplier Challan entries"""
     try:
         product_id = request.GET.get('product_id')
         if not product_id:
             return JsonResponse({'success': False, 'error': 'Product ID required'})
         
-        # Import StockManager for accurate stock calculations
         from .stock_manager import StockManager
-        from .models import ReturnPurchaseMaster, ReturnSalesMaster
+        from .models import ReturnPurchaseMaster, ReturnSalesMaster, SupplierChallanMaster
         
-        # Get all batches for the product with stock calculation
-        batches = []
-        purchase_batches = PurchaseMaster.objects.filter(
-            productid=product_id
-        ).values(
+        batches_dict = {}
+        
+        # 1. Get batches from PurchaseMaster
+        purchase_batches = PurchaseMaster.objects.filter(productid=product_id).values(
             'product_batch_no', 'product_expiry', 'product_MRP', 'product_purchase_rate'
         ).distinct()
         
         for batch in purchase_batches:
             batch_no = batch['product_batch_no']
-            
-            # Use StockManager for accurate stock calculation including returns
             try:
                 batch_stock_info = StockManager._get_batch_stock(product_id, batch_no)
                 current_stock = batch_stock_info['batch_stock']
-                
-                # Debug logging
-                print(f"\n=== BATCH SELECTION DEBUG ===")
-                print(f"Product ID: {product_id}")
-                print(f"Batch No: {batch_no}")
-                print(f"Purchased: {batch_stock_info['purchased']}")
-                print(f"Sold: {batch_stock_info['sold']}")
-                print(f"Purchase Returns: {batch_stock_info['purchase_returns']}")
-                print(f"Sales Returns: {batch_stock_info['sales_returns']}")
-                print(f"Correct Stock: {current_stock}")
-                print(f"============================\n")
-                
-            except Exception as e:
-                print(f"Error calculating stock for batch {batch_no}: {e}")
-                # Fallback to basic calculation if StockManager fails
+            except Exception:
                 total_purchased = PurchaseMaster.objects.filter(
-                    productid=product_id,
-                    product_batch_no=batch_no
+                    productid=product_id, product_batch_no=batch_no
                 ).aggregate(total=Sum('product_quantity'))['total'] or 0
-                
                 total_sold = SalesMaster.objects.filter(
-                    productid=product_id,
-                    product_batch_no=batch_no
+                    productid=product_id, product_batch_no=batch_no
                 ).aggregate(total=Sum('sale_quantity'))['total'] or 0
-                
-                # Include returns in fallback calculation
                 purchase_returns = ReturnPurchaseMaster.objects.filter(
-                    returnproductid=product_id,
-                    returnproduct_batch_no=batch_no
+                    returnproductid=product_id, returnproduct_batch_no=batch_no
                 ).aggregate(total=Sum('returnproduct_quantity'))['total'] or 0
-                
                 sales_returns = ReturnSalesMaster.objects.filter(
-                    return_productid=product_id,
-                    return_product_batch_no=batch_no
+                    return_productid=product_id, return_product_batch_no=batch_no
                 ).aggregate(total=Sum('return_sale_quantity'))['total'] or 0
-                
-                # Correct calculation: Purchased - Sold - Purchase Returns + Sales Returns
                 current_stock = total_purchased - total_sold - purchase_returns + sales_returns
             
-            if current_stock >= 0:  # Show all batches including zero stock
-                # Get latest purchase rate for this batch
+            if current_stock >= 0:
                 latest_purchase = PurchaseMaster.objects.filter(
-                    productid=product_id,
-                    product_batch_no=batch_no
-                ).order_by('-purchase_entry_date').first()
+                    productid=product_id, product_batch_no=batch_no
+                ).select_related('product_invoiceid', 'product_supplierid').order_by('-purchase_entry_date').first()
                 
-                batches.append({
+                supplier_challan = None
+                if latest_purchase:
+                    try:
+                        challan = SupplierChallanMaster.objects.filter(
+                            product_id=product_id, product_batch_no=batch_no
+                        ).select_related('product_challan_id').order_by('-challan_entry_date').first()
+                        if challan:
+                            supplier_challan = {
+                                'challan_no': challan.product_challan_no,
+                                'challan_date': challan.product_challan_id.challan_date.strftime('%d-%m-%Y')
+                            }
+                    except Exception:
+                        pass
+                
+                batches_dict[batch_no] = {
                     'batch_no': batch_no,
                     'expiry': batch['product_expiry'],
                     'mrp': batch['product_MRP'],
                     'purchase_rate': latest_purchase.product_purchase_rate if latest_purchase else batch['product_purchase_rate'],
-                    'stock': current_stock
-                })
+                    'stock': current_stock,
+                    'supplier_name': latest_purchase.product_supplierid.supplier_name if latest_purchase else 'N/A',
+                    'invoice_no': latest_purchase.product_invoice_no if latest_purchase else 'N/A',
+                    'supplier_challan': supplier_challan
+                }
         
-        return JsonResponse({
-            'success': True,
-            'batches': batches
-        })
+        # 2. Get batches from SupplierChallanMaster
+        challan_batches = SupplierChallanMaster.objects.filter(product_id=product_id).values(
+            'product_batch_no', 'product_expiry', 'product_mrp', 'product_purchase_rate'
+        ).distinct()
+        
+        for batch in challan_batches:
+            batch_no = batch['product_batch_no']
+            if batch_no in batches_dict:
+                continue
+            
+            try:
+                batch_stock_info = StockManager._get_batch_stock(product_id, batch_no)
+                current_stock = batch_stock_info['batch_stock']
+            except Exception:
+                total_challan = SupplierChallanMaster.objects.filter(
+                    product_id=product_id, product_batch_no=batch_no
+                ).aggregate(total=Sum('product_quantity'))['total'] or 0
+                total_sold = SalesMaster.objects.filter(
+                    productid=product_id, product_batch_no=batch_no
+                ).aggregate(total=Sum('sale_quantity'))['total'] or 0
+                sales_returns = ReturnSalesMaster.objects.filter(
+                    return_productid=product_id, return_product_batch_no=batch_no
+                ).aggregate(total=Sum('return_sale_quantity'))['total'] or 0
+                current_stock = total_challan - total_sold + sales_returns
+            
+            if current_stock >= 0:
+                latest_challan = SupplierChallanMaster.objects.filter(
+                    product_id=product_id, product_batch_no=batch_no
+                ).select_related('product_challan_id', 'product_suppliername').order_by('-challan_entry_date').first()
+                
+                batches_dict[batch_no] = {
+                    'batch_no': batch_no,
+                    'expiry': batch['product_expiry'],
+                    'mrp': batch['product_mrp'],
+                    'purchase_rate': latest_challan.product_purchase_rate if latest_challan else batch['product_purchase_rate'],
+                    'stock': current_stock,
+                    'supplier_name': latest_challan.product_suppliername.supplier_name if latest_challan else 'N/A',
+                    'invoice_no': 'N/A',
+                    'supplier_challan': {
+                        'challan_no': latest_challan.product_challan_no,
+                        'challan_date': latest_challan.product_challan_id.challan_date.strftime('%d-%m-%Y')
+                    } if latest_challan else None
+                }
+        
+        return JsonResponse({'success': True, 'batches': list(batches_dict.values())})
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        })
+        return JsonResponse({'success': False, 'error': str(e)})
 
 
 

@@ -84,13 +84,22 @@ def get_batch_stock_status(product_id, batch_no, expiry_date=None, exclude_sale_
     try:
         from django.db.models import Sum
         
-        # Get total stock for batch (all expiry dates combined)
-        batch_purchased = PurchaseMaster.objects.filter(
+        # Get total stock for batch from invoices
+        batch_purchased_invoice = PurchaseMaster.objects.filter(
             productid=product_id, 
             product_batch_no=batch_no
         ).aggregate(total=Sum('product_quantity'))['total'] or 0
         
-        # Get sold quantity, excluding specific sale if provided (for edit mode)
+        # Get total stock for batch from challans
+        from .models import SupplierChallanMaster
+        batch_purchased_challan = SupplierChallanMaster.objects.filter(
+            product_id=product_id, 
+            product_batch_no=batch_no
+        ).aggregate(total=Sum('product_quantity'))['total'] or 0
+        
+        batch_purchased = batch_purchased_invoice + batch_purchased_challan
+        
+        # Get sold quantity from sales invoices, excluding specific sale if provided (for edit mode)
         sales_query = SalesMaster.objects.filter(
             productid=product_id, 
             product_batch_no=batch_no
@@ -99,7 +108,16 @@ def get_batch_stock_status(product_id, batch_no, expiry_date=None, exclude_sale_
         if exclude_sale_id:
             sales_query = sales_query.exclude(id=exclude_sale_id)
         
-        batch_sold = sales_query.aggregate(total=Sum('sale_quantity'))['total'] or 0
+        batch_sold_invoices = sales_query.aggregate(total=Sum('sale_quantity'))['total'] or 0
+        
+        # Get sold quantity from customer challans
+        from .models import CustomerChallanMaster
+        batch_sold_challans = CustomerChallanMaster.objects.filter(
+            product_id=product_id, 
+            product_batch_no=batch_no
+        ).aggregate(total=Sum('sale_quantity'))['total'] or 0
+        
+        batch_sold = batch_sold_invoices + batch_sold_challans
         
         purchase_returns = ReturnPurchaseMaster.objects.filter(
             returnproductid=product_id,
@@ -123,11 +141,26 @@ def get_batch_stock_status(product_id, batch_no, expiry_date=None, exclude_sale_
 def get_stock_status(product_id):
     """
     Calculate current stock for a product using StockManager
+    Includes sales from both SalesMaster and CustomerChallanMaster
     """
     try:
         from .stock_manager import StockManager
+        from .models import CustomerChallanMaster
+        from django.db.models import Sum
         
         stock_summary = StockManager.get_stock_summary(product_id)
+        
+        # Get total sold from sales invoices
+        total_sold_invoices = SalesMaster.objects.filter(
+            productid=product_id
+        ).aggregate(total=Sum('sale_quantity'))['total'] or 0
+        
+        # Get total sold from customer challans
+        total_sold_challans = CustomerChallanMaster.objects.filter(
+            product_id=product_id
+        ).aggregate(total=Sum('sale_quantity'))['total'] or 0
+        
+        total_sold_combined = total_sold_invoices + total_sold_challans
         
         # Convert to legacy format for backward compatibility
         expiry_stock = []
@@ -149,7 +182,7 @@ def get_stock_status(product_id):
         
         return {
             'purchased': stock_summary['total_purchased'],
-            'sold': stock_summary['total_sold'],
+            'sold': total_sold_combined,  # Now includes both invoices and challans
             'purchase_returns': stock_summary['total_purchase_returns'],
             'sales_returns': stock_summary['total_sales_returns'],
             'current_stock': stock_summary['total_stock'],
@@ -191,30 +224,88 @@ def generate_sales_invoice_pdf(invoice):
 
 def generate_sales_invoice_number(series_id=None):
     """
-    Generate next sales invoice number using series
+    Generate next sales invoice number with proper sequence handling
     """
-    from .models import InvoiceSeries
+    from .models import InvoiceSeries, SalesInvoiceMaster
     
     if series_id:
         try:
             series = InvoiceSeries.objects.get(series_id=series_id, is_active=True)
-            return series.get_next_invoice_number()
+            
+            # Check existing invoices to determine next number
+            existing_invoices = SalesInvoiceMaster.objects.filter(
+                invoice_series=series
+            ).order_by('-sales_invoice_no')
+            
+            if existing_invoices.exists():
+                # Get the last used number from existing invoices
+                last_invoice = existing_invoices.first()
+                last_invoice_no = last_invoice.sales_invoice_no
+                
+                # Extract number from invoice number
+                try:
+                    number_part = last_invoice_no.replace(series.series_name, '')
+                    last_number = int(number_part)
+                    next_number = last_number + 1
+                except (ValueError, TypeError):
+                    next_number = series.current_number
+            else:
+                next_number = series.current_number
+            
+            # Generate invoice number
+            if series.series_prefix:
+                invoice_no = f"{series.series_prefix}{next_number:07d}"
+            else:
+                invoice_no = f"{series.series_name}{next_number:07d}"
+            
+            # Update series current_number
+            series.current_number = next_number + 1
+            series.save()
+            
+            return invoice_no
+            
         except InvoiceSeries.DoesNotExist:
             pass
     
-    # Fallback to default ABC series
+    # Fallback to ABC series or create it
     try:
-        default_series = InvoiceSeries.objects.get(series_name='ABC', is_active=True)
-        return default_series.get_next_invoice_number()
+        abc_series = InvoiceSeries.objects.get(series_name='ABC', is_active=True)
+        
+        # Check existing invoices for ABC series
+        existing_invoices = SalesInvoiceMaster.objects.filter(
+            invoice_series=abc_series
+        ).order_by('-sales_invoice_no')
+        
+        if existing_invoices.exists():
+            last_invoice = existing_invoices.first()
+            last_invoice_no = last_invoice.sales_invoice_no
+            try:
+                number_part = last_invoice_no.replace('ABC', '')
+                last_number = int(number_part)
+                next_number = last_number + 1
+            except (ValueError, TypeError):
+                next_number = abc_series.current_number
+        else:
+            next_number = abc_series.current_number
+        
+        invoice_no = f"ABC{next_number:07d}"
+        abc_series.current_number = next_number + 1
+        abc_series.save()
+        
+        return invoice_no
+        
     except InvoiceSeries.DoesNotExist:
-        # Create default series if it doesn't exist
-        default_series = InvoiceSeries.objects.create(
+        # Create ABC series if it doesn't exist
+        abc_series = InvoiceSeries.objects.create(
             series_name='ABC',
             series_prefix='ABC',
             current_number=1,
             is_active=True
         )
-        return default_series.get_next_invoice_number()
+        invoice_no = "ABC0000001"
+        abc_series.current_number = 2
+        abc_series.save()
+        return invoice_no
 
 
 def get_avg_mrp(product_id):
@@ -451,24 +542,48 @@ def get_inventory_batches_info(product_id):
     batches = []
     
     try:
-        # Get all unique batches from purchases (ignore expiry for now)
-        batch_list = PurchaseMaster.objects.filter(productid=product_id).values(
-            'product_batch_no'
-        ).distinct()
+        # Get unique batches from both purchases and challans
+        from .models import SupplierChallanMaster
         
-        for batch_info in batch_list:
-            batch_no = batch_info['product_batch_no']
-            
-            # Calculate stock for this batch (all expiry dates combined)
-            batch_purchased = PurchaseMaster.objects.filter(
+        invoice_batches = PurchaseMaster.objects.filter(productid=product_id).values('product_batch_no').distinct()
+        challan_batches = SupplierChallanMaster.objects.filter(product_id=product_id).values('product_batch_no').distinct()
+        
+        # Combine unique batch numbers
+        all_batch_nos = set()
+        for b in invoice_batches:
+            all_batch_nos.add(b['product_batch_no'])
+        for b in challan_batches:
+            all_batch_nos.add(b['product_batch_no'])
+        
+        for batch_no in all_batch_nos:
+            # Calculate stock from invoices
+            batch_purchased_invoice = PurchaseMaster.objects.filter(
                 productid=product_id, 
                 product_batch_no=batch_no
             ).aggregate(total=Sum('product_quantity'))['total'] or 0
             
-            batch_sold = SalesMaster.objects.filter(
+            # Calculate stock from challans
+            batch_purchased_challan = SupplierChallanMaster.objects.filter(
+                product_id=product_id, 
+                product_batch_no=batch_no
+            ).aggregate(total=Sum('product_quantity'))['total'] or 0
+            
+            batch_purchased = batch_purchased_invoice + batch_purchased_challan
+            
+            # Calculate sold from sales invoices
+            batch_sold_invoices = SalesMaster.objects.filter(
                 productid=product_id, 
                 product_batch_no=batch_no
             ).aggregate(total=Sum('sale_quantity'))['total'] or 0
+            
+            # Calculate sold from customer challans
+            from .models import CustomerChallanMaster
+            batch_sold_challans = CustomerChallanMaster.objects.filter(
+                product_id=product_id, 
+                product_batch_no=batch_no
+            ).aggregate(total=Sum('sale_quantity'))['total'] or 0
+            
+            batch_sold = batch_sold_invoices + batch_sold_challans
             
             # Include returns in calculation
             purchase_returns = ReturnPurchaseMaster.objects.filter(
@@ -481,14 +596,27 @@ def get_inventory_batches_info(product_id):
                 return_product_batch_no=batch_no
             ).aggregate(total=Sum('return_sale_quantity'))['total'] or 0
             
-            # Calculate stock
+            # Calculate stock (includes customer challan sales)
             batch_stock = batch_purchased - batch_sold - purchase_returns + sales_returns
             
-            # Get MRP from first purchase record
+            # Get MRP from first purchase or challan record
             first_purchase = PurchaseMaster.objects.filter(
                 productid=product_id,
                 product_batch_no=batch_no
             ).first()
+            
+            if not first_purchase:
+                first_challan = SupplierChallanMaster.objects.filter(
+                    product_id=product_id,
+                    product_batch_no=batch_no
+                ).first()
+                if first_challan:
+                    # Create a pseudo purchase object for compatibility
+                    class PseudoPurchase:
+                        def __init__(self, challan):
+                            self.product_expiry = challan.product_expiry
+                            self.product_MRP = challan.product_mrp
+                    first_purchase = PseudoPurchase(first_challan)
             
             # Get batch rates
             batch_rates = {'rate_A': 0, 'rate_B': 0, 'rate_C': 0}

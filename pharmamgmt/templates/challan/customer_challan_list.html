@@ -1,0 +1,924 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Customer Challan List{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/customer_challan_list.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="cust-challan-container">
+    <!-- Header Section -->
+    <div class="cust-challan-header">
+        <h1 class="cust-challan-title">Customer Challan List</h1>
+        <div class="cust-challan-actions">
+            <button id="createInvoiceBtn" class="cust-challan-create-invoice-btn" style="display: none;" onclick="openCreateInvoiceDialog()">
+                <i class="fas fa-file-invoice"></i>
+                Create Invoice
+            </button>
+            <a href="{% url 'add_customer_challan' %}" class="cust-challan-add-btn">
+                <i class="fas fa-plus"></i>
+                Add New Challan
+            </a>
+        </div>
+    </div>
+
+    <!-- Search and Filter Controls -->
+    <div class="cust-challan-controls">
+        <div class="cust-challan-search-wrapper">
+            <input 
+                type="text" 
+                class="cust-challan-search-input" 
+                placeholder="Search by challan number, customer name..."
+                id="custChallanSearch"
+            >
+            <i class="fas fa-search cust-challan-search-icon"></i>
+        </div>
+        <button class="cust-challan-filter-btn">
+            <i class="fas fa-filter"></i>
+            Filter
+        </button>
+    </div>
+
+    <!-- Challan List Table -->
+    <div class="cust-challan-list-wrapper">
+        <table class="cust-challan-table">
+            <thead>
+                <tr>
+                    <th class="select-col">
+                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                    </th>
+                    <th>Challan No.</th>
+                    <th>Customer Name</th>
+                    <th>Date</th>
+                    <th>Total Amount</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="custChallanTableBody">
+                {% if challans %}
+                    {% for challan in challans %}
+                    <tr>
+                        <td class="select-col">
+                            <input type="checkbox" class="challan-checkbox" value="{{ challan.customer_challan_id }}" 
+                                   data-challan-no="{{ challan.customer_challan_no }}" 
+                                   data-customer="{{ challan.customer_name.customer_name }}" 
+                                   data-total="{{ challan.challan_total }}" 
+                                   onchange="updateCreateInvoiceButton()">
+                        </td>
+                        <td>{{ challan.customer_challan_no }}</td>
+                        <td>{{ challan.customer_name.customer_name }}</td>
+                        <td>{{ challan.customer_challan_date|date:"d M, Y" }}</td>
+                        <td>₹{{ challan.challan_total|floatformat:2 }}</td>
+                        <td>
+                            {% if challan.challan_invoice_paid >= challan.challan_total %}
+                                <span class="cust-badge cust-badge-success">Paid</span>
+                            {% elif challan.challan_invoice_paid > 0 %}
+                                <span class="cust-badge cust-badge-warning">Partial</span>
+                            {% else %}
+                                <span class="cust-badge cust-badge-danger">Unpaid</span>
+                            {% endif %}
+                        </td>
+                        <td class="cust-action-buttons">
+                            <a href="{% url 'view_customer_challan' challan.customer_challan_id %}" class="cust-btn-action cust-btn-view" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="#" onclick="deleteCustChallan({{ challan.customer_challan_id }}, '{{ challan.customer_challan_no }}'); return false;" class="cust-btn-action cust-btn-delete" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="cust-challan-empty">
+                                <div class="cust-challan-empty-icon">
+                                    <i class="fas fa-file-invoice"></i>
+                                </div>
+                                <div class="cust-challan-empty-text">No customer challans found</div>
+                                <p class="cust-challan-empty-desc">Click "Add New Challan" to create your first customer challan</p>
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Create Invoice Dialog -->
+<div id="createInvoiceDialog" class="create-invoice-overlay" style="display: none;">
+    <div class="create-invoice-content">
+        <div class="create-invoice-header">
+            <h3><i class="fas fa-file-invoice"></i> Create Invoice from Selected Challans</h3>
+            <button type="button" class="create-invoice-close" onclick="closeCreateInvoiceDialog()">&times;</button>
+        </div>
+        <div class="create-invoice-body">
+            <div class="selected-challans-section">
+                <h4>Selected Challans:</h4>
+                <div id="selectedChallansList" class="selected-challans-list"></div>
+            </div>
+            
+            <div class="invoice-details-section">
+                <div class="invoice-form-row">
+                    <div class="invoice-form-col">
+                        <label class="invoice-form-label">Invoice Series*</label>
+                        <div class="series-selector-wrapper">
+                            <select id="invoiceSeriesSelect" class="invoice-form-input" required>
+                                <option value="">Select Series</option>
+                                {% for series in invoice_series %}
+                                <option value="{{ series.series_id }}">{{ series.series_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" class="add-series-btn" onclick="openAddSeriesDialog()">
+                                <i class="fas fa-plus"></i> Add Series
+                            </button>
+                        </div>
+                    </div>
+                    <div class="invoice-form-col">
+                        <label class="invoice-form-label">Invoice Number</label>
+                        <input type="text" id="invoiceNumberPreview" class="invoice-form-input" readonly style="background: #e8f5e9; color: #2e7d32; font-weight: bold;">
+                    </div>
+                    <div class="invoice-form-col">
+                        <label class="invoice-form-label">Invoice Date*</label>
+                        <input type="date" id="invoiceDate" class="invoice-form-input" required>
+                    </div>
+                </div>
+                
+                <div class="invoice-form-row">
+                    <div class="invoice-form-col">
+                        <label class="invoice-form-label">Total Amount</label>
+                        <input type="text" id="totalAmount" class="invoice-form-input" readonly style="background: #f8f9fa; font-weight: bold; font-size: 1.1rem;">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="create-invoice-footer">
+            <button type="button" class="create-invoice-btn create-invoice-btn-secondary" onclick="closeCreateInvoiceDialog()">Cancel</button>
+            <button type="button" class="create-invoice-btn create-invoice-btn-primary" onclick="saveInvoiceFromChallans()">Save Invoice</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Series Dialog -->
+<div id="addSeriesDialog" class="series-dialog-overlay" style="display: none;">
+    <div class="series-dialog-content">
+        <div class="series-dialog-header">
+            <h3><i class="fas fa-plus-circle"></i> Add New Invoice Series</h3>
+            <button type="button" class="series-dialog-close" onclick="closeAddSeriesDialog()">&times;</button>
+        </div>
+        <div class="series-dialog-body">
+            <form id="addSeriesForm" class="series-dialog-form">
+                {% csrf_token %}
+                <div class="series-form-row">
+                    <div class="series-form-col">
+                        <label class="series-form-label">Series Name*</label>
+                        <input type="text" name="series_name" id="seriesNameInput" class="series-form-input" 
+                               placeholder="e.g., ABC, XYZ, INV" maxlength="10" required>
+                        <small class="series-help-text">Maximum 10 characters, will be converted to uppercase</small>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="series-dialog-footer">
+            <button type="button" class="series-dialog-btn series-dialog-btn-secondary" onclick="closeAddSeriesDialog()">Cancel</button>
+            <button type="button" class="series-dialog-btn series-dialog-btn-primary" onclick="saveInvoiceSeries()">Add Series</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Search functionality
+    document.getElementById('custChallanSearch').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('#custChallanTableBody tr');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+        
+        // Update create invoice button after search
+        updateCreateInvoiceButton();
+    });
+    
+    // Handle series selection change
+    document.addEventListener('change', function(e) {
+        if (e.target.id === 'invoiceSeriesSelect') {
+            const seriesId = e.target.value;
+            if (seriesId) {
+                // Generate invoice number preview
+                fetch(`/api/get-next-invoice-number/?series_id=${seriesId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            document.getElementById('invoiceNumberPreview').value = data.invoice_number;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            } else {
+                document.getElementById('invoiceNumberPreview').value = '';
+            }
+        }
+    });
+    
+    // Save invoice from selected challans
+    function saveInvoiceFromChallans() {
+        const seriesId = document.getElementById('invoiceSeriesSelect').value;
+        const invoiceDate = document.getElementById('invoiceDate').value;
+        const selectedCheckboxes = document.querySelectorAll('.challan-checkbox:checked');
+        
+        if (!seriesId) {
+            alert('Please select an invoice series.');
+            return;
+        }
+        
+        if (!invoiceDate) {
+            alert('Please select invoice date.');
+            return;
+        }
+        
+        if (selectedCheckboxes.length === 0) {
+            alert('No challans selected.');
+            return;
+        }
+        
+        // Collect selected challan IDs
+        const challanIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+        
+        // Show loading state
+        const saveBtn = document.querySelector('.create-invoice-btn-primary');
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Invoice...';
+        saveBtn.disabled = true;
+        
+        // Send request to create invoice
+        fetch('/api/create-sales-invoice-from-challans/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                series_id: seriesId,
+                invoice_date: invoiceDate,
+                challan_ids: challanIds
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`Sales Invoice ${data.invoice_number} created successfully!`);
+                closeCreateInvoiceDialog();
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error creating invoice.');
+        })
+        .finally(() => {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        });
+    }
+    
+    // Add Series Dialog Functions
+    function openAddSeriesDialog() {
+        document.getElementById('addSeriesDialog').style.display = 'flex';
+        setTimeout(() => {
+            document.getElementById('seriesNameInput').focus();
+        }, 100);
+    }
+    
+    function closeAddSeriesDialog() {
+        document.getElementById('addSeriesDialog').style.display = 'none';
+        document.getElementById('addSeriesForm').reset();
+    }
+    
+    function saveInvoiceSeries() {
+        const form = document.getElementById('addSeriesForm');
+        const formData = new FormData(form);
+        
+        const seriesName = formData.get('series_name');
+        if (!seriesName || seriesName.trim().length === 0) {
+            alert('Please enter a series name.');
+            return;
+        }
+        
+        if (seriesName.length > 10) {
+            alert('Series name must be 10 characters or less.');
+            return;
+        }
+        
+        const saveBtn = document.querySelector('.series-dialog-btn-primary');
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+        saveBtn.disabled = true;
+        
+        fetch('/api/add-invoice-series/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Add to series dropdown
+                const seriesSelect = document.getElementById('invoiceSeriesSelect');
+                const newOption = document.createElement('option');
+                newOption.value = data.series_id;
+                newOption.textContent = data.series_name;
+                seriesSelect.appendChild(newOption);
+                
+                closeAddSeriesDialog();
+                alert(data.message);
+                
+                // Auto-select the new series
+                seriesSelect.value = data.series_id;
+                seriesSelect.dispatchEvent(new Event('change'));
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while adding the series.');
+        })
+        .finally(() => {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        });
+    }
+    
+    // Delete challan function
+    function deleteCustChallan(challanId, challanNo) {
+        if (confirm(`Are you sure you want to delete Challan ${challanNo}?`)) {
+            fetch(`/delete-customer-challan/${challanId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Challan deleted successfully!');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting challan');
+            });
+        }
+    }
+    
+    // Toggle select all checkboxes
+    function toggleSelectAll() {
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.challan-checkbox');
+        
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = selectAll.checked;
+        });
+        
+        updateCreateInvoiceButton();
+    }
+    
+    // Update create invoice button visibility
+    function updateCreateInvoiceButton() {
+        const checkboxes = document.querySelectorAll('.challan-checkbox:checked');
+        const createBtn = document.getElementById('createInvoiceBtn');
+        
+        if (checkboxes.length > 0) {
+            createBtn.style.display = 'inline-flex';
+            createBtn.innerHTML = `<i class="fas fa-file-invoice"></i> Create Invoice (${checkboxes.length})`;
+        } else {
+            createBtn.style.display = 'none';
+        }
+        
+        // Update select all checkbox state
+        const allCheckboxes = document.querySelectorAll('.challan-checkbox');
+        const selectAll = document.getElementById('selectAll');
+        
+        if (checkboxes.length === allCheckboxes.length) {
+            selectAll.checked = true;
+            selectAll.indeterminate = false;
+        } else if (checkboxes.length > 0) {
+            selectAll.checked = false;
+            selectAll.indeterminate = true;
+        } else {
+            selectAll.checked = false;
+            selectAll.indeterminate = false;
+        }
+    }
+    
+    // Open create invoice dialog
+    function openCreateInvoiceDialog() {
+        const selectedCheckboxes = document.querySelectorAll('.challan-checkbox:checked');
+        
+        if (selectedCheckboxes.length === 0) {
+            alert('Please select at least one challan to create invoice.');
+            return;
+        }
+        
+        // Show selected challans
+        const selectedList = document.getElementById('selectedChallansList');
+        let totalAmount = 0;
+        let challanHtml = '';
+        
+        selectedCheckboxes.forEach(checkbox => {
+            const challanNo = checkbox.getAttribute('data-challan-no');
+            const customer = checkbox.getAttribute('data-customer');
+            const amount = parseFloat(checkbox.getAttribute('data-total'));
+            totalAmount += amount;
+            
+            challanHtml += `
+                <div class="selected-challan-item">
+                    <div class="challan-info">
+                        <strong>${challanNo}</strong> - ${customer}
+                    </div>
+                    <div class="challan-amount">₹${amount.toFixed(2)}</div>
+                </div>
+            `;
+        });
+        
+        selectedList.innerHTML = challanHtml;
+        document.getElementById('totalAmount').value = `₹${totalAmount.toFixed(2)}`;
+        
+        // Set current date
+        const today = new Date();
+        const dateStr = today.getFullYear() + '-' + 
+                       String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                       String(today.getDate()).padStart(2, '0');
+        document.getElementById('invoiceDate').value = dateStr;
+        
+        // Show dialog
+        document.getElementById('createInvoiceDialog').style.display = 'flex';
+        
+        // Focus on series select
+        setTimeout(() => {
+            document.getElementById('invoiceSeriesSelect').focus();
+        }, 100);
+    }
+    
+    // Close create invoice dialog
+    function closeCreateInvoiceDialog() {
+        document.getElementById('createInvoiceDialog').style.display = 'none';
+        document.getElementById('invoiceSeriesSelect').value = '';
+        document.getElementById('invoiceNumberPreview').value = '';
+    }
+    
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-convert series name to uppercase
+        const seriesInput = document.getElementById('seriesNameInput');
+        if (seriesInput) {
+            seriesInput.addEventListener('input', function(e) {
+                e.target.value = e.target.value.toUpperCase();
+            });
+        }
+    });
+    
+    // Close dialogs on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const createDialog = document.getElementById('createInvoiceDialog');
+            const seriesDialog = document.getElementById('addSeriesDialog');
+            
+            if (createDialog.style.display === 'flex') {
+                closeCreateInvoiceDialog();
+            }
+            if (seriesDialog.style.display === 'flex') {
+                closeAddSeriesDialog();
+            }
+        }
+    });
+    
+    // Close dialogs when clicking outside
+    document.addEventListener('click', function(e) {
+        const createDialog = document.getElementById('createInvoiceDialog');
+        const seriesDialog = document.getElementById('addSeriesDialog');
+        
+        if (e.target === createDialog) {
+            closeCreateInvoiceDialog();
+        }
+        if (e.target === seriesDialog) {
+            closeAddSeriesDialog();
+        }
+    });
+</script>
+
+<style>
+/* Create Invoice Dialog Styles */
+.cust-challan-actions {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.cust-challan-create-invoice-btn {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cust-challan-create-invoice-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.select-col {
+    width: 40px;
+    text-align: center;
+}
+
+.create-invoice-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.create-invoice-content {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.create-invoice-header {
+    padding: 20px;
+    border-bottom: 1px solid #e5e5e5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+}
+
+.create-invoice-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 18px;
+}
+
+.create-invoice-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.create-invoice-close:hover {
+    color: #000;
+}
+
+.create-invoice-body {
+    padding: 20px;
+}
+
+.selected-challans-section {
+    margin-bottom: 20px;
+}
+
+.selected-challans-section h4 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.selected-challans-list {
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    background: #f8f9fa;
+}
+
+.selected-challan-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.selected-challan-item:last-child {
+    border-bottom: none;
+}
+
+.challan-info {
+    flex: 1;
+}
+
+.challan-amount {
+    font-weight: bold;
+    color: #28a745;
+}
+
+.invoice-details-section {
+    border-top: 1px solid #e5e5e5;
+    padding-top: 20px;
+}
+
+.invoice-form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.invoice-form-col {
+    flex: 1;
+}
+
+.invoice-form-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333;
+    font-size: 14px;
+}
+
+.invoice-form-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.invoice-form-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.series-selector-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.add-series-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.add-series-btn:hover {
+    background: #0056b3;
+}
+
+.create-invoice-footer {
+    padding: 20px;
+    border-top: 1px solid #e5e5e5;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    background: #f8f9fa;
+    border-radius: 0 0 8px 8px;
+}
+
+.create-invoice-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.create-invoice-btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.create-invoice-btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.create-invoice-btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.create-invoice-btn-secondary:hover {
+    background-color: #545b62;
+}
+
+/* Series Dialog Styles */
+.series-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.series-dialog-content {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.series-dialog-header {
+    padding: 20px;
+    border-bottom: 1px solid #e5e5e5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+}
+
+.series-dialog-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 18px;
+}
+
+.series-dialog-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.series-dialog-close:hover {
+    color: #000;
+}
+
+.series-dialog-body {
+    padding: 20px;
+}
+
+.series-form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.series-form-col {
+    flex: 1;
+}
+
+.series-form-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333;
+    font-size: 14px;
+}
+
+.series-form-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+    text-transform: uppercase;
+}
+
+.series-form-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.series-help-text {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+    display: block;
+}
+
+.series-dialog-footer {
+    padding: 20px;
+    border-top: 1px solid #e5e5e5;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    background: #f8f9fa;
+    border-radius: 0 0 8px 8px;
+}
+
+.series-dialog-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.series-dialog-btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.series-dialog-btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.series-dialog-btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.series-dialog-btn-secondary:hover {
+    background-color: #545b62;
+}
+
+@media (max-width: 768px) {
+    .cust-challan-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .cust-challan-create-invoice-btn,
+    .cust-challan-add-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .invoice-form-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .series-selector-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .create-invoice-content {
+        width: 95%;
+        margin: 10px;
+    }
+}
+</style>
+
+{% endblock %}

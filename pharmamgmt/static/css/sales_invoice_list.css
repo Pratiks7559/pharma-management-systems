@@ -36,6 +36,26 @@
     box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
 }
 
+.sales-invoice-list-challan-btn {
+    background: linear-gradient(135deg, #fd7e14 0%, #e55a4e 100%);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.sales-invoice-list-challan-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(253, 126, 20, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
 /* Container */
 .sales-invoice-list-container {
     padding: 20px;
@@ -262,6 +282,17 @@
     transform: translateY(-2px);
 }
 
+.sales-invoice-list-challan-btn-action {
+    background: #fd7e14;
+    color: white;
+}
+
+.sales-invoice-list-challan-btn-action:hover {
+    background: #e55a4e;
+    color: white;
+    transform: translateY(-2px);
+}
+
 .sales-invoice-list-empty-row {
     background: #f8f9fa;
 }
@@ -357,7 +388,8 @@
     }
     
     .sales-invoice-list-quick-btn,
-    .sales-invoice-list-add-btn {
+    .sales-invoice-list-add-btn,
+    .sales-invoice-list-challan-btn {
         width: 100%;
         justify-content: center;
     }

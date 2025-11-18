@@ -375,13 +375,17 @@ function calculateReturnTotal() {
     });
     
     const returnCharges = parseFloat(document.querySelector('input[name*="return_charges"]')?.value) || 0;
-    total += returnCharges;
+    const finalTotal = total + returnCharges;
     
-    document.getElementById('returnTotal').textContent = total.toFixed(2);
+    if (returnCharges > 0) {
+        document.getElementById('returnTotal').innerHTML = `${total.toFixed(2)} + ${returnCharges.toFixed(2)} = <strong>${finalTotal.toFixed(2)}</strong>`;
+    } else {
+        document.getElementById('returnTotal').textContent = finalTotal.toFixed(2);
+    }
     
     const returnTotalInput = document.querySelector('input[name*="returninvoice_total"]');
     if (returnTotalInput) {
-        returnTotalInput.value = total.toFixed(2);
+        returnTotalInput.value = finalTotal.toFixed(2);
     }
 }
 function setCurrentReturnDate() {

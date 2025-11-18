@@ -43,6 +43,10 @@
                         <i class="fas fa-filter purchase-filter-icon"></i>
                         Filter
                     </button>
+                    <a href="{% url 'challan_invoice_list' %}" class="purchase-challan-btn">
+                        <i class="fas fa-file-invoice"></i>
+                        Challan Invoices
+                    </a>
                 </form>
             </div>
         </div>
@@ -324,6 +328,33 @@
 </div>
 
 <style>
+.purchase-challan-btn {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.purchase-challan-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    color: white;
+}
+
+.purchase-challan-btn i {
+    font-size: 14px;
+}
+
 /* Payment Modal Styles */
 .payment-modal {
     position: fixed;

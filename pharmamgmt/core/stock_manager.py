@@ -2,7 +2,7 @@ from django.db.models import Sum, F
 from django.db import transaction
 from .models import (
     PurchaseMaster, SalesMaster, ReturnPurchaseMaster, ReturnSalesMaster,
-    ProductMaster
+    ProductMaster, SupplierChallanMaster
 )
 from .date_utils import format_date_for_backend
 
@@ -21,15 +21,31 @@ class StockManager:
         Get comprehensive stock summary for a product
         """
         try:
-            # Get total purchased
-            total_purchased = PurchaseMaster.objects.filter(
+            from .models import CustomerChallanMaster
+            
+            # Get total purchased from invoices
+            total_purchased_invoice = PurchaseMaster.objects.filter(
                 productid=product_id
             ).aggregate(total=Sum('product_quantity'))['total'] or 0
             
-            # Get total sold
+            # Get total purchased from challans
+            total_purchased_challan = SupplierChallanMaster.objects.filter(
+                product_id=product_id
+            ).aggregate(total=Sum('product_quantity'))['total'] or 0
+            
+            total_purchased = total_purchased_invoice + total_purchased_challan
+            
+            # Get total sold from sales invoices
             total_sold = SalesMaster.objects.filter(
                 productid=product_id
             ).aggregate(total=Sum('sale_quantity'))['total'] or 0
+            
+            # Get total sold from customer challans
+            total_challan_sold = CustomerChallanMaster.objects.filter(
+                product_id=product_id
+            ).aggregate(total=Sum('sale_quantity'))['total'] or 0
+            
+            total_sold_combined = total_sold + total_challan_sold
             
             # Get total purchase returns (reduces stock)
             total_purchase_returns = ReturnPurchaseMaster.objects.filter(
@@ -42,8 +58,8 @@ class StockManager:
             ).aggregate(total=Sum('return_sale_quantity'))['total'] or 0
             
             # Calculate current stock
-            # Stock = Purchased - Sold - Purchase Returns + Sales Returns
-            total_stock = total_purchased - total_sold - total_purchase_returns + total_sales_returns
+            # Stock = Purchased - Sold - Challan Sold - Purchase Returns + Sales Returns
+            total_stock = total_purchased - total_sold_combined - total_purchase_returns + total_sales_returns
             
             # Get batch-wise breakdown
             batches = StockManager._get_batch_breakdown(product_id)
@@ -85,14 +101,26 @@ class StockManager:
         batches = []
         
         try:
+            from .models import CustomerChallanMaster
+            
             # Get all unique batch + expiry combinations from purchases
             purchase_combinations = PurchaseMaster.objects.filter(
                 productid=product_id
             ).values('product_batch_no', 'product_expiry').distinct()
             
-            # Also get combinations from sales and returns
+            # Get combinations from supplier challans
+            challan_combinations = SupplierChallanMaster.objects.filter(
+                product_id=product_id
+            ).values('product_batch_no', 'product_expiry').distinct()
+            
+            # Get combinations from sales invoices
             sales_combinations = SalesMaster.objects.filter(
                 productid=product_id
+            ).values('product_batch_no', 'product_expiry').distinct()
+            
+            # Get combinations from customer challans
+            customer_challan_combinations = CustomerChallanMaster.objects.filter(
+                product_id=product_id
             ).values('product_batch_no', 'product_expiry').distinct()
             
             pr_combinations = ReturnPurchaseMaster.objects.filter(
@@ -109,7 +137,13 @@ class StockManager:
             for combo in purchase_combinations:
                 all_combinations.add((combo['product_batch_no'], combo['product_expiry']))
             
+            for combo in challan_combinations:
+                all_combinations.add((combo['product_batch_no'], combo['product_expiry']))
+            
             for combo in sales_combinations:
+                all_combinations.add((combo['product_batch_no'], combo['product_expiry']))
+            
+            for combo in customer_challan_combinations:
                 all_combinations.add((combo['product_batch_no'], combo['product_expiry']))
             
             for combo in pr_combinations:
@@ -147,17 +181,35 @@ class StockManager:
         """
         Get stock information for a specific batch (all expiry dates combined)
         """
-        # Get batch purchased quantity
-        purchased = PurchaseMaster.objects.filter(
+        from .models import CustomerChallanMaster
+        
+        # Get batch purchased from invoices
+        purchased_invoice = PurchaseMaster.objects.filter(
             productid=product_id,
             product_batch_no=batch_no
         ).aggregate(total=Sum('product_quantity'))['total'] or 0
         
-        # Get batch sold quantity
+        # Get batch purchased from challans
+        purchased_challan = SupplierChallanMaster.objects.filter(
+            product_id=product_id,
+            product_batch_no=batch_no
+        ).aggregate(total=Sum('product_quantity'))['total'] or 0
+        
+        purchased = purchased_invoice + purchased_challan
+        
+        # Get batch sold quantity from sales invoices
         sold = SalesMaster.objects.filter(
             productid=product_id,
             product_batch_no=batch_no
         ).aggregate(total=Sum('sale_quantity'))['total'] or 0
+        
+        # Get batch sold quantity from customer challans
+        challan_sold = CustomerChallanMaster.objects.filter(
+            product_id=product_id,
+            product_batch_no=batch_no
+        ).aggregate(total=Sum('sale_quantity'))['total'] or 0
+        
+        total_sold = sold + challan_sold
         
         # Get batch purchase returns (reduces stock)
         purchase_returns = ReturnPurchaseMaster.objects.filter(
@@ -172,7 +224,7 @@ class StockManager:
         ).aggregate(total=Sum('return_sale_quantity'))['total'] or 0
         
         # Calculate batch stock
-        batch_stock = purchased - sold - purchase_returns + sales_returns
+        batch_stock = purchased - total_sold - purchase_returns + sales_returns
         
         return {
             'batch_stock': batch_stock,
@@ -188,20 +240,38 @@ class StockManager:
         Get stock information for a specific batch + expiry date combination
         """
         try:
+            from .models import CustomerChallanMaster
+            
             # Skip expiry date filtering to avoid MM-YYYY format issues
             # Calculate stock for batch only (all expiry dates combined)
             
-            # Get batch purchased quantity (all expiry dates)
-            purchased = PurchaseMaster.objects.filter(
+            # Get batch purchased from invoices
+            purchased_invoice = PurchaseMaster.objects.filter(
                 productid=product_id,
                 product_batch_no=batch_no
             ).aggregate(total=Sum('product_quantity'))['total'] or 0
             
-            # Get batch sold quantity (all expiry dates)
+            # Get batch purchased from challans
+            purchased_challan = SupplierChallanMaster.objects.filter(
+                product_id=product_id,
+                product_batch_no=batch_no
+            ).aggregate(total=Sum('product_quantity'))['total'] or 0
+            
+            purchased = purchased_invoice + purchased_challan
+            
+            # Get batch sold quantity from sales invoices
             sold = SalesMaster.objects.filter(
                 productid=product_id,
                 product_batch_no=batch_no
             ).aggregate(total=Sum('sale_quantity'))['total'] or 0
+            
+            # Get batch sold quantity from customer challans
+            challan_sold = CustomerChallanMaster.objects.filter(
+                product_id=product_id,
+                product_batch_no=batch_no
+            ).aggregate(total=Sum('sale_quantity'))['total'] or 0
+            
+            total_sold = sold + challan_sold
             
             # Get batch purchase returns (reduces stock)
             purchase_returns = ReturnPurchaseMaster.objects.filter(
@@ -216,7 +286,7 @@ class StockManager:
             ).aggregate(total=Sum('return_sale_quantity'))['total'] or 0
             
             # Calculate batch stock
-            batch_stock = purchased - sold - purchase_returns + sales_returns
+            batch_stock = purchased - total_sold - purchase_returns + sales_returns
             
             return {
                 'batch_stock': batch_stock,
@@ -478,11 +548,19 @@ class StockManager:
         """
         Get batch stock excluding a specific purchase return (for validation)
         """
-        # Get batch purchased quantity
-        purchased = PurchaseMaster.objects.filter(
+        # Get batch purchased from invoices
+        purchased_invoice = PurchaseMaster.objects.filter(
             productid=product_id,
             product_batch_no=batch_no
         ).aggregate(total=Sum('product_quantity'))['total'] or 0
+        
+        # Get batch purchased from challans
+        purchased_challan = SupplierChallanMaster.objects.filter(
+            product_id=product_id,
+            product_batch_no=batch_no
+        ).aggregate(total=Sum('product_quantity'))['total'] or 0
+        
+        purchased = purchased_invoice + purchased_challan
         
         # Get batch sold quantity
         sold = SalesMaster.objects.filter(
@@ -520,11 +598,19 @@ class StockManager:
         """
         Get batch stock excluding a specific sales return (for validation)
         """
-        # Get batch purchased quantity
-        purchased = PurchaseMaster.objects.filter(
+        # Get batch purchased from invoices
+        purchased_invoice = PurchaseMaster.objects.filter(
             productid=product_id,
             product_batch_no=batch_no
         ).aggregate(total=Sum('product_quantity'))['total'] or 0
+        
+        # Get batch purchased from challans
+        purchased_challan = SupplierChallanMaster.objects.filter(
+            product_id=product_id,
+            product_batch_no=batch_no
+        ).aggregate(total=Sum('product_quantity'))['total'] or 0
+        
+        purchased = purchased_invoice + purchased_challan
         
         # Get batch sold quantity
         sold = SalesMaster.objects.filter(
@@ -562,10 +648,17 @@ class StockManager:
         """
         Check if a batch exists for a product
         """
-        return PurchaseMaster.objects.filter(
+        invoice_exists = PurchaseMaster.objects.filter(
             productid=product_id,
             product_batch_no=batch_no
         ).exists()
+        
+        challan_exists = SupplierChallanMaster.objects.filter(
+            product_id=product_id,
+            product_batch_no=batch_no
+        ).exists()
+        
+        return invoice_exists or challan_exists
     
     @staticmethod
     def validate_stock_transaction(product_id, batch_no, transaction_type, quantity):
@@ -632,3 +725,26 @@ class StockManager:
                 'error_type': 'system_error',
                 'error': str(e)
             }
+    
+    @staticmethod
+    def update_stock_on_customer_challan(product, batch_no, quantity, expiry, mrp, rate):
+        """
+        Update inventory when customer challan is created (reduces stock like sales)
+        Stock is tracked via SalesMaster - no separate inventory tables needed
+        """
+        try:
+            # Customer challan reduces stock just like a sale
+            # Stock calculation is done via StockManager methods which aggregate from:
+            # - PurchaseMaster (adds stock)
+            # - SupplierChallanMaster (adds stock)
+            # - SalesMaster (reduces stock)
+            # - CustomerChallanMaster (reduces stock via this tracking)
+            
+            # No additional action needed - stock is automatically calculated
+            # when get_stock_summary or _get_batch_stock is called
+            
+            print(f"Customer challan stock update: Product {product.product_name}, Batch {batch_no}, Qty {quantity}")
+            return True
+        except Exception as e:
+            print(f"Error in customer challan stock tracking: {e}")
+            return False

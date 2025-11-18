@@ -4,7 +4,9 @@ from .models import (
     Web_User, Pharmacy_Details, ProductMaster, SupplierMaster, CustomerMaster,
     InvoiceMaster, InvoicePaid, PurchaseMaster, SalesInvoiceMaster, SalesMaster,
     SalesInvoicePaid, ProductRateMaster, ReturnInvoiceMaster, PurchaseReturnInvoicePaid,
-    ReturnPurchaseMaster, ReturnSalesInvoiceMaster, ReturnSalesInvoicePaid, ReturnSalesMaster
+    ReturnPurchaseMaster, ReturnSalesInvoiceMaster, ReturnSalesInvoicePaid, ReturnSalesMaster,
+    Challan1, SupplierChallanMaster, CustomerChallan, CustomerChallanMaster, ChallanSeries,
+    ChallanInvoice, ChallanInvoicePaid, InvoiceSeries, SalesChallanInvoice, SalesChallanInvoicePaid
 )
 
 # Define custom admin classes
@@ -58,6 +60,30 @@ class SalesMasterAdmin(admin.ModelAdmin):
     list_filter = ('sale_entry_date',)
     search_fields = ('product_name', 'product_batch_no', 'sales_invoice_no__sales_invoice_no')
 
+class ChallanInvoiceAdmin(admin.ModelAdmin):
+    list_display = ('challan_invoice_id', 'invoice_no', 'invoice_date', 'supplier', 
+                   'invoice_total', 'invoice_paid', 'balance_due')
+    list_filter = ('invoice_date', 'supplier')
+    search_fields = ('invoice_no', 'supplier__supplier_name')
+    readonly_fields = ('balance_due', 'created_at', 'updated_at')
+
+class InvoiceSeriesAdmin(admin.ModelAdmin):
+    list_display = ('series_id', 'series_name', 'series_prefix', 'current_number', 'is_active')
+    list_filter = ('is_active',)
+    search_fields = ('series_name',)
+
+class SalesChallanInvoiceAdmin(admin.ModelAdmin):
+    list_display = ('sales_challan_invoice_id', 'invoice_no', 'invoice_date', 'customer', 
+                   'invoice_total', 'invoice_paid', 'balance_due')
+    list_filter = ('invoice_date', 'customer')
+    search_fields = ('invoice_no', 'customer__customer_name')
+    readonly_fields = ('balance_due', 'created_at', 'updated_at')
+
+class SalesChallanInvoicePaidAdmin(admin.ModelAdmin):
+    list_display = ('payment_id', 'sales_challan_invoice', 'payment_date', 'payment_amount', 'payment_method')
+    list_filter = ('payment_date', 'payment_method')
+    search_fields = ('sales_challan_invoice__invoice_no',)
+
 # Register models with admin site
 admin.site.register(Web_User, Web_UserAdmin)
 admin.site.register(Pharmacy_Details, PharmacyDetailsAdmin)
@@ -77,3 +103,13 @@ admin.site.register(ReturnPurchaseMaster)
 admin.site.register(ReturnSalesInvoiceMaster)
 admin.site.register(ReturnSalesInvoicePaid)
 admin.site.register(ReturnSalesMaster)
+admin.site.register(Challan1)
+admin.site.register(SupplierChallanMaster)
+admin.site.register(CustomerChallan)
+admin.site.register(CustomerChallanMaster)
+admin.site.register(ChallanSeries)
+admin.site.register(ChallanInvoice, ChallanInvoiceAdmin)
+admin.site.register(ChallanInvoicePaid)
+admin.site.register(InvoiceSeries, InvoiceSeriesAdmin)
+admin.site.register(SalesChallanInvoice, SalesChallanInvoiceAdmin)
+admin.site.register(SalesChallanInvoicePaid, SalesChallanInvoicePaidAdmin)

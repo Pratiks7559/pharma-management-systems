@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Challan Invoice Detail - {{ invoice.invoice_no }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/challan_invoice_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="cid-container">
+    <!-- Header Section -->
+    <div class="cid-header">
+        <div class="cid-header-content">
+            <h1 class="cid-title">Challan Invoice Detail</h1>
+            <p class="cid-subtitle">Invoice #{{ invoice.invoice_no }}</p>
+        </div>
+        <div class="cid-header-actions">
+            <a href="{% url 'challan_invoice_list' %}" class="cid-back-btn">
+                <i class="cid-back-icon fas fa-arrow-left"></i>
+                <span class="cid-back-text">Back to List</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Invoice Info Card -->
+    <div class="cid-info-card">
+        <div class="cid-info-grid">
+            <div class="cid-info-item">
+                <label class="cid-info-label">Invoice No:</label>
+                <span class="cid-info-value">{{ invoice.invoice_no }}</span>
+            </div>
+            <div class="cid-info-item">
+                <label class="cid-info-label">Invoice Date:</label>
+                <span class="cid-info-value">{{ invoice.invoice_date|date:"d M, Y" }}</span>
+            </div>
+            <div class="cid-info-item">
+                <label class="cid-info-label">Supplier:</label>
+                <span class="cid-info-value">{{ invoice.supplier.supplier_name }}</span>
+            </div>
+            <div class="cid-info-item">
+                <label class="cid-info-label">Total Amount:</label>
+                <span class="cid-info-value cid-amount-highlight">₹{{ invoice.invoice_total|floatformat:2 }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Summary -->
+    <div class="cid-payment-card">
+        <h3 class="cid-card-title">Payment Summary</h3>
+        <div class="cid-payment-grid">
+            <div class="cid-payment-item">
+                <label class="cid-payment-label">Total Amount:</label>
+                <span class="cid-payment-value cid-amount-total">₹{{ invoice.invoice_total|floatformat:2 }}</span>
+            </div>
+            <div class="cid-payment-item">
+                <label class="cid-payment-label">Paid Amount:</label>
+                <span class="cid-payment-value cid-amount-paid">₹{{ invoice.invoice_paid|floatformat:2 }}</span>
+            </div>
+            <div class="cid-payment-item">
+                <label class="cid-payment-label">Balance Due:</label>
+                <span class="cid-payment-value cid-amount-balance">₹{{ invoice.balance_due|floatformat:2 }}</span>
+            </div>
+        </div>
+        
+        <!-- Payment Progress Bar -->
+        <div class="cid-progress-section">
+            <div class="cid-progress-bar">
+                <div class="cid-progress-fill" data-percentage="{{ payment_percentage }}"></div>
+            </div>
+            <span class="cid-progress-text">{{ payment_percentage|floatformat:1 }}% Paid</span>
+        </div>
+    </div>
+
+    <!-- Payment History -->
+    <div class="purchase-invoice-card">
+        <div class="card-header">
+            <h3 class="card-title">Payment History</h3>
+            {% if invoice.balance_due > 0 %}
+            <button class="btn-add-payment" onclick="showPaymentModal()">
+                <i class="fas fa-plus"></i> Add Payment
+            </button>
+            {% endif %}
+        </div>
+        
+        {% if payments %}
+        <div class="payment-history-table">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Reference</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments %}
+                    <tr>
+                        <td>{{ payment.payment_date|date:"d M, Y" }}</td>
+                        <td>₹{{ payment.payment_amount|floatformat:2 }}</td>
+                        <td>{{ payment.payment_method|title }}</td>
+                        <td>{{ payment.payment_reference|default:"-" }}</td>
+                        <td>
+                            <button class="btn-action btn-edit" onclick="editPayment({{ payment.id }})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-action btn-delete" onclick="deletePayment({{ payment.id }})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-money-bill-wave"></i>
+            <p>No payments recorded yet</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Included Challans -->
+    <div class="purchase-invoice-card">
+        <h3 class="card-title">Included Challans ({{ challans|length }})</h3>
+        
+        <div class="challans-table">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Challan No.</th>
+                        <th>Challan Date</th>
+                        <th>Total Amount</th>
+                        <th>Transport Charges</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for challan in challans %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'view_supplier_challan' challan.challan_id %}" class="challan-link">
+                                {{ challan.challan_no }}
+                            </a>
+                        </td>
+                        <td>{{ challan.challan_date|date:"d M, Y" }}</td>
+                        <td>₹{{ challan.challan_total|floatformat:2 }}</td>
+                        <td>₹{{ challan.transport_charges|floatformat:2 }}</td>
+                        <td>
+                            <a href="{% url 'view_supplier_challan' challan.challan_id %}" class="btn-action btn-view">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="2"><strong>Grand Total:</strong></td>
+                        <td><strong>₹{{ challans_total|floatformat:2 }}</strong></td>
+                        <td><strong>₹{{ transport_total|floatformat:2 }}</strong></td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div id="paymentModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Add Payment</h3>
+            <span class="modal-close" onclick="hidePaymentModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="paymentForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Payment Date:</label>
+                    <input type="date" name="payment_date" required>
+                </div>
+                <div class="form-group">
+                    <label>Payment Amount:</label>
+                    <input type="number" name="payment_amount" step="0.01" max="{{ invoice.balance_due }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Payment Method:</label>
+                    <select name="payment_method" required>
+                        <option value="">Select Method</option>
+                        <option value="cash">Cash</option>
+                        <option value="cheque">Cheque</option>
+                        <option value="bank_transfer">Bank Transfer</option>
+                        <option value="upi">UPI</option>
+                        <option value="card">Card</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Reference No:</label>
+                    <input type="text" name="payment_reference" placeholder="Transaction/Cheque No.">
+                </div>
+                <div class="form-actions">
+                    <button type="button" onclick="hidePaymentModal()">Cancel</button>
+                    <button type="submit">Add Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+function showPaymentModal() {
+    document.getElementById('paymentModal').style.display = 'flex';
+    // Set today's date as default
+    document.querySelector('[name="payment_date"]').value = new Date().toISOString().split('T')[0];
+}
+
+function hidePaymentModal() {
+    document.getElementById('paymentModal').style.display = 'none';
+    document.getElementById('paymentForm').reset();
+}
+
+// Handle payment form submission
+document.getElementById('paymentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch(`/challan-invoices/{{ invoice.challan_invoice_id }}/add-payment/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Payment added successfully!');
+            window.location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error adding payment');
+    });
+});
+
+// Close modal when clicking outside
+document.getElementById('paymentModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        hidePaymentModal();
+    }
+});
+</script>
+
+{% endblock %}
