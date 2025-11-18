@@ -4,8 +4,11 @@ from .challan_views import (
     supplier_challan_list, add_supplier_challan, view_supplier_challan, delete_supplier_challan,
     customer_challan_list, add_customer_challan, view_customer_challan, delete_customer_challan,
     get_next_challan_number, add_challan_series, challan_invoice_list, create_invoice_from_challans,
-    challan_invoice_detail, add_challan_invoice_payment, sales_challan_invoice_list,
-    create_customer_invoice_from_challans, sales_challan_invoice_detail, add_sales_challan_invoice_payment
+    challan_invoice_detail, add_challan_invoice_payment, edit_challan_invoice_payment, 
+    delete_challan_invoice_payment, get_challan_invoice_payment, sales_challan_invoice_list,
+    create_customer_invoice_from_challans, sales_challan_invoice_detail, add_sales_challan_invoice_payment,
+    edit_sales_challan_invoice_payment, delete_sales_challan_invoice_payment, get_sales_challan_invoice_payment,
+    delete_sales_challan_invoice, delete_challan_invoice
 )
 from .combined_invoice_view import add_invoice_with_products, get_existing_batches, cleanup_duplicate_batches
 from .low_stock_views import low_stock_update, update_low_stock_item, bulk_update_low_stock, get_batch_suggestions
@@ -77,6 +80,10 @@ urlpatterns = [
     path('invoices/challan/', challan_invoice_list, name='challan_invoice_list'),
     path('invoices/challan/<int:invoice_id>/', challan_invoice_detail, name='challan_invoice_detail'),
     path('challan-invoices/<int:invoice_id>/add-payment/', add_challan_invoice_payment, name='add_challan_invoice_payment'),
+    path('challan-invoices/payment/<int:payment_id>/edit/', edit_challan_invoice_payment, name='edit_challan_invoice_payment'),
+    path('challan-invoices/payment/<int:payment_id>/delete/', delete_challan_invoice_payment, name='delete_challan_invoice_payment'),
+    path('challan-invoices/payment/<int:payment_id>/get/', get_challan_invoice_payment, name='get_challan_invoice_payment'),
+    path('challan-invoices/<int:invoice_id>/delete/', delete_challan_invoice, name='delete_challan_invoice'),
     path('invoices/add/', views.add_invoice, name='add_invoice'),
     path('invoices/add-with-products/', views.add_invoice_with_products, name='add_invoice_with_products'),
 
@@ -96,6 +103,10 @@ urlpatterns = [
     path('sales/challan-invoices/', sales_challan_invoice_list, name='sales_challan_invoice_list'),
     path('sales/challan-invoices/<int:invoice_id>/', sales_challan_invoice_detail, name='sales_challan_invoice_detail'),
     path('sales/challan-invoices/<int:invoice_id>/add-payment/', add_sales_challan_invoice_payment, name='add_sales_challan_invoice_payment'),
+    path('sales/challan-invoices/payment/<int:payment_id>/edit/', edit_sales_challan_invoice_payment, name='edit_sales_challan_invoice_payment'),
+    path('sales/challan-invoices/payment/<int:payment_id>/delete/', delete_sales_challan_invoice_payment, name='delete_sales_challan_invoice_payment'),
+    path('sales/challan-invoices/payment/<int:payment_id>/get/', get_sales_challan_invoice_payment, name='get_sales_challan_invoice_payment'),
+    path('sales/challan-invoices/<int:invoice_id>/delete/', delete_sales_challan_invoice, name='delete_sales_challan_invoice'),
     path('sales/add/', views.add_sales_invoice, name='add_sales_invoice'),
     path('sales/add-with-products/', views.add_sales_invoice_with_products, name='add_sales_invoice_with_products'),
     path('sales/<str:pk>/', views.sales_invoice_detail, name='sales_invoice_detail'),

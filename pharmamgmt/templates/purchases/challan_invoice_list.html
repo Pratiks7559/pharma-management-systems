@@ -8,6 +8,7 @@
 {% endblock %}
 
 {% block content %}
+{% csrf_token %}
 <div class="scil-main-container">
     <div class="scil-page-header">
         <h1 class="scil-page-title">Challan Invoice List</h1>
@@ -99,7 +100,7 @@
                         {% for invoice in invoices %}
                         <tr class="scil-data-row">
                             <td class="scil-data-cell scil-invoice-cell">
-                                <a href="#" class="scil-invoice-link">{{ invoice.invoice_no }}</a>
+                                <a href="{% url 'challan_invoice_detail' invoice.invoice_id %}" class="scil-invoice-link">{{ invoice.invoice_no }}</a>
                             </td>
                             <td class="scil-data-cell scil-date-cell">{{ invoice.invoice_date|date:"d M, Y" }}</td>
                             <td class="scil-data-cell scil-supplier-cell">{{ invoice.supplier_name }}</td>
@@ -126,7 +127,8 @@
                                         <i class="fas fa-money-bill-wave scil-action-icon"></i>
                                     </button>
                                     {% endif %}
-                                    <button class="scil-action-btn scil-delete-btn" title="Delete">
+                                    <button class="scil-action-btn scil-delete-btn" title="Delete" 
+                                            onclick="deleteChallanInvoice('{{ invoice.invoice_id }}', '{{ invoice.invoice_no }}')">
                                         <i class="fas fa-trash scil-action-icon"></i>
                                     </button>
                                 </div>
@@ -369,6 +371,36 @@ document.getElementById('scilPaymentForm').addEventListener('submit', function(e
         submitBtn.textContent = 'Add Payment';
     });
 });
+
+// Delete challan invoice function
+function deleteChallanInvoice(invoiceId, invoiceNo) {
+    if (confirm(`Are you sure you want to delete Challan Invoice ${invoiceNo}?\n\nThis will also mark associated challans as not invoiced.`)) {
+        fetch(`/challan-invoices/${invoiceId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    window.location.reload();
+                }
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting invoice');
+        });
+    }
+}
 
 // Close modal when clicking outside
 document.getElementById('scilPaymentModal').addEventListener('click', function(e) {

@@ -251,7 +251,8 @@
 }
 
 .sales-challan-invoice-list-view-btn,
-.sales-challan-invoice-list-payment-btn {
+.sales-challan-invoice-list-payment-btn,
+.sales-challan-invoice-list-delete-btn {
     background: none;
     border: none;
     padding: 8px 12px;
@@ -284,6 +285,15 @@
 .sales-challan-invoice-list-payment-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.sales-challan-invoice-list-delete-btn {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.sales-challan-invoice-list-delete-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
 }
 
 .sales-challan-invoice-list-empty-row {

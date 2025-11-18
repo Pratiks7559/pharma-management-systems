@@ -623,6 +623,102 @@ def add_challan_invoice_payment(request, invoice_id):
 
 @login_required
 @require_POST
+def edit_challan_invoice_payment(request, payment_id):
+    """Edit challan invoice payment"""
+    from core.models import ChallanInvoicePaid
+    from django.db import transaction
+    
+    try:
+        with transaction.atomic():
+            payment = get_object_or_404(ChallanInvoicePaid, payment_id=payment_id)
+            old_amount = payment.payment_amount
+            
+            payment_date = request.POST.get('payment_date')
+            payment_amount = float(request.POST.get('payment_amount', 0))
+            payment_method = request.POST.get('payment_method', 'Cash')
+            payment_reference = request.POST.get('payment_reference', 'NA')
+            
+            if payment_amount <= 0:
+                return JsonResponse({'success': False, 'error': 'Payment amount must be greater than 0'})
+            
+            # Check if new amount is valid
+            invoice = payment.challan_invoice
+            available_balance = invoice.balance_due + old_amount  # Add back old amount
+            
+            if payment_amount > available_balance:
+                return JsonResponse({'success': False, 'error': 'Payment amount cannot exceed available balance'})
+            
+            # Update payment record
+            payment.payment_date = payment_date
+            payment.payment_amount = payment_amount
+            payment.payment_method = payment_method
+            payment.payment_reference = payment_reference
+            payment.save()
+            
+            # Update invoice paid amount
+            invoice.invoice_paid = invoice.invoice_paid - old_amount + payment_amount
+            invoice.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Payment updated successfully!'
+            })
+            
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+@require_POST
+def delete_challan_invoice_payment(request, payment_id):
+    """Delete challan invoice payment"""
+    from core.models import ChallanInvoicePaid
+    from django.db import transaction
+    
+    try:
+        with transaction.atomic():
+            payment = get_object_or_404(ChallanInvoicePaid, payment_id=payment_id)
+            payment_amount = payment.payment_amount
+            invoice = payment.challan_invoice
+            
+            # Update invoice paid amount
+            invoice.invoice_paid -= payment_amount
+            invoice.save()
+            
+            # Delete payment record
+            payment.delete()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Payment of ₹{payment_amount} deleted successfully!'
+            })
+            
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+def get_challan_invoice_payment(request, payment_id):
+    """Get challan invoice payment details for editing"""
+    from core.models import ChallanInvoicePaid
+    
+    try:
+        payment = get_object_or_404(ChallanInvoicePaid, payment_id=payment_id)
+        
+        return JsonResponse({
+            'success': True,
+            'payment': {
+                'payment_id': payment.payment_id,
+                'payment_date': payment.payment_date.strftime('%Y-%m-%d'),
+                'payment_amount': payment.payment_amount,
+                'payment_method': payment.payment_method,
+                'payment_reference': payment.payment_reference
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+@require_POST
 def create_customer_invoice_from_challans(request):
     """Create sales challan invoice from selected customer challans"""
     from core.models import CustomerChallan, SalesChallanInvoice, InvoiceSeries
@@ -791,6 +887,157 @@ def add_sales_challan_invoice_payment(request, invoice_id):
             return JsonResponse({
                 'success': True,
                 'message': f'Payment of ₹{payment_amount} added successfully!'
+            })
+            
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+@require_POST
+def edit_sales_challan_invoice_payment(request, payment_id):
+    """Edit sales challan invoice payment"""
+    from core.models import SalesChallanInvoicePaid
+    from django.db import transaction
+    
+    try:
+        with transaction.atomic():
+            payment = get_object_or_404(SalesChallanInvoicePaid, payment_id=payment_id)
+            old_amount = payment.payment_amount
+            
+            payment_date = request.POST.get('payment_date')
+            payment_amount = float(request.POST.get('payment_amount', 0))
+            payment_method = request.POST.get('payment_method', 'Cash')
+            payment_reference = request.POST.get('payment_reference', 'NA')
+            
+            if payment_amount <= 0:
+                return JsonResponse({'success': False, 'error': 'Payment amount must be greater than 0'})
+            
+            # Check if new amount is valid
+            invoice = payment.sales_challan_invoice
+            available_balance = invoice.balance_due + old_amount  # Add back old amount
+            
+            if payment_amount > available_balance:
+                return JsonResponse({'success': False, 'error': 'Payment amount cannot exceed available balance'})
+            
+            # Update payment record
+            payment.payment_date = payment_date
+            payment.payment_amount = payment_amount
+            payment.payment_method = payment_method
+            payment.payment_reference = payment_reference
+            payment.save()
+            
+            # Update invoice paid amount
+            invoice.invoice_paid = invoice.invoice_paid - old_amount + payment_amount
+            invoice.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Payment updated successfully!'
+            })
+            
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+@require_POST
+def delete_sales_challan_invoice_payment(request, payment_id):
+    """Delete sales challan invoice payment"""
+    from core.models import SalesChallanInvoicePaid
+    from django.db import transaction
+    
+    try:
+        with transaction.atomic():
+            payment = get_object_or_404(SalesChallanInvoicePaid, payment_id=payment_id)
+            payment_amount = payment.payment_amount
+            invoice = payment.sales_challan_invoice
+            
+            # Update invoice paid amount
+            invoice.invoice_paid -= payment_amount
+            invoice.save()
+            
+            # Delete payment record
+            payment.delete()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Payment of ₹{payment_amount} deleted successfully!'
+            })
+            
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+def get_sales_challan_invoice_payment(request, payment_id):
+    """Get sales challan invoice payment details for editing"""
+    from core.models import SalesChallanInvoicePaid
+    
+    try:
+        payment = get_object_or_404(SalesChallanInvoicePaid, payment_id=payment_id)
+        
+        return JsonResponse({
+            'success': True,
+            'payment': {
+                'payment_id': payment.payment_id,
+                'payment_date': payment.payment_date.strftime('%Y-%m-%d'),
+                'payment_amount': payment.payment_amount,
+                'payment_method': payment.payment_method,
+                'payment_reference': payment.payment_reference
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+@require_POST
+def delete_sales_challan_invoice(request, invoice_id):
+    """Delete sales challan invoice"""
+    from core.models import SalesChallanInvoice, CustomerChallan
+    from django.db import transaction
+    
+    try:
+        with transaction.atomic():
+            invoice = get_object_or_404(SalesChallanInvoice, sales_challan_invoice_id=invoice_id)
+            invoice_no = invoice.invoice_no
+            
+            # Mark associated challans as not invoiced
+            challan_ids = invoice.selected_challans
+            CustomerChallan.objects.filter(customer_challan_id__in=challan_ids).update(is_invoiced=False)
+            
+            # Delete the invoice (payments will be deleted due to CASCADE)
+            invoice.delete()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Sales Challan Invoice {invoice_no} deleted successfully!',
+                'redirect_url': '/challan/customer/'
+            })
+            
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+@login_required
+@require_POST
+def delete_challan_invoice(request, invoice_id):
+    """Delete challan invoice"""
+    from core.models import ChallanInvoice, Challan1
+    from django.db import transaction
+    
+    try:
+        with transaction.atomic():
+            invoice = get_object_or_404(ChallanInvoice, challan_invoice_id=invoice_id)
+            invoice_no = invoice.invoice_no
+            
+            # Mark associated challans as not invoiced
+            challan_ids = invoice.selected_challans
+            Challan1.objects.filter(challan_id__in=challan_ids).update(is_invoiced=False)
+            
+            # Delete the invoice (payments will be deleted due to CASCADE)
+            invoice.delete()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Challan Invoice {invoice_no} deleted successfully!',
+                'redirect_url': '/challan/supplier/'
             })
             
     except Exception as e:

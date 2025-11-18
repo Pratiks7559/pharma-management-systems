@@ -19,6 +19,7 @@
 {% endblock %}
 
 {% block content %}
+{% csrf_token %}
 <div class="sales-challan-invoice-list-container">
     <div class="sales-challan-invoice-list-wrapper">
         <div class="sales-challan-invoice-list-header">
@@ -91,6 +92,11 @@
                                 <i class="fas fa-money-bill-wave"></i>
                             </button>
                             {% endif %}
+                            <button type="button" class="sales-challan-invoice-list-delete-btn" 
+                                    onclick="deleteSalesChallanInvoice('{{ invoice.sales_challan_invoice_id }}', '{{ invoice.invoice_no }}')" 
+                                    title="Delete Invoice">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </td>
                     </tr>
                     {% empty %}
@@ -230,6 +236,35 @@
     </div>
 </div>
 
-
+<script>
+function deleteSalesChallanInvoice(invoiceId, invoiceNo) {
+    if (confirm(`Are you sure you want to delete Sales Challan Invoice ${invoiceNo}?\n\nThis will also mark associated challans as not invoiced.`)) {
+        fetch(`/sales/challan-invoices/${invoiceId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    window.location.reload();
+                }
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting invoice');
+        });
+    }
+}
+</script>
 
 {% endblock %}
