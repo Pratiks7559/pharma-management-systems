@@ -4,6 +4,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/product_list.css' %}">
+<link rel="stylesheet" href="{% static 'css/product-search-autocomplete.css' %}">
 <style>
 
 .product-list-page-actions {
@@ -89,6 +90,119 @@
 
 .product-list-export-print:hover {
     background: #138496;
+}
+
+/* Search and Sort Styles */
+.product-list-search-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.product-list-search-form {
+    position: relative;
+    flex: 1;
+    min-width: 300px;
+}
+
+.sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.sort-label {
+    font-weight: 500;
+    color: #555;
+    font-size: 14px;
+}
+
+.sort-select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: white;
+    font-size: 14px;
+    min-width: 180px;
+    cursor: pointer;
+}
+
+.sort-select:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+/* Table Header Sort Links */
+.sort-link {
+    color: #333;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.sort-link:hover {
+    background-color: #f8f9fa;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.sort-link.active {
+    color: #007bff;
+    font-weight: 600;
+}
+
+.sort-link i {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.sort-link:hover i,
+.sort-link.active i {
+    opacity: 1;
+}
+
+/* Search Input Enhancements */
+.product-list-search-input {
+    padding-right: 45px;
+}
+
+.product-list-search-input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .product-list-search-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .product-list-search-form {
+        min-width: auto;
+    }
+    
+    .sort-controls {
+        justify-content: space-between;
+    }
+    
+    .sort-select {
+        min-width: auto;
+        flex: 1;
+    }
+    
+    .sort-link {
+        font-size: 12px;
+        padding: 3px;
+    }
 }
 
 /* Pagination Styles */
@@ -398,11 +512,27 @@
         <div class="product-list-header">
             <div class="product-list-search-section">
                 <form method="GET" class="product-list-search-form">
-                    <input type="text" name="search" placeholder="Search products..." value="{{ search_query }}" class="product-list-search-input">
+                    <input type="text" 
+                           id="product-search-input"
+                           name="search" 
+                           placeholder="Search products by name, company, category..." 
+                           value="{{ search_query }}" 
+                           class="product-list-search-input"
+                           autocomplete="off">
                     <button type="submit" class="product-list-search-btn">
                         <i class="fas fa-search product-list-search-icon"></i>
                     </button>
+                    <div id="search-suggestions" class="search-suggestions-container"></div>
                 </form>
+                
+                <div class="sort-controls">
+                    <label for="sort-select" class="sort-label">Sort by:</label>
+                    <select id="sort-select" name="sort" class="sort-select">
+                        {% for value, label in sort_options %}
+                            <option value="{{ value }}" {% if sort_by == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
             
             <div class="product-list-add-section">
@@ -421,15 +551,40 @@
             <table class="product-list-table">
                 <thead class="product-list-thead">
                     <tr class="product-list-header-row">
-                        <th class="product-list-id-header">ID</th>
-                        <th class="product-list-name-header">Product Name</th>
-                        <th class="product-list-company-header">Company</th>
+                        <th class="product-list-id-header">
+                            <a href="?sort=productid{% if search_query %}&search={{ search_query }}{% endif %}" 
+                               class="sort-link {% if sort_by == 'productid' %}active{% endif %}">
+                                ID <i class="fas fa-sort"></i>
+                            </a>
+                        </th>
+                        <th class="product-list-name-header">
+                            <a href="?sort=name{% if search_query %}&search={{ search_query }}{% endif %}" 
+                               class="sort-link {% if sort_by == 'name' %}active{% endif %}">
+                                Product Name <i class="fas fa-sort"></i>
+                            </a>
+                        </th>
+                        <th class="product-list-company-header">
+                            <a href="?sort=company{% if search_query %}&search={{ search_query }}{% endif %}" 
+                               class="sort-link {% if sort_by == 'company' %}active{% endif %}">
+                                Company/Supplier <i class="fas fa-sort"></i>
+                            </a>
+                        </th>
                         <th class="product-list-packing-header">Packing</th>
                         <th class="product-list-batch-header">Batches & Stock</th>
                         <th class="product-list-rates-header">Batch Rates (A/B/C)</th>
                         <th class="product-list-barcode-header">Barcode</th>
-                        <th class="product-list-category-header">Category</th>
-                        <th class="product-list-stock-header">Stock</th>
+                        <th class="product-list-category-header">
+                            <a href="?sort=category{% if search_query %}&search={{ search_query }}{% endif %}" 
+                               class="sort-link {% if sort_by == 'category' %}active{% endif %}">
+                                Category <i class="fas fa-sort"></i>
+                            </a>
+                        </th>
+                        <th class="product-list-stock-header">
+                            <a href="?sort=stock{% if search_query %}&search={{ search_query }}{% endif %}" 
+                               class="sort-link {% if sort_by == 'stock' %}active{% endif %}">
+                                Stock <i class="fas fa-sort"></i>
+                            </a>
+                        </th>
                         <th class="product-list-actions-header">Actions</th>
                     </tr>
                 </thead>
@@ -586,6 +741,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/product-search-autocomplete.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Fix cursor position in search input

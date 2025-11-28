@@ -83,6 +83,11 @@
                     <li class="supplier-detail-bank-item">
                         <i class="fas fa-university me-2 supplier-detail-bank-icon"></i><strong class="supplier-detail-info-strong">Bank Name:</strong> {{ supplier.supplier_bank }}
                     </li>
+                    {% if supplier.supplier_branch %}
+                    <li class="supplier-detail-bank-item">
+                        <i class="fas fa-building me-2 supplier-detail-branch-icon"></i><strong class="supplier-detail-info-strong">Branch Name:</strong> {{ supplier.supplier_branch }}
+                    </li>
+                    {% endif %}
                     <li class="supplier-detail-bank-item">
                         <i class="fas fa-credit-card me-2 supplier-detail-account-icon"></i><strong class="supplier-detail-info-strong">Account Number:</strong> {{ supplier.supplier_bankaccountno }}
                     </li>
@@ -238,6 +243,10 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
+                        <label>Branch Name</label>
+                        <input type="text" name="supplier_branch" value="{{ supplier.supplier_branch }}">
+                    </div>
+                    <div class="form-group">
                         <label>Account Number</label>
                         <input type="text" name="supplier_bankaccountno" value="{{ supplier.supplier_bankaccountno }}">
                     </div>
@@ -245,9 +254,17 @@
                         <label>IFSC Code</label>
                         <input type="text" name="supplier_bankifsc" value="{{ supplier.supplier_bankifsc }}">
                     </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label>UPI ID</label>
                         <input type="text" name="supplier_upi" value="{{ supplier.supplier_upi }}">
+                    </div>
+                    <div class="form-group">
+                        <!-- Empty for spacing -->
+                    </div>
+                    <div class="form-group">
+                        <!-- Empty for spacing -->
                     </div>
                 </div>
             </form>
@@ -260,13 +277,14 @@
 </div>
 
 <style>
+/* Fixed Modal Styles - Theme Consistent */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.7) !important;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -274,39 +292,61 @@
 }
 
 .modal-content {
-    background: white;
+    background: white !important;
+    color: #212529 !important;
     border-radius: 6px;
     width: 95%;
     max-width: 800px;
     max-height: 85vh;
     overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .modal-header {
     padding: 12px 15px;
-    border-bottom: 1px solid #e5e5e5;
+    border-bottom: 1px solid #e5e5e5 !important;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: #f8f9fa !important;
+    color: #495057 !important;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #495057 !important;
+    font-size: 1.1rem;
 }
 
 .modal-close {
-    background: none;
-    border: none;
+    background: none !important;
+    border: none !important;
     font-size: 20px;
     cursor: pointer;
+    color: #495057 !important;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.modal-close:hover {
+    background: #e9ecef !important;
+    color: #212529 !important;
 }
 
 .modal-body {
     padding: 15px;
+    background: white !important;
+    color: #212529 !important;
 }
 
 .modal-footer {
     padding: 12px 15px;
-    border-top: 1px solid #e5e5e5;
+    border-top: 1px solid #e5e5e5 !important;
     display: flex;
     justify-content: flex-end;
     gap: 8px;
+    background: #f8f9fa !important;
 }
 
 .form-row {
@@ -333,6 +373,7 @@
     margin-bottom: 4px;
     font-weight: 600;
     font-size: 0.85rem;
+    color: #495057 !important;
 }
 
 .form-group input,
@@ -340,26 +381,67 @@
 .form-group textarea {
     width: 100%;
     padding: 6px 10px;
-    border: 1px solid #ddd;
+    border: 1px solid #ddd !important;
     border-radius: 4px;
     font-size: 0.9rem;
+    background: white !important;
+    color: #212529 !important;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #007bff !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+    outline: none;
 }
 
 .btn {
     padding: 8px 16px;
-    border: none;
+    border: none !important;
     border-radius: 4px;
     cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
 }
 
 .btn-primary {
-    background: #007bff;
-    color: white;
+    background: #007bff !important;
+    color: white !important;
+}
+
+.btn-primary:hover {
+    background: #0056b3 !important;
+    color: white !important;
 }
 
 .btn-secondary {
-    background: #6c757d;
-    color: white;
+    background: #6c757d !important;
+    color: white !important;
+}
+
+.btn-secondary:hover {
+    background: #545b62 !important;
+    color: white !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .form-group.full-width,
+    .form-group.half-width {
+        grid-column: span 1;
+    }
+    
+    .modal-content {
+        width: 98%;
+        margin: 10px;
+    }
 }
 </style>
 

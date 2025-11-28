@@ -64,7 +64,7 @@ def validate_expiry_format(expiry_str):
         if len(parts) != 2:
             return False
         month, year = map(int, parts)
-        return 1 <= month <= 12 and 2000 <= year <= 2050
+        return 1 <= int(month) <= 12 and 2000 <= int(year) <= 2050
     except (ValueError, AttributeError):
         return False
 
@@ -74,6 +74,7 @@ def get_batch_stock_status(product_id, batch_no, expiry_date=None, exclude_sale_
     Calculate current stock for a specific product batch + expiry combination
     Returns a tuple of (available_quantity, is_available)
     Enhanced with better error handling and user feedback
+    Now includes stock issues in calculation - FIXED FOR UI UPDATE
     
     Args:
         product_id: Product ID
@@ -129,12 +130,27 @@ def get_batch_stock_status(product_id, batch_no, expiry_date=None, exclude_sale_
             return_product_batch_no=batch_no
         ).aggregate(total=Sum('return_sale_quantity'))['total'] or 0
         
-        # Calculate current stock
-        current_stock = batch_purchased - batch_sold - purchase_returns + sales_returns
+        # Get stock issues (reduces stock) - CRITICAL FOR UI UPDATE
+        from .models import StockIssueDetail
+        stock_issues = StockIssueDetail.objects.filter(
+            product=product_id,
+            batch_no=batch_no
+        ).aggregate(total=Sum('quantity_issued'))['total'] or 0
         
-        return current_stock, current_stock > 0
+        # Calculate current stock including stock issues - UPDATED CALCULATION FOR UI FIX
+        current_stock = batch_purchased - batch_sold - purchase_returns + sales_returns - stock_issues
+        
+        # Debug logging for stock issue tracking - Enhanced for troubleshooting
+        print(f"✅ Stock calculation for Product {product_id}, Batch {batch_no}:")
+        print(f"   📦 Purchased: {batch_purchased} (Invoice: {batch_purchased_invoice} + Challan: {batch_purchased_challan})")
+        print(f"   📤 Sold: {batch_sold} (Invoice: {batch_sold_invoices} + Challan: {batch_sold_challans})")
+        print(f"   🔄 Returns: Purchase(-{purchase_returns}) + Sales(+{sales_returns}) = {sales_returns - purchase_returns}")
+        print(f"   ⚠️  Stock Issues: -{stock_issues}")
+        print(f"   📊 Final Stock: {current_stock} (Available: {current_stock > 0})")
+        
+        return current_stock, float(current_stock) > 0
     except Exception as e:
-        print(f"Error processing inventory for {product_id}: [{e}]")
+        print(f"❌ Error processing inventory for Product {product_id}, Batch {batch_no}: {e}")
         return 0, False
 
 
@@ -142,10 +158,11 @@ def get_stock_status(product_id):
     """
     Calculate current stock for a product using StockManager
     Includes sales from both SalesMaster and CustomerChallanMaster
+    Now includes stock issues in calculation
     """
     try:
         from .stock_manager import StockManager
-        from .models import CustomerChallanMaster
+        from .models import CustomerChallanMaster, StockIssueDetail
         from django.db.models import Sum
         
         stock_summary = StockManager.get_stock_summary(product_id)
@@ -162,6 +179,14 @@ def get_stock_status(product_id):
         
         total_sold_combined = total_sold_invoices + total_sold_challans
         
+        # Get total stock issues (reduces stock)
+        total_stock_issues = StockIssueDetail.objects.filter(
+            product=product_id
+        ).aggregate(total=Sum('quantity_issued'))['total'] or 0
+        
+        # Recalculate current stock including stock issues
+        current_stock_with_issues = stock_summary['total_stock'] - total_stock_issues
+        
         # Convert to legacy format for backward compatibility
         expiry_stock = []
         for batch in stock_summary['batches']:
@@ -172,10 +197,19 @@ def get_stock_status(product_id):
             ).first()
             
             if purchase:
+                # Get stock issues for this batch
+                batch_stock_issues = StockIssueDetail.objects.filter(
+                    product=product_id,
+                    batch_no=batch['batch_no']
+                ).aggregate(total=Sum('quantity_issued'))['total'] or 0
+                
+                # Calculate batch stock including issues
+                batch_stock_with_issues = batch['stock'] - batch_stock_issues
+                
                 expiry_stock.append({
                     'batch_no': batch['batch_no'],
                     'expiry': batch['expiry'],
-                    'quantity': batch['stock'],
+                    'quantity': batch_stock_with_issues,
                     'purchase_rate': purchase.product_purchase_rate,
                     'mrp': purchase.product_MRP
                 })
@@ -185,7 +219,8 @@ def get_stock_status(product_id):
             'sold': total_sold_combined,  # Now includes both invoices and challans
             'purchase_returns': stock_summary['total_purchase_returns'],
             'sales_returns': stock_summary['total_sales_returns'],
-            'current_stock': stock_summary['total_stock'],
+            'stock_issues': total_stock_issues,  # Add stock issues to response
+            'current_stock': current_stock_with_issues,  # Updated stock including issues
             'expiry_stock': expiry_stock
         }
     except Exception as e:
@@ -195,6 +230,7 @@ def get_stock_status(product_id):
             'sold': 0,
             'purchase_returns': 0,
             'sales_returns': 0,
+            'stock_issues': 0,
             'current_stock': 0,
             'expiry_stock': []
         }
@@ -535,9 +571,10 @@ def get_inventory_batches_info(product_id):
     """
     Get all batch information for inventory display with stock details
     Simplified to avoid MM-YYYY date format issues
+    FIXED: Now properly includes stock issues in calculation for UI updates
     """
     from django.db.models import Sum
-    from .models import SaleRateMaster
+    from .models import SaleRateMaster, StockIssueDetail
     
     batches = []
     
@@ -554,6 +591,8 @@ def get_inventory_batches_info(product_id):
             all_batch_nos.add(b['product_batch_no'])
         for b in challan_batches:
             all_batch_nos.add(b['product_batch_no'])
+        
+        print(f"📊 Processing inventory for Product {product_id} - Found {len(all_batch_nos)} unique batches")
         
         for batch_no in all_batch_nos:
             # Calculate stock from invoices
@@ -596,8 +635,18 @@ def get_inventory_batches_info(product_id):
                 return_product_batch_no=batch_no
             ).aggregate(total=Sum('return_sale_quantity'))['total'] or 0
             
-            # Calculate stock (includes customer challan sales)
-            batch_stock = batch_purchased - batch_sold - purchase_returns + sales_returns
+            # CRITICAL FIX: Include stock issues in calculation (reduces stock)
+            batch_stock_issues = StockIssueDetail.objects.filter(
+                product=product_id,
+                batch_no=batch_no
+            ).aggregate(total=Sum('quantity_issued'))['total'] or 0
+            
+            # Calculate stock (includes customer challan sales and stock issues) - FIXED CALCULATION
+            batch_stock = batch_purchased - batch_sold - purchase_returns + sales_returns - batch_stock_issues
+            
+            # Enhanced logging for UI debugging
+            if batch_stock_issues > 0:
+                print(f"   ⚠️  Batch {batch_no}: Stock Issues = {batch_stock_issues}, Final Stock = {batch_stock}")
             
             # Get MRP from first purchase or challan record
             first_purchase = PurchaseMaster.objects.filter(
@@ -632,16 +681,16 @@ def get_inventory_batches_info(product_id):
             except SaleRateMaster.DoesNotExist:
                 pass
             
-            # Include all batches
+            # Include all batches - FIXED: Now shows correct stock after issues
             batches.append({
                 'batch_no': batch_no,
                 'expiry': first_purchase.product_expiry if first_purchase else '',
-                'stock': batch_stock,
+                'stock': batch_stock,  # This now includes stock issues deduction
                 'mrp': first_purchase.product_MRP if first_purchase else 0,
                 'rates': batch_rates
             })
     
     except Exception as e:
-        print(f"Error processing inventory for {product_id}: {[str(e)]}")
+        print(f"❌ Error processing inventory for Product {product_id}: {str(e)}")
     
     return batches

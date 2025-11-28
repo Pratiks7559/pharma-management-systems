@@ -19,21 +19,36 @@ class StockManager:
     def get_stock_summary(product_id):
         """
         Get comprehensive stock summary for a product
+        Prevents double counting when challans are pulled into invoices
         """
         try:
             from .models import CustomerChallanMaster
             
-            # Get total purchased from invoices
+            # Get total purchased from invoices (excluding challan-sourced ones)
             total_purchased_invoice = PurchaseMaster.objects.filter(
                 productid=product_id
+            ).exclude(
+                product_invoice_no__icontains='from challan'
             ).aggregate(total=Sum('product_quantity'))['total'] or 0
             
-            # Get total purchased from challans
+            # Get total purchased from challans that haven't been invoiced
+            from .models import Challan1
+            non_invoiced_challan_ids = Challan1.objects.filter(
+                is_invoiced=False
+            ).values_list('challan_id', flat=True)
+            
             total_purchased_challan = SupplierChallanMaster.objects.filter(
-                product_id=product_id
+                product_id=product_id,
+                product_challan_id__in=non_invoiced_challan_ids
             ).aggregate(total=Sum('product_quantity'))['total'] or 0
             
-            total_purchased = total_purchased_invoice + total_purchased_challan
+            # Get challan-sourced invoice purchases (already counted in challans)
+            challan_sourced_invoice = PurchaseMaster.objects.filter(
+                productid=product_id,
+                product_invoice_no__icontains='from challan'
+            ).aggregate(total=Sum('product_quantity'))['total'] or 0
+            
+            total_purchased = total_purchased_invoice + total_purchased_challan + challan_sourced_invoice
             
             # Get total sold from sales invoices
             total_sold = SalesMaster.objects.filter(
@@ -169,7 +184,8 @@ class StockManager:
                         'purchased': batch_stock_info['purchased'],
                         'sold': batch_stock_info['sold'],
                         'purchase_returns': batch_stock_info['purchase_returns'],
-                        'sales_returns': batch_stock_info['sales_returns']
+                        'sales_returns': batch_stock_info['sales_returns'],
+                        'stock_issues': batch_stock_info.get('stock_issues', 0)
                     })
         except Exception as e:
             print(f"Error in _get_batch_breakdown: {e}")
@@ -180,22 +196,38 @@ class StockManager:
     def _get_batch_stock(product_id, batch_no):
         """
         Get stock information for a specific batch (all expiry dates combined)
+        Prevents double counting when challans are pulled into invoices
         """
         from .models import CustomerChallanMaster
         
-        # Get batch purchased from invoices
+        # Get batch purchased from invoices (excluding challan-sourced ones)
         purchased_invoice = PurchaseMaster.objects.filter(
             productid=product_id,
             product_batch_no=batch_no
+        ).exclude(
+            product_invoice_no__icontains='from challan'
         ).aggregate(total=Sum('product_quantity'))['total'] or 0
         
-        # Get batch purchased from challans
+        # Get batch purchased from non-invoiced challans only
+        from .models import Challan1
+        non_invoiced_challan_ids = Challan1.objects.filter(
+            is_invoiced=False
+        ).values_list('challan_id', flat=True)
+        
         purchased_challan = SupplierChallanMaster.objects.filter(
             product_id=product_id,
-            product_batch_no=batch_no
+            product_batch_no=batch_no,
+            product_challan_id__in=non_invoiced_challan_ids
         ).aggregate(total=Sum('product_quantity'))['total'] or 0
         
-        purchased = purchased_invoice + purchased_challan
+        # Get challan-sourced invoice purchases
+        challan_sourced_invoice = PurchaseMaster.objects.filter(
+            productid=product_id,
+            product_batch_no=batch_no,
+            product_invoice_no__icontains='from challan'
+        ).aggregate(total=Sum('product_quantity'))['total'] or 0
+        
+        purchased = purchased_invoice + purchased_challan + challan_sourced_invoice
         
         # Get batch sold quantity from sales invoices
         sold = SalesMaster.objects.filter(
@@ -238,6 +270,7 @@ class StockManager:
     def _get_batch_stock_with_expiry(product_id, batch_no, expiry_date):
         """
         Get stock information for a specific batch + expiry date combination
+        Prevents double counting when challans are pulled into invoices
         """
         try:
             from .models import CustomerChallanMaster
@@ -245,19 +278,34 @@ class StockManager:
             # Skip expiry date filtering to avoid MM-YYYY format issues
             # Calculate stock for batch only (all expiry dates combined)
             
-            # Get batch purchased from invoices
+            # Get batch purchased from invoices (excluding challan-sourced ones)
             purchased_invoice = PurchaseMaster.objects.filter(
                 productid=product_id,
                 product_batch_no=batch_no
+            ).exclude(
+                product_invoice_no__icontains='from challan'
             ).aggregate(total=Sum('product_quantity'))['total'] or 0
             
-            # Get batch purchased from challans
+            # Get batch purchased from non-invoiced challans only
+            from .models import Challan1
+            non_invoiced_challan_ids = Challan1.objects.filter(
+                is_invoiced=False
+            ).values_list('challan_id', flat=True)
+            
             purchased_challan = SupplierChallanMaster.objects.filter(
                 product_id=product_id,
-                product_batch_no=batch_no
+                product_batch_no=batch_no,
+                product_challan_id__in=non_invoiced_challan_ids
             ).aggregate(total=Sum('product_quantity'))['total'] or 0
             
-            purchased = purchased_invoice + purchased_challan
+            # Get challan-sourced invoice purchases
+            challan_sourced_invoice = PurchaseMaster.objects.filter(
+                productid=product_id,
+                product_batch_no=batch_no,
+                product_invoice_no__icontains='from challan'
+            ).aggregate(total=Sum('product_quantity'))['total'] or 0
+            
+            purchased = purchased_invoice + purchased_challan + challan_sourced_invoice
             
             # Get batch sold quantity from sales invoices
             sold = SalesMaster.objects.filter(
@@ -547,20 +595,36 @@ class StockManager:
     def _get_batch_stock_excluding_return(product_id, batch_no, return_id):
         """
         Get batch stock excluding a specific purchase return (for validation)
+        Prevents double counting when challans are pulled into invoices
         """
-        # Get batch purchased from invoices
+        # Get batch purchased from invoices (excluding challan-sourced ones)
         purchased_invoice = PurchaseMaster.objects.filter(
             productid=product_id,
             product_batch_no=batch_no
+        ).exclude(
+            product_invoice_no__icontains='from challan'
         ).aggregate(total=Sum('product_quantity'))['total'] or 0
         
-        # Get batch purchased from challans
+        # Get batch purchased from non-invoiced challans only
+        from .models import Challan1
+        non_invoiced_challan_ids = Challan1.objects.filter(
+            is_invoiced=False
+        ).values_list('challan_id', flat=True)
+        
         purchased_challan = SupplierChallanMaster.objects.filter(
             product_id=product_id,
-            product_batch_no=batch_no
+            product_batch_no=batch_no,
+            product_challan_id__in=non_invoiced_challan_ids
         ).aggregate(total=Sum('product_quantity'))['total'] or 0
         
-        purchased = purchased_invoice + purchased_challan
+        # Get challan-sourced invoice purchases
+        challan_sourced_invoice = PurchaseMaster.objects.filter(
+            productid=product_id,
+            product_batch_no=batch_no,
+            product_invoice_no__icontains='from challan'
+        ).aggregate(total=Sum('product_quantity'))['total'] or 0
+        
+        purchased = purchased_invoice + purchased_challan + challan_sourced_invoice
         
         # Get batch sold quantity
         sold = SalesMaster.objects.filter(
@@ -597,20 +661,36 @@ class StockManager:
     def _get_batch_stock_excluding_sales_return(product_id, batch_no, return_id):
         """
         Get batch stock excluding a specific sales return (for validation)
+        Prevents double counting when challans are pulled into invoices
         """
-        # Get batch purchased from invoices
+        # Get batch purchased from invoices (excluding challan-sourced ones)
         purchased_invoice = PurchaseMaster.objects.filter(
             productid=product_id,
             product_batch_no=batch_no
+        ).exclude(
+            product_invoice_no__icontains='from challan'
         ).aggregate(total=Sum('product_quantity'))['total'] or 0
         
-        # Get batch purchased from challans
+        # Get batch purchased from non-invoiced challans only
+        from .models import Challan1
+        non_invoiced_challan_ids = Challan1.objects.filter(
+            is_invoiced=False
+        ).values_list('challan_id', flat=True)
+        
         purchased_challan = SupplierChallanMaster.objects.filter(
             product_id=product_id,
-            product_batch_no=batch_no
+            product_batch_no=batch_no,
+            product_challan_id__in=non_invoiced_challan_ids
         ).aggregate(total=Sum('product_quantity'))['total'] or 0
         
-        purchased = purchased_invoice + purchased_challan
+        # Get challan-sourced invoice purchases
+        challan_sourced_invoice = PurchaseMaster.objects.filter(
+            productid=product_id,
+            product_batch_no=batch_no,
+            product_invoice_no__icontains='from challan'
+        ).aggregate(total=Sum('product_quantity'))['total'] or 0
+        
+        purchased = purchased_invoice + purchased_challan + challan_sourced_invoice
         
         # Get batch sold quantity
         sold = SalesMaster.objects.filter(
@@ -647,15 +727,23 @@ class StockManager:
     def _batch_exists(product_id, batch_no):
         """
         Check if a batch exists for a product
+        Checks both invoices and non-invoiced challans
         """
         invoice_exists = PurchaseMaster.objects.filter(
             productid=product_id,
             product_batch_no=batch_no
         ).exists()
         
+        # Check non-invoiced challans only to avoid double counting
+        from .models import Challan1
+        non_invoiced_challan_ids = Challan1.objects.filter(
+            is_invoiced=False
+        ).values_list('challan_id', flat=True)
+        
         challan_exists = SupplierChallanMaster.objects.filter(
             product_id=product_id,
-            product_batch_no=batch_no
+            product_batch_no=batch_no,
+            product_challan_id__in=non_invoiced_challan_ids
         ).exists()
         
         return invoice_exists or challan_exists
@@ -729,22 +817,10 @@ class StockManager:
     @staticmethod
     def update_stock_on_customer_challan(product, batch_no, quantity, expiry, mrp, rate):
         """
-        Update inventory when customer challan is created (reduces stock like sales)
-        Stock is tracked via SalesMaster - no separate inventory tables needed
+        DEPRECATED: This method is no longer used to prevent double counting.
+        Stock is now managed directly through InventoryMaster in challan_views.py
+        
+        This method is kept for backward compatibility but does nothing.
         """
-        try:
-            # Customer challan reduces stock just like a sale
-            # Stock calculation is done via StockManager methods which aggregate from:
-            # - PurchaseMaster (adds stock)
-            # - SupplierChallanMaster (adds stock)
-            # - SalesMaster (reduces stock)
-            # - CustomerChallanMaster (reduces stock via this tracking)
-            
-            # No additional action needed - stock is automatically calculated
-            # when get_stock_summary or _get_batch_stock is called
-            
-            print(f"Customer challan stock update: Product {product.product_name}, Batch {batch_no}, Qty {quantity}")
-            return True
-        except Exception as e:
-            print(f"Error in customer challan stock tracking: {e}")
-            return False
+        print(f"⚠️ DEPRECATED: update_stock_on_customer_challan called for {product.product_name}. Stock is now managed through InventoryMaster.")
+        return True  # Return True to maintain compatibility

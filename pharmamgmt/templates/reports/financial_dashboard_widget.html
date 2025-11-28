@@ -1,0 +1,342 @@
+<!-- Financial Dashboard Widget -->
+<div class="financial-dashboard-widget">
+    <div class="widget-header">
+        <h5 class="widget-title">
+            <i class="fas fa-chart-line"></i>
+            Financial Overview
+        </h5>
+        <div class="widget-actions">
+            <button class="btn btn-sm btn-outline-primary" onclick="refreshFinancialWidget()">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+            <a href="{% url 'financial_report' %}" class="btn btn-sm btn-primary">
+                <i class="fas fa-external-link-alt"></i> Full Report
+            </a>
+        </div>
+    </div>
+    
+    <div class="widget-body">
+        <!-- Quick Metrics -->
+        <div class="quick-metrics">
+            <div class="metric-item">
+                <div class="metric-icon bg-success">
+                    <i class="fas fa-arrow-up"></i>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-value" data-metric="sales">₹{{ sales|floatformat:0 }}</div>
+                    <div class="metric-label">Total Sales</div>
+                </div>
+            </div>
+            
+            <div class="metric-item">
+                <div class="metric-icon bg-info">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-value" data-metric="purchases">₹{{ purchases|floatformat:0 }}</div>
+                    <div class="metric-label">Total Purchases</div>
+                </div>
+            </div>
+            
+            <div class="metric-item">
+                <div class="metric-icon {% if gross_profit > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                    <i class="fas {% if gross_profit > 0 %}fa-chart-line{% else %}fa-chart-line-down{% endif %}"></i>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-value {% if gross_profit > 0 %}text-success{% else %}text-danger{% endif %}" data-metric="gross_profit">
+                        ₹{{ gross_profit|floatformat:0 }}
+                    </div>
+                    <div class="metric-label">Gross Profit</div>
+                </div>
+            </div>
+            
+            <div class="metric-item">
+                <div class="metric-icon bg-warning">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-value" data-metric="total_receivables">₹{{ total_receivables|floatformat:0 }}</div>
+                    <div class="metric-label">Outstanding</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mini Chart -->
+        <div class="mini-chart-container">
+            <canvas id="miniFinancialChart" height="100"></canvas>
+        </div>
+        
+        <!-- Key Ratios -->
+        <div class="key-ratios">
+            <div class="ratio-item">
+                <span class="ratio-label">Profit Margin:</span>
+                <span class="ratio-value {% if profit_margin > 0 %}text-success{% else %}text-danger{% endif %}">
+                    {{ profit_margin|floatformat:1 }}%
+                </span>
+            </div>
+            <div class="ratio-item">
+                <span class="ratio-label">Collection Ratio:</span>
+                <span class="ratio-value">{{ sales_data.collection_ratio|floatformat:1 }}%</span>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <a href="{% url 'export_financial_pdf' %}" class="btn btn-sm btn-outline-danger">
+                <i class="fas fa-file-pdf"></i> PDF
+            </a>
+            <a href="{% url 'export_financial_excel' %}" class="btn btn-sm btn-outline-success">
+                <i class="fas fa-file-excel"></i> Excel
+            </a>
+            <button class="btn btn-sm btn-outline-secondary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.financial-dashboard-widget {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.widget-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.widget-title {
+    margin: 0;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.widget-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.widget-actions .btn {
+    border-color: rgba(255,255,255,0.3);
+    color: white;
+}
+
+.widget-actions .btn:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: white;
+}
+
+.widget-body {
+    padding: 20px;
+}
+
+.quick-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.metric-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    transition: transform 0.2s ease;
+}
+
+.metric-item:hover {
+    transform: translateY(-2px);
+}
+
+.metric-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.metric-content {
+    flex: 1;
+}
+
+.metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 5px;
+}
+
+.metric-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.mini-chart-container {
+    margin: 20px 0;
+    height: 100px;
+    position: relative;
+}
+
+.key-ratios {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.ratio-item {
+    text-align: center;
+}
+
+.ratio-label {
+    display: block;
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.ratio-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.quick-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+    .quick-metrics {
+        grid-template-columns: 1fr;
+    }
+    
+    .widget-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    .key-ratios {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+</style>
+
+<script>
+function refreshFinancialWidget() {
+    const btn = event.target.closest('button');
+    const originalHTML = btn.innerHTML;
+    
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.disabled = true;
+    
+    fetch('{% url "financial_dashboard_api" %}')
+        .then(response => response.json())
+        .then(data => {
+            // Update metrics
+            document.querySelector('[data-metric="sales"]').textContent = '₹' + data.sales.toLocaleString();
+            document.querySelector('[data-metric="purchases"]').textContent = '₹' + data.purchases.toLocaleString();
+            document.querySelector('[data-metric="gross_profit"]').textContent = '₹' + data.gross_profit.toLocaleString();
+            document.querySelector('[data-metric="total_receivables"]').textContent = '₹' + data.total_receivables.toLocaleString();
+            
+            // Show success message
+            showNotification('Financial data refreshed successfully', 'success');
+        })
+        .catch(error => {
+            console.error('Error refreshing financial data:', error);
+            showNotification('Failed to refresh financial data', 'error');
+        })
+        .finally(() => {
+            btn.innerHTML = originalHTML;
+            btn.disabled = false;
+        });
+}
+
+// Initialize mini chart
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('miniFinancialChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Sales Trend',
+                    data: [12000, 15000, 13000, 17000, 16000, 18000],
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 0,
+                    pointHoverRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        display: false
+                    },
+                    y: {
+                        display: false
+                    }
+                },
+                elements: {
+                    line: {
+                        borderWidth: 2
+                    }
+                }
+            }
+        });
+    }
+});
+
+function showNotification(message, type) {
+    // Simple notification function
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+    notification.style.position = 'fixed';
+    notification.style.top = '20px';
+    notification.style.right = '20px';
+    notification.style.zIndex = '9999';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+}
+</script>

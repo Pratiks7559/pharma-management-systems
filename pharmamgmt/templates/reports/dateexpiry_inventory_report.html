@@ -5,134 +5,8 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% load static %}{% static 'css/dateexpiry_inventory_report.css' %}">
-<style>
-/* Print Styles - Optimized Expiry Report */
-@media print {
-    * { box-sizing: border-box; }
-    body { margin: 0; padding: 0; }
-    body * { visibility: hidden; }
-    .date-report-container, .date-report-container * { visibility: visible; }
-    .date-report-container { position: absolute; left: 0; top: 0; width: 100%; }
-    
-    .no-print, .date-report-actions, .date-filter-form,
-    .sidebar-container, .navbar, .date-alert-close { display: none !important; }
-    
-    .date-report-header { 
-        background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
-        -webkit-print-color-adjust: exact; print-color-adjust: exact;
-        color: white !important; padding: 12px 15px !important;
-        margin-bottom: 10px !important; border-radius: 0 !important;
-    }
-    .date-report-title { font-size: 18px !important; margin: 0 !important; color: white !important; text-align: center !important; }
-    
-    .date-report-card { border: 1px solid #e5e7eb !important; border-radius: 4px !important; margin-bottom: 10px !important; }
-    .date-report-card-header { 
-        background: #f3f4f6 !important; padding: 8px 12px !important;
-        -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    }
-    .date-report-card-title { font-size: 14px !important; font-weight: 600 !important; margin: 0 !important; }
-    .date-report-card-subtitle { font-size: 10px !important; color: #6b7280 !important; }
-    
-    .date-info-alert { 
-        background: #fef3c7 !important; border: 1px solid #f59e0b !important;
-        padding: 6px 10px !important; margin-bottom: 8px !important; font-size: 9px !important;
-        -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    }
-    
-    .date-inventory-table { 
-        width: 100% !important; border-collapse: collapse !important;
-        font-size: 7px !important; page-break-inside: auto;
-    }
-    .date-table-header { 
-        background: #6366f1 !important; color: white !important;
-        -webkit-print-color-adjust: exact; print-color-adjust: exact;
-        display: table-header-group;
-    }
-    .date-inventory-table th { 
-        padding: 4px 2px !important; font-size: 8px !important;
-        font-weight: 600 !important; text-align: left !important;
-        border: 1px solid #4f46e5 !important; line-height: 1.2 !important;
-    }
-    .date-inventory-table td { 
-        padding: 3px 2px !important; font-size: 7px !important;
-        border: 1px solid #e5e7eb !important; vertical-align: top !important;
-        line-height: 1.3 !important;
-    }
-    .date-inventory-table tbody tr { page-break-inside: avoid; page-break-after: auto; }
-    .date-inventory-table tbody tr:nth-child(even) { 
-        background: #f9fafb !important;
-        -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    }
-    
-    .date-expiry-heading { 
-        font-weight: bold !important;
-        page-break-inside: avoid !important;
-        page-break-after: avoid !important;
-    }
-    .date-expiry-heading td { 
-        padding: 5px 2px !important;
-        font-size: 8px !important;
-        font-weight: 700 !important;
-    }
-    .date-expired { 
-        background: #fee2e2 !important;
-        -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    }
-    .date-expiring-soon { 
-        background: #fef3c7 !important;
-        -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    }
-    .date-expiring-warning { 
-        background: #fef9c3 !important;
-        -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    }
-    .date-expiring-later { 
-        background: #d1fae5 !important;
-        -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    }
-    .date-no-expiry { 
-        background: #e5e7eb !important;
-        -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    }
-    
-    .date-expiry-days { 
-        font-size: 7px !important;
-        color: #6b7280 !important;
-        font-weight: normal !important;
-    }
-    .date-expiry-value { 
-        text-align: right !important;
-        font-weight: 700 !important;
-        color: #6366f1 !important;
-    }
-    
-    .expired-product { 
-        background: #fee2e2 !important;
-        -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    }
-    .expiring-soon { 
-        background: #fef3c7 !important;
-        -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    }
-    .expiring-warning { 
-        background: #fef9c3 !important;
-        -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    }
-    
-    .date-table-footer { 
-        background: #f3f4f6 !important; font-weight: bold !important;
-        -webkit-print-color-adjust: exact; print-color-adjust: exact;
-        display: table-footer-group !important; page-break-inside: avoid !important;
-    }
-    .date-table-footer td { 
-        padding: 6px 2px !important; font-size: 9px !important;
-        border: 2px solid #6366f1 !important;
-    }
-    .date-total-label { text-align: right !important; font-weight: 700 !important; color: #374151 !important; }
-    
-    @page { margin: 0.3in 0.25in; size: A4 landscape; }
-}
-</style>
+<link rel="stylesheet" href="{% load static %}{% static 'css/inventory_export.css' %}">
+
 {% endblock %}
 
 {% block content %}
@@ -143,8 +17,16 @@
             <a href="{% url 'batch_inventory_report' %}" class="date-report-btn date-report-btn-primary">
                 <i class="fas fa-boxes fa-sm"></i> Batch-wise Inventory
             </a>
-            <a href="javascript:window.print()" class="date-report-btn date-report-btn-secondary">
-                <i class="fas fa-download fa-sm"></i> Print/Export
+
+            <button onclick="window.print()" class="date-report-btn date-report-btn-warning" id="print-btn" title="Print Report (Ctrl+P)">
+                <i class="fas fa-print fa-sm"></i> Print (Ctrl+P)
+            </button>
+
+            <a href="{% url 'export_dateexpiry_inventory_pdf' %}{% if search_query or expiry_from or expiry_to %}?{% if search_query %}search={{ search_query }}{% endif %}{% if expiry_from %}{% if search_query %}&{% endif %}expiry_from={{ expiry_from }}{% endif %}{% if expiry_to %}{% if search_query or expiry_from %}&{% endif %}expiry_to={{ expiry_to }}{% endif %}{% endif %}" class="date-report-btn date-report-btn-success" id="export-pdf-btn">
+                <i class="fas fa-file-pdf fa-sm"></i> Export PDF (Ctrl+Q)
+            </a>
+            <a href="{% url 'export_dateexpiry_inventory_excel' %}{% if search_query or expiry_from or expiry_to %}?{% if search_query %}search={{ search_query }}{% endif %}{% if expiry_from %}{% if search_query %}&{% endif %}expiry_from={{ expiry_from }}{% endif %}{% if expiry_to %}{% if search_query or expiry_from %}&{% endif %}expiry_to={{ expiry_to }}{% endif %}{% endif %}" class="date-report-btn date-report-btn-info" id="export-excel-btn">
+                <i class="fas fa-file-excel fa-sm"></i> Export Excel (Ctrl+E)
             </a>
         </div>
     </div>
@@ -265,6 +147,123 @@
     $(document).ready(function() {
         // Nothing to do here as we're not using DataTables for this report
         // We want to preserve the grouping by expiry date
+    });
+    
+    // Enhanced keyboard shortcuts for export with feedback
+    document.addEventListener('keydown', function(e) {
+        // Ctrl+P for Print
+        if (e.ctrlKey && e.key === 'p') {
+            e.preventDefault();
+            window.print();
+            showNotification('Opening print dialog...', 'info');
+        }
+        
+        // Ctrl+Q for PDF export
+        if (e.ctrlKey && e.key === 'q') {
+            e.preventDefault();
+            const pdfBtn = document.getElementById('export-pdf-btn');
+            if (pdfBtn) {
+                triggerExport(pdfBtn, 'PDF');
+            }
+        }
+        
+        // Ctrl+E for Excel export
+        if (e.ctrlKey && e.key === 'e') {
+            e.preventDefault();
+            const excelBtn = document.getElementById('export-excel-btn');
+            if (excelBtn) {
+                triggerExport(excelBtn, 'Excel');
+            }
+        }
+    });
+    
+    // Function to handle export with visual feedback
+    function triggerExport(button, type) {
+        // Add loading state
+        button.classList.add('export-loading');
+        button.classList.add('export-pulse');
+        
+        // Show notification
+        showNotification(`Generating ${type} export...`, 'info');
+        
+        // Trigger download
+        window.location.href = button.href;
+        
+        // Remove loading state after delay
+        setTimeout(() => {
+            button.classList.remove('export-loading');
+            button.classList.remove('export-pulse');
+            showNotification(`${type} export started!`, 'success');
+        }, 1500);
+    }
+    
+    // Simple notification function
+    function showNotification(message, type) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type === 'success' ? 'success' : 'info'} alert-dismissible fade show`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            animation: slideIn 0.3s ease;
+        `;
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i> ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Add to page
+        document.body.appendChild(notification);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 3000);
+    }
+    
+    // Add CSS for slide-in animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Enhanced tooltips and click handlers
+    document.addEventListener('DOMContentLoaded', function() {
+        const pdfBtn = document.getElementById('export-pdf-btn');
+        const excelBtn = document.getElementById('export-excel-btn');
+        
+        if (pdfBtn) {
+            pdfBtn.title = 'Export as PDF (Ctrl+Q)';
+            pdfBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                triggerExport(this, 'PDF');
+            });
+        }
+        
+        if (excelBtn) {
+            excelBtn.title = 'Export as Excel (Ctrl+E)';
+            excelBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                triggerExport(this, 'Excel');
+            });
+        }
+        
+        // Show keyboard shortcut help on first visit
+        if (!localStorage.getItem('inventory_shortcuts_shown')) {
+            setTimeout(() => {
+                showNotification('💡 Tip: Use Ctrl+Q for PDF export, Ctrl+E for Excel export', 'info');
+                localStorage.setItem('inventory_shortcuts_shown', 'true');
+            }, 2000);
+        }
     });
 </script>
 {% endblock %}

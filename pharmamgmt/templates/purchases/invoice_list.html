@@ -43,10 +43,7 @@
                         <i class="fas fa-filter purchase-filter-icon"></i>
                         Filter
                     </button>
-                    <a href="{% url 'challan_invoice_list' %}" class="purchase-challan-btn">
-                        <i class="fas fa-file-invoice"></i>
-                        Challan Invoices
-                    </a>
+
                 </form>
             </div>
         </div>
@@ -99,10 +96,12 @@
                             {{ invoice.balance_due|currency }}
                         </td>
                         <td class="purchase-invoice-cell purchase-status-cell">
-                            {% if invoice.balance_due == 0 %}
+                            {% if invoice.payment_status == 'paid' %}
                                 <span class="purchase-invoice-status purchase-status-paid">Paid</span>
-                            {% elif invoice.invoice_paid > 0 %}
+                            {% elif invoice.payment_status == 'partial' %}
                                 <span class="purchase-invoice-status purchase-status-partial">Partial</span>
+                            {% elif invoice.payment_status == 'overdue' %}
+                                <span class="purchase-invoice-status purchase-status-overdue">Overdue</span>
                             {% else %}
                                 <span class="purchase-invoice-status purchase-status-pending">Pending</span>
                             {% endif %}
@@ -111,6 +110,9 @@
                             <div class="purchase-action-buttons">
                                 <a href="{% url 'invoice_detail' pk=invoice.invoiceid %}" class="purchase-btn-action purchase-btn-view">
                                     <i class="fas fa-eye purchase-action-icon"></i>
+                                </a>
+                                <a href="{% url 'print_purchase_receipt' invoice_id=invoice.invoiceid %}" target="_blank" class="purchase-btn-action purchase-btn-print" title="Print Receipt">
+                                    <i class="fas fa-print purchase-action-icon"></i>
                                 </a>
                                 {% if invoice.balance_due > 0 %}
                                 <button type="button" class="purchase-btn-action purchase-btn-payment" 
@@ -328,32 +330,7 @@
 </div>
 
 <style>
-.purchase-challan-btn {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
-}
 
-.purchase-challan-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-    color: white;
-}
-
-.purchase-challan-btn i {
-    font-size: 14px;
-}
 
 /* Payment Modal Styles */
 .payment-modal {
@@ -933,10 +910,56 @@ function setupPaymentFormHandler() {
                     currentBulkIndex++;
                     setTimeout(() => showNextBulkPayment(), 200);
                 } else {
-                    // Single payment mode
+                    // Single payment mode - update UI with new values
                     hidePaymentModal();
-                    showSuccessMessage('Payment added successfully!');
-                    setTimeout(() => window.location.reload(), 1000);
+                    
+                    // Find the invoice row and update balance, paid amount, and status
+                    const invoiceRows = document.querySelectorAll('.purchase-invoice-row');
+                    invoiceRows.forEach(row => {
+                        const invoiceLink = row.querySelector('.purchase-invoice-link');
+                        if (invoiceLink && invoiceLink.textContent.trim() === data.invoice_no) {
+                            // Update paid amount
+                            const paidCell = row.querySelector('.purchase-paid-cell');
+                            if (paidCell) {
+                                paidCell.textContent = '₹' + data.new_paid_amount.toFixed(2);
+                            }
+                            
+                            // Update balance
+                            const balanceCell = row.querySelector('.purchase-balance-cell');
+                            if (balanceCell) {
+                                balanceCell.textContent = '₹' + data.new_balance.toFixed(2);
+                                balanceCell.className = data.new_balance > 0 ? 'purchase-invoice-cell purchase-balance-cell purchase-amount-small' : 'purchase-invoice-cell purchase-balance-cell purchase-amount-display';
+                            }
+                            
+                            // Update status
+                            const statusCell = row.querySelector('.purchase-status-cell span');
+                            if (statusCell) {
+                                const statusMap = {
+                                    'paid': { text: 'Paid', class: 'purchase-invoice-status purchase-status-paid' },
+                                    'partial': { text: 'Partial', class: 'purchase-invoice-status purchase-status-partial' },
+                                    'pending': { text: 'Pending', class: 'purchase-invoice-status purchase-status-pending' },
+                                    'overdue': { text: 'Overdue', class: 'purchase-invoice-status purchase-status-overdue' }
+                                };
+                                const status = statusMap[data.payment_status] || statusMap['pending'];
+                                statusCell.textContent = status.text;
+                                statusCell.className = status.class;
+                            }
+                            
+                            // Hide payment button if fully paid
+                            if (data.new_balance <= 0.01) {
+                                const paymentBtn = row.querySelector('.purchase-btn-payment');
+                                if (paymentBtn) {
+                                    paymentBtn.style.display = 'none';
+                                }
+                                const checkbox = row.querySelector('.invoice-checkbox');
+                                if (checkbox) {
+                                    checkbox.style.display = 'none';
+                                }
+                            }
+                        }
+                    });
+                    
+                    showSuccessMessage('Payment added successfully! Balance updated.');
                 }
             } else {
                 showErrorMessage(data.error || 'Failed to add payment');

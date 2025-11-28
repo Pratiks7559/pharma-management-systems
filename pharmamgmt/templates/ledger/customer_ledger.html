@@ -7,26 +7,28 @@
 <link rel="stylesheet" href="{% static 'css/customer_ledger.css' %}">
 <style>
 @media print {
+    @page { size: A5 landscape; margin: 10mm; }
     * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
-    body { margin: 0; padding: 10px; font-family: Arial, sans-serif; font-size: 12px; }
+    body { margin: 0; padding: 8px; font-family: Arial, sans-serif; font-size: 11px; }
     .no-print { display: none !important; }
     .print-only { display: block !important; }
-    .print-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
-    .print-header h1 { margin: 0; font-size: 18px; font-weight: bold; }
-    .print-header h2 { margin: 5px 0; font-size: 14px; }
-    .print-header p { margin: 2px 0; font-size: 11px; }
-    .print-ledger-info { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
-    .print-customer-info h3 { margin: 0 0 5px 0; font-size: 14px; }
-    .print-customer-info p { margin: 2px 0; font-size: 11px; }
-    .print-date-info { text-align: right; font-size: 11px; }
-    .print-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-    .print-table th, .print-table td { border: 1px solid #000; padding: 4px; text-align: left; font-size: 10px; }
+    .print-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; }
+    .print-header h1 { margin: 0; font-size: 16px; font-weight: bold; }
+    .print-header h2 { margin: 3px 0; font-size: 12px; }
+    .print-header p { margin: 2px 0; font-size: 10px; }
+    .print-ledger-info { display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid #ccc; padding-bottom: 8px; }
+    .print-customer-info h3 { margin: 0 0 5px 0; font-size: 13px; font-weight: bold; }
+    .print-customer-info p { margin: 2px 0; font-size: 10px; }
+    .print-additional-info { text-align: right; font-size: 10px; }
+    .print-additional-info p { margin: 2px 0; }
+    .print-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+    .print-table th, .print-table td { border: 1px solid #000; padding: 3px; text-align: left; font-size: 9px; }
     .print-table th { background-color: #f0f0f0; font-weight: bold; text-align: center; }
     .print-table .text-right { text-align: right; }
     .print-table .text-center { text-align: center; }
-    .print-summary { display: flex; justify-content: space-between; margin-top: 15px; border-top: 2px solid #000; padding-top: 10px; }
-    .print-summary div { font-size: 12px; font-weight: bold; }
-    .print-footer { text-align: center; margin-top: 20px; font-size: 10px; border-top: 1px solid #ccc; padding-top: 10px; }
+    .print-summary { display: flex; justify-content: space-between; margin-top: 12px; border-top: 2px solid #000; padding-top: 8px; }
+    .print-summary div { font-size: 11px; font-weight: bold; }
+    .print-footer { text-align: center; margin-top: 12px; font-size: 9px; border-top: 1px solid #ccc; padding-top: 8px; }
 }
 </style>
 {% endblock %}
@@ -55,6 +57,12 @@
                     </option>
                     {% endfor %}
                 </select>
+                <button onclick="exportPDF()" class="ledger-btn ledger-btn-pdf" id="exportPdfBtn" data-url="{% url 'export_customer_ledger_pdf' customer.customerid %}{% if request.GET.start_date %}?start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}{% endif %}">
+                    <i class="fas fa-file-pdf"></i> PDF <span class="shortcut-badge">Ctrl+Q</span>
+                </button>
+                <a href="{% url 'export_customer_ledger_excel' customer.customerid %}{% if request.GET.start_date %}?start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}{% endif %}" class="ledger-btn ledger-btn-excel" id="exportExcelBtn">
+                    <i class="fas fa-file-excel"></i> Excel <span class="shortcut-badge">Ctrl+E</span>
+                </a>
                 <button onclick="printLedger()" class="ledger-btn ledger-btn-print">
                     <i class="fas fa-print"></i> Print
                 </button>
@@ -125,7 +133,23 @@
                                     {{ trans.type }}
                                 </span>
                             </td>
-                            <td>{{ trans.reference }}</td>
+                            <td>
+                                {% if trans.type == 'Sales Invoice' and trans.invoice_obj %}
+                                    <a href="{% url 'sales_invoice_detail' trans.invoice_obj.sales_invoice_no %}" class="ledger-invoice-link">
+                                        {{ trans.reference }}
+                                    </a>
+                                {% elif trans.type == 'Payment' and trans.invoice_obj %}
+                                    <a href="{% url 'sales_invoice_detail' trans.invoice_obj.sales_invoice_no %}" class="ledger-invoice-link">
+                                        {{ trans.reference }}
+                                    </a>
+                                {% elif trans.type == 'Sales Return' and trans.return_obj %}
+                                    <a href="{% url 'sales_return_detail' trans.return_obj.pk %}" class="ledger-invoice-link">
+                                        {{ trans.reference }}
+                                    </a>
+                                {% else %}
+                                    {{ trans.reference }}
+                                {% endif %}
+                            </td>
                             <td class="text-right ledger-amount-debit">
                                 {% if trans.debit > 0 %}₹{{ trans.debit|floatformat:2 }}{% else %}-{% endif %}
                             </td>
@@ -177,21 +201,13 @@
     <!-- Print Customer Info -->
     <div class="print-ledger-info">
         <div class="print-customer-info">
-            <h3>Customer Details:</h3>
-            <p><strong>Name:</strong> {{ customer.customer_name }}</p>
-            <p><strong>Mobile:</strong> {{ customer.customer_mobile }}</p>
-            <p><strong>Email:</strong> {{ customer.customer_emailid|default:"N/A" }}</p>
-            <p><strong>Address:</strong> {{ customer.customer_address|default:"N/A" }}</p>
-            <p><strong>GST No:</strong> {{ customer.customer_gstno|default:"N/A" }}</p>
+            <h3>{{ customer.customer_name }}</h3>
+            <p>Mobile: {{ customer.customer_mobile }}</p>
+            {% if customer.customer_emailid %}<p>Email: {{ customer.customer_emailid }}</p>{% endif %}
         </div>
-        <div class="print-date-info">
-            <p><strong>Print Date:</strong> {{ current_date|date:"d-m-Y" }}</p>
-            <p><strong>Print Time:</strong> {{ current_date|time:"H:i:s" }}</p>
-            {% if request.GET.start_date %}
-            <p><strong>Period:</strong> {{ request.GET.start_date }} to {{ request.GET.end_date }}</p>
-            {% else %}
-            <p><strong>Period:</strong> All Transactions</p>
-            {% endif %}
+        <div class="print-additional-info">
+            {% if customer.customer_address %}<p>Address: {{ customer.customer_address }}</p>{% endif %}
+            {% if customer.customer_gstno %}<p>GST No: {{ customer.customer_gstno }}</p>{% endif %}
         </div>
     </div>
 
@@ -199,12 +215,12 @@
     <table class="print-table">
         <thead>
             <tr>
-                <th style="width: 12%;">Date</th>
-                <th style="width: 18%;">Transaction Type</th>
-                <th style="width: 20%;">Invoice No.</th>
-                <th style="width: 15%;">Debit (Sales)</th>
-                <th style="width: 15%;">Credit (Received)</th>
-                <th style="width: 20%;">Running Balance</th>
+                <th style="width: 10%;">Date</th>
+                <th style="width: 15%;">Type</th>
+                <th style="width: 18%;">Invoice</th>
+                <th style="width: 19%;">Sales</th>
+                <th style="width: 19%;">Received</th>
+                <th style="width: 19%;">Balance</th>
             </tr>
         </thead>
         <tbody>
@@ -251,7 +267,6 @@
     <!-- Print Footer -->
     <div class="print-footer">
         <p>This is a computer generated ledger statement.</p>
-        <p>Generated on {{ current_date|date:"d-m-Y" }} at {{ current_date|time:"H:i:s" }}</p>
     </div>
 </div>
 
@@ -259,5 +274,38 @@
 function printLedger() {
     window.print();
 }
+
+// PDF export with auto-open and download
+function exportPDF() {
+    const pdfUrl = document.getElementById('exportPdfBtn').getAttribute('data-url');
+    
+    // Open PDF in new tab
+    window.open(pdfUrl, '_blank');
+    
+    // Also trigger download
+    setTimeout(() => {
+        const link = document.createElement('a');
+        link.href = pdfUrl + (pdfUrl.includes('?') ? '&' : '?') + 'download=1';
+        link.download = '';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }, 500);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl+Q for PDF export
+    if (e.ctrlKey && e.key === 'q') {
+        e.preventDefault();
+        exportPDF();
+    }
+    
+    // Ctrl+E for Excel export
+    if (e.ctrlKey && e.key === 'e') {
+        e.preventDefault();
+        document.getElementById('exportExcelBtn').click();
+    }
+});
 </script>
 {% endblock %}

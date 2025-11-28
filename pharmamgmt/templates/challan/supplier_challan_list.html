@@ -13,10 +13,7 @@
     <div class="supplier-challan-header">
         <h1 class="supplier-challan-title">Supplier Challan List</h1>
         <div style="display: flex; gap: 10px;">
-            <button id="createInvoiceBtn" class="supplier-challan-add-btn" style="display: none; background: #10b981;" onclick="openCreateInvoiceDialog()">
-                <i class="fas fa-file-invoice"></i>
-                Create Invoice
-            </button>
+
             <a href="{% url 'add_supplier_challan' %}" class="supplier-challan-add-btn">
                 <i class="fas fa-plus"></i>
                 Add New Challan
@@ -88,7 +85,6 @@
         <table class="supplier-challan-table">
             <thead>
                 <tr>
-                    <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
                     <th>Challan No.</th>
                     <th>Supplier Name</th>
                     <th>Date</th>
@@ -101,7 +97,6 @@
                 {% if challans %}
                     {% for challan in challans %}
                     <tr>
-                        <td><input type="checkbox" class="challan-checkbox" data-challan-id="{{ challan.challan_id }}" data-challan-no="{{ challan.challan_no }}" data-supplier="{{ challan.supplier.supplier_name }}" data-amount="{{ challan.challan_total }}" onchange="updateCreateInvoiceBtn()"></td>
                         <td>{{ challan.challan_no }}</td>
                         <td>{{ challan.supplier.supplier_name }}</td>
                         <td>{{ challan.challan_date|date:"d M, Y" }}</td>
@@ -127,7 +122,7 @@
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="7">
+                        <td colspan="6">
                             <div class="supplier-challan-empty">
                                 <div class="supplier-challan-empty-icon">
                                     <i class="fas fa-file-invoice"></i>
@@ -143,39 +138,7 @@
     </div>
 </div>
 
-<!-- Create Invoice Dialog -->
-<div id="createInvoiceDialog" class="invoice-dialog" style="display: none;">
-    <div class="invoice-dialog-content">
-        <div class="invoice-dialog-header">
-            <h3>Create Invoice from Selected Challans</h3>
-            <button onclick="closeCreateInvoiceDialog()" class="close-dialog">&times;</button>
-        </div>
-        <div class="invoice-dialog-body">
-            <div class="selected-challans-section">
-                <h4>Selected Challans:</h4>
-                <div id="selectedChallansList" class="selected-challans-list"></div>
-            </div>
-            <div class="invoice-details-section">
-                <div class="invoice-field">
-                    <label>Invoice No:</label>
-                    <input type="text" id="invoiceNo" class="invoice-input" placeholder="Enter invoice number">
-                </div>
-                <div class="invoice-field">
-                    <label>Invoice Date:</label>
-                    <input type="date" id="invoiceDate" class="invoice-input">
-                </div>
-                <div class="invoice-field">
-                    <label>Total Amount:</label>
-                    <input type="text" id="totalAmount" class="invoice-input" readonly>
-                </div>
-            </div>
-        </div>
-        <div class="invoice-dialog-footer">
-            <button onclick="saveInvoice()" class="btn-save-invoice">Save Invoice</button>
-            <button onclick="closeCreateInvoiceDialog()" class="btn-cancel-invoice">Cancel</button>
-        </div>
-    </div>
-</div>
+
 
 <style>
 .badge {
@@ -360,146 +323,7 @@
     background: #d1d5db;
 }
 
-/* Invoice Dialog Styles */
-.invoice-dialog {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
 
-.invoice-dialog-content {
-    background: white;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 600px;
-    max-height: 80vh;
-    overflow-y: auto;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-}
-
-.invoice-dialog-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.invoice-dialog-header h3 {
-    margin: 0;
-    color: #1f2937;
-}
-
-.close-dialog {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #6b7280;
-}
-
-.invoice-dialog-body {
-    padding: 20px;
-}
-
-.selected-challans-section {
-    margin-bottom: 20px;
-}
-
-.selected-challans-section h4 {
-    margin: 0 0 10px 0;
-    color: #374151;
-}
-
-.selected-challans-list {
-    max-height: 150px;
-    overflow-y: auto;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    padding: 10px;
-}
-
-.selected-challan-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid #f3f4f6;
-}
-
-.selected-challan-item:last-child {
-    border-bottom: none;
-}
-
-.invoice-details-section {
-    display: grid;
-    gap: 15px;
-}
-
-.invoice-field {
-    display: flex;
-    flex-direction: column;
-}
-
-.invoice-field label {
-    margin-bottom: 5px;
-    font-weight: 500;
-    color: #374151;
-}
-
-.invoice-input {
-    padding: 10px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 14px;
-}
-
-.invoice-input:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.invoice-dialog-footer {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    padding: 20px;
-    border-top: 1px solid #e5e7eb;
-}
-
-.btn-save-invoice, .btn-cancel-invoice {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s;
-}
-
-.btn-save-invoice {
-    background: #10b981;
-    color: white;
-}
-
-.btn-save-invoice:hover {
-    background: #059669;
-}
-
-.btn-cancel-invoice {
-    background: #e5e7eb;
-    color: #374151;
-}
-
-.btn-cancel-invoice:hover {
-    background: #d1d5db;
-}
 </style>
 
 <script>
@@ -523,8 +347,7 @@
             }
         });
         
-        // Set today's date as default
-        document.getElementById('invoiceDate').value = new Date().toISOString().split('T')[0];
+
     });
     
     // Search with suggestions
@@ -679,118 +502,6 @@
         }
     }
     
-    // Checkbox functions
-    function toggleSelectAll() {
-        const selectAll = document.getElementById('selectAll');
-        const checkboxes = document.querySelectorAll('.challan-checkbox');
-        
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = selectAll.checked;
-        });
-        
-        updateCreateInvoiceBtn();
-    }
-    
-    function updateCreateInvoiceBtn() {
-        const selectedCheckboxes = document.querySelectorAll('.challan-checkbox:checked');
-        const createBtn = document.getElementById('createInvoiceBtn');
-        
-        if (selectedCheckboxes.length > 0) {
-            createBtn.style.display = 'flex';
-        } else {
-            createBtn.style.display = 'none';
-        }
-    }
-    
-    // Dialog functions
-    function openCreateInvoiceDialog() {
-        const selectedCheckboxes = document.querySelectorAll('.challan-checkbox:checked');
-        const selectedChallansList = document.getElementById('selectedChallansList');
-        let totalAmount = 0;
-        
-        selectedChallansList.innerHTML = '';
-        
-        selectedCheckboxes.forEach(checkbox => {
-            const challanNo = checkbox.dataset.challanNo;
-            const supplier = checkbox.dataset.supplier;
-            const amount = parseFloat(checkbox.dataset.amount);
-            
-            totalAmount += amount;
-            
-            const challanItem = document.createElement('div');
-            challanItem.className = 'selected-challan-item';
-            challanItem.innerHTML = `
-                <span><strong>${challanNo}</strong> - ${supplier}</span>
-                <span>₹${amount.toFixed(2)}</span>
-            `;
-            selectedChallansList.appendChild(challanItem);
-        });
-        
-        document.getElementById('totalAmount').value = `₹${totalAmount.toFixed(2)}`;
-        document.getElementById('createInvoiceDialog').style.display = 'flex';
-    }
-    
-    function closeCreateInvoiceDialog() {
-        document.getElementById('createInvoiceDialog').style.display = 'none';
-        document.getElementById('invoiceNo').value = '';
-    }
-    
-    function saveInvoice() {
-        const invoiceNo = document.getElementById('invoiceNo').value.trim();
-        const invoiceDate = document.getElementById('invoiceDate').value;
-        
-        if (!invoiceNo) {
-            alert('Please enter invoice number');
-            return;
-        }
-        
-        if (!invoiceDate) {
-            alert('Please select invoice date');
-            return;
-        }
-        
-        const selectedCheckboxes = document.querySelectorAll('.challan-checkbox:checked');
-        const selectedChallanIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.challanId);
-        
-        // Show loading state
-        const saveBtn = document.querySelector('.btn-save-invoice');
-        saveBtn.disabled = true;
-        saveBtn.textContent = 'Creating Invoice...';
-        
-        // Send data to server
-        const formData = new FormData();
-        formData.append('invoice_no', invoiceNo);
-        formData.append('invoice_date', invoiceDate);
-        formData.append('challan_ids', JSON.stringify(selectedChallanIds));
-        
-        fetch('/create-invoice-from-challans/', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(data.message);
-                closeCreateInvoiceDialog();
-                
-                // Reload page to remove invoiced challans from list
-                window.location.reload();
-            } else {
-                alert('Error: ' + data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error creating invoice');
-        })
-        .finally(() => {
-            saveBtn.disabled = false;
-            saveBtn.textContent = 'Save Invoice';
-        });
-    }
+
 </script>
 {% endblock %}

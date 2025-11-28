@@ -403,67 +403,68 @@ body.select2-open {
                         <input type="text" name="supplier_name" class="supplier-form-input" required>
                     </div>
                     <div class="supplier-form-col">
-                        <label class="supplier-form-label">Supplier Type*</label>
-                        <input type="text" name="supplier_type" class="supplier-form-input" placeholder="e.g. Distributor, Manufacturer, Wholesaler" required>
-                    </div>
-                    <div class="supplier-form-col">
                         <label class="supplier-form-label">Mobile*</label>
                         <input type="text" name="supplier_mobile" class="supplier-form-input" required>
                     </div>
-                </div>
-                
-                <div class="supplier-form-row">
                     <div class="supplier-form-col">
-                        <label class="supplier-form-label">WhatsApp*</label>
-                        <input type="text" name="supplier_whatsapp" class="supplier-form-input" required>
-                    </div>
-                    <div class="supplier-form-col">
-                        <label class="supplier-form-label">Email*</label>
-                        <input type="email" name="supplier_emailid" class="supplier-form-input" required>
-                    </div>
-                    <div class="supplier-form-col">
-                        <label class="supplier-form-label">Contact Person*</label>
-                        <input type="text" name="supplier_spoc" class="supplier-form-input" required>
+                        <label class="supplier-form-label">Supplier Type</label>
+                        <input type="text" name="supplier_type" class="supplier-form-input" placeholder="e.g. Distributor, Manufacturer, Wholesaler">
                     </div>
                 </div>
                 
                 <div class="supplier-form-row">
                     <div class="supplier-form-col">
-                        <label class="supplier-form-label">Address*</label>
-                        <textarea name="supplier_address" class="supplier-form-input" rows="2" required></textarea>
+                        <label class="supplier-form-label">WhatsApp</label>
+                        <input type="text" name="supplier_whatsapp" class="supplier-form-input">
                     </div>
                     <div class="supplier-form-col">
-                        <label class="supplier-form-label">Drug License*</label>
-                        <input type="text" name="supplier_dlno" class="supplier-form-input" required>
+                        <label class="supplier-form-label">Email</label>
+                        <input type="email" name="supplier_emailid" class="supplier-form-input">
                     </div>
                     <div class="supplier-form-col">
-                        <label class="supplier-form-label">GST Number*</label>
-                        <input type="text" name="supplier_gstno" class="supplier-form-input" required>
+                        <label class="supplier-form-label">Contact Person</label>
+                        <input type="text" name="supplier_spoc" class="supplier-form-input">
                     </div>
                 </div>
                 
                 <div class="supplier-form-row">
                     <div class="supplier-form-col">
-                        <label class="supplier-form-label">Bank Name*</label>
-                        <input type="text" name="supplier_bank" class="supplier-form-input" required>
+                        <label class="supplier-form-label">Address</label>
+                        <textarea name="supplier_address" class="supplier-form-input" rows="2"></textarea>
                     </div>
                     <div class="supplier-form-col">
-                        <label class="supplier-form-label">Account Number*</label>
-                        <input type="text" name="supplier_bankaccountno" class="supplier-form-input" required>
+                        <label class="supplier-form-label">Drug License</label>
+                        <input type="text" name="supplier_dlno" class="supplier-form-input">
                     </div>
                     <div class="supplier-form-col">
-                        <label class="supplier-form-label">IFSC Code*</label>
-                        <input type="text" name="supplier_bankifsc" class="supplier-form-input" required>
+                        <label class="supplier-form-label">GST Number</label>
+                        <input type="text" name="supplier_gstno" class="supplier-form-input">
                     </div>
                 </div>
                 
                 <div class="supplier-form-row">
+                    <div class="supplier-form-col">
+                        <label class="supplier-form-label">Bank Name</label>
+                        <input type="text" name="supplier_bank" class="supplier-form-input">
+                    </div>
+                    <div class="supplier-form-col">
+                        <label class="supplier-form-label">Branch Name</label>
+                        <input type="text" name="supplier_branch" class="supplier-form-input">
+                    </div>
+                    <div class="supplier-form-col">
+                        <label class="supplier-form-label">Account Number</label>
+                        <input type="text" name="supplier_bankaccountno" class="supplier-form-input">
+                    </div>
+                </div>
+                
+                <div class="supplier-form-row">
+                    <div class="supplier-form-col">
+                        <label class="supplier-form-label">IFSC Code</label>
+                        <input type="text" name="supplier_bankifsc" class="supplier-form-input">
+                    </div>
                     <div class="supplier-form-col">
                         <label class="supplier-form-label">UPI ID</label>
                         <input type="text" name="supplier_upi" class="supplier-form-input">
-                    </div>
-                    <div class="supplier-form-col">
-                        <!-- Empty column for spacing -->
                     </div>
                     <div class="supplier-form-col">
                         <!-- Empty column for spacing -->
@@ -1724,8 +1725,8 @@ function saveSupplier() {
     const form = document.getElementById('supplierDialogForm');
     const formData = new FormData(form);
     
-    // Basic validation
-    const requiredFields = ['supplier_name', 'supplier_type', 'supplier_mobile', 'supplier_whatsapp', 'supplier_emailid', 'supplier_spoc', 'supplier_address', 'supplier_dlno', 'supplier_gstno', 'supplier_bank', 'supplier_bankaccountno', 'supplier_bankifsc'];
+    // Basic validation - only supplier name and mobile are required
+    const requiredFields = ['supplier_name', 'supplier_mobile'];
     
     for (let field of requiredFields) {
         if (!formData.get(field) || formData.get(field).trim() === '') {

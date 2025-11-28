@@ -11,12 +11,11 @@
     <button type="button" class="edit-invoice-action-btn" data-bs-toggle="modal" data-bs-target="#editSalesInvoiceModal">
         <i class="fas fa-edit me-2"></i>Edit Invoice
     </button>
-    <a href="{% url 'print_receipt' pk=invoice.sales_invoice_no %}" target="_blank" class="print-bill-action-btn" title="Print Receipt (Ctrl+P)">
-        <i class="fas fa-receipt me-2"></i>Print Receipt (Ctrl+P)
+
+    <a href="{% url 'print_sales_receipt' invoice_id=invoice.sales_invoice_no %}" target="_blank" class="print-receipt-action-btn">
+        <i class="fas fa-print me-2"></i>Print Receipt
     </a>
-    <a href="{% url 'print_sales_bill' pk=invoice.sales_invoice_no %}" target="_blank" class="print-bill-action-btn">
-        <i class="fas fa-print me-2"></i>Print Bill
-    </a>
+
     {% if invoice.balance_due > 0 %}
     <button type="button" onclick="openAddSalesPaymentDialog()" class="add-payment-action-btn">
         <i class="fas fa-money-bill-wave me-2"></i>Add Payment
@@ -154,7 +153,7 @@
     <div class="products-section">
         <div class="products-card">
             <div class="products-header">
-                <h5 class="products-title">Products</h5>
+                <h5 class="products-title">Invoice Products</h5>
 
             </div>
             <div class="products-body">
@@ -239,6 +238,51 @@
             </div>
         </div>
     </div>
+    
+    {% if challan_products %}
+    <div class="challan-products-section">
+        <div class="challan-products-card">
+            <div class="challan-products-header">
+                <h5 class="challan-products-title">Challan Products</h5>
+            </div>
+            <div class="challan-products-body">
+                <div class="challan-products-table-wrapper">
+                    <table class="challan-products-table">
+                        <thead class="challan-products-table-header">
+                            <tr class="challan-products-header-row">
+                                <th class="challan-product-name-header">Product</th>
+                                <th class="challan-batch-no-header">Batch No</th>
+                                <th class="challan-expiry-header">Expiry</th>
+                                <th class="challan-rate-header">Rate</th>
+                                <th class="challan-quantity-header">Qty</th>
+                                <th class="challan-total-header">Total</th>
+                                <th class="challan-date-header">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody class="challan-products-table-body">
+                            {% for challan in challan_products %}
+                            <tr class="challan-product-row">
+                                <td class="challan-product-name-cell">
+                                    <a href="{% url 'product_detail' pk=challan.product_id.productid %}" class="challan-product-detail-link">
+                                        {{ challan.product_name }}
+                                    </a>
+                                    <div class="challan-product-company-info">{{ challan.product_company }} - {{ challan.product_packing }}</div>
+                                </td>
+                                <td class="challan-batch-no-cell">{{ challan.product_batch_no }}</td>
+                                <td class="challan-expiry-cell">{{ challan.product_expiry }}</td>
+                                <td class="challan-rate-cell">{{ challan.sale_rate|currency }}</td>
+                                <td class="challan-quantity-cell">{{ challan.sale_quantity|floatformat:2 }}</td>
+                                <td class="challan-total-cell">{{ challan.sale_total_amount|currency }}</td>
+                                <td class="challan-date-cell">{{ challan.sales_entry_date|date:"d/m/Y" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <!-- Edit Sales Invoice Modal -->
@@ -1590,12 +1634,7 @@ document.addEventListener('keydown', function(e) {
         }, 300);
     }
     
-    // Ctrl+P for print receipt
-    if (e.ctrlKey && e.key === 'p') {
-        e.preventDefault();
-        const printReceiptUrl = "{% url 'print_receipt' pk=invoice.sales_invoice_no %}";
-        window.open(printReceiptUrl, '_blank');
-    }
+
 });
 </script>
 <script>
@@ -1653,16 +1692,25 @@ function closeDeleteSaleDialog() {
     if (dialog) dialog.remove();
     deleteSaleId = null;
 }
+
+// Ctrl+P shortcut for print receipt
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'p') {
+        e.preventDefault();
+        window.open('{% url "print_sales_receipt" invoice.sales_invoice_no %}', '_blank');
+    }
+});
 </script>
 <div style="position: fixed; bottom: 0; left: 0; right: 0; background: #1f2937; color: #d1d5db; padding: 10px 20px; font-size: 0.8rem; display: flex; justify-content: center; gap: 30px; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.1);">
+    <div style="display: flex; align-items: center; gap: 5px;">
+        <span style="background: #374151; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 0.7rem;">Ctrl+P</span>
+        <span>Print Receipt</span>
+    </div>
     <div style="display: flex; align-items: center; gap: 5px;">
         <span style="background: #374151; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 0.7rem;">Ctrl+E</span>
         <span>Edit Invoice</span>
     </div>
-    <div style="display: flex; align-items: center; gap: 5px;">
-        <span style="background: #374151; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 0.7rem;">Ctrl+P</span>
-        <span>Print receipt</span>
-    </div>
+
     <!-- <div style="display: flex; align-items: center; gap: 5px;">
         <span style="background: #374151; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 0.7rem;">Alt+W</span>
         <span>Batch Selector</span>

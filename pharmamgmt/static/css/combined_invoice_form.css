@@ -87,10 +87,46 @@
     font-size: 0.85rem;
 }
 
+.ci-supplier-controls-wrapper {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+}
+
 .ci-supplier-select-wrapper {
+    flex: 1;
+    min-width: 0;
     display: flex;
     gap: 8px;
     align-items: flex-end;
+}
+
+.ci-pull-challan-btn {
+    padding: 8px 12px;
+    background: #17a2b8;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+}
+
+.ci-pull-challan-btn:hover:not(:disabled) {
+    background: #138496;
+    transform: translateY(-1px);
+}
+
+.ci-pull-challan-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
 }
 
 .ci-add-supplier-btn {
@@ -360,7 +396,9 @@
     .ci-form-row { flex-direction: column; gap: 8px; }
     .ci-products-header { flex-direction: column; align-items: flex-start; gap: 8px; }
     .ci-form-actions { flex-direction: column; gap: 8px; }
+    .ci-supplier-controls-wrapper { flex-direction: column; gap: 8px; }
     .ci-supplier-select-wrapper { flex-direction: column; align-items: stretch; gap: 5px; }
+    .ci-pull-challan-btn { width: 100%; justify-content: center; }
     .ci-add-product-btn { width: 100%; }
     .ci-save-btn, .ci-back-btn { width: 100%; }
 }
@@ -369,7 +407,9 @@
     .ci-form-row { flex-direction: column; gap: 10px; }
     .ci-products-header { flex-direction: column; align-items: flex-start; gap: 10px; }
     .ci-form-actions { flex-direction: column; }
+    .ci-supplier-controls-wrapper { flex-direction: column; gap: 10px; }
     .ci-supplier-select-wrapper { flex-direction: column; align-items: stretch; }
+    .ci-pull-challan-btn { width: 100%; justify-content: center; }
     .ci-products-table { min-width: 800px; }
 }
 
@@ -689,4 +729,8 @@ input[name*="invoice_no"]:focus {
     color: #6c757d;
     font-weight: 500;
     font-size: 0.85rem;
+}
+
+.ci-table-body tr {
+    background: white;
 }

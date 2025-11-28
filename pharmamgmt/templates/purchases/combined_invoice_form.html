@@ -204,6 +204,8 @@ body.select2-open {
         max-height: 250px !important;
     }
 }
+
+
 </style>
 {% endblock %}
 
@@ -244,14 +246,20 @@ body.select2-open {
                                 </div>
                             </div>
                             <div class="ci-form-row">
-                                <div class="ci-form-column">
+                                <div class="ci-form-column ci-supplier-column">
                                     <div class="ci-supplier-field-group">
                                         <label for="{{ invoice_form.supplierid.id_for_label }}" class="ci-supplier-label">Supplier*</label>
-                                        <div class="ci-supplier-select-wrapper">
-                                            {{ invoice_form.supplierid }}
-                                            <button type="button" class="ci-add-supplier-btn" 
-                                            onclick="openSupplierDialog()">
-                                                <i class="fas fa-plus"></i> Add Supplier
+                                        <div class="ci-supplier-controls-wrapper">
+                                            <div class="ci-supplier-select-wrapper">
+                                                {{ invoice_form.supplierid }}
+                                                <button type="button" class="ci-add-supplier-btn" 
+                                                onclick="openSupplierDialog()">
+                                                    <i class="fas fa-plus"></i> Add Supplier
+                                                </button>
+                                            </div>
+                                            <button type="button" class="ci-pull-challan-btn" 
+                                            onclick="openPullChallanDialog()" id="pullChallanBtn" disabled>
+                                                <i class="fas fa-file-import"></i> Pull Challan
                                             </button>
                                         </div>
                                     </div>
@@ -275,6 +283,8 @@ body.select2-open {
                                 </div>
                             </div>
                         </div>
+
+
 
                         <!-- Products Section -->
                         <div class="ci-products-section">
@@ -317,12 +327,16 @@ body.select2-open {
                             <div class="ci-total-section">
                                 <div class="ci-grand-total-display">
                                     <strong class="ci-total-text">Invoice Total: ₹<span id="invoiceTotal" class="ci-total-amount">0.00</span></strong>
+                                    <button type="button" onclick="forceChallanTotalCalculation()" class="btn btn-sm btn-outline-primary ms-2" title="Recalculate Totals">
+                                        <i class="fas fa-calculator"></i> Recalculate
+                                    </button>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Hidden field for products data -->
                         <input type="hidden" name="products_data" id="productsData">
+                        <input type="hidden" name="is_from_challan" id="isFromChallan" value="false">
 
                         <!-- Keyboard Shortcuts Display -->
                         <div class="ci-shortcuts-section">
@@ -355,6 +369,10 @@ body.select2-open {
                                     <span class="ci-shortcut-key">Esc</span>
                                     <span class="ci-shortcut-desc">Clear Field</span>
                                 </div>
+                                <div class="ci-shortcut-item">
+                                    <span class="ci-shortcut-key">F3</span>
+                                    <span class="ci-shortcut-desc">Pull Challan</span>
+                                </div>
                             </div>
                         </div>
 
@@ -386,6 +404,59 @@ body.select2-open {
     </div>
 </div>
 
+<!-- Pull Challan Dialog Modal -->
+<div id="pullChallanDialog" class="pull-challan-dialog-overlay" style="display: none;">
+    <div class="pull-challan-dialog-content">
+        <div class="pull-challan-dialog-header">
+            <h3><i class="fas fa-file-import"></i> Pull Supplier Challans</h3>
+            <button type="button" class="pull-challan-dialog-close" onclick="closePullChallanDialog()">&times;</button>
+        </div>
+        <div class="pull-challan-dialog-body">
+            <div class="supplier-info-section">
+                <h4 id="selectedSupplierName">Select a supplier first</h4>
+                <p class="supplier-info-text">Available challans for the selected supplier:</p>
+            </div>
+            <div class="challan-search-section">
+                <input type="text" id="challanSearchInput" placeholder="Search challans by number or date..." class="challan-search-input">
+            </div>
+            <div class="challans-list-container" id="challansListContainer">
+                <div class="loading-message" id="loadingMessage">
+                    <i class="fas fa-spinner fa-spin"></i> Loading challans...
+                </div>
+                <div class="no-challans-message" id="noChallanMessage" style="display: none;">
+                    <i class="fas fa-info-circle"></i> No challans found for this supplier
+                </div>
+                <div class="challans-table-wrapper" id="challansTableWrapper" style="display: none;">
+                    <table class="challans-table">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="selectAllChallans" onchange="toggleSelectAllChallans()"></th>
+                                <th>Challan No</th>
+                                <th>Date</th>
+                                <th>Total Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="challansTableBody">
+                            <!-- Challan rows will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="pull-challan-dialog-footer">
+            <div class="selected-summary">
+                <span id="selectedChallanCount">0 challans selected</span>
+                <span id="selectedChallanTotal">Total: ₹0.00</span>
+            </div>
+            <div class="dialog-buttons">
+                <button type="button" class="pull-challan-btn-secondary" onclick="closePullChallanDialog()">Cancel</button>
+                <button type="button" class="pull-challan-btn-primary" onclick="pullSelectedChallans()" id="pullSelectedBtn" disabled>Pull Selected Challans</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Supplier Dialog Modal -->
 <div id="supplierDialog" class="supplier-dialog-overlay" style="display: none;">
     <div class="supplier-dialog-content">
@@ -402,8 +473,8 @@ body.select2-open {
                         <input type="text" name="supplier_name" class="supplier-form-input" required>
                     </div>
                     <div class="supplier-form-col">
-                        <label class="supplier-form-label">Supplier Type*</label>
-                        <input type="text" name="supplier_type" class="supplier-form-input" placeholder="e.g. Distributor, Manufacturer, Wholesaler" required>
+                        <label class="supplier-form-label">Supplier Type</label>
+                        <input type="text" name="supplier_type" class="supplier-form-input" placeholder="e.g. Distributor, Manufacturer, Wholesaler">
                     </div>
                     <div class="supplier-form-col">
                         <label class="supplier-form-label">Mobile*</label>
@@ -413,56 +484,57 @@ body.select2-open {
                 
                 <div class="supplier-form-row">
                     <div class="supplier-form-col">
-                        <label class="supplier-form-label">WhatsApp*</label>
-                        <input type="text" name="supplier_whatsapp" class="supplier-form-input" required>
+                        <label class="supplier-form-label">WhatsApp</label>
+                        <input type="text" name="supplier_whatsapp" class="supplier-form-input">
                     </div>
                     <div class="supplier-form-col">
-                        <label class="supplier-form-label">Email*</label>
-                        <input type="email" name="supplier_emailid" class="supplier-form-input" required>
+                        <label class="supplier-form-label">Email</label>
+                        <input type="email" name="supplier_emailid" class="supplier-form-input">
                     </div>
                     <div class="supplier-form-col">
-                        <label class="supplier-form-label">Contact Person*</label>
-                        <input type="text" name="supplier_spoc" class="supplier-form-input" required>
+                        <label class="supplier-form-label">Contact Person</label>
+                        <input type="text" name="supplier_spoc" class="supplier-form-input">
                     </div>
                 </div>
                 
                 <div class="supplier-form-row">
                     <div class="supplier-form-col">
-                        <label class="supplier-form-label">Address*</label>
-                        <textarea name="supplier_address" class="supplier-form-input" rows="2" required></textarea>
+                        <label class="supplier-form-label">Address</label>
+                        <textarea name="supplier_address" class="supplier-form-input" rows="2"></textarea>
                     </div>
                     <div class="supplier-form-col">
-                        <label class="supplier-form-label">Drug License*</label>
-                        <input type="text" name="supplier_dlno" class="supplier-form-input" required>
+                        <label class="supplier-form-label">Drug License</label>
+                        <input type="text" name="supplier_dlno" class="supplier-form-input">
                     </div>
                     <div class="supplier-form-col">
-                        <label class="supplier-form-label">GST Number*</label>
-                        <input type="text" name="supplier_gstno" class="supplier-form-input" required>
+                        <label class="supplier-form-label">GST Number</label>
+                        <input type="text" name="supplier_gstno" class="supplier-form-input">
                     </div>
                 </div>
                 
                 <div class="supplier-form-row">
                     <div class="supplier-form-col">
-                        <label class="supplier-form-label">Bank Name*</label>
-                        <input type="text" name="supplier_bank" class="supplier-form-input" required>
+                        <label class="supplier-form-label">Bank Name</label>
+                        <input type="text" name="supplier_bank" class="supplier-form-input">
                     </div>
                     <div class="supplier-form-col">
-                        <label class="supplier-form-label">Account Number*</label>
-                        <input type="text" name="supplier_bankaccountno" class="supplier-form-input" required>
+                        <label class="supplier-form-label">Branch Name</label>
+                        <input type="text" name="supplier_branch" class="supplier-form-input">
                     </div>
                     <div class="supplier-form-col">
-                        <label class="supplier-form-label">IFSC Code*</label>
-                        <input type="text" name="supplier_bankifsc" class="supplier-form-input" required>
+                        <label class="supplier-form-label">Account Number</label>
+                        <input type="text" name="supplier_bankaccountno" class="supplier-form-input">
                     </div>
                 </div>
                 
                 <div class="supplier-form-row">
+                    <div class="supplier-form-col">
+                        <label class="supplier-form-label">IFSC Code</label>
+                        <input type="text" name="supplier_bankifsc" class="supplier-form-input">
+                    </div>
                     <div class="supplier-form-col">
                         <label class="supplier-form-label">UPI ID</label>
                         <input type="text" name="supplier_upi" class="supplier-form-input">
-                    </div>
-                    <div class="supplier-form-col">
-                        <!-- Empty column for spacing -->
                     </div>
                     <div class="supplier-form-col">
                         <!-- Empty column for spacing -->
@@ -610,6 +682,353 @@ body.select2-open {
     background-color: #545b62;
 }
 
+/* Pull Challan Dialog Styles */
+.pull-challan-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pull-challan-dialog-content {
+    background: white;
+    border-radius: 12px;
+    width: 95%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+}
+
+.pull-challan-dialog-header {
+    padding: 20px;
+    border-bottom: 1px solid #e5e5e5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fa;
+    border-radius: 12px 12px 0 0;
+}
+
+.pull-challan-dialog-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 18px;
+}
+
+.pull-challan-dialog-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pull-challan-dialog-close:hover {
+    color: #000;
+}
+
+.pull-challan-dialog-body {
+    padding: 20px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.supplier-info-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+.supplier-info-section h4 {
+    margin: 0 0 5px 0;
+    color: #333;
+    font-size: 16px;
+}
+
+.supplier-info-text {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.challan-search-section {
+    margin-bottom: 20px;
+}
+
+.challan-search-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.challan-search-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.challans-list-container {
+    min-height: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.loading-message, .no-challans-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: #666;
+    font-size: 16px;
+    gap: 10px;
+}
+
+.challans-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    background: #ffffff !important;
+    color-scheme: light !important;
+}
+
+.challans-table th,
+.challans-table td {
+    padding: 12px !important;
+    text-align: left !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    color: #212529 !important;
+    background: #ffffff !important;
+    color-scheme: light !important;
+}
+
+.challans-table th {
+    background: #f8f9fa !important;
+    font-weight: 600 !important;
+    color: #374151 !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1 !important;
+}
+
+.challans-table tbody tr {
+    background: #ffffff !important;
+    color: #212529 !important;
+}
+
+.challans-table tbody tr td {
+    background: #ffffff !important;
+    color: #212529 !important;
+}
+
+.challans-table tbody tr:hover {
+    background: #f9fafb !important;
+}
+
+.challans-table tbody tr:hover td {
+    background: #f9fafb !important;
+    color: #212529 !important;
+}
+
+/* Force override any theme styles on table rows */
+.challans-table tbody tr,
+.challans-table tbody tr *,
+.challans-table tbody td,
+.challans-table tbody td * {
+    background: #ffffff !important;
+    color: #212529 !important;
+    color-scheme: light !important;
+}
+
+.challans-table tbody tr:hover,
+.challans-table tbody tr:hover *,
+.challans-table tbody tr:hover td,
+.challans-table tbody tr:hover td * {
+    background: #f9fafb !important;
+    color: #212529 !important;
+    color-scheme: light !important;
+}
+
+.challan-checkbox {
+    cursor: pointer;
+}
+
+.challan-status {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-paid {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-partial {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-unpaid {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.pull-challan-dialog-footer {
+    padding: 20px;
+    border-top: 1px solid #e5e5e5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fa;
+    border-radius: 0 0 12px 12px;
+}
+
+.selected-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 14px;
+    color: #374151;
+}
+
+.dialog-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.pull-challan-btn-primary,
+.pull-challan-btn-secondary {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.pull-challan-btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.pull-challan-btn-primary:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+.pull-challan-btn-primary:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.pull-challan-btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.pull-challan-btn-secondary:hover {
+    background-color: #545b62;
+}
+
+/* Supplier Controls Layout */
+.ci-supplier-column {
+    width: 100%;
+}
+
+.ci-supplier-controls-wrapper {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.ci-supplier-select-wrapper {
+    flex: 1;
+    min-width: 0;
+}
+
+.ci-pull-challan-btn {
+    padding: 10px 16px;
+    background: #17a2b8;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 42px;
+}
+
+.ci-pull-challan-btn:hover:not(:disabled) {
+    background: #138496;
+    transform: translateY(-1px);
+}
+
+.ci-pull-challan-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+@media (max-width: 768px) {
+    .ci-supplier-controls-wrapper {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .ci-pull-challan-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .pull-challan-dialog-content {
+        width: 98%;
+        margin: 10px;
+    }
+    
+    .pull-challan-dialog-footer {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+    
+    .dialog-buttons {
+        justify-content: stretch;
+    }
+    
+    .pull-challan-btn-primary,
+    .pull-challan-btn-secondary {
+        flex: 1;
+    }
+}
+
 @media (max-width: 768px) {
     .supplier-form-row {
         flex-direction: column;
@@ -627,6 +1046,11 @@ body.select2-open {
 let productRowIndex = 0;
 
 function addProductRow() {
+    // Reset challan flag when manually adding products
+    if (document.getElementById('productRows').children.length === 0) {
+        document.getElementById('isFromChallan').value = 'false';
+    }
+    
     const tbody = document.getElementById('productRows');
     const row = document.createElement('tr');
     row.id = `productRow_${productRowIndex}`;
@@ -682,6 +1106,11 @@ function removeProductRow(rowIndex) {
     if (row) {
         row.remove();
         calculateInvoiceTotal();
+        
+        // If all rows removed, reset challan flag
+        if (document.getElementById('productRows').children.length === 0) {
+            document.getElementById('isFromChallan').value = 'false';
+        }
     }
 }
 
@@ -689,41 +1118,72 @@ function calculateRowTotal(rowIndex) {
     const row = document.getElementById(`productRow_${rowIndex}`);
     if (!row) return;
     
-    const rate = parseFloat(row.querySelector('.purchase-rate').value) || 0;
-    const qty = parseFloat(row.querySelector('.qty').value) || 0;
-    const discount = parseFloat(row.querySelector('.discount').value) || 0;
-    const cgstRate = parseFloat(row.querySelector('.cgst-rate').value) || 0;
-    const sgstRate = parseFloat(row.querySelector('.sgst-rate').value) || 0;
+    const rateInput = row.querySelector('.purchase-rate');
+    const qtyInput = row.querySelector('.qty');
+    const discountInput = row.querySelector('.discount');
+    const cgstInput = row.querySelector('.cgst-rate');
+    const sgstInput = row.querySelector('.sgst-rate');
     
-    const subtotal = rate * qty;
-    const afterDiscount = subtotal - discount;
+    const rate = parseFloat(String(rateInput ? rateInput.value : '0')) || 0;
+    const qty = parseFloat(String(qtyInput ? qtyInput.value : '0')) || 0;
+    const discount = parseFloat(String(discountInput ? discountInput.value : '0')) || 0;
+    const cgstRate = parseFloat(String(cgstInput ? cgstInput.value : '0')) || 0;
+    const sgstRate = parseFloat(String(sgstInput ? sgstInput.value : '0')) || 0;
+    
+    // Calculate base amount
+    const baseAmount = rate * qty;
+    
+    // Apply discount
+    const afterDiscount = baseAmount - discount;
+    
+    // Calculate tax amounts on the discounted amount
     const cgstAmount = (afterDiscount * cgstRate) / 100;
     const sgstAmount = (afterDiscount * sgstRate) / 100;
+    
+    // Total including taxes
     const total = afterDiscount + cgstAmount + sgstAmount;
+    
+    console.log(`Row ${rowIndex}: Base=${baseAmount.toFixed(2)}, After Discount=${afterDiscount.toFixed(2)}, CGST=${cgstAmount.toFixed(2)}, SGST=${sgstAmount.toFixed(2)}, Total=${total.toFixed(2)}`);
     
     row.querySelector('.row-total').textContent = total.toFixed(2);
     calculateInvoiceTotal();
 }
 
 function calculateInvoiceTotal() {
-    let total = 0;
+    // Calculate total from all products (including those from challan)
+    let productsTotal = 0;
     document.querySelectorAll('.row-total').forEach(span => {
-        total += parseFloat(span.textContent) || 0;
+        const rowTotal = parseFloat(String(span.textContent || '0')) || 0;
+        productsTotal += rowTotal;
     });
     
-    const transportCharges = parseFloat(document.querySelector('input[name*="transport_charges"]').value) || 0;
-    const finalTotal = total + transportCharges;
+    const transportInput = document.querySelector('input[name*="transport_charges"]');
+    const transportCharges = parseFloat(String(transportInput ? transportInput.value : '0')) || 0;
+    const finalTotal = productsTotal + transportCharges;
     
+    console.log(`Invoice Total: Products=${productsTotal.toFixed(2)}, Transport=${transportCharges.toFixed(2)}, Final=${finalTotal.toFixed(2)}`);
+    
+    // Update display
     if (transportCharges > 0) {
-        document.getElementById('invoiceTotal').innerHTML = `${total.toFixed(2)} + ${transportCharges.toFixed(2)} = <strong>${finalTotal.toFixed(2)}</strong>`;
+        document.getElementById('invoiceTotal').innerHTML = `${productsTotal.toFixed(2)} + ${transportCharges.toFixed(2)} = <strong>${finalTotal.toFixed(2)}</strong>`;
     } else {
         document.getElementById('invoiceTotal').textContent = finalTotal.toFixed(2);
     }
     
-    // Auto-fill the invoice total field
-    const invoiceTotalInput = document.querySelector('input[name*="invoice_total"]');
+    // Auto-fill the invoice total field - try multiple selectors
+    const invoiceTotalInput = document.querySelector('input[name*="invoice_total"]') || 
+                             document.querySelector('#id_invoice_total') ||
+                             document.querySelector('input[id*="invoice_total"]');
+    
     if (invoiceTotalInput) {
         invoiceTotalInput.value = finalTotal.toFixed(2);
+        console.log(`Invoice total field updated: ${finalTotal.toFixed(2)}`);
+        
+        // Trigger change event to ensure any listeners are notified
+        invoiceTotalInput.dispatchEvent(new Event('change', { bubbles: true }));
+        invoiceTotalInput.dispatchEvent(new Event('input', { bubbles: true }));
+    } else {
+        console.error('Invoice total input field not found!');
     }
 }
 
@@ -917,10 +1377,15 @@ document.addEventListener('keydown', function(e) {
         openQuickProductSearch();
     }
     
-    // F3: Focus on supplier select
+    // F3: Open pull challan dialog
     if (e.key === 'F3') {
         e.preventDefault();
-        document.querySelector('select[name*="supplierid"]')?.focus();
+        const pullChallanBtn = document.getElementById('pullChallanBtn');
+        if (pullChallanBtn && !pullChallanBtn.disabled) {
+            openPullChallanDialog();
+        } else {
+            alert('Please select a supplier first to pull challans!');
+        }
     }
     
 
@@ -1100,7 +1565,7 @@ function loadProductInfo(rowIndex, productId) {
 }
 
 // Function to collect all product data before form submission
-function collectProductsData() {
+function collectAllProductsData() {
     const products = [];
     const rows = document.querySelectorAll('#productRows tr');
     
@@ -1125,21 +1590,33 @@ function collectProductsData() {
             const rateB = row.querySelector('.rate-b')?.value?.trim() || '0';
             const rateC = row.querySelector('.rate-c')?.value?.trim() || '0';
             
+            // Check if this row is from challan
+            const challanNo = row.querySelector('.challan-no-source')?.value || '';
+            const fromChallanFlag = row.getAttribute('data-from-challan') === 'true' || 
+                                  row.querySelector('.from-challan-flag')?.value === 'true';
+            
+            // Get challan info from row attributes
+            const rowChallanNo = row.getAttribute('data-challan-no') || '';
+            const rowChallanDate = row.getAttribute('data-challan-date') || '';
+            
             const product = {
-                productid: productId,
-                batch_no: batchNo,
-                expiry: expiry,
-                mrp: mrp,
-                purchase_rate: purchaseRate,
-                quantity: quantity,
+                productid: String(productId),
+                batch_no: String(batchNo),
+                expiry: String(expiry),
+                mrp: String(mrp),
+                purchase_rate: String(purchaseRate),
+                quantity: String(quantity),
                 scheme: '0',
-                discount: discount,
-                cgst: cgstRate,
-                sgst: sgstRate,
+                discount: String(discount),
+                cgst: String(cgstRate),
+                sgst: String(sgstRate),
                 calculation_mode: 'flat',
-                rate_A: rateA,
-                rate_B: rateB,
-                rate_C: rateC
+                rate_a: String(rateA),
+                rate_b: String(rateB),
+                rate_c: String(rateC),
+                from_challan: fromChallanFlag,
+                challan_no: String(rowChallanNo),
+                challan_date: String(rowChallanDate)
             };
             
             console.log(`Row ${index + 1} data:`, product);
@@ -1541,15 +2018,76 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             document.querySelector('.select2-search__field').focus();
         }, 50);
+    }).on('select2:select', function(e) {
+        // Enable pull challan button when supplier is selected
+        const pullChallanBtn = document.getElementById('pullChallanBtn');
+        if (pullChallanBtn) {
+            pullChallanBtn.disabled = false;
+        }
+    }).on('select2:clear', function(e) {
+        // Disable pull challan button when supplier is cleared
+        const pullChallanBtn = document.getElementById('pullChallanBtn');
+        if (pullChallanBtn) {
+            pullChallanBtn.disabled = true;
+        }
     });
     */
     
-    addProductRow();
+    // Don't add default product row - user will add manually
     
     // Add event listener for transport charges
     const transportInput = document.querySelector('input[name*="transport_charges"]');
     if (transportInput) {
         transportInput.addEventListener('input', calculateInvoiceTotal);
+        transportInput.addEventListener('change', calculateInvoiceTotal);
+    }
+    
+    // Add global event listener for all numeric inputs that affect totals
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('purchase-rate') || 
+            e.target.classList.contains('qty') || 
+            e.target.classList.contains('discount') || 
+            e.target.classList.contains('cgst-rate') || 
+            e.target.classList.contains('sgst-rate')) {
+            
+            // Find the row index
+            const row = e.target.closest('tr');
+            if (row && row.id) {
+                const rowIndex = row.id.split('_')[1];
+                if (rowIndex) {
+                    calculateRowTotal(parseInt(rowIndex));
+                }
+            }
+        }
+    });
+    
+    // Add change event listener as backup
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('purchase-rate') || 
+            e.target.classList.contains('qty') || 
+            e.target.classList.contains('discount') || 
+            e.target.classList.contains('cgst-rate') || 
+            e.target.classList.contains('sgst-rate')) {
+            
+            const row = e.target.closest('tr');
+            if (row && row.id) {
+                const rowIndex = row.id.split('_')[1];
+                if (rowIndex) {
+                    calculateRowTotal(parseInt(rowIndex));
+                }
+            }
+        }
+    });
+    
+    // Add event listener for supplier dropdown change (non-Select2 version)
+    const supplierSelect = document.querySelector('select[name*="supplierid"]');
+    if (supplierSelect) {
+        supplierSelect.addEventListener('change', function() {
+            const pullChallanBtn = document.getElementById('pullChallanBtn');
+            if (pullChallanBtn) {
+                pullChallanBtn.disabled = !this.value;
+            }
+        });
     }
     
     // Enhanced focus on invoice number input when page loads
@@ -1590,8 +2128,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 return false;
             }
             
-            // Collect products data
-            const productsData = collectProductsData();
+            // Collect all products data (challan + regular)
+            const productsData = collectAllProductsData();
             
             // Check if at least one product is added
             if (productsData.length === 0) {
@@ -1637,6 +2175,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const productsDataJson = JSON.stringify(productsData);
             console.log('Products data JSON:', productsDataJson);
             document.getElementById('productsData').value = productsDataJson;
+            
+            // Check if any products are from challan
+            const isFromChallan = document.getElementById('isFromChallan').value;
+            console.log('Is from challan:', isFromChallan);
             
             // Disable submit button to prevent double submission
             const submitBtn = form.querySelector('button[type="submit"]');
@@ -1757,8 +2299,8 @@ function saveSupplier() {
     const form = document.getElementById('supplierDialogForm');
     const formData = new FormData(form);
     
-    // Basic validation
-    const requiredFields = ['supplier_name', 'supplier_type', 'supplier_mobile', 'supplier_whatsapp', 'supplier_emailid', 'supplier_spoc', 'supplier_address', 'supplier_dlno', 'supplier_gstno', 'supplier_bank', 'supplier_bankaccountno', 'supplier_bankifsc'];
+    // Basic validation - only supplier name and mobile are required
+    const requiredFields = ['supplier_name', 'supplier_mobile'];
     
     for (let field of requiredFields) {
         if (!formData.get(field) || formData.get(field).trim() === '') {
@@ -1860,17 +2402,419 @@ setInterval(function() {
     });
 }, 500); // Run every 500ms to catch dynamically added fields
 
+// Pull Challan Dialog Functions
+function openPullChallanDialog() {
+    const supplierSelect = document.querySelector('select[name*="supplierid"]');
+    const supplierId = supplierSelect ? supplierSelect.value : '';
+    
+    if (!supplierId) {
+        alert('Please select a supplier first!');
+        return;
+    }
+    
+    // Get supplier name
+    const supplierName = supplierSelect.options[supplierSelect.selectedIndex].text;
+    document.getElementById('selectedSupplierName').textContent = supplierName;
+    
+    // Show dialog
+    document.getElementById('pullChallanDialog').style.display = 'flex';
+    
+    // Load challans for the selected supplier
+    loadSupplierChallans(supplierId);
+}
+
+function closePullChallanDialog() {
+    document.getElementById('pullChallanDialog').style.display = 'none';
+    // Clear search and reset
+    document.getElementById('challanSearchInput').value = '';
+    document.getElementById('challansTableBody').innerHTML = '';
+    document.getElementById('selectAllChallans').checked = false;
+    updateSelectedChallanSummary();
+}
+
+function loadSupplierChallans(supplierId) {
+    const loadingMessage = document.getElementById('loadingMessage');
+    const noChallanMessage = document.getElementById('noChallanMessage');
+    const challansTableWrapper = document.getElementById('challansTableWrapper');
+    
+    // Show loading
+    loadingMessage.style.display = 'flex';
+    noChallanMessage.style.display = 'none';
+    challansTableWrapper.style.display = 'none';
+    
+    // Fetch challans from server
+    fetch(`/api/supplier-challans/?supplier_id=${supplierId}`)
+        .then(response => response.json())
+        .then(data => {
+            loadingMessage.style.display = 'none';
+            
+            if (data.success && data.challans && data.challans.length > 0) {
+                displayChallans(data.challans);
+                challansTableWrapper.style.display = 'block';
+            } else {
+                noChallanMessage.style.display = 'flex';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading challans:', error);
+            loadingMessage.style.display = 'none';
+            noChallanMessage.style.display = 'flex';
+            document.getElementById('noChallanMessage').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error loading challans';
+        });
+}
+
+function displayChallans(challans) {
+    const tbody = document.getElementById('challansTableBody');
+    tbody.innerHTML = '';
+    
+    challans.forEach(challan => {
+        const row = document.createElement('tr');
+        
+        // Determine status
+        let statusClass = 'status-unpaid';
+        let statusText = 'Unpaid';
+        
+        if (challan.challan_paid >= challan.challan_total) {
+            statusClass = 'status-paid';
+            statusText = 'Paid';
+        } else if (challan.challan_paid > 0) {
+            statusClass = 'status-partial';
+            statusText = 'Partial';
+        }
+        
+        row.innerHTML = `
+            <td>
+                <input type="checkbox" class="challan-checkbox" 
+                       data-challan-id="${challan.challan_id}"
+                       data-challan-no="${challan.challan_no}"
+                       data-challan-total="${challan.challan_total}"
+                       onchange="updateSelectedChallanSummary()">
+            </td>
+            <td>${challan.challan_no}</td>
+            <td>${new Date(challan.challan_date).toLocaleDateString('en-GB')}</td>
+            <td>₹${parseFloat(challan.challan_total).toFixed(2)}</td>
+            <td><span class="challan-status ${statusClass}">${statusText}</span></td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+    
+    // Add search functionality
+    setupChallanSearch();
+}
+
+function setupChallanSearch() {
+    const searchInput = document.getElementById('challanSearchInput');
+    const rows = document.querySelectorAll('#challansTableBody tr');
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        
+        rows.forEach(row => {
+            const challanNo = row.cells[1].textContent.toLowerCase();
+            const date = row.cells[2].textContent.toLowerCase();
+            
+            const matches = challanNo.includes(searchTerm) || date.includes(searchTerm);
+            row.style.display = matches ? '' : 'none';
+        });
+    });
+}
+
+function toggleSelectAllChallans() {
+    const selectAll = document.getElementById('selectAllChallans');
+    const checkboxes = document.querySelectorAll('.challan-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        // Only select visible rows
+        if (checkbox.closest('tr').style.display !== 'none') {
+            checkbox.checked = selectAll.checked;
+        }
+    });
+    
+    updateSelectedChallanSummary();
+}
+
+function updateSelectedChallanSummary() {
+    const selectedCheckboxes = document.querySelectorAll('.challan-checkbox:checked');
+    const count = selectedCheckboxes.length;
+    let total = 0;
+    
+    selectedCheckboxes.forEach(checkbox => {
+        total += parseFloat(checkbox.dataset.challanTotal || 0);
+    });
+    
+    document.getElementById('selectedChallanCount').textContent = `${count} challan${count !== 1 ? 's' : ''} selected`;
+    document.getElementById('selectedChallanTotal').textContent = `Total: ₹${total.toFixed(2)}`;
+    
+    // Enable/disable pull button
+    const pullBtn = document.getElementById('pullSelectedBtn');
+    pullBtn.disabled = count === 0;
+}
+
+function pullSelectedChallans() {
+    const selectedCheckboxes = document.querySelectorAll('.challan-checkbox:checked');
+    
+    if (selectedCheckboxes.length === 0) {
+        alert('Please select at least one challan!');
+        return;
+    }
+    
+    // Collect selected challan data
+    const selectedChallans = [];
+    selectedCheckboxes.forEach(checkbox => {
+        selectedChallans.push({
+            challan_id: checkbox.dataset.challanId,
+            challan_no: checkbox.dataset.challanNo,
+            challan_total: parseFloat(checkbox.dataset.challanTotal)
+        });
+    });
+    
+    // Show loading state
+    const pullBtn = document.getElementById('pullSelectedBtn');
+    pullBtn.disabled = true;
+    pullBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Pulling Challans...';
+    
+    // Fetch challan products
+    const challanIds = selectedChallans.map(c => c.challan_id);
+    
+    fetch('/api/challan-products/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({ challan_ids: challanIds })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.products) {
+            // Add products from challans to regular products section
+            data.products.forEach(product => {
+                addProductRowFromChallan(product);
+            });
+            
+            // Mark as from challan
+            document.getElementById('isFromChallan').value = 'true';
+            
+            // Calculate invoice total
+            setTimeout(() => {
+                calculateInvoiceTotal();
+            }, 200);
+            
+            // Close dialog
+            closePullChallanDialog();
+            
+            // Show success message
+            alert(`Successfully pulled ${data.products.length} products from ${selectedChallans.length} challan(s)!`);
+            
+            // Focus on transport charges input
+            setTimeout(() => {
+                const transportInput = document.querySelector('input[name*="transport_charges"]');
+                if (transportInput) {
+                    transportInput.focus();
+                    transportInput.select();
+                }
+            }, 1200);
+        } else {
+            alert('Error: ' + (data.error || 'Failed to pull challan products'));
+        }
+    })
+    .catch(error => {
+        console.error('Error pulling challans:', error);
+        alert('Error pulling challans. Please try again.');
+    })
+    .finally(() => {
+        pullBtn.disabled = false;
+        pullBtn.innerHTML = '<i class="fas fa-file-import"></i> Pull Selected Challans';
+    });
+}
+
+function addProductRowFromChallan(product) {
+    const tbody = document.getElementById('productRows');
+    const row = document.createElement('tr');
+    row.id = `productRow_${productRowIndex}`;
+    
+    // Store challan info in row attributes
+    row.setAttribute('data-from-challan', 'true');
+    row.setAttribute('data-challan-no', product.challan_no || '');
+    row.setAttribute('data-challan-date', product.challan_date || '');
+    
+    console.log(`Adding challan product: challan_no=${product.challan_no}, challan_date=${product.challan_date}`);
+    
+    // Format expiry date to MM-YYYY if needed
+    let expiry = product.product_expiry || '';
+    if (expiry && expiry.length === 10 && expiry.includes('-')) {
+        const parts = expiry.split('-');
+        if (parts.length === 3 && parts[0].length === 4) {
+            expiry = `${parts[1]}-${parts[0]}`;
+        }
+    }
+    
+    row.innerHTML = `
+        <td><select class="product-select" id="productSelect_${productRowIndex}" onchange="loadProductInfo(${productRowIndex}, this.value)" required>
+            <option value="">Select Product</option>
+            {% for product in products %}
+            <option value="{{ product.productid }}">{{ product.product_name }} - {{ product.product_company }}</option>
+            {% endfor %}
+        </select></td>
+        <td><input type="text" class="batch-no" placeholder="Batch No" value="${String(product.product_batch_no || '')}" required></td>
+        <td><input type="text" class="expiry" placeholder="MM-YYYY" maxlength="7" title="Enter expiry in MM-YYYY format (e.g., 12-2025)" value="${String(expiry)}" required></td>
+        <td><input type="number" class="mrp" step="0.01" placeholder="MRP" min="0.01" value="${String(product.product_mrp || '')}" required></td>
+        <td><input type="number" class="purchase-rate" step="0.01" placeholder="Rate" min="0.01" value="${String(product.product_purchase_rate || '')}" onchange="calculateRowTotal(${productRowIndex})" required></td>
+        <td><input type="number" class="qty" placeholder="Qty" min="0.01" step="0.01" value="${String(product.product_quantity || '')}" onchange="calculateRowTotal(${productRowIndex})" required></td>
+        <td><input type="number" class="discount" step="0.01" placeholder="Discount" min="0" value="${String(product.product_discount || '0')}" onchange="calculateRowTotal(${productRowIndex})"></td>
+        <td><input type="number" class="cgst-rate" step="0.01" placeholder="CGST %" min="0" max="50" value="${String(product.cgst || '2.5')}" onchange="calculateRowTotal(${productRowIndex})"></td>
+        <td><input type="number" class="sgst-rate" step="0.01" placeholder="SGST %" min="0" max="50" value="${String(product.sgst || '2.5')}" onchange="calculateRowTotal(${productRowIndex})"></td>
+        <td><input type="number" class="rate-a" step="0.01" placeholder="Rate A" min="0" value="${String(product.rate_a || '')}"></td>
+        <td><input type="number" class="rate-b" step="0.01" placeholder="Rate B" min="0" value="${String(product.rate_b || '')}"></td>
+        <td><input type="number" class="rate-c" step="0.01" placeholder="Rate C" min="0" value="${String(product.rate_c || '')}"></td>
+        <td><span class="row-total">0.00</span></td>
+        <td><button type="button" class="remove-btn" onclick="removeProductRow(${productRowIndex})" title="Remove Row"><i class="fas fa-trash"></i></button></td>
+        <input type="hidden" class="from-challan-flag" value="true">
+        <input type="hidden" class="challan-no-source" value="${product.challan_no || ''}">
+    `;
+    
+    tbody.appendChild(row);
+    
+    // Set the product selection
+    const productSelect = row.querySelector('.product-select');
+    if (productSelect && product.product_id) {
+        productSelect.value = product.product_id;
+    }
+    
+    const currentRowIndex = productRowIndex;
+    productRowIndex++;
+    
+    setTimeout(() => {
+        calculateRowTotal(currentRowIndex);
+    }, 100);
+}
+
+// Close dialog when clicking outside
+document.addEventListener('click', function(e) {
+    const dialog = document.getElementById('pullChallanDialog');
+    if (e.target === dialog) {
+        closePullChallanDialog();
+    }
+});
+
+// Close dialog with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const dialog = document.getElementById('pullChallanDialog');
+        if (dialog.style.display === 'flex') {
+            closePullChallanDialog();
+        }
+    }
+});
+
+// Function to manually recalculate all totals
+function recalculateAllTotals() {
+    console.log('Manually recalculating all totals...');
+    
+    // Recalculate each row total
+    const rows = document.querySelectorAll('#productRows tr');
+    rows.forEach((row, index) => {
+        if (row.id) {
+            const rowIndex = row.id.split('_')[1];
+            if (rowIndex) {
+                calculateRowTotal(parseInt(rowIndex));
+            }
+        }
+    });
+    
+    // Recalculate invoice total
+    setTimeout(() => {
+        calculateInvoiceTotal();
+    }, 100);
+    
+    console.log('Total recalculation completed');
+}
+
+// Function specifically for challan products to force calculation
+function forceChallanTotalCalculation() {
+    console.log('Force calculating challan product totals...');
+    
+    let grandTotal = 0;
+    const rows = document.querySelectorAll('#productRows tr');
+    
+    rows.forEach((row, index) => {
+        if (row.id) {
+            const rate = parseFloat(row.querySelector('.purchase-rate')?.value) || 0;
+            const qty = parseFloat(row.querySelector('.qty')?.value) || 0;
+            const discount = parseFloat(row.querySelector('.discount')?.value) || 0;
+            const cgstRate = parseFloat(row.querySelector('.cgst-rate')?.value) || 0;
+            const sgstRate = parseFloat(row.querySelector('.sgst-rate')?.value) || 0;
+            
+            if (rate > 0 && qty > 0) {
+                const baseAmount = rate * qty;
+                const afterDiscount = baseAmount - discount;
+                const cgstAmount = (afterDiscount * cgstRate) / 100;
+                const sgstAmount = (afterDiscount * sgstRate) / 100;
+                const total = afterDiscount + cgstAmount + sgstAmount;
+                
+                const totalSpan = row.querySelector('.row-total');
+                if (totalSpan) {
+                    totalSpan.textContent = total.toFixed(2);
+                    grandTotal += total;
+                }
+                
+                console.log(`Row ${index}: Rate=${rate}, Qty=${qty}, Discount=${discount}, CGST=${cgstRate}%, SGST=${sgstRate}%, Total=${total.toFixed(2)}`);
+            }
+        }
+    });
+    
+    // Update invoice total
+    const transportCharges = parseFloat(document.querySelector('input[name*="transport_charges"]')?.value) || 0;
+    const finalTotal = grandTotal + transportCharges;
+    
+    console.log(`Grand Total: ${grandTotal.toFixed(2)}, Transport: ${transportCharges.toFixed(2)}, Final: ${finalTotal.toFixed(2)}`);
+    
+    // Update display
+    const invoiceTotalDisplay = document.getElementById('invoiceTotal');
+    if (invoiceTotalDisplay) {
+        if (transportCharges > 0) {
+            invoiceTotalDisplay.innerHTML = `${grandTotal.toFixed(2)} + ${transportCharges.toFixed(2)} = <strong>${finalTotal.toFixed(2)}</strong>`;
+        } else {
+            invoiceTotalDisplay.textContent = finalTotal.toFixed(2);
+        }
+    }
+    
+    // Update invoice total input field
+    const invoiceTotalInput = document.querySelector('input[name*="invoice_total"]') || 
+                             document.querySelector('#id_invoice_total') ||
+                             document.querySelector('input[id*="invoice_total"]');
+    
+    if (invoiceTotalInput) {
+        invoiceTotalInput.value = finalTotal.toFixed(2);
+        invoiceTotalInput.dispatchEvent(new Event('change', { bubbles: true }));
+        console.log(`Invoice total field forcefully updated to: ${finalTotal.toFixed(2)}`);
+    }
+    
+    return finalTotal;
+}
+
+
+
 </script>
 
 <!-- Keyboard Shortcuts Footer -->
 <div style="position: fixed; bottom: 0; left: 0; right: 0; background: #1f2937; color: #d1d5db; padding: 10px 20px; font-size: 0.8rem; display: flex; justify-content: center; gap: 30px; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.1);">
     <div style="display: flex; align-items: center; gap: 5px;">
-        <span style="background: #374151; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 0.7rem;">Ctrl+F2</span>
+        <span style="background: #374151; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 0.7rem;">F2</span>
         <span>Quick Search</span>
     </div>
     <div style="display: flex; align-items: center; gap: 5px;">
         <span style="background: #374151; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 0.7rem;">Ctrl+Enter</span>
         <span>Add Product</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 5px;">
+        <span style="background: #374151; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 0.7rem;">Alt+W</span>
+        <span>Batch Select</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 5px;">
+        <span style="background: #374151; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 0.7rem;">Ctrl+S</span>
+        <span>Save Invoice</span>
     </div>
     <!-- <div style="display: flex; align-items: center; gap: 5px;">
         <span style="background: #374151; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 0.7rem;">Alt+W</span>

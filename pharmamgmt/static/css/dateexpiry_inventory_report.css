@@ -63,6 +63,42 @@
     text-decoration: none;
 }
 
+.date-report-btn-warning {
+    background: #f6c23e;
+    color: #5a5c69;
+    border: 1px solid #f6c23e;
+}
+
+.date-report-btn-warning:hover {
+    background: #f4b619;
+    color: #5a5c69;
+    text-decoration: none;
+}
+
+.date-report-btn-success {
+    background: #1cc88a;
+    color: white;
+    border: 1px solid #1cc88a;
+}
+
+.date-report-btn-success:hover {
+    background: #17a673;
+    color: white;
+    text-decoration: none;
+}
+
+.date-report-btn-info {
+    background: #36b9cc;
+    color: white;
+    border: 1px solid #36b9cc;
+}
+
+.date-report-btn-info:hover {
+    background: #2c9faf;
+    color: white;
+    text-decoration: none;
+}
+
 /* Card section */
 .date-report-card {
     background: white;
@@ -351,37 +387,184 @@
     color: #0a3622;
 }
 
+/* Button loading states */
+.export-loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.export-pulse {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
 /* Print styles */
 @media print {
-    .no-print {
+    /* Hide non-printable elements */
+    .no-print,
+    .date-report-actions,
+    .date-filter-form,
+    .date-alert-close {
         display: none !important;
+    }
+    
+    /* Reset page styles */
+    body {
+        background: white !important;
+        color: black !important;
     }
     
     .date-report-container {
         padding: 0;
-        background: white;
+        background: white !important;
+        color: black !important;
+    }
+    
+    .date-report-header {
+        background: white !important;
+        box-shadow: none;
+        border-bottom: 2px solid #000;
+        margin-bottom: 20px;
+    }
+    
+    .date-report-title {
+        color: black !important;
+        font-size: 24px;
     }
     
     .date-report-card {
         box-shadow: none;
         border: none;
+        background: white !important;
+    }
+    
+    .date-report-card-header {
+        background: white !important;
+        border-bottom: 1px solid #000;
+    }
+    
+    .date-report-card-title {
+        color: black !important;
+    }
+    
+    .date-report-card-subtitle {
+        color: #333 !important;
+    }
+    
+    .date-info-alert {
+        background: #f0f0f0 !important;
+        border: 1px solid #ccc !important;
+        color: black !important;
+    }
+    
+    /* Table print styles */
+    .date-table-container {
+        border: 1px solid #000;
     }
     
     .date-inventory-table {
-        font-size: 12px;
+        font-size: 11px;
+        background: white !important;
+        color: black !important;
+        page-break-inside: auto;
     }
     
-    .date-inventory-table th,
-    .date-inventory-table td {
+    .date-inventory-table thead {
+        display: table-header-group;
+    }
+    
+    .date-inventory-table tfoot {
+        display: table-footer-group;
+    }
+    
+    .date-table-header {
+        background: #f0f0f0 !important;
+        border-bottom: 2px solid #000 !important;
+    }
+    
+    .date-table-header th {
         padding: 8px 6px;
+        color: black !important;
+        border-right: 1px solid #000 !important;
+    }
+    
+    .date-inventory-table tbody tr {
+        page-break-inside: avoid;
+        border-bottom: 1px solid #ccc !important;
+    }
+    
+    .date-inventory-table td {
+        padding: 6px 4px;
+        color: black !important;
+        border-right: 1px solid #ccc !important;
+    }
+    
+    /* Expiry status colors for print */
+    .date-expired {
+        background-color: #f5f5f5 !important;
+        color: black !important;
+        font-weight: bold;
+    }
+    
+    .date-expiring-soon {
+        background-color: #f9f9f9 !important;
+        color: black !important;
+        font-weight: bold;
+    }
+    
+    .date-expiring-warning {
+        background-color: #fafafa !important;
+        color: black !important;
+    }
+    
+    .date-expiring-later {
+        background-color: white !important;
+        color: black !important;
+    }
+    
+    .date-no-expiry {
+        background-color: #f0f0f0 !important;
+        color: black !important;
+    }
+    
+    .expired-product,
+    .expiring-soon,
+    .expiring-warning {
+        background-color: #f9f9f9 !important;
+        color: black !important;
     }
     
     .date-expiry-heading {
-        font-size: 13px;
+        font-size: 12px;
+        font-weight: bold;
     }
     
     .date-expiry-days {
         font-size: 10px;
+    }
+    
+    .date-expiry-value {
+        color: black !important;
+    }
+    
+    .date-table-footer {
+        background: #f0f0f0 !important;
+        border-top: 2px solid #000 !important;
+    }
+    
+    .date-table-footer td {
+        color: black !important;
+        font-weight: bold;
+    }
+    
+    /* Page break control */
+    @page {
+        size: A4 landscape;
+        margin: 1cm;
     }
 }
 

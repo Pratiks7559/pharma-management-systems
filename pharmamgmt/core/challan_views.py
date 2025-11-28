@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
 
 @login_required
 def supplier_challan_list(request):
@@ -75,8 +76,8 @@ def add_supplier_challan(request):
                     sgst_amount = (after_discount * sgst) / 100
                     total = after_discount + cgst_amount + sgst_amount
                     
-                    # Create challan entry - Inventory auto-updates via StockManager
-                    SupplierChallanMaster.objects.create(
+                    # Create challan entry - Inventory tracked via StockManager
+                    challan_entry = SupplierChallanMaster.objects.create(
                         product_suppliername=supplier,
                         product_challan_id=challan,
                         product_challan_no=challan_no,
@@ -94,8 +95,15 @@ def add_supplier_challan(request):
                         cgst=float(cgst),
                         sgst=float(sgst),
                         total_amount=float(total),
-                        challan_calculation_mode=product_data.get('calculation_mode', 'flat')
+                        challan_calculation_mode=product_data.get('calculation_mode', 'flat'),
+                        rate_a=float(product_data.get('rate_A', 0) or product_data.get('rate_a', 0) or 0),
+                        rate_b=float(product_data.get('rate_B', 0) or product_data.get('rate_b', 0) or 0),
+                        rate_c=float(product_data.get('rate_C', 0) or product_data.get('rate_c', 0) or 0)
                     )
+                    
+                    # REMOVED: Inventory tracking - no longer needed
+                    # Inventory is now tracked through PurchaseMaster and SalesMaster tables
+                    print(f"✅ SUPPLIER CHALLAN: Added {qty} units of {product.product_name} (Batch: {batch_no}) to challan {challan_no}")
                     
                     # Update sale rates if provided
                     rate_A = product_data.get('rate_A')
@@ -113,7 +121,7 @@ def add_supplier_challan(request):
                             }
                         )
                 
-                messages.success(request, f'Challan {challan_no} created successfully! Inventory has been updated.')
+                messages.success(request, f'Challan {challan_no} created successfully! Inventory tracking enabled for {len(products_data)} products.')
                 return redirect('supplier_challan_list')
                 
         except Exception as e:
@@ -136,13 +144,16 @@ def add_supplier_challan(request):
 @login_required
 def view_supplier_challan(request, challan_id):
     """View for displaying supplier challan details"""
-    from core.models import Challan1, SupplierChallanMaster
+    from core.models import Challan1, SupplierChallanMaster, SupplierChallanMaster2
     from django.db.models import Sum
+    from itertools import chain
     
     challan = get_object_or_404(Challan1, challan_id=challan_id)
-    challan_items = SupplierChallanMaster.objects.filter(product_challan_id=challan).select_related('product_id')
+    challan_items_1 = SupplierChallanMaster.objects.filter(product_challan_id=challan).select_related('product_id')
+    challan_items_2 = SupplierChallanMaster2.objects.filter(product_challan_id=challan).select_related('product_id')
+    challan_items = list(chain(challan_items_1, challan_items_2))
     
-    products_total = challan_items.aggregate(total=Sum('total_amount'))['total'] or 0
+    products_total = (challan_items_1.aggregate(total=Sum('total_amount'))['total'] or 0) + (challan_items_2.aggregate(total=Sum('total_amount'))['total'] or 0)
     
     context = {
         'challan': challan,
@@ -151,6 +162,34 @@ def view_supplier_challan(request, challan_id):
         'title': f'Challan {challan.challan_no}'
     }
     return render(request, 'challan/supplier_challan_detail.html', context)
+
+@login_required
+def print_purchase_receipt(request, challan_id):
+    """Print purchase receipt"""
+    from core.models import Challan1, SupplierChallanMaster, SupplierChallanMaster2
+    from django.db.models import Sum
+    from itertools import chain
+    
+    challan = get_object_or_404(Challan1, challan_id=challan_id)
+    challan_items_1 = SupplierChallanMaster.objects.filter(product_challan_id=challan).select_related('product_id')
+    challan_items_2 = SupplierChallanMaster2.objects.filter(product_challan_id=challan).select_related('product_id')
+    challan_items = list(chain(challan_items_1, challan_items_2))
+    
+    subtotal = challan_items.aggregate(total=Sum('total_amount'))['total'] or 0
+    total_discount = sum(item.product_discount for item in challan_items)
+    cgst_total = sum(item.total_amount * item.cgst / 100 for item in challan_items)
+    sgst_total = sum(item.total_amount * item.sgst / 100 for item in challan_items)
+    
+    context = {
+        'challan': challan,
+        'challan_items': challan_items,
+        'subtotal': subtotal,
+        'total_discount': total_discount,
+        'cgst_total': cgst_total,
+        'sgst_total': sgst_total,
+        'grand_total': subtotal + challan.transport_charges
+    }
+    return render(request, 'challan/print_purchase_receipt.html', context)
 
 @login_required
 @require_POST
@@ -315,15 +354,9 @@ def add_customer_challan(request):
                         rate_applied=product_data.get('rate_applied', 'NA')
                     )
                     
-                    from core.stock_manager import StockManager
-                    StockManager.update_stock_on_customer_challan(
-                        product=product,
-                        batch_no=batch_no,
-                        quantity=float(qty),
-                        expiry=expiry,
-                        mrp=float(product_data.get('mrp', 0)),
-                        rate=float(rate)
-                    )
+                    # REMOVED: Inventory tracking - no longer needed
+                    # Stock is now tracked through SalesMaster table
+                    print(f"✅ CUSTOMER CHALLAN: Added {qty} units of {product.product_name} (Batch: {batch_no}) to challan {challan_no}")
                 
                 messages.success(request, f'Customer Challan {challan_no} created successfully! Inventory updated.')
                 return redirect('view_customer_challan', challan_id=challan.customer_challan_id)
@@ -351,14 +384,17 @@ def add_customer_challan(request):
 @login_required
 def view_customer_challan(request, challan_id):
     """View for displaying customer challan details"""
-    from core.models import CustomerChallan, CustomerChallanMaster
+    from core.models import CustomerChallan, CustomerChallanMaster, CustomerChallanMaster2
     from django.db.models import Sum
+    from itertools import chain
     
     challan = get_object_or_404(CustomerChallan, customer_challan_id=challan_id)
-    challan_items = CustomerChallanMaster.objects.filter(customer_challan_id=challan).select_related('product_id')
+    challan_items_1 = CustomerChallanMaster.objects.filter(customer_challan_id=challan).select_related('product_id')
+    challan_items_2 = CustomerChallanMaster2.objects.filter(customer_challan_id=challan).select_related('product_id')
+    challan_items = list(chain(challan_items_1, challan_items_2))
     
     # Calculate grand total
-    grand_total = challan_items.aggregate(total=Sum('sale_total_amount'))['total'] or 0
+    grand_total = (challan_items_1.aggregate(total=Sum('sale_total_amount'))['total'] or 0) + (challan_items_2.aggregate(total=Sum('sale_total_amount'))['total'] or 0)
     final_total = grand_total + (challan.customer_transport_charges or 0)
     
     context = {
@@ -460,260 +496,83 @@ def add_challan_series(request):
     
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
-@login_required
-def challan_invoice_list(request):
-    """View for challan invoice list"""
-    from core.models import ChallanInvoice, SupplierMaster
-    
-    # Get actual challan invoices
-    invoices = ChallanInvoice.objects.select_related('supplier').all().order_by('-invoice_date', '-challan_invoice_id')
-    suppliers = SupplierMaster.objects.all().order_by('supplier_name')
-    
-    # Transform data for template
-    invoice_data = []
-    for invoice in invoices:
-        invoice_data.append({
-            'invoice_id': invoice.challan_invoice_id,
-            'invoice_no': invoice.invoice_no,
-            'invoice_date': invoice.invoice_date,
-            'supplier_name': invoice.supplier.supplier_name,
-            'total_amount': invoice.invoice_total,
-            'paid_amount': invoice.invoice_paid,
-            'balance_amount': invoice.balance_due
-        })
-    
-    context = {
-        'title': 'Challan Invoice List',
-        'invoices': invoice_data,
-        'suppliers': suppliers
-    }
-    return render(request, 'purchases/challan_invoice_list.html', context)
+
 
 @login_required
-@require_POST
-def create_invoice_from_challans(request):
-    """Create invoice from selected challans"""
-    from core.models import Challan1, ChallanInvoice
-    from django.db import transaction
-    import json
+def get_customer_challans_api(request):
+    """API to get customer challans for pull challan dialog"""
+    from core.models import CustomerChallan, CustomerChallanMaster
+    from django.db.models import Count
     
     try:
-        with transaction.atomic():
-            invoice_no = request.POST.get('invoice_no')
-            invoice_date = request.POST.get('invoice_date')
-            challan_ids = json.loads(request.POST.get('challan_ids', '[]'))
-            
-            if not invoice_no or not challan_ids:
-                return JsonResponse({'success': False, 'error': 'Missing required fields'})
-            
-            # Check if invoice number already exists
-            if ChallanInvoice.objects.filter(invoice_no=invoice_no).exists():
-                return JsonResponse({'success': False, 'error': 'Invoice number already exists'})
-            
-            # Get selected challans
-            challans = Challan1.objects.filter(challan_id__in=challan_ids)
-            if not challans.exists():
-                return JsonResponse({'success': False, 'error': 'No valid challans found'})
-            
-            # Check if all challans are from same supplier
-            suppliers = set(challan.supplier.supplierid for challan in challans)
-            if len(suppliers) > 1:
-                return JsonResponse({'success': False, 'error': 'All challans must be from the same supplier'})
-            
-            # Calculate total amount
-            total_amount = sum(challan.challan_total for challan in challans)
-            
-            # Create challan invoice
-            challan_invoice = ChallanInvoice.objects.create(
-                invoice_no=invoice_no,
-                invoice_date=invoice_date,
-                supplier=challans.first().supplier,
-                selected_challans=challan_ids,
-                invoice_total=total_amount,
-                invoice_paid=0.0
-            )
-            
-            # Mark selected challans as invoiced
-            challans.update(is_invoiced=True)
-            
-            return JsonResponse({
-                'success': True,
-                'message': f'Invoice {invoice_no} created successfully!',
-                'invoice_id': challan_invoice.challan_invoice_id
+        customer_id = request.GET.get('customer_id')
+        if not customer_id:
+            return JsonResponse({'success': False, 'error': 'Customer ID required'})
+        
+        # Get non-invoiced challans for this customer
+        challans = CustomerChallan.objects.filter(
+            customer_name_id=customer_id,
+            is_invoiced=False
+        ).annotate(
+            product_count=Count('customerchallanmaster')
+        ).order_by('-customer_challan_date')
+        
+        challan_list = []
+        for challan in challans:
+            challan_list.append({
+                'id': challan.customer_challan_id,
+                'challan_no': challan.customer_challan_no,
+                'date': challan.customer_challan_date.strftime('%d-%m-%Y'),
+                'product_count': challan.product_count,
+                'total': f"{challan.challan_total:.2f}"
             })
-            
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
-
-@login_required
-def challan_invoice_detail(request, invoice_id):
-    """View for challan invoice detail"""
-    from core.models import ChallanInvoice, Challan1
-    
-    invoice = get_object_or_404(ChallanInvoice, challan_invoice_id=invoice_id)
-    
-    # Get included challans
-    challan_ids = invoice.selected_challans
-    challans = Challan1.objects.filter(challan_id__in=challan_ids)
-    
-    # Calculate totals
-    challans_total = sum(challan.challan_total for challan in challans)
-    transport_total = sum(challan.transport_charges for challan in challans)
-    
-    # Calculate payment percentage
-    payment_percentage = (invoice.invoice_paid / invoice.invoice_total * 100) if invoice.invoice_total > 0 else 0
-    
-    # Get payment history
-    from core.models import ChallanInvoicePaid
-    payments = ChallanInvoicePaid.objects.filter(challan_invoice=invoice).order_by('-payment_date')
-    
-    context = {
-        'title': f'Challan Invoice {invoice.invoice_no}',
-        'invoice': invoice,
-        'challans': challans,
-        'challans_total': challans_total,
-        'transport_total': transport_total,
-        'payment_percentage': payment_percentage,
-        'payments': payments
-    }
-    return render(request, 'purchases/challan_invoice_detail.html', context)
-
-@login_required
-@require_POST
-def add_challan_invoice_payment(request, invoice_id):
-    """Add payment to challan invoice"""
-    from core.models import ChallanInvoice, ChallanInvoicePaid
-    from django.db import transaction
-    
-    try:
-        with transaction.atomic():
-            invoice = get_object_or_404(ChallanInvoice, challan_invoice_id=invoice_id)
-            
-            payment_date = request.POST.get('payment_date')
-            payment_amount = float(request.POST.get('payment_amount', 0))
-            payment_method = request.POST.get('payment_method', 'Cash')
-            payment_reference = request.POST.get('payment_reference', 'NA')
-            
-            if payment_amount <= 0:
-                return JsonResponse({'success': False, 'error': 'Payment amount must be greater than 0'})
-            
-            if payment_amount > invoice.balance_due:
-                return JsonResponse({'success': False, 'error': 'Payment amount cannot exceed balance due'})
-            
-            # Create payment record
-            ChallanInvoicePaid.objects.create(
-                challan_invoice=invoice,
-                payment_date=payment_date,
-                payment_amount=payment_amount,
-                payment_method=payment_method,
-                payment_reference=payment_reference
-            )
-            
-            # Update invoice paid amount
-            invoice.invoice_paid += payment_amount
-            invoice.save()
-            
-            return JsonResponse({
-                'success': True,
-                'message': f'Payment of ₹{payment_amount} added successfully!'
-            })
-            
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
-
-@login_required
-@require_POST
-def edit_challan_invoice_payment(request, payment_id):
-    """Edit challan invoice payment"""
-    from core.models import ChallanInvoicePaid
-    from django.db import transaction
-    
-    try:
-        with transaction.atomic():
-            payment = get_object_or_404(ChallanInvoicePaid, payment_id=payment_id)
-            old_amount = payment.payment_amount
-            
-            payment_date = request.POST.get('payment_date')
-            payment_amount = float(request.POST.get('payment_amount', 0))
-            payment_method = request.POST.get('payment_method', 'Cash')
-            payment_reference = request.POST.get('payment_reference', 'NA')
-            
-            if payment_amount <= 0:
-                return JsonResponse({'success': False, 'error': 'Payment amount must be greater than 0'})
-            
-            # Check if new amount is valid
-            invoice = payment.challan_invoice
-            available_balance = invoice.balance_due + old_amount  # Add back old amount
-            
-            if payment_amount > available_balance:
-                return JsonResponse({'success': False, 'error': 'Payment amount cannot exceed available balance'})
-            
-            # Update payment record
-            payment.payment_date = payment_date
-            payment.payment_amount = payment_amount
-            payment.payment_method = payment_method
-            payment.payment_reference = payment_reference
-            payment.save()
-            
-            # Update invoice paid amount
-            invoice.invoice_paid = invoice.invoice_paid - old_amount + payment_amount
-            invoice.save()
-            
-            return JsonResponse({
-                'success': True,
-                'message': f'Payment updated successfully!'
-            })
-            
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
-
-@login_required
-@require_POST
-def delete_challan_invoice_payment(request, payment_id):
-    """Delete challan invoice payment"""
-    from core.models import ChallanInvoicePaid
-    from django.db import transaction
-    
-    try:
-        with transaction.atomic():
-            payment = get_object_or_404(ChallanInvoicePaid, payment_id=payment_id)
-            payment_amount = payment.payment_amount
-            invoice = payment.challan_invoice
-            
-            # Update invoice paid amount
-            invoice.invoice_paid -= payment_amount
-            invoice.save()
-            
-            # Delete payment record
-            payment.delete()
-            
-            return JsonResponse({
-                'success': True,
-                'message': f'Payment of ₹{payment_amount} deleted successfully!'
-            })
-            
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
-
-@login_required
-def get_challan_invoice_payment(request, payment_id):
-    """Get challan invoice payment details for editing"""
-    from core.models import ChallanInvoicePaid
-    
-    try:
-        payment = get_object_or_404(ChallanInvoicePaid, payment_id=payment_id)
         
         return JsonResponse({
             'success': True,
-            'payment': {
-                'payment_id': payment.payment_id,
-                'payment_date': payment.payment_date.strftime('%Y-%m-%d'),
-                'payment_amount': payment.payment_amount,
-                'payment_method': payment.payment_method,
-                'payment_reference': payment.payment_reference
-            }
+            'challans': challan_list
         })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+@require_POST
+def get_challan_products_api(request):
+    """API to get products from selected challans"""
+    from core.models import CustomerChallanMaster
+    import json
+    
+    try:
+        data = json.loads(request.body)
+        challan_ids = data.get('challan_ids', [])
         
+        if not challan_ids:
+            return JsonResponse({'success': False, 'error': 'No challans selected'})
+        
+        # Get all products from selected challans
+        challan_items = CustomerChallanMaster.objects.filter(
+            customer_challan_id__in=challan_ids
+        ).select_related('product_id', 'customer_challan_id')
+        
+        products = []
+        for item in challan_items:
+            products.append({
+                'product_id': item.product_id.productid,
+                'batch_no': item.product_batch_no,
+                'expiry': item.product_expiry,
+                'mrp': item.product_mrp,
+                'rate': item.sale_rate,
+                'quantity': item.sale_quantity,
+                'discount': item.sale_discount,
+                'cgst': item.sale_cgst,
+                'sgst': item.sale_sgst,
+                'challan_no': item.customer_challan_no,
+                'challan_date': item.customer_challan_id.customer_challan_date.strftime('%Y-%m-%d')
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'products': products
+        })
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
@@ -721,7 +580,7 @@ def get_challan_invoice_payment(request, payment_id):
 @require_POST
 def create_customer_invoice_from_challans(request):
     """Create sales challan invoice from selected customer challans"""
-    from core.models import CustomerChallan, SalesChallanInvoice, InvoiceSeries
+    from core.models import CustomerChallan, SalesInvoiceMaster, InvoiceSeries, SalesMaster, CustomerChallanMaster
     from django.db import transaction
     import json
     
@@ -752,293 +611,64 @@ def create_customer_invoice_from_challans(request):
             if len(customers) > 1:
                 return JsonResponse({'success': False, 'error': 'All challans must be from the same customer'})
             
-            # Calculate total amount
-            total_amount = sum(challan.challan_total for challan in challans)
+            customer = challans.first().customer_name
             
-            # Create sales challan invoice
-            sales_challan_invoice = SalesChallanInvoice.objects.create(
-                invoice_no=invoice_no,
-                invoice_date=invoice_date,
-                customer=challans.first().customer_name,
+            # Create sales invoice
+            sales_invoice = SalesInvoiceMaster.objects.create(
+                sales_invoice_no=invoice_no,
+                sales_invoice_date=invoice_date,
+                customerid=customer,
                 invoice_series=series,
-                selected_challans=challan_ids,
-                invoice_total=total_amount,
-                invoice_paid=0.0
+                sales_transport_charges=0,
+                sales_invoice_paid=0.0
             )
+            
+            # Copy challan items to sales master
+            for challan in challans:
+                challan_items = CustomerChallanMaster.objects.filter(customer_challan_id=challan)
+                for item in challan_items:
+                    SalesMaster.objects.create(
+                        sales_invoice_no=sales_invoice,
+                        customerid=customer,
+                        productid=item.product_id,
+                        product_name=item.product_name,
+                        product_company=item.product_company,
+                        product_packing=item.product_packing,
+                        product_batch_no=item.product_batch_no,
+                        product_expiry=item.product_expiry,
+                        product_MRP=item.product_mrp,
+                        sale_rate=item.sale_rate,
+                        sale_quantity=item.sale_quantity,
+                        sale_discount=item.sale_discount,
+                        sale_cgst=item.sale_cgst,
+                        sale_sgst=item.sale_sgst,
+                        sale_total_amount=item.sale_total_amount,
+                        rate_applied=item.rate_applied
+                    )
             
             # Mark selected challans as invoiced
             challans.update(is_invoiced=True)
             
             return JsonResponse({
                 'success': True,
-                'message': f'Sales Challan Invoice {invoice_no} created successfully!',
+                'message': f'Sales Invoice {invoice_no} created successfully from challans!',
                 'invoice_number': invoice_no,
-                'invoice_id': sales_challan_invoice.sales_challan_invoice_id
+                'redirect_url': f'/sales/invoice_detail/{invoice_no}/'
             })
             
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required
-def sales_challan_invoice_list(request):
-    """View for sales challan invoice list"""
-    from core.models import SalesChallanInvoice, CustomerMaster
-    from django.db.models import Q
-    from django.core.paginator import Paginator
-    
-    # Get search and filter parameters
-    search_query = request.GET.get('search', '')
-    start_date = request.GET.get('start_date', '')
-    end_date = request.GET.get('end_date', '')
-    
-    # Base queryset
-    invoices = SalesChallanInvoice.objects.select_related('customer', 'invoice_series').all()
-    
-    # Apply filters
-    if search_query:
-        invoices = invoices.filter(
-            Q(invoice_no__icontains=search_query) |
-            Q(customer__customer_name__icontains=search_query)
-        )
-    
-    if start_date:
-        invoices = invoices.filter(invoice_date__gte=start_date)
-    
-    if end_date:
-        invoices = invoices.filter(invoice_date__lte=end_date)
-    
-    invoices = invoices.order_by('-invoice_date', '-sales_challan_invoice_id')
-    
-    # Pagination
-    paginator = Paginator(invoices, 25)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
-    context = {
-        'title': 'Sales Challan Invoices',
-        'invoices': page_obj,
-        'search_query': search_query,
-        'start_date': start_date,
-        'end_date': end_date
-    }
-    return render(request, 'sales/sales_challan_invoice_list.html', context)
 
-@login_required
-def sales_challan_invoice_detail(request, invoice_id):
-    """View for sales challan invoice detail"""
-    from core.models import SalesChallanInvoice, CustomerChallan, SalesChallanInvoicePaid
-    
-    invoice = get_object_or_404(SalesChallanInvoice, sales_challan_invoice_id=invoice_id)
-    
-    # Get included challans
-    challan_ids = invoice.selected_challans
-    challans = CustomerChallan.objects.filter(customer_challan_id__in=challan_ids)
-    
-    # Get payment history
-    payments = SalesChallanInvoicePaid.objects.filter(sales_challan_invoice=invoice).order_by('-payment_date')
-    
-    # Calculate payment percentage
-    payment_percentage = (invoice.invoice_paid / invoice.invoice_total * 100) if invoice.invoice_total > 0 else 0
-    
-    context = {
-        'title': f'Sales Challan Invoice {invoice.invoice_no}',
-        'invoice': invoice,
-        'challans': challans,
-        'payments': payments,
-        'payment_percentage': round(payment_percentage, 1)
-    }
-    return render(request, 'sales/sales_challan_invoice_detail.html', context)
 
-@login_required
-@require_POST
-def add_sales_challan_invoice_payment(request, invoice_id):
-    """Add payment to sales challan invoice"""
-    from core.models import SalesChallanInvoice, SalesChallanInvoicePaid
-    from django.db import transaction
-    
-    try:
-        with transaction.atomic():
-            invoice = get_object_or_404(SalesChallanInvoice, sales_challan_invoice_id=invoice_id)
-            
-            payment_date = request.POST.get('payment_date')
-            payment_amount = float(request.POST.get('payment_amount', 0))
-            payment_method = request.POST.get('payment_method', 'Cash')
-            payment_reference = request.POST.get('payment_reference', 'NA')
-            
-            if payment_amount <= 0:
-                return JsonResponse({'success': False, 'error': 'Payment amount must be greater than 0'})
-            
-            if payment_amount > invoice.balance_due:
-                return JsonResponse({'success': False, 'error': 'Payment amount cannot exceed balance due'})
-            
-            # Create payment record
-            SalesChallanInvoicePaid.objects.create(
-                sales_challan_invoice=invoice,
-                payment_date=payment_date,
-                payment_amount=payment_amount,
-                payment_method=payment_method,
-                payment_reference=payment_reference
-            )
-            
-            # Update invoice paid amount
-            invoice.invoice_paid += payment_amount
-            invoice.save()
-            
-            return JsonResponse({
-                'success': True,
-                'message': f'Payment of ₹{payment_amount} added successfully!'
-            })
-            
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required
-@require_POST
-def edit_sales_challan_invoice_payment(request, payment_id):
-    """Edit sales challan invoice payment"""
-    from core.models import SalesChallanInvoicePaid
-    from django.db import transaction
-    
-    try:
-        with transaction.atomic():
-            payment = get_object_or_404(SalesChallanInvoicePaid, payment_id=payment_id)
-            old_amount = payment.payment_amount
-            
-            payment_date = request.POST.get('payment_date')
-            payment_amount = float(request.POST.get('payment_amount', 0))
-            payment_method = request.POST.get('payment_method', 'Cash')
-            payment_reference = request.POST.get('payment_reference', 'NA')
-            
-            if payment_amount <= 0:
-                return JsonResponse({'success': False, 'error': 'Payment amount must be greater than 0'})
-            
-            # Check if new amount is valid
-            invoice = payment.sales_challan_invoice
-            available_balance = invoice.balance_due + old_amount  # Add back old amount
-            
-            if payment_amount > available_balance:
-                return JsonResponse({'success': False, 'error': 'Payment amount cannot exceed available balance'})
-            
-            # Update payment record
-            payment.payment_date = payment_date
-            payment.payment_amount = payment_amount
-            payment.payment_method = payment_method
-            payment.payment_reference = payment_reference
-            payment.save()
-            
-            # Update invoice paid amount
-            invoice.invoice_paid = invoice.invoice_paid - old_amount + payment_amount
-            invoice.save()
-            
-            return JsonResponse({
-                'success': True,
-                'message': f'Payment updated successfully!'
-            })
-            
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required
-@require_POST
-def delete_sales_challan_invoice_payment(request, payment_id):
-    """Delete sales challan invoice payment"""
-    from core.models import SalesChallanInvoicePaid
-    from django.db import transaction
-    
-    try:
-        with transaction.atomic():
-            payment = get_object_or_404(SalesChallanInvoicePaid, payment_id=payment_id)
-            payment_amount = payment.payment_amount
-            invoice = payment.sales_challan_invoice
-            
-            # Update invoice paid amount
-            invoice.invoice_paid -= payment_amount
-            invoice.save()
-            
-            # Delete payment record
-            payment.delete()
-            
-            return JsonResponse({
-                'success': True,
-                'message': f'Payment of ₹{payment_amount} deleted successfully!'
-            })
-            
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required
-def get_sales_challan_invoice_payment(request, payment_id):
-    """Get sales challan invoice payment details for editing"""
-    from core.models import SalesChallanInvoicePaid
-    
-    try:
-        payment = get_object_or_404(SalesChallanInvoicePaid, payment_id=payment_id)
-        
-        return JsonResponse({
-            'success': True,
-            'payment': {
-                'payment_id': payment.payment_id,
-                'payment_date': payment.payment_date.strftime('%Y-%m-%d'),
-                'payment_amount': payment.payment_amount,
-                'payment_method': payment.payment_method,
-                'payment_reference': payment.payment_reference
-            }
-        })
-        
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required
-@require_POST
-def delete_sales_challan_invoice(request, invoice_id):
-    """Delete sales challan invoice"""
-    from core.models import SalesChallanInvoice, CustomerChallan
-    from django.db import transaction
-    
-    try:
-        with transaction.atomic():
-            invoice = get_object_or_404(SalesChallanInvoice, sales_challan_invoice_id=invoice_id)
-            invoice_no = invoice.invoice_no
-            
-            # Mark associated challans as not invoiced
-            challan_ids = invoice.selected_challans
-            CustomerChallan.objects.filter(customer_challan_id__in=challan_ids).update(is_invoiced=False)
-            
-            # Delete the invoice (payments will be deleted due to CASCADE)
-            invoice.delete()
-            
-            return JsonResponse({
-                'success': True,
-                'message': f'Sales Challan Invoice {invoice_no} deleted successfully!',
-                'redirect_url': '/challan/customer/'
-            })
-            
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
-@login_required
-@require_POST
-def delete_challan_invoice(request, invoice_id):
-    """Delete challan invoice"""
-    from core.models import ChallanInvoice, Challan1
-    from django.db import transaction
-    
-    try:
-        with transaction.atomic():
-            invoice = get_object_or_404(ChallanInvoice, challan_invoice_id=invoice_id)
-            invoice_no = invoice.invoice_no
-            
-            # Mark associated challans as not invoiced
-            challan_ids = invoice.selected_challans
-            Challan1.objects.filter(challan_id__in=challan_ids).update(is_invoiced=False)
-            
-            # Delete the invoice (payments will be deleted due to CASCADE)
-            invoice.delete()
-            
-            return JsonResponse({
-                'success': True,
-                'message': f'Challan Invoice {invoice_no} deleted successfully!',
-                'redirect_url': '/challan/supplier/'
-            })
-            
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+
+
+
+
+
+
+

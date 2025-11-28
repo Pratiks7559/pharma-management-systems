@@ -2,7 +2,7 @@ from django.db.models import Sum, Count, Avg, Max, Min
 from datetime import datetime, timedelta
 from .models import (
     InvoiceMaster, PurchaseMaster, SupplierMaster, ProductMaster, 
-    InvoicePaid, PaymentMaster
+    InvoicePaid
 )
 
 class PurchaseAnalytics:

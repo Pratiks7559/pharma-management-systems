@@ -5,9 +5,8 @@ from .models import (
     InvoiceMaster, InvoicePaid, PurchaseMaster, SalesInvoiceMaster, SalesMaster,
     SalesInvoicePaid, ProductRateMaster, ReturnInvoiceMaster, PurchaseReturnInvoicePaid,
     ReturnPurchaseMaster, ReturnSalesInvoiceMaster, ReturnSalesInvoicePaid, ReturnSalesMaster,
-    SaleRateMaster, PaymentMaster, ReceiptMaster
+    SaleRateMaster
 )
-# PaymentMaster and ReceiptMaster are now in models.py
 
 class DateInput(forms.TextInput):
     input_type = 'text'
@@ -33,6 +32,7 @@ class UserRegistrationForm(UserCreationForm):
         ('admin', 'Admin'),
         ('manager', 'Manager'),
         ('staff', 'Staff'),
+        ('customer', 'Customer'),
     ]
     
     first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
@@ -54,6 +54,7 @@ class UserUpdateForm(forms.ModelForm):
         ('admin', 'Admin'),
         ('manager', 'Manager'),
         ('staff', 'Staff'),
+        ('customer', 'Customer'),
     ]
     
     first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
@@ -120,17 +121,18 @@ class ProductForm(forms.ModelForm):
 
 class SupplierForm(forms.ModelForm):
     supplier_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    supplier_type = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    supplier_address = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
+    supplier_type = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    supplier_address = forms.CharField(required=False, widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
     supplier_mobile = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    supplier_whatsapp = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    supplier_emailid = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control'}))
-    supplier_spoc = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    supplier_dlno = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    supplier_gstno = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    supplier_bank = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    supplier_bankaccountno = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    supplier_bankifsc = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+    supplier_whatsapp = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    supplier_emailid = forms.EmailField(required=False, widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    supplier_spoc = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    supplier_dlno = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    supplier_gstno = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    supplier_bank = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    supplier_branch = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    supplier_bankaccountno = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    supplier_bankifsc = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
     supplier_upi = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
     
     class Meta:
@@ -145,16 +147,16 @@ class CustomerForm(forms.ModelForm):
     ]
     
     customer_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    customer_type = forms.ChoiceField(choices=CUSTOMER_TYPE_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}))
-    customer_address = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
     customer_mobile = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    customer_whatsapp = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    customer_emailid = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control'}))
-    customer_spoc = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    customer_dlno = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    customer_gstno = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    customer_food_license_no = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
-    customer_credit_days = forms.IntegerField(widget=forms.NumberInput(attrs={'class': 'form-control'}))
+    customer_type = forms.ChoiceField(choices=CUSTOMER_TYPE_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}), required=False)
+    customer_address = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}), required=False)
+    customer_whatsapp = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}), required=False)
+    customer_emailid = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control'}), required=False)
+    customer_spoc = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}), required=False)
+    customer_dlno = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}), required=False)
+    customer_gstno = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}), required=False)
+    customer_food_license_no = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}), required=False)
+    customer_credit_days = forms.IntegerField(widget=forms.NumberInput(attrs={'class': 'form-control'}), required=False, initial=0)
     
     class Meta:
         model = CustomerMaster
@@ -409,20 +411,38 @@ class ProductRateForm(forms.ModelForm):
 
 class PurchaseReturnInvoiceForm(forms.ModelForm):
     returninvoiceid = forms.CharField(required=False, widget=forms.HiddenInput())
-    returninvoice_date = forms.CharField(widget=DateInput())
+    returninvoice_date = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'class': 'form-control date-input-ddmmyyyy',
+            'placeholder': 'DD-MM-YYYY',
+            'maxlength': '10',
+            'title': 'Enter return date in DD-MM-YYYY format'
+        })
+    )
     returnsupplierid = forms.ModelChoiceField(queryset=SupplierMaster.objects.all(), widget=forms.Select(attrs={'class': 'form-control'}))
     return_charges = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), initial=0.0)
     returninvoice_total = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), initial=0.0)
     
     def clean_returninvoice_date(self):
-        from .date_utils import parse_ddmmyyyy_date
+        from datetime import datetime
         from django.core.exceptions import ValidationError
         
         date_str = self.cleaned_data['returninvoice_date']
-        try:
-            return parse_ddmmyyyy_date(date_str)
-        except ValidationError:
-            raise forms.ValidationError("Enter date in DDMMYYYY format")
+        
+        # Handle YYYY-MM-DD format (from backend)
+        if len(date_str) == 10 and '-' in date_str:
+            try:
+                # Check if it's DD-MM-YYYY format
+                if date_str[2] == '-' and date_str[5] == '-':
+                    day, month, year = date_str.split('-')
+                    return datetime(int(year), int(month), int(day)).date()
+                # Check if it's YYYY-MM-DD format
+                elif date_str[4] == '-' and date_str[7] == '-':
+                    return datetime.strptime(date_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+        
+        raise ValidationError("Enter date in DD-MM-YYYY format")
     
     class Meta:
         model = ReturnInvoiceMaster
@@ -643,60 +663,38 @@ class SaleRateForm(forms.ModelForm):
         model = SaleRateMaster
         fields = ['productid', 'product_batch_no', 'rate_A', 'rate_B', 'rate_C']
 
+
+
+
 class PaymentForm(forms.ModelForm):
-    payment_date = forms.DateField(widget=DateInput(attrs={'class': 'form-control'}))
-    payment_amount = forms.DecimalField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
-    payment_method = forms.ChoiceField(
-        choices=PaymentMaster._meta.get_field('payment_method').choices,
-        widget=forms.Select(attrs={'class': 'form-control'})
-    )
-    payment_description = forms.CharField(required=False, widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
-    payment_reference = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    
-    def clean_payment_date(self):
-        from django.utils import timezone
-        from datetime import datetime
-        
-        payment_date = self.cleaned_data.get('payment_date')
-        
-        if payment_date and hasattr(payment_date, 'date'):
-            # Convert date to timezone-aware datetime
-            current_time = timezone.now().time()
-            payment_date = timezone.make_aware(
-                datetime.combine(payment_date, current_time)
-            )
-        
-        return payment_date
+    payment_date = forms.DateField(widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}))
+    payment_amount = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    PAYMENT_MODE_CHOICES = [
+        ('cash', 'Cash'),
+        ('cheque', 'Cheque'),
+        ('bank_transfer', 'Bank Transfer'),
+        ('upi', 'UPI'),
+    ]
+    payment_mode = forms.ChoiceField(choices=PAYMENT_MODE_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}))
+    payment_ref_no = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    ip_invoiceid = forms.ModelChoiceField(queryset=InvoiceMaster.objects.all(), widget=forms.HiddenInput())
     
     class Meta:
-        model = PaymentMaster
-        fields = ['payment_date', 'payment_amount', 'payment_method', 'payment_description', 'payment_reference']
+        model = InvoicePaid
+        fields = ['payment_date', 'payment_amount', 'payment_mode', 'payment_ref_no', 'ip_invoiceid']
 
-class ReceiptForm(forms.ModelForm):
-    receipt_date = forms.DateField(widget=DateInput(attrs={'class': 'form-control'}))
-    receipt_amount = forms.DecimalField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+class ReceiptForm(forms.Form):
+    receipt_date = forms.DateField(widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}))
+    receipt_amount = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
     receipt_method = forms.ChoiceField(
-        choices=ReceiptMaster._meta.get_field('receipt_method').choices,
+        choices=[
+            ('cash', 'Cash'),
+            ('cheque', 'Cheque'),
+            ('bank_transfer', 'Bank Transfer'),
+            ('upi', 'UPI'),
+            ('card', 'Card')
+        ],
         widget=forms.Select(attrs={'class': 'form-control'})
     )
     receipt_description = forms.CharField(required=False, widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
     receipt_reference = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    
-    def clean_receipt_date(self):
-        from django.utils import timezone
-        from datetime import datetime
-        
-        receipt_date = self.cleaned_data.get('receipt_date')
-        
-        if receipt_date and hasattr(receipt_date, 'date'):
-            # Convert date to timezone-aware datetime
-            current_time = timezone.now().time()
-            receipt_date = timezone.make_aware(
-                datetime.combine(receipt_date, current_time)
-            )
-        
-        return receipt_date
-    
-    class Meta:
-        model = ReceiptMaster
-        fields = ['receipt_date', 'receipt_amount', 'receipt_method', 'receipt_description', 'receipt_reference']

@@ -6,8 +6,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from core.models import (
     InvoiceMaster, SalesInvoiceMaster, PurchaseMaster, SalesMaster,
-    ReturnInvoiceMaster, ReturnPurchaseMaster, ReturnSalesInvoiceMaster, ReturnSalesMaster,
-    PaymentMaster, ReceiptMaster, InvoicePaid, SalesInvoicePaid
+    ReturnInvoiceMaster, ReturnPurchaseMaster, ReturnSalesInvoiceMaster, ReturnSalesMaster, ReceiptMaster, InvoicePaid, SalesInvoicePaid
 )
 from core.date_utils import format_date_for_backend, convert_legacy_dates
 from datetime import datetime

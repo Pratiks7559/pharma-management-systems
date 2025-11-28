@@ -5,117 +5,104 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/financial_report.css' %}">
+<link rel="stylesheet" href="{% static 'css/financial_report_modern.css' %}">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
 {% endblock %}
 
 {% block content %}
-<div class="financial-report-container">
-    <div class="financial-report-header">
-        <h1 class="financial-report-title">{{ title }}</h1>
-        <div class="financial-export-buttons no-print">
-            <a href="{% url 'export_financial_pdf' %}" class="financial-export-btn financial-export-pdf">
+<div class="finrep-container">
+    <div class="finrep-header">
+        <h1 class="finrep-title">{{ title }}</h1>
+        <div class="finrep-actions no-print">
+            <a href="{% url 'export_financial_pdf' %}" class="finrep-btn finrep-btn-pdf">
                 <i class="fas fa-file-pdf"></i> PDF
             </a>
-            <a href="{% url 'export_financial_excel' %}" class="financial-export-btn financial-export-excel">
-                <i class="fas fa-file-csv"></i> CSV/Excel
+            <a href="{% url 'export_financial_excel' %}" class="finrep-btn finrep-btn-excel">
+                <i class="fas fa-file-csv"></i> Excel
             </a>
-            <button onclick="window.print()" class="financial-export-btn financial-export-print">
-                <i class="fas fa-print"></i> Print (Ctrl+P)
+            <button onclick="window.print()" class="finrep-btn finrep-btn-print">
+                <i class="fas fa-print"></i> Print
             </button>
         </div>
     </div>
 
     <!-- Date Range Selector -->
-    <div class="financial-date-range-card">
-        <div class="financial-date-range-header">
-            <h6 class="financial-date-range-title">Select Date Range</h6>
+    <div class="finrep-datecard">
+        <div class="finrep-datecard-header">
+            <h6 class="finrep-datecard-title">Select Date Range</h6>
         </div>
-        <div class="financial-date-range-body">
-            <form method="get" class="financial-date-range-form">
-                <div class="financial-date-inputs-row">
-                    <div class="col">
-                        <div class="financial-form-group">
-                            <label for="start_date" class="financial-date-label">Start Date</label>
-                            <input type="date" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" class="financial-date-input">
-                        </div>
+        <div class="finrep-datecard-body">
+            <form method="get" class="finrep-dateform">
+                <div class="finrep-dateinputs">
+                    <div class="finrep-dategroup">
+                        <label for="start_date" class="finrep-datelabel">Start Date</label>
+                        <input type="date" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" class="finrep-dateinput">
                     </div>
-                    <div class="col">
-                        <div class="financial-form-group">
-                            <label for="end_date" class="financial-date-label">End Date</label>
-                            <input type="date" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" class="financial-date-input">
-                        </div>
+                    <div class="finrep-dategroup">
+                        <label for="end_date" class="finrep-datelabel">End Date</label>
+                        <input type="date" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" class="finrep-dateinput">
                     </div>
                 </div>
-                <button type="submit" class="financial-apply-btn">Apply</button>
+                <button type="submit" class="finrep-applybtn">Apply</button>
             </form>
         </div>
     </div>
 
     <!-- Financial Summary -->
-    <div class="financial-summary-row">
-        <div class="financial-summary-col">
-            <div class="financial-summary-card">
-                <div class="financial-summary-card-body">
-                    <div class="financial-summary-content">
-                        <div class="col mr-2">
-                            <div class="financial-summary-label">
-                                Gross Sales</div>
-                            <div class="financial-summary-value">₹ {{ sales|floatformat:2 }}</div>
-                        </div>
-                        <div class="financial-summary-icon">
-                            <i class="fas fa-cart-plus fa-2x text-gray-300"></i>
-                        </div>
+    <div class="finrep-summary">
+        <div class="finrep-summarycard">
+            <div class="finrep-summarycard-body">
+                <div class="finrep-summarycard-content">
+                    <div class="finrep-summarycard-text">
+                        <div class="finrep-summarycard-label">Gross Sales</div>
+                        <div class="finrep-summarycard-value">₹ {{ sales|floatformat:2 }}</div>
+                        <small class="finrep-summarycard-meta">{{ sales_data.invoice_count }} invoices</small>
+                    </div>
+                    <div class="finrep-summarycard-icon">
+                        <i class="fas fa-cart-plus"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="financial-summary-col">
-            <div class="financial-summary-card">
-                <div class="financial-summary-card-body">
-                    <div class="financial-summary-content">
-                        <div class="col mr-2">
-                            <div class="financial-summary-label">
-                                Gross Purchases</div>
-                            <div class="financial-summary-value">₹ {{ purchases|floatformat:2 }}</div>
-                        </div>
-                        <div class="financial-summary-icon">
-                            <i class="fas fa-shopping-bag fa-2x text-gray-300"></i>
-                        </div>
+        <div class="finrep-summarycard">
+            <div class="finrep-summarycard-body">
+                <div class="finrep-summarycard-content">
+                    <div class="finrep-summarycard-text">
+                        <div class="finrep-summarycard-label">Gross Purchases</div>
+                        <div class="finrep-summarycard-value">₹ {{ purchases|floatformat:2 }}</div>
+                        <small class="finrep-summarycard-meta">{{ purchase_data.invoice_count }} invoices</small>
+                    </div>
+                    <div class="finrep-summarycard-icon">
+                        <i class="fas fa-shopping-bag"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="financial-returns-col">
-            <div class="financial-sales-returns-card">
-                <div class="financial-sales-returns-body">
-                    <div class="financial-sales-returns-content">
-                        <div class="financial-sales-returns-text">
-                            <div class="financial-sales-returns-label">
-                                Sales Returns</div>
-                            <div class="financial-sales-returns-value">₹ {{ sales_returns|floatformat:2 }}</div>
-                        </div>
-                        <div class="financial-sales-returns-icon">
-                            <i class="fas fa-undo fa-2x text-gray-300"></i>
-                        </div>
+        <div class="finrep-summarycard finrep-summarycard-warning">
+            <div class="finrep-summarycard-body">
+                <div class="finrep-summarycard-content">
+                    <div class="finrep-summarycard-text">
+                        <div class="finrep-summarycard-label">Sales Returns</div>
+                        <div class="finrep-summarycard-value">₹ {{ sales_returns|floatformat:2 }}</div>
+                    </div>
+                    <div class="finrep-summarycard-icon">
+                        <i class="fas fa-undo"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="financial-returns-col">
-            <div class="financial-purchase-returns-card">
-                <div class="financial-purchase-returns-body">
-                    <div class="financial-purchase-returns-content">
-                        <div class="financial-purchase-returns-text">
-                            <div class="financial-purchase-returns-label">
-                                Purchase Returns</div>
-                            <div class="financial-purchase-returns-value">₹ {{ purchase_returns|floatformat:2 }}</div>
-                        </div>
-                        <div class="financial-purchase-returns-icon">
-                            <i class="fas fa-undo-alt fa-2x text-gray-300"></i>
-                        </div>
+        <div class="finrep-summarycard finrep-summarycard-info">
+            <div class="finrep-summarycard-body">
+                <div class="finrep-summarycard-content">
+                    <div class="finrep-summarycard-text">
+                        <div class="finrep-summarycard-label">Purchase Returns</div>
+                        <div class="finrep-summarycard-value">₹ {{ purchase_returns|floatformat:2 }}</div>
+                    </div>
+                    <div class="finrep-summarycard-icon">
+                        <i class="fas fa-undo-alt"></i>
                     </div>
                 </div>
             </div>
@@ -186,14 +173,179 @@
         </div>
     </div>
 
-    <!-- Monthly Sales Trend Chart -->
-    <div class="financial-chart-card">
-        <div class="financial-chart-header">
-            <h6 class="financial-chart-title">Monthly Sales Trend (Past 12 Months)</h6>
+    <!-- Key Performance Indicators -->
+    <div class="row financial-section">
+        <div class="col-md-3">
+            <div class="financial-kpi-card">
+                <div class="financial-metric-value">{{ profit_margin|floatformat:1 }}%</div>
+                <div class="financial-metric-label">Profit Margin</div>
+            </div>
         </div>
-        <div class="financial-chart-body">
-            <div class="financial-chart-area">
-                <canvas id="monthlySalesChart"></canvas>
+        <div class="col-md-3">
+            <div class="financial-kpi-card">
+                <div class="financial-metric-value">{{ inventory_turnover|floatformat:1 }}</div>
+                <div class="financial-metric-label">Inventory Turnover</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="financial-kpi-card">
+                <div class="financial-metric-value">{{ days_sales_outstanding|floatformat:0 }}</div>
+                <div class="financial-metric-label">Days Sales Outstanding</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="financial-kpi-card">
+                <div class="financial-metric-value">{{ sales_data.collection_ratio|floatformat:1 }}%</div>
+                <div class="financial-metric-label">Collection Ratio</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="row financial-section">
+        <div class="col-md-6">
+            <div class="financial-chart-card">
+                <div class="financial-chart-header">
+                    <h6 class="financial-chart-title">Monthly Sales vs Purchases</h6>
+                </div>
+                <div class="financial-chart-body">
+                    <div class="chart-container">
+                        <canvas id="monthlySalesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="financial-chart-card">
+                <div class="financial-chart-header">
+                    <h6 class="financial-chart-title">Cash Flow Trend</h6>
+                </div>
+                <div class="financial-chart-body">
+                    <div class="chart-container">
+                        <canvas id="cashFlowChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Performers Section -->
+    <div class="financial-section">
+        <h3>Top Performers</h3>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="financial-table">
+                    <div class="card-header">
+                        <h6>Top Products by Sales</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Sales (₹)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in top_performers.products|slice:":5" %}
+                                <tr>
+                                    <td>{{ product.productid__product_name|truncatechars:20 }}</td>
+                                    <td>₹{{ product.total_sales|floatformat:0 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="financial-table">
+                    <div class="card-header">
+                        <h6>Top Customers</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Purchase (₹)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for customer in top_performers.customers|slice:":5" %}
+                                <tr>
+                                    <td>{{ customer.customerid__customer_name|truncatechars:20 }}</td>
+                                    <td>₹{{ customer.total_purchase|floatformat:0 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="financial-table">
+                    <div class="card-header">
+                        <h6>Top Suppliers</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Supplier</th>
+                                    <th>Purchase (₹)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for supplier in top_performers.suppliers|slice:":5" %}
+                                <tr>
+                                    <td>{{ supplier.product_supplierid__supplier_name|truncatechars:20 }}</td>
+                                    <td>₹{{ supplier.total_purchase|floatformat:0 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Metrics -->
+    <div class="financial-section">
+        <h3>Inventory Overview</h3>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">₹{{ inventory_metrics.total_stock_value|floatformat:0 }}</h5>
+                        <p class="card-text">Total Stock Value</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ inventory_metrics.total_items }}</h5>
+                        <p class="card-text">Total Items</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-warning">{{ inventory_metrics.low_stock_items }}</h5>
+                        <p class="card-text">Low Stock Items</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-danger">{{ inventory_metrics.expired_items }}</h5>
+                        <p class="card-text">Expired Items</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -281,90 +433,163 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
 <script>
     $(document).ready(function() {
         // Initialize DataTables
         $('#receivablesTable').DataTable({
-            "order": [[1, "desc"]]  // Sort by outstanding amount (descending) by default
+            "order": [[1, "desc"]],
+            "pageLength": 10,
+            "responsive": true
         });
         
         $('#payablesTable').DataTable({
-            "order": [[1, "desc"]]  // Sort by outstanding amount (descending) by default
+            "order": [[1, "desc"]],
+            "pageLength": 10,
+            "responsive": true
         });
 
-        // Monthly Sales Chart
+        // Monthly Sales vs Purchases Chart
         var monthlyLabels = [
             {% for item in monthly_sales %}
                 "{{ item.month|date:'M Y' }}"{% if not forloop.last %},{% endif %}
             {% endfor %}
         ];
         
-        var monthlySales = [
+        var monthlySalesData = [
             {% for item in monthly_sales %}
-                {{ item.total }}{% if not forloop.last %},{% endif %}
+                {{ item.total|default:0 }}{% if not forloop.last %},{% endif %}
             {% endfor %}
         ];
 
-        var ctx = document.getElementById('monthlySalesChart').getContext('2d');
-        var monthlySalesChart = new Chart(ctx, {
+        var monthlyPurchasesData = [
+            {% for item in monthly_purchases %}
+                {{ item.total|default:0 }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        var ctx1 = document.getElementById('monthlySalesChart').getContext('2d');
+        var monthlySalesChart = new Chart(ctx1, {
             type: 'line',
             data: {
                 labels: monthlyLabels,
                 datasets: [{
-                    label: 'Monthly Sales',
-                    lineTension: 0.3,
-                    backgroundColor: "rgba(78, 115, 223, 0.05)",
-                    borderColor: "rgba(78, 115, 223, 1)",
-                    pointRadius: 3,
-                    pointBackgroundColor: "rgba(78, 115, 223, 1)",
-                    pointBorderColor: "rgba(78, 115, 223, 1)",
-                    pointHoverRadius: 5,
-                    pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
-                    pointHoverBorderColor: "rgba(78, 115, 223, 1)",
-                    pointHitRadius: 10,
-                    pointBorderWidth: 2,
-                    data: monthlySales,
-                }],
+                    label: 'Sales',
+                    data: monthlySalesData,
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                    tension: 0.1
+                }, {
+                    label: 'Purchases',
+                    data: monthlyPurchasesData,
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                    tension: 0.1
+                }]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: {
-                            color: "rgb(234, 236, 244)",
-                            zeroLineColor: "rgb(234, 236, 244)",
-                            drawBorder: false,
-                            borderDash: [2],
-                            zeroLineBorderDash: [2]
-                        },
                         ticks: {
                             callback: function(value) {
                                 return '₹' + value.toLocaleString();
                             }
                         }
-                    },
-                    x: {
-                        grid: {
-                            display: false,
-                            drawBorder: false
-                        }
                     }
                 },
                 plugins: {
-                    legend: {
-                        display: false
-                    },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return 'Sales: ₹' + context.raw.toLocaleString();
+                                return context.dataset.label + ': ₹' + context.raw.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Cash Flow Chart
+        var cashFlowLabels = [
+            {% for item in cash_flow_data.daily_inflow %}
+                "{{ item.date|date:'M d' }}"{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        
+        var inflowData = [
+            {% for item in cash_flow_data.daily_inflow %}
+                {{ item.amount|default:0 }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        var outflowData = [
+            {% for item in cash_flow_data.daily_outflow %}
+                {{ item.amount|default:0 }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        var ctx2 = document.getElementById('cashFlowChart').getContext('2d');
+        var cashFlowChart = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: cashFlowLabels,
+                datasets: [{
+                    label: 'Cash Inflow',
+                    data: inflowData,
+                    backgroundColor: 'rgba(40, 167, 69, 0.8)',
+                    borderColor: 'rgba(40, 167, 69, 1)',
+                    borderWidth: 1
+                }, {
+                    label: 'Cash Outflow',
+                    data: outflowData,
+                    backgroundColor: 'rgba(220, 53, 69, 0.8)',
+                    borderColor: 'rgba(220, 53, 69, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString();
                             }
                         }
                     }
                 },
-                maintainAspectRatio: false
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ₹' + context.raw.toLocaleString();
+                            }
+                        }
+                    }
+                }
             }
         });
+
+        // Auto-refresh data every 5 minutes
+        setInterval(function() {
+            $.ajax({
+                url: '{% url "financial_dashboard_api" %}',
+                method: 'GET',
+                success: function(data) {
+                    // Update key metrics without full page reload
+                    console.log('Financial data refreshed:', data);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error refreshing financial data:', error);
+                }
+            });
+        }, 300000); // 5 minutes
     });
 </script>
 {% endblock %}

@@ -5,8 +5,9 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.db import transaction
 from django.db.models import Sum, Q
-from .models import ProductMaster, SupplierMaster, PurchaseMaster, SaleRateMaster, InvoiceMaster, SalesMaster
+from .models import ProductMaster, SupplierMaster, PurchaseMaster, SaleRateMaster, InvoiceMaster, SalesMaster, Challan1, SupplierChallanMaster, SupplierChallanMaster2
 from .forms import InvoiceForm
+from .stock_manager import StockManager
 import logging
 from datetime import datetime, timedelta
 
@@ -50,19 +51,16 @@ def add_invoice_with_products(request):
             
             # Process products data from JavaScript
             products_data = request.POST.get('products_data')
+            challan_flag = request.POST.get('is_from_challan', 'false').lower()
+            is_from_challan = challan_flag == 'true'
+            is_mixed_mode = challan_flag == 'mixed'
             logger.info(f"Products data received: {products_data}")
+            logger.info(f"Challan flag: {challan_flag}")
             
-            if not products_data:
-                messages.error(request, "No products data provided. Please add at least one product.")
-                suppliers = SupplierMaster.objects.all().order_by('supplier_name')
-                products = ProductMaster.objects.all().order_by('product_name')
-                context = {
-                    'invoice_form': invoice_form,
-                    'suppliers': suppliers,
-                    'products': products,
-                    'title': 'Add Invoice with Products'
-                }
-                return render(request, 'purchases/combined_invoice_form.html', context)
+            # Allow invoice creation without products - just log it
+            if not products_data or products_data.strip() == '' or products_data.strip() == '[]':
+                logger.info("Invoice being created without products - header only")
+                products_data = '[]'  # Set empty array for processing
             
             try:
                 products = json.loads(products_data)
@@ -79,17 +77,28 @@ def add_invoice_with_products(request):
                 }
                 return render(request, 'purchases/combined_invoice_form.html', context)
             
-            if not products:
-                messages.error(request, "Please add at least one product to the invoice.")
-                suppliers = SupplierMaster.objects.all().order_by('supplier_name')
-                products_list = ProductMaster.objects.all().order_by('product_name')
-                context = {
-                    'invoice_form': invoice_form,
-                    'suppliers': suppliers,
-                    'products': products_list,
-                    'title': 'Add Invoice with Products'
-                }
-                return render(request, 'purchases/combined_invoice_form.html', context)
+            # Filter valid products but allow invoice creation even without products
+            valid_products = []
+            for product in products:
+                try:
+                    product_id = product.get('productid')
+                    batch_no = str(product.get('batch_no', '')).strip()
+                    quantity_val = product.get('quantity', 0)
+                    quantity = float(str(quantity_val)) if quantity_val else 0.0
+                    
+                    if product_id and batch_no and quantity > 0:
+                        valid_products.append(product)
+                except (ValueError, TypeError) as e:
+                    logger.warning(f"Error validating product: {e}")
+                    continue
+            
+            # Log if no valid products but continue with invoice creation
+            if not valid_products:
+                logger.info("Creating invoice without valid products - header only invoice")
+                valid_products = []  # Empty list for processing
+            
+            # Use valid products for processing
+            products = valid_products
             
             # Use transaction to ensure data consistency
             with transaction.atomic():
@@ -157,9 +166,9 @@ def add_invoice_with_products(request):
                                 month = int(month)
                                 year = int(year)
                                 
-                                if month < 1 or month > 12:
+                                if int(month) < 1 or int(month) > 12:
                                     raise ValueError("Invalid month")
-                                if year < 2020 or year > 2100:
+                                if int(year) < 2020 or int(year) > 2100:
                                     raise ValueError("Invalid year")
                                 
                             except (ValueError, IndexError) as e:
@@ -168,22 +177,31 @@ def add_invoice_with_products(request):
                             
                             # Convert and validate numeric fields
                             try:
-                                mrp = float(product_data.get('mrp', 0))
-                                purchase_rate = float(product_data.get('purchase_rate', 0))
-                                quantity = float(product_data.get('quantity', 0))
-                                scheme = float(product_data.get('scheme', 0))
-                                discount = float(product_data.get('discount', 0))
-                                cgst = float(product_data.get('cgst', 0))
-                                sgst = float(product_data.get('sgst', 0))
+                                mrp_val = product_data.get('mrp', 0)
+                                purchase_rate_val = product_data.get('purchase_rate', 0)
+                                quantity_val = product_data.get('quantity', 0)
+                                scheme_val = product_data.get('scheme', 0)
+                                discount_val = product_data.get('discount', 0)
+                                cgst_val = product_data.get('cgst', 0)
+                                sgst_val = product_data.get('sgst', 0)
+                                
+                                # Convert to float, handling string values
+                                mrp = float(str(mrp_val)) if mrp_val else 0.0
+                                purchase_rate = float(str(purchase_rate_val)) if purchase_rate_val else 0.0
+                                quantity = float(str(quantity_val)) if quantity_val else 0.0
+                                scheme = float(str(scheme_val)) if scheme_val else 0.0
+                                discount = float(str(discount_val)) if discount_val else 0.0
+                                cgst = float(str(cgst_val)) if cgst_val else 0.0
+                                sgst = float(str(sgst_val)) if sgst_val else 0.0
                             except (ValueError, TypeError) as e:
                                 errors.append(f"Row {i+1}: Invalid numeric values for {product.product_name}: {e}")
                                 continue
                             
-                            if quantity <= 0:
+                            if float(quantity) <= 0:
                                 errors.append(f"Row {i+1}: Quantity must be greater than 0 for {product.product_name}")
                                 continue
                             
-                            if purchase_rate <= 0:
+                            if float(purchase_rate) <= 0:
                                 errors.append(f"Row {i+1}: Purchase rate must be greater than 0 for {product.product_name}")
                                 continue
                             
@@ -207,31 +225,91 @@ def add_invoice_with_products(request):
                             purchase.SGST = sgst
                             purchase.purchase_calculation_mode = product_data.get('calculation_mode', 'flat')
                             
+                            # Challan reference fields
+                            challan_no = product_data.get('challan_no', '')
+                            challan_date_str = product_data.get('challan_date', '')
+                            
+                            logger.info(f"Challan data received: challan_no={challan_no}, challan_date={challan_date_str}")
+                            
+                            if challan_no and str(challan_no).strip():
+                                purchase.source_challan_no = str(challan_no).strip()
+                                logger.info(f"Set source_challan_no: {purchase.source_challan_no}")
+                            else:
+                                purchase.source_challan_no = None
+                            
+                            if challan_date_str and str(challan_date_str).strip():
+                                try:
+                                    from datetime import datetime
+                                    date_str = str(challan_date_str).strip()
+                                    # Try multiple date formats
+                                    for fmt in ['%d-%m-%Y', '%Y-%m-%d', '%d/%m/%Y']:
+                                        try:
+                                            purchase.source_challan_date = datetime.strptime(date_str, fmt).date()
+                                            logger.info(f"Set source_challan_date: {purchase.source_challan_date}")
+                                            break
+                                        except ValueError:
+                                            continue
+                                except Exception as e:
+                                    logger.warning(f"Error parsing challan date '{challan_date_str}': {e}")
+                                    purchase.source_challan_date = None
+                            else:
+                                purchase.source_challan_date = None
+                            
+                            # Optional rate fields
+                            try:
+                                rate_a_val = product_data.get('rate_a', 0)
+                                rate_b_val = product_data.get('rate_b', 0)
+                                rate_c_val = product_data.get('rate_c', 0)
+                                
+                                purchase.rate_a = float(str(rate_a_val)) if rate_a_val else 0.0
+                                purchase.rate_b = float(str(rate_b_val)) if rate_b_val else 0.0
+                                purchase.rate_c = float(str(rate_c_val)) if rate_c_val else 0.0
+                                
+                                logger.info(f"Setting rates for {product.product_name}: A={purchase.rate_a}, B={purchase.rate_b}, C={purchase.rate_c}")
+                            except (ValueError, TypeError) as e:
+                                logger.warning(f"Error converting rates for {product.product_name}: {e}")
+                                purchase.rate_a = 0.0
+                                purchase.rate_b = 0.0
+                                purchase.rate_c = 0.0
+                            
                             # Calculate actual rate
                             if purchase.purchase_calculation_mode == 'flat':
-                                if discount > purchase_rate * quantity:
+                                total_amount_calc = float(purchase_rate) * float(quantity)
+                                if float(discount) > total_amount_calc:
                                     errors.append(f"Row {i+1}: Flat discount cannot exceed total amount for {product.product_name}")
                                     continue
-                                purchase.actual_rate_per_qty = purchase_rate - (discount / quantity) if quantity > 0 else purchase_rate
+                                purchase.actual_rate_per_qty = float(purchase_rate) - (float(discount) / float(quantity)) if float(quantity) > 0 else float(purchase_rate)
                             else:
-                                if discount > 100:
+                                if float(discount) > 100.0:
                                     errors.append(f"Row {i+1}: Percentage discount cannot exceed 100% for {product.product_name}")
                                     continue
-                                purchase.actual_rate_per_qty = purchase_rate * (1 - (discount / 100))
+                                purchase.actual_rate_per_qty = float(purchase_rate) * (1 - (float(discount) / 100.0))
                             
                             purchase.product_actual_rate = purchase.actual_rate_per_qty
-                            purchase.total_amount = purchase.product_actual_rate * quantity
+                            
+                            # Calculate base amount before tax
+                            base_amount = purchase.product_actual_rate * quantity
+                            
+                            # Calculate tax amounts
+                            cgst_amount = base_amount * (cgst / 100)
+                            sgst_amount = base_amount * (sgst / 100)
+                            
+                            # Total amount including taxes
+                            purchase.total_amount = base_amount + cgst_amount + sgst_amount
                             purchase.product_transportation_charges = 0  # Will be calculated later
                             
                             total_amount += purchase.total_amount
+                            logger.info(f"Product {product.product_name}: Base={base_amount}, CGST={cgst_amount}, SGST={sgst_amount}, Total={purchase.total_amount}")
                             purchase.save()
                             products_added += 1
                             logger.info(f"Product {product.product_name} added to invoice")
                             
+                            logger.info(f"✅ PURCHASE CREATED: {product.product_name}, Batch: {batch_no}, Qty: {quantity}")
+                            
                             # Save sale rates if provided
-                            rate_A = product_data.get('rate_A')
-                            rate_B = product_data.get('rate_B')
-                            rate_C = product_data.get('rate_C')
+                            rate_A = product_data.get('rate_a') or product_data.get('rate_A')
+                            rate_B = product_data.get('rate_b') or product_data.get('rate_B')
+                            rate_C = product_data.get('rate_c') or product_data.get('rate_C')
                             
                             if rate_A or rate_B or rate_C:
                                 try:
@@ -239,9 +317,9 @@ def add_invoice_with_products(request):
                                         productid=product,
                                         product_batch_no=batch_no,
                                         defaults={
-                                            'rate_A': float(rate_A) if rate_A else 0,
-                                            'rate_B': float(rate_B) if rate_B else 0,
-                                            'rate_C': float(rate_C) if rate_C else 0
+                                            'rate_A': float(str(rate_A)) if rate_A else 0,
+                                            'rate_B': float(str(rate_B)) if rate_B else 0,
+                                            'rate_C': float(str(rate_C)) if rate_C else 0
                                         }
                                     )
                                 except (ValueError, TypeError):
@@ -251,61 +329,108 @@ def add_invoice_with_products(request):
                             errors.append(f"Row {i+1}: Product with ID {product_data['productid']} not found")
                             continue
                         except Exception as e:
+                            import traceback
+                            error_trace = traceback.format_exc()
                             errors.append(f"Row {i+1}: Error processing product: {str(e)}")
                             logger.error(f"Error processing product {i+1}: {e}")
+                            logger.error(f"Full traceback: {error_trace}")
                             continue
                 
-                # Check if any products were added
+                # Allow invoice creation even without products
                 if products_added == 0:
-                    error_msg = "No valid products were added to the invoice."
+                    logger.info(f"Invoice {invoice.invoice_no} created without products - header only")
                     if errors:
-                        error_msg += " Errors: " + "; ".join(errors[:5])  # Show first 5 errors
-                    messages.error(request, error_msg)
-                    # Delete the invoice since no products were added
-                    invoice.delete()
-                    suppliers = SupplierMaster.objects.all().order_by('supplier_name')
-                    products_list = ProductMaster.objects.all().order_by('product_name')
-                    context = {
-                        'invoice_form': InvoiceForm(),
-                        'suppliers': suppliers,
-                        'products': products_list,
-                        'title': 'Add Invoice with Products'
-                    }
-                    return render(request, 'purchases/combined_invoice_form.html', context)
+                        # Show errors as warnings but don't prevent invoice creation
+                        for error in errors[:3]:  # Show first 3 errors
+                            messages.warning(request, error)
+                    messages.info(request, "📄 Invoice created without products. You can add products later by editing the invoice.")
                 
-                # Distribute transport charges if any
-                if invoice.transport_charges > 0 and products_added > 0:
-                    transport_per_product = invoice.transport_charges / products_added
-                    purchases = PurchaseMaster.objects.filter(product_invoiceid=invoice)
-                    
-                    for purchase in purchases:
-                        purchase.product_transportation_charges = transport_per_product
-                        transport_per_unit = transport_per_product / purchase.product_quantity
-                        purchase.product_actual_rate = purchase.actual_rate_per_qty + transport_per_unit
-                        purchase.total_amount = purchase.product_actual_rate * purchase.product_quantity
-                        purchase.save()
-                    
-                    # Recalculate total with transport charges
-                    total_amount = sum(p.total_amount for p in purchases)
+                # Don't distribute transport charges - keep separate
+                transport_charges_val = float(str(invoice.transport_charges)) if invoice.transport_charges else 0.0
                 
-                # Update invoice total if calculated total differs significantly
-                if abs(total_amount - invoice.invoice_total) > 0.01:
-                    logger.info(f"Updating invoice total from {invoice.invoice_total} to {total_amount}")
-                    invoice.invoice_total = total_amount
-                    invoice.save()
+                # Invoice total = products total + transport charges
+                invoice.invoice_total = total_amount + transport_charges_val
+                invoice.save()
+                logger.info(f"Products total: {total_amount}, Transport: {transport_charges_val}, Invoice total: {invoice.invoice_total}")
+                
+                # Move challan entries to SupplierChallanMaster2 if pulled from challan
+                if is_from_challan or is_mixed_mode:
+                    moved_count = 0
+                    for product_data in products:
+                        challan_no = product_data.get('challan_no', '')
+                        if challan_no and str(challan_no).strip():
+                            try:
+                                # Find matching challan entries
+                                challan_entries = SupplierChallanMaster.objects.filter(
+                                    product_challan_no=str(challan_no).strip(),
+                                    product_id=product_data.get('productid'),
+                                    product_batch_no=product_data.get('batch_no', '').strip()
+                                )
+                                
+                                for entry in challan_entries:
+                                    # Copy to SupplierChallanMaster2
+                                    SupplierChallanMaster2.objects.create(
+                                        product_suppliername=entry.product_suppliername,
+                                        product_challan_id=entry.product_challan_id,
+                                        product_challan_no=entry.product_challan_no,
+                                        product_id=entry.product_id,
+                                        product_name=entry.product_name,
+                                        product_company=entry.product_company,
+                                        product_packing=entry.product_packing,
+                                        product_batch_no=entry.product_batch_no,
+                                        product_expiry=entry.product_expiry,
+                                        product_mrp=entry.product_mrp,
+                                        product_purchase_rate=entry.product_purchase_rate,
+                                        product_quantity=entry.product_quantity,
+                                        product_scheme=entry.product_scheme,
+                                        product_discount=entry.product_discount,
+                                        product_transportation_charges=entry.product_transportation_charges,
+                                        actual_rate_per_qty=entry.actual_rate_per_qty,
+                                        product_actual_rate=entry.product_actual_rate,
+                                        total_amount=entry.total_amount,
+                                        challan_entry_date=entry.challan_entry_date,
+                                        cgst=entry.cgst,
+                                        sgst=entry.sgst,
+                                        challan_calculation_mode=entry.challan_calculation_mode,
+                                        rate_a=entry.rate_a,
+                                        rate_b=entry.rate_b,
+                                        rate_c=entry.rate_c
+                                    )
+                                    # Delete from SupplierChallanMaster
+                                    entry.delete()
+                                    moved_count += 1
+                                    logger.info(f"Moved challan entry to SupplierChallanMaster2: {entry.product_name} - {entry.product_batch_no}")
+                            except Exception as e:
+                                logger.error(f"Error moving challan entry: {e}")
+                    
+                    if moved_count > 0:
+                        logger.info(f"Total {moved_count} challan entries moved to SupplierChallanMaster2")
                 
                 # Show any non-critical errors as warnings
                 if errors:
                     for error in errors[:3]:  # Show first 3 errors
                         messages.warning(request, error)
                 
-                messages.success(request, f"Purchase Invoice #{invoice.invoice_no} with {products_added} products added successfully!")
+                # Success message based on whether products were added
+                if products_added > 0:
+                    success_msg = f"Purchase Invoice #{invoice.invoice_no} with {products_added} products added successfully!"
+                else:
+                    success_msg = f"Purchase Invoice #{invoice.invoice_no} created successfully (header only)!"
+                
+                messages.success(request, success_msg)
                 logger.info(f"Invoice {invoice.invoice_no} created successfully with {products_added} products")
                 return redirect('invoice_detail', pk=invoice.invoiceid)
                 
         except Exception as e:
+            import traceback
+            error_trace = traceback.format_exc()
             logger.error(f"Unexpected error creating invoice: {e}")
+            logger.error(f"Full error traceback: {error_trace}")
             messages.error(request, f"Error creating invoice: {str(e)}")
+            print(f"\n\n=== INVOICE CREATION ERROR ===")
+            print(f"Error: {e}")
+            print(f"Traceback:\n{error_trace}")
+            print(f"=== END ERROR ===")
             # Return to form
             suppliers = SupplierMaster.objects.all().order_by('supplier_name')
             products = ProductMaster.objects.all().order_by('product_name')
@@ -600,3 +725,118 @@ def cleanup_product_duplicates(request):
         'success': False,
         'error': 'Invalid request method'
     })
+
+@login_required
+def get_supplier_challans(request):
+    """API endpoint to get challans for a specific supplier"""
+    try:
+        supplier_id = request.GET.get('supplier_id')
+        if not supplier_id:
+            return JsonResponse({'success': False, 'error': 'Supplier ID required'})
+        
+        # Get non-invoiced challans for the supplier
+        challans = Challan1.objects.filter(
+            supplier_id=supplier_id,
+            is_invoiced=False
+        ).order_by('-challan_date', '-challan_id')
+        
+        challan_data = []
+        for challan in challans:
+            challan_data.append({
+                'challan_id': challan.challan_id,
+                'challan_no': challan.challan_no,
+                'challan_date': challan.challan_date.isoformat(),
+                'challan_total': float(challan.challan_total),
+                'challan_paid': float(challan.challan_paid),
+                'supplier_name': challan.supplier.supplier_name
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'challans': challan_data
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching supplier challans: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+@login_required
+def get_challan_products(request):
+    """API endpoint to get products from selected challans"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    
+    try:
+        data = json.loads(request.body)
+        challan_ids = data.get('challan_ids', [])
+        
+        if not challan_ids:
+            return JsonResponse({'success': False, 'error': 'No challan IDs provided'})
+        
+        # Get all products from the selected challans
+        challan_products = SupplierChallanMaster.objects.filter(
+            product_challan_id__in=challan_ids
+        ).select_related('product_id', 'product_suppliername')
+        
+        products_data = []
+        for product in challan_products:
+            # Get sale rates - first try from challan, then from SaleRateMaster
+            rate_a = float(product.rate_a) if hasattr(product, 'rate_a') and product.rate_a else 0.0
+            rate_b = float(product.rate_b) if hasattr(product, 'rate_b') and product.rate_b else 0.0
+            rate_c = float(product.rate_c) if hasattr(product, 'rate_c') and product.rate_c else 0.0
+            
+            # If rates not in challan, try SaleRateMaster
+            if rate_a == 0.0 and rate_b == 0.0 and rate_c == 0.0:
+                try:
+                    sale_rates = SaleRateMaster.objects.get(
+                        productid=product.product_id,
+                        product_batch_no=product.product_batch_no
+                    )
+                    rate_a = float(sale_rates.rate_A) if sale_rates.rate_A else 0.0
+                    rate_b = float(sale_rates.rate_B) if sale_rates.rate_B else 0.0
+                    rate_c = float(sale_rates.rate_C) if sale_rates.rate_C else 0.0
+                except SaleRateMaster.DoesNotExist:
+                    pass
+            
+            # Get challan date
+            challan_date_str = ''
+            if product.product_challan_id:
+                try:
+                    challan_date_str = product.product_challan_id.challan_date.strftime('%d-%m-%Y')
+                except:
+                    challan_date_str = ''
+            
+            products_data.append({
+                'product_id': product.product_id.productid,
+                'product_name': product.product_name or '',
+                'product_company': product.product_company or '',
+                'product_packing': product.product_packing or '',
+                'product_batch_no': product.product_batch_no or '',
+                'product_expiry': product.product_expiry or '',
+                'product_mrp': float(product.product_mrp) if product.product_mrp else 0.0,
+                'product_purchase_rate': float(product.product_purchase_rate) if product.product_purchase_rate else 0.0,
+                'product_quantity': float(product.product_quantity) if product.product_quantity else 0.0,
+                'product_discount': float(product.product_discount) if product.product_discount else 0.0,
+                'cgst': float(product.cgst) if product.cgst else 2.5,
+                'sgst': float(product.sgst) if product.sgst else 2.5,
+                'rate_a': rate_a,
+                'rate_b': rate_b,
+                'rate_c': rate_c,
+                'challan_no': product.product_challan_no or '',
+                'challan_date': challan_date_str
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'products': products_data
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching challan products: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })

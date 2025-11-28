@@ -39,7 +39,7 @@
                             <div class="payment-list-filter-group">
                                 <label for="search" class="payment-list-filter-label">Search</label>
                                 <input type="text" id="search" name="search" class="payment-list-search-input"
-                                       value="{{ search_query }}" placeholder="Description, Reference...">
+                                       value="{{ search_query }}" placeholder="Supplier, Reference...">
                             </div>
                             <div class="payment-list-filter-group">
                                 <label for="start_date" class="payment-list-filter-label">From Date</label>
@@ -90,7 +90,7 @@
                                     <th class="payment-list-table-header">Date</th>
                                     <th class="payment-list-table-header">Amount</th>
                                     <th class="payment-list-table-header">Method</th>
-                                    <th class="payment-list-table-header">Description</th>
+                                    <th class="payment-list-table-header">Supplier</th>
                                     <th class="payment-list-table-header">Reference</th>
                                     <th class="payment-list-table-header no-print">Actions</th>
                                 </tr>
@@ -100,9 +100,9 @@
                                 <tr class="payment-list-table-row">
                                     <td class="payment-list-table-cell">{{ payment.payment_date|date:"d-m-Y" }}</td>
                                     <td class="payment-list-table-cell">₹{{ payment.payment_amount|floatformat:2 }}</td>
-                                    <td class="payment-list-table-cell">{{ payment.get_payment_method_display }}</td>
-                                    <td class="payment-list-table-cell">{{ payment.payment_description|default:"-" }}</td>
-                                    <td class="payment-list-table-cell">{{ payment.payment_reference|default:"-" }}</td>
+                                    <td class="payment-list-table-cell">{{ payment.payment_mode|default:"-" }}</td>
+                                    <td class="payment-list-table-cell">{{ payment.ip_invoiceid.supplierid.supplier_name|default:"-" }}</td>
+                                    <td class="payment-list-table-cell">{{ payment.payment_ref_no|default:"-" }}</td>
                                     <td class="payment-list-table-cell no-print">
                                         <div class="payment-list-actions" role="group">
                                             <a href="{% url 'edit_payment' payment.payment_id %}" class="payment-list-edit-btn">
@@ -166,33 +166,5 @@
 function printPayments() {
     window.print();
 }
-
-// Keyboard shortcut for print
-document.addEventListener('keydown', function(e) {
-    if (e.ctrlKey && e.key === 'p') {
-        e.preventDefault();
-        printPayments();
-    }
-});
-
-// Auto-submit form on date change
-document.getElementById('start_date').addEventListener('change', function() {
-    if (this.value && document.getElementById('end_date').value) {
-        this.form.submit();
-    }
-});
-
-document.getElementById('end_date').addEventListener('change', function() {
-    if (this.value && document.getElementById('start_date').value) {
-        this.form.submit();
-    }
-});
 </script>
 {% endblock %}
-
-
-
-
-
-
-

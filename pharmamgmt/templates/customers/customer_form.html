@@ -17,19 +17,19 @@
                     
                         <div class="form-row">
                             <div class="form-group required">
-                                <label for="{{ form.customer_name.id_for_label }}" class="field-label">Customer Name</label>
+                                <label for="{{ form.customer_name.id_for_label }}" class="field-label">Customer Name*</label>
                                 {{ form.customer_name }}
                                 {% if form.customer_name.errors %}<div class="error-message">{{ form.customer_name.errors }}</div>{% endif %}
                             </div>
                             <div class="form-group required">
+                                <label for="{{ form.customer_mobile.id_for_label }}" class="field-label">Mobile Number*</label>
+                                {{ form.customer_mobile }}
+                                {% if form.customer_mobile.errors %}<div class="error-message">{{ form.customer_mobile.errors }}</div>{% endif %}
+                            </div>
+                            <div class="form-group">
                                 <label for="{{ form.customer_type.id_for_label }}" class="field-label">Customer Type</label>
                                 {{ form.customer_type }}
                                 {% if form.customer_type.errors %}<div class="error-message">{{ form.customer_type.errors }}</div>{% endif %}
-                            </div>
-                            <div class="form-group">
-                                <label for="{{ form.customer_mobile.id_for_label }}" class="field-label">Mobile Number</label>
-                                {{ form.customer_mobile }}
-                                {% if form.customer_mobile.errors %}<div class="error-message">{{ form.customer_mobile.errors }}</div>{% endif %}
                             </div>
                         </div>
                         
@@ -75,7 +75,7 @@
                                 {{ form.customer_food_license_no }}
                                 {% if form.customer_food_license_no.errors %}<div class="error-message">{{ form.customer_food_license_no.errors }}</div>{% endif %}
                             </div>
-                            <div class="form-group required">
+                            <div class="form-group">
                                 <label for="{{ form.customer_credit_days.id_for_label }}" class="field-label">Credit Days</label>
                                 {{ form.customer_credit_days }}
                                 {% if form.customer_credit_days.errors %}<div class="error-message">{{ form.customer_credit_days.errors }}</div>{% endif %}

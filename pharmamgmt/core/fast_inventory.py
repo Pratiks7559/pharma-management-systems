@@ -1,6 +1,6 @@
 from django.db.models import Sum, Q
 from collections import defaultdict
-from .models import PurchaseMaster, SalesMaster, ReturnPurchaseMaster, ReturnSalesMaster, SupplierChallanMaster, ProductMaster, CustomerChallanMaster
+from .models import PurchaseMaster, SalesMaster, ReturnPurchaseMaster, ReturnSalesMaster, SupplierChallanMaster, ProductMaster, CustomerChallanMaster, StockIssueDetail
 
 class FastInventory:
     @staticmethod
@@ -50,11 +50,16 @@ class FastInventory:
         for r in ReturnSalesMaster.objects.filter(return_productid__in=product_ids).values('return_productid', 'return_product_batch_no').annotate(total=Sum('return_sale_quantity')):
             sr[(r['return_productid'], r['return_product_batch_no'])] = r['total']
         
-        # Calculate inventory
+        # CRITICAL FIX: Add stock issues to calculation
+        stock_issues = defaultdict(int)
+        for si in StockIssueDetail.objects.filter(product__in=product_ids).values('product', 'batch_no').annotate(total=Sum('quantity_issued')):
+            stock_issues[(si['product'], si['batch_no'])] = si['total']
+        
+        # Calculate inventory - FIXED to include stock issues
         inventory = []
         for key, data in purchases.items():
             pid, batch = key
-            stock = data['qty'] - sales.get(key, 0) - pr.get(key, 0) + sr.get(key, 0)
+            stock = data['qty'] - sales.get(key, 0) - pr.get(key, 0) + sr.get(key, 0) - stock_issues.get(key, 0)
             if stock > 0 and pid in products_dict:
                 p = products_dict[pid]
                 inventory.append({
@@ -118,6 +123,11 @@ class FastInventory:
         for r in ReturnSalesMaster.objects.filter(return_productid__in=product_ids).values('return_productid', 'return_product_batch_no').annotate(total=Sum('return_sale_quantity')):
             sr[(r['return_productid'], r['return_product_batch_no'])] = r['total']
         
+        # CRITICAL FIX: Add stock issues to dateexpiry calculation
+        stock_issues = defaultdict(int)
+        for si in StockIssueDetail.objects.filter(product__in=product_ids).values('product', 'batch_no').annotate(total=Sum('quantity_issued')):
+            stock_issues[(si['product'], si['batch_no'])] = si['total']
+        
         # Group by expiry
         from datetime import datetime
         import calendar
@@ -126,7 +136,7 @@ class FastInventory:
         
         for key, data in purchases.items():
             pid, batch = key
-            stock = data['qty'] - sales.get(key, 0) - pr.get(key, 0) + sr.get(key, 0)
+            stock = data['qty'] - sales.get(key, 0) - pr.get(key, 0) + sr.get(key, 0) - stock_issues.get(key, 0)
             if stock > 0 and pid in products_dict:
                 p = products_dict[pid]
                 expiry = data['expiry']

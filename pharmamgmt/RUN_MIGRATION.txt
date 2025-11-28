@@ -1,0 +1,7 @@
+To apply the migration for source_challan fields, run:
+
+cd "c:\pharmaproject pratk\WebsiteHostingService\WebsiteHostingService\WebsiteHostingService\pharmamgmt"
+python manage.py makemigrations
+python manage.py migrate
+
+This will add source_challan_no and source_challan_date fields to SalesMaster table.

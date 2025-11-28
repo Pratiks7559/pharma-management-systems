@@ -36,9 +36,7 @@
                     <button type="submit" class="sales-invoice-list-filter-btn">
                         <i class="fas fa-filter"></i>
                     </button>
-                    <a href="{% url 'sales_challan_invoice_list' %}" class="sales-invoice-list-challan-btn">
-                        <i class="fas fa-file-invoice-dollar"></i> Challan Invoice
-                    </a>
+
                 </form>
             </div>
         </div>
@@ -88,6 +86,9 @@
                         <td class="sales-invoice-list-table-cell sales-invoice-list-actions-cell">
                             <a href="{% url 'sales_invoice_detail' pk=invoice.sales_invoice_no %}" class="sales-invoice-list-view-btn">
                                 <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'print_sales_receipt' invoice_id=invoice.sales_invoice_no %}" target="_blank" class="sales-invoice-list-print-btn" title="Print Receipt">
+                                <i class="fas fa-print"></i>
                             </a>
                             {% if invoice.balance_due > 0 %}
                             <button type="button" class="sales-invoice-list-payment-btn" 

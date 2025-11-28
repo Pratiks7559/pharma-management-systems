@@ -1,0 +1,657 @@
+/* Customer Wise Sales Report - Beautiful Fixed Theme */
+
+/* Beautiful Fixed Theme - No Dark/Light Mode Effects */
+.cws-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    min-height: 100vh !important;
+    padding: 2rem !important;
+}
+
+.cws-page-header {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px) !important;
+    border-radius: 20px !important;
+    padding: 2rem !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    margin-bottom: 1.5rem;
+}
+
+.cws-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.cws-title-section {
+    flex: 1;
+}
+
+.cws-header-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.cws-page-title {
+    background: linear-gradient(135deg, #667eea, #764ba2) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    font-weight: 800 !important;
+    font-size: 1.75rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.cws-page-subtitle {
+    color: #6b7280 !important;
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.cws-search-container {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(15px) !important;
+    border-radius: 20px !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.cws-filters-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 1rem;
+    align-items: end;
+}
+
+.cws-filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.cws-filter-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #374151 !important;
+    font-size: 0.875rem;
+}
+
+.cws-filter-input,
+.cws-search-input {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 2px solid transparent !important;
+    border-radius: 15px !important;
+    backdrop-filter: blur(10px) !important;
+    transition: all 0.3s ease !important;
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    color: #1f2937 !important;
+}
+
+.cws-filter-input:focus,
+.cws-search-input:focus {
+    background: rgba(255, 255, 255, 1) !important;
+    border-color: #667eea !important;
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.3) !important;
+    transform: translateY(-2px) !important;
+    outline: none;
+}
+
+.cws-customer-select-wrapper {
+    display: flex;
+    gap: 0.5rem;
+    align-items: stretch;
+}
+
+.cws-customer-select {
+    flex: 1;
+}
+
+.cws-quick-search-btn {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: white !important;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 15px !important;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3) !important;
+}
+
+.cws-quick-search-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4) !important;
+}
+
+.cws-generate-btn {
+    background: linear-gradient(135deg, #667eea, #764ba2) !important;
+    color: white !important;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px !important;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.cws-generate-btn:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 15px 35px rgba(102, 126, 234, 0.6) !important;
+}
+
+.cws-summary-container {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(15px) !important;
+    border-radius: 20px !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.cws-summary-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937 !important;
+    margin: 0 0 1rem 0;
+}
+
+.cws-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.cws-summary-card {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 15px !important;
+    padding: 1rem;
+    text-align: center;
+    transform: translateY(0) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.cws-summary-card:hover {
+    transform: translateY(-8px) scale(1.05) !important;
+    box-shadow: 0 25px 50px rgba(240, 147, 251, 0.4) !important;
+}
+
+.cws-summary-card:nth-child(2) {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+}
+
+.cws-summary-card:nth-child(3) {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important;
+}
+
+.cws-summary-card:nth-child(4) {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%) !important;
+}
+
+.cws-summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white !important;
+    margin-bottom: 0.25rem;
+}
+
+.cws-summary-label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.9) !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.cws-section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937 !important;
+    margin: 1.5rem 0 1rem 0;
+}
+
+.cws-table-container {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(15px) !important;
+    border-radius: 20px !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+    overflow: hidden !important;
+    margin-bottom: 1.5rem;
+}
+
+.cws-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: transparent !important;
+    font-size: 0.875rem;
+}
+
+.cws-table th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    padding: 0.75rem;
+    text-align: left;
+    border: none !important;
+    white-space: nowrap;
+}
+
+.cws-table tbody tr {
+    background: rgba(255, 255, 255, 0.8) !important;
+    transition: all 0.3s ease !important;
+}
+
+.cws-table tbody tr:hover {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)) !important;
+    transform: scale(1.02) !important;
+}
+
+.cws-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #1f2937 !important;
+}
+
+.cws-export-btn {
+    border-radius: 25px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border: none !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.cws-pdf-btn {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24) !important;
+    color: white !important;
+}
+
+.cws-excel-btn {
+    background: linear-gradient(135deg, #00d2d3, #54a0ff) !important;
+    color: white !important;
+}
+
+.cws-print-btn {
+    background: linear-gradient(135deg, #5f27cd, #341f97) !important;
+    color: white !important;
+}
+
+.cws-export-btn:hover {
+    transform: translateY(-2px) !important;
+    color: white !important;
+}
+
+.cws-invoice-number {
+    font-weight: 600;
+    color: #667eea !important;
+}
+
+.cws-invoice-items {
+    font-size: 0.75rem;
+    color: #6b7280 !important;
+    margin-top: 0.25rem;
+    line-height: 1.3;
+}
+
+.cws-amount {
+    font-weight: 600;
+    color: #059669 !important;
+}
+
+.cws-balance-due {
+    font-weight: 600;
+    color: #dc2626 !important;
+}
+
+.cws-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+.cws-modal-content {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2) !important;
+    border-radius: 0.75rem;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow: hidden;
+}
+
+.cws-modal-header {
+    background: linear-gradient(135deg, #667eea, #764ba2) !important;
+    color: white !important;
+    padding: 1.5rem;
+    border-bottom: none !important;
+}
+
+.cws-modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: white !important;
+    margin: 0 0 1rem 0;
+}
+
+.cws-search-results {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 0.5rem;
+}
+
+.cws-customer-result {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+    margin-bottom: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.cws-customer-result:hover {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)) !important;
+    border-color: #667eea !important;
+    transform: translateX(5px) !important;
+}
+
+.cws-customer-name {
+    font-weight: 600;
+    color: #1f2937 !important;
+    margin-bottom: 0.25rem;
+}
+
+.cws-customer-details {
+    font-size: 0.75rem;
+    color: #6b7280 !important;
+    line-height: 1.3;
+}
+
+.cws-shortcut-hint {
+    font-size: 0.75rem;
+    color: #9ca3af !important;
+    text-align: center;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.5) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+.cws-search-message {
+    text-align: center;
+    padding: 2rem;
+    color: #6b7280 !important;
+    font-style: italic;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .cws-filters-grid {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto;
+    }
+    
+    .cws-filter-group:first-child {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .cws-container {
+        padding: 1rem !important;
+    }
+    
+    .cws-page-header {
+        padding: 1.5rem !important;
+    }
+    
+    .cws-page-title {
+        font-size: 1.5rem;
+    }
+    
+    .cws-search-container {
+        padding: 1rem;
+    }
+    
+    .cws-filters-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .cws-summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .cws-modal-content {
+        width: 95%;
+        margin: 1rem;
+    }
+    
+    .cws-modal-header {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .cws-summary-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .cws-page-title {
+        font-size: 1.25rem;
+    }
+}
+
+/* Professional Print Styles */
+@media print {
+    @page {
+        size: A4;
+        margin: 0.5in;
+    }
+    
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    body {
+        font-family: 'Times New Roman', serif !important;
+        font-size: 12pt !important;
+        line-height: 1.4 !important;
+        color: #000 !important;
+    }
+    
+    .cws-search-container,
+    .cws-header-actions,
+    .cws-quick-search-btn,
+    .cws-generate-btn,
+    .cws-export-btn {
+        display: none !important;
+    }
+    
+    .cws-container {
+        background: white !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+    }
+    
+    .cws-page-header {
+        background: white !important;
+        box-shadow: none !important;
+        border: none !important;
+        border-bottom: 3px solid #000 !important;
+        padding: 20pt 0 15pt 0 !important;
+        margin-bottom: 20pt !important;
+        text-align: center !important;
+    }
+    
+    .cws-page-title {
+        background: none !important;
+        -webkit-background-clip: unset !important;
+        -webkit-text-fill-color: unset !important;
+        color: #000 !important;
+        font-size: 24pt !important;
+        font-weight: bold !important;
+        text-transform: uppercase !important;
+        letter-spacing: 2pt !important;
+        margin-bottom: 8pt !important;
+    }
+    
+    .cws-page-subtitle {
+        color: #666 !important;
+        font-size: 14pt !important;
+        font-style: italic !important;
+    }
+    
+    .cws-summary-container {
+        background: white !important;
+        box-shadow: none !important;
+        border: 2px solid #000 !important;
+        padding: 15pt !important;
+        margin-bottom: 20pt !important;
+    }
+    
+    .cws-summary-title {
+        font-size: 16pt !important;
+        font-weight: bold !important;
+        color: #000 !important;
+        text-transform: uppercase !important;
+        border-bottom: 1px solid #000 !important;
+        padding-bottom: 5pt !important;
+        margin-bottom: 15pt !important;
+    }
+    
+    .cws-summary-grid {
+        display: table !important;
+        width: 100% !important;
+        border-collapse: collapse !important;
+    }
+    
+    .cws-summary-card {
+        display: table-cell !important;
+        background: white !important;
+        border: 1px solid #000 !important;
+        padding: 10pt !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+        width: 25% !important;
+    }
+    
+    .cws-summary-value {
+        font-size: 18pt !important;
+        font-weight: bold !important;
+        color: #000 !important;
+        margin-bottom: 5pt !important;
+    }
+    
+    .cws-summary-label {
+        font-size: 10pt !important;
+        color: #000 !important;
+        text-transform: uppercase !important;
+        font-weight: bold !important;
+    }
+    
+    .cws-section-title {
+        font-size: 16pt !important;
+        font-weight: bold !important;
+        color: #000 !important;
+        text-transform: uppercase !important;
+        border-bottom: 1px solid #000 !important;
+        padding-bottom: 5pt !important;
+        margin: 20pt 0 10pt 0 !important;
+    }
+    
+    .cws-table-container {
+        background: white !important;
+        box-shadow: none !important;
+        border: none !important;
+        margin-bottom: 20pt !important;
+        page-break-inside: avoid !important;
+    }
+    
+    .cws-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 10pt !important;
+        page-break-inside: auto !important;
+    }
+    
+    .cws-table th {
+        background: #f0f0f0 !important;
+        color: #000 !important;
+        font-weight: bold !important;
+        text-transform: uppercase !important;
+        padding: 8pt 4pt !important;
+        border: 1px solid #000 !important;
+        text-align: left !important;
+        font-size: 9pt !important;
+    }
+    
+    .cws-table td {
+        padding: 6pt 4pt !important;
+        border: 1px solid #000 !important;
+        color: #000 !important;
+        font-size: 9pt !important;
+        page-break-inside: avoid !important;
+    }
+    
+    .cws-table tbody tr {
+        background: white !important;
+        page-break-inside: avoid !important;
+    }
+    
+    .cws-table tbody tr:nth-child(even) {
+        background: #f9f9f9 !important;
+    }
+    
+    .cws-invoice-number {
+        font-weight: bold !important;
+        color: #000 !important;
+    }
+    
+    .cws-amount {
+        font-weight: bold !important;
+        color: #000 !important;
+        text-align: right !important;
+    }
+    
+    .cws-balance-due {
+        font-weight: bold !important;
+        color: #000 !important;
+        text-align: right !important;
+    }
+}

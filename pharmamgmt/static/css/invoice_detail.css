@@ -759,3 +759,38 @@
         grid-template-columns: repeat(2, 1fr);
     }
 }
+/* Challan Sourced Product Styling */
+.challan-sourced-product {
+    position: relative;
+    border: 3px solid #17a2b8 !important;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%) !important;
+}
+
+.challan-sourced-product td {
+    background: transparent !important;
+    color: #2c3e50 !important;
+}
+
+.challan-sourced-product:hover {
+    box-shadow: 0 6px 16px rgba(23, 162, 184, 0.3) !important;
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+.challan-sourced-product::before {
+    content: attr(data-challan-info);
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    color: white;
+    padding: 4px 16px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(23, 162, 184, 0.4);
+    z-index: 5;
+    white-space: nowrap;
+}

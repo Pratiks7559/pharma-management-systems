@@ -18,7 +18,7 @@ from .models import (
     InvoiceMaster, InvoicePaid, PurchaseMaster, SalesInvoiceMaster, SalesMaster,
     SalesInvoicePaid, ProductRateMaster, ReturnInvoiceMaster, PurchaseReturnInvoicePaid,
     ReturnPurchaseMaster, ReturnSalesInvoiceMaster, ReturnSalesInvoicePaid, ReturnSalesMaster,
-    SaleRateMaster, PaymentMaster, ReceiptMaster, InvoiceSeries
+    SaleRateMaster, ReceiptMaster, InvoiceSeries
 )
 from .forms import (
     LoginForm, UserRegistrationForm, UserUpdateForm, PharmacyDetailsForm, ProductForm,
@@ -1937,7 +1937,7 @@ def print_purchase_receipt(request, invoice_id):
         'pharmacy': pharmacy,
         'title': f'Purchase Receipt - Invoice #{invoice.invoice_no}'
     }
-    return render(request, 'purchases/print_purchase_receipt.html', context)
+    return render(request, 'purchases/pharmacy_purchase_receipt.html', context)
 
 @login_required
 def add_sale(request, invoice_id):
@@ -5255,8 +5255,7 @@ def export_inventory_csv(request):
 # Finance - Payments
 @login_required
 def payment_list(request):
-    payments = PaymentMaster.objects.all().order_by('-payment_date')
-    
+        
     search_query = request.GET.get('search', '')
     if search_query:
         payments = payments.filter(
@@ -5294,7 +5293,7 @@ def add_payment(request):
 
 @login_required
 def edit_payment(request, payment_id):
-    payment = get_object_or_404(PaymentMaster, payment_id=payment_id)
+    payment = get_object_or_404(payment_id=payment_id)
     
     if request.method == 'POST':
         form = PaymentForm(request.POST, instance=payment)
@@ -5315,7 +5314,7 @@ def edit_payment(request, payment_id):
 
 @login_required
 def delete_payment(request, pk):
-    payment = get_object_or_404(PaymentMaster, payment_id=pk)
+    payment = get_object_or_404(payment_id=pk)
     
     if request.method == 'POST':
         try:
@@ -5378,8 +5377,7 @@ def export_payments_pdf(request):
     end_date = convert_date_format(end_date_str)
     
     # Filter payments by date if provided
-    payments = PaymentMaster.objects.all()
-    if start_date and end_date:
+        if start_date and end_date:
         payments = payments.filter(payment_date__range=[start_date, end_date])
     elif start_date:
         payments = payments.filter(payment_date__gte=start_date)
@@ -5450,8 +5448,7 @@ def export_payments_excel(request):
     writer = csv.writer(response)
     writer.writerow(['Date', 'Amount', 'Mode', 'Reference'])
     
-    payments = PaymentMaster.objects.all()[:100]
-    for payment in payments:
+        for payment in payments:
         writer.writerow([
             payment.payment_date,
             payment.payment_amount,
@@ -7440,8 +7437,7 @@ def export_financial_excel(request):
 # Finance views
 @login_required
 def payment_list(request):
-    payments = PaymentMaster.objects.all().order_by('-payment_date')
-    context = {
+        context = {
         'payments': payments,
         'title': 'Payments'
     }
@@ -7873,7 +7869,7 @@ def get_customer_rate_info(request):
 # Missing finance view functions
 @login_required
 def edit_payment(request, pk):
-    payment = get_object_or_404(PaymentMaster, payment_id=pk)
+    payment = get_object_or_404(payment_id=pk)
     
     if request.method == 'POST':
         payment.payment_date = request.POST.get('payment_date')
@@ -7893,7 +7889,7 @@ def edit_payment(request, pk):
 
 @login_required
 def delete_payment(request, pk):
-    payment = get_object_or_404(PaymentMaster, payment_id=pk)
+    payment = get_object_or_404(payment_id=pk)
     
     if request.method == 'POST':
         payment.delete()
@@ -8867,8 +8863,7 @@ def export_financial_excel(request):
 # Finance payment function
 @login_required
 def payment_list(request):
-    payments = PaymentMaster.objects.all().order_by('-payment_date')
-    
+        
     paginator = Paginator(payments, 20)
     page_number = request.GET.get('page')
     payments = paginator.get_page(page_number)
@@ -8884,8 +8879,7 @@ def payment_list(request):
 def add_payment(request):
     from django.shortcuts import render, get_object_or_404, redirect
     from django.urls import reverse
-    from .models import PaymentMaster
-    from .forms import PaymentForm
+        from .forms import PaymentForm
     if request.method == "POST":
         form = PaymentForm(request.POST)
         if form.is_valid():
@@ -8906,9 +8900,8 @@ def add_payment(request):
 def edit_payment(request, payment_id):
     from django.shortcuts import render, get_object_or_404, redirect
     from django.urls import reverse
-    from .models import PaymentMaster
-    from .forms import PaymentForm
-    payment = get_object_or_404(PaymentMaster, id=payment_id)
+        from .forms import PaymentForm
+    payment = get_object_or_404(id=payment_id)
     title = "Edit Payment"
 
     if request.method == "POST":
@@ -8950,8 +8943,7 @@ def payment_confirm_delete(request):
 
 def export_payments_excel(request):
     import openpyxl
-    from .models import PaymentMaster
-    # Create workbook and worksheet
+        # Create workbook and worksheet
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Payments"
@@ -8962,8 +8954,7 @@ def export_payments_excel(request):
     ])
 
     # Fetch all payments
-    payments = PaymentMaster.objects.all()
-
+    
     for payment in payments:
         ws.append([
             payment.payment_id,
@@ -8990,8 +8981,7 @@ def export_payments_excel(request):
 def export_payments_pdf(request):
     from reportlab.lib.pagesizes import A4
     from reportlab.pdfgen import canvas
-    from .models import PaymentMaster
-    # Create HTTP response with PDF headers
+        # Create HTTP response with PDF headers
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="payments.pdf"'
 
@@ -9012,8 +9002,7 @@ def export_payments_pdf(request):
         pdf.drawString(x, y, header)
 
     # Fetch payments
-    payments = PaymentMaster.objects.all()
-    pdf.setFont("Helvetica", 10)
+        pdf.setFont("Helvetica", 10)
     y -= 20
 
     for payment in payments:
@@ -9476,7 +9465,7 @@ def export_payments_pdf(request, payment_type=None, start_date=None, end_date=No
     from reportlab.lib import colors
     from reportlab.lib.units import inch
     from io import BytesIO
-    from .models import PaymentMaster, ReceiptMaster, InvoicePaid, SalesInvoicePaid
+    from .models import ReceiptMaster, InvoicePaid, SalesInvoicePaid
     from datetime import datetime, timedelta
     
     # Get filter parameters from request
@@ -9573,8 +9562,7 @@ def export_payments_pdf(request, payment_type=None, start_date=None, end_date=No
     
     if payment_type in ['all', 'other']:
         # Other Payments (PaymentMaster)
-        other_payments = PaymentMaster.objects.filter(
-            payment_date__range=[start_date, end_date]
+        other_            payment_date__range=[start_date, end_date]
         )
         
         for payment in other_payments:

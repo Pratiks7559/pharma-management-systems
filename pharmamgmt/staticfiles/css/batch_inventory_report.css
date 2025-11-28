@@ -62,6 +62,42 @@
     text-decoration: none;
 }
 
+.batch-report-btn-warning {
+    background: #f6c23e;
+    color: #5a5c69;
+    border: 1px solid #f6c23e;
+}
+
+.batch-report-btn-warning:hover {
+    background: #f4b619;
+    color: #5a5c69;
+    text-decoration: none;
+}
+
+.batch-report-btn-success {
+    background: #1cc88a;
+    color: white;
+    border: 1px solid #1cc88a;
+}
+
+.batch-report-btn-success:hover {
+    background: #17a673;
+    color: white;
+    text-decoration: none;
+}
+
+.batch-report-btn-info {
+    background: #36b9cc;
+    color: white;
+    border: 1px solid #36b9cc;
+}
+
+.batch-report-btn-info:hover {
+    background: #2c9faf;
+    color: white;
+    text-decoration: none;
+}
+
 /* Card section */
 .batch-report-card {
     background: white !important;
@@ -367,28 +403,150 @@
 
 /* Print styles */
 @media print {
-    .no-print {
+    /* Hide non-printable elements */
+    .no-print,
+    .batch-report-actions,
+    .batch-search-form,
+    .batch-pagination-container,
+    .batch-alert-close {
         display: none !important;
+    }
+    
+    /* Reset page styles */
+    body {
+        background: white !important;
+        color: black !important;
     }
     
     .batch-report-container {
         padding: 0;
-        background: white;
+        background: white !important;
+        color: black !important;
+    }
+    
+    .batch-report-header {
+        background: white !important;
+        box-shadow: none;
+        border-bottom: 2px solid #000;
+        margin-bottom: 20px;
+    }
+    
+    .batch-report-title {
+        color: black !important;
+        font-size: 24px;
     }
     
     .batch-report-card {
         box-shadow: none;
         border: none;
+        background: white !important;
+    }
+    
+    .batch-report-card-header {
+        background: white !important;
+        border-bottom: 1px solid #000;
+    }
+    
+    .batch-report-card-title {
+        color: black !important;
+    }
+    
+    .batch-report-card-subtitle {
+        color: #333 !important;
+    }
+    
+    .batch-info-alert {
+        background: #f0f0f0 !important;
+        border: 1px solid #ccc !important;
+        color: black !important;
+    }
+    
+    /* Table print styles */
+    .batch-table-container {
+        border: 1px solid #000;
     }
     
     .batch-inventory-table {
-        font-size: 12px;
+        font-size: 11px;
+        background: white !important;
+        color: black !important;
+        page-break-inside: auto;
     }
     
-    .batch-inventory-table th,
-    .batch-inventory-table td {
-        padding: 8px 6px;
+    .batch-inventory-table thead {
+        display: table-header-group;
     }
+    
+    .batch-inventory-table tfoot {
+        display: table-footer-group;
+    }
+    
+    .batch-table-header {
+        background: #f0f0f0 !important;
+        border-bottom: 2px solid #000 !important;
+    }
+    
+    .batch-table-header th {
+        padding: 8px 6px;
+        color: black !important;
+        border-right: 1px solid #000 !important;
+    }
+    
+    .batch-inventory-table tbody tr {
+        page-break-inside: avoid;
+        border-bottom: 1px solid #ccc !important;
+    }
+    
+    .batch-inventory-table td {
+        padding: 6px 4px;
+        color: black !important;
+        border-right: 1px solid #ccc !important;
+    }
+    
+    .batch-zero-stock-row {
+        background-color: #f9f9f9 !important;
+    }
+    
+    .batch-product-link {
+        color: black !important;
+        text-decoration: none !important;
+    }
+    
+    .batch-zero-stock-badge {
+        background-color: #ccc !important;
+        color: black !important;
+    }
+    
+    .batch-table-footer {
+        background: #f0f0f0 !important;
+        border-top: 2px solid #000 !important;
+    }
+    
+    .batch-table-footer td {
+        color: black !important;
+        font-weight: bold;
+    }
+    
+    /* Page break control */
+    @page {
+        size: A4 landscape;
+        margin: 1cm;
+    }
+}
+
+/* Button loading states */
+.export-loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.export-pulse {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
 }
 
 /* Comprehensive Mobile Responsiveness */

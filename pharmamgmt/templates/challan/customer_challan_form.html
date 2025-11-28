@@ -837,8 +837,8 @@ function saveCustomer() {
     const form = document.getElementById('customerDialogForm');
     const formData = new FormData(form);
     
-    if (!formData.get('customer_name') || !formData.get('customer_type') || !formData.get('customer_credit_days')) {
-        alert('Please fill in all required fields');
+    if (!formData.get('customer_name') || !formData.get('customer_mobile')) {
+        alert('Please fill in customer name and mobile number');
         return;
     }
     
@@ -963,17 +963,16 @@ function saveSeries() {
                         <input type="text" name="customer_name" class="customer-form-input" required>
                     </div>
                     <div class="customer-form-col">
-                        <label class="customer-form-label">Customer Type*</label>
-                        <select name="customer_type" class="customer-form-input" required>
-                            <option value="">Select Type</option>
+                        <label class="customer-form-label">Mobile Number*</label>
+                        <input type="text" name="customer_mobile" class="customer-form-input" required>
+                    </div>
+                    <div class="customer-form-col">
+                        <label class="customer-form-label">Customer Type</label>
+                        <select name="customer_type" class="customer-form-input">
                             <option value="Type-A">Type-A</option>
                             <option value="Type-B">Type-B</option>
                             <option value="Type-C">Type-C</option>
                         </select>
-                    </div>
-                    <div class="customer-form-col">
-                        <label class="customer-form-label">Mobile Number</label>
-                        <input type="text" name="customer_mobile" class="customer-form-input">
                     </div>
                 </div>
                 <div class="customer-form-row">
@@ -1010,8 +1009,11 @@ function saveSeries() {
                         <input type="text" name="customer_food_license_no" class="customer-form-input">
                     </div>
                     <div class="customer-form-col">
-                        <label class="customer-form-label">Credit Days*</label>
-                        <input type="number" name="customer_credit_days" class="customer-form-input" value="0" required>
+                        <label class="customer-form-label">Credit Days</label>
+                        <input type="number" name="customer_credit_days" class="customer-form-input" value="0">
+                    </div>
+                    <div class="customer-form-col">
+                        <!-- Empty column for spacing -->
                     </div>
                 </div>
             </form>

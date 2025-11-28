@@ -472,3 +472,65 @@ def expiry_mmyyyy(value):
     
     # Return as-is if format is not recognized
     return expiry_str
+
+@register.filter
+def slice_list(value, chunk_size):
+    """Slice a list into chunks of specified size with global counter"""
+    try:
+        chunk_size = int(chunk_size)
+        result = []
+        for i in range(0, len(value), chunk_size):
+            chunk = list(value[i:i + chunk_size])
+            # Add global counter to each item
+            for j, item in enumerate(chunk):
+                item.global_counter = i + j + 1
+            result.append(chunk)
+        return result
+    except (ValueError, TypeError):
+        return [value]
+
+@register.filter
+def calculate_cgst_total(purchases):
+    """Calculate total CGST amount from purchases"""
+    try:
+        total = 0
+        for purchase in purchases:
+            # Calculate CGST amount: (base_amount * cgst_rate) / 100
+            base_amount = purchase.product_purchase_rate * purchase.product_quantity
+            if purchase.purchase_calculation_mode == 'flat':
+                base_amount -= purchase.product_discount_got
+            else:
+                base_amount *= (1 - (purchase.product_discount_got / 100))
+            
+            cgst_amount = (base_amount * purchase.CGST) / 100
+            total += cgst_amount
+        return total
+    except Exception:
+        return 0
+
+@register.filter
+def calculate_sgst_total(purchases):
+    """Calculate total SGST amount from purchases"""
+    try:
+        total = 0
+        for purchase in purchases:
+            # Calculate SGST amount: (base_amount * sgst_rate) / 100
+            base_amount = purchase.product_purchase_rate * purchase.product_quantity
+            if purchase.purchase_calculation_mode == 'flat':
+                base_amount -= purchase.product_discount_got
+            else:
+                base_amount *= (1 - (purchase.product_discount_got / 100))
+            
+            sgst_amount = (base_amount * purchase.SGST) / 100
+            total += sgst_amount
+        return total
+    except Exception:
+        return 0
+
+@register.filter
+def get_item(dictionary, key):
+    """Get an item from a dictionary using a key"""
+    try:
+        return dictionary.get(key, [])
+    except (AttributeError, TypeError):
+        return []

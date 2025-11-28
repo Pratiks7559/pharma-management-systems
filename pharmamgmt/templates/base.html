@@ -112,6 +112,12 @@
     <!-- Theme Toggle JavaScript -->
     <script src="{% static 'js/theme-toggle.js' %}"></script>
     
+    <!-- Response Handler Utility -->
+    <script src="{% static 'js/response-handler.js' %}"></script>
+    
+    <!-- Notification System -->
+    <script src="{% static 'js/notification-system.js' %}"></script>
+    
     <!-- Custom JavaScript -->
     <script src="{% static 'js/main.js' %}"></script>
     
@@ -131,6 +137,42 @@
         let inputHistory = [];
         let currentInputIndex = -1;
         let inputValues = new Map(); // Store input values
+        
+        // Show navigation info function
+        function showNavigationInfo(current, total, message = '') {
+            let navInfo = document.getElementById('navigationInfo');
+            if (!navInfo) {
+                navInfo = document.createElement('div');
+                navInfo.id = 'navigationInfo';
+                navInfo.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: rgba(0, 0, 0, 0.8);
+                    color: white;
+                    padding: 10px 15px;
+                    border-radius: 5px;
+                    font-size: 14px;
+                    z-index: 10000;
+                    transition: opacity 0.3s ease;
+                `;
+                document.body.appendChild(navInfo);
+            }
+            
+            navInfo.textContent = message || `Input ${current} of ${total}`;
+            navInfo.style.opacity = '1';
+            
+            setTimeout(() => {
+                if (navInfo) {
+                    navInfo.style.opacity = '0';
+                    setTimeout(() => {
+                        if (navInfo && navInfo.parentNode) {
+                            navInfo.parentNode.removeChild(navInfo);
+                        }
+                    }, 300);
+                }
+            }, 2000);
+        }
         
         // Save input value when it changes
         function saveInputValue(element) {
@@ -155,9 +197,13 @@
             const saved = inputValues.get(key);
             if (saved) {
                 element.value = saved.value;
-                if (element.setSelectionRange && saved.selectionStart !== undefined) {
+                if (element.setSelectionRange && saved.selectionStart !== undefined && element.type !== 'date') {
                     setTimeout(() => {
-                        element.setSelectionRange(saved.selectionStart, saved.selectionEnd);
+                        try {
+                            element.setSelectionRange(saved.selectionStart, saved.selectionEnd);
+                        } catch (e) {
+                            // Ignore selection errors for unsupported input types
+                        }
                     }, 0);
                 }
             }

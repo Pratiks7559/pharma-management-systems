@@ -43,9 +43,11 @@
                         <div class="ci-form-column">
                             <div class="ci-field-group">
                                 <label for="returninvoice_date" class="ci-field-label required">Return Date*</label>
-                                <input type="date" name="returninvoice_date" id="returninvoice_date" class="form-control" 
+                                <input type="text" name="returninvoice_date" id="returninvoice_date" 
+                                       class="form-control date-input-ddmmyyyy" 
                                        value="{{ form.returninvoice_date.value|default:'' }}" 
-                                       title="Enter return date" required>
+                                       placeholder="DD-MM-YYYY" maxlength="10"
+                                       title="Enter return date in DD-MM-YYYY format" required>
                                 {% if form.returninvoice_date.errors %}
                                     <div class="invalid-feedback d-block">{{ form.returninvoice_date.errors }}</div>
                                 {% endif %}
@@ -179,7 +181,12 @@ function addReturnProductRow() {
         </td>
         <td><input type="number" class="scheme" step="0.01" placeholder="Scheme" min="0" onchange="calculateReturnRowTotal(${returnProductRowIndex})"></td>
         <td><input type="number" class="charges" step="0.01" placeholder="Charges" min="0" onchange="calculateReturnRowTotal(${returnProductRowIndex})"></td>
-        <td><input type="text" class="reason" placeholder="Return Reason" maxlength="200"></td>
+        <td><select class="reason" required>
+            <option value="">Select Reason</option>
+            <option value="Expiry">Expiry</option>
+            <option value="Breakage">Breakage</option>
+            <option value="Non Moving">Non Moving</option>
+        </select></td>
         <td><span class="return-row-total">0.00</span></td>
         <td><button type="button" class="remove-btn" onclick="removeReturnProductRow(${returnProductRowIndex})" title="Remove Row"><i class="fas fa-trash"></i></button></td>
     `;
@@ -393,7 +400,7 @@ function setCurrentReturnDate() {
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
-    const dateString = `${year}-${month}-${day}`;
+    const dateString = `${day}-${month}-${year}`; // DD-MM-YYYY format
     
     const returnDateInput = document.querySelector('input[name="returninvoice_date"]');
     if (returnDateInput && !returnDateInput.value) {
@@ -1034,9 +1041,44 @@ document.addEventListener('DOMContentLoaded', function() {
         returnChargesInput.addEventListener('input', calculateReturnTotal);
     }
     
-    // Handle return date input with DDMMYYYY format
+    // Handle return date input with DD-MM-YYYY format
     const returnDateInput = document.querySelector('input[name*="returninvoice_date"]');
     if (returnDateInput) {
+        // Auto-format date input as user types
+        returnDateInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+            
+            if (value.length >= 2) {
+                value = value.substring(0, 2) + '-' + value.substring(2);
+            }
+            if (value.length >= 5) {
+                value = value.substring(0, 5) + '-' + value.substring(5, 9);
+            }
+            
+            e.target.value = value;
+        });
+        
+        // Validate date on blur
+        returnDateInput.addEventListener('blur', function(e) {
+            const value = e.target.value;
+            if (value && value.length === 10) {
+                const parts = value.split('-');
+                if (parts.length === 3) {
+                    const day = parseInt(parts[0]);
+                    const month = parseInt(parts[1]);
+                    const year = parseInt(parts[2]);
+                    
+                    if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1900 || year > 2100) {
+                        e.target.style.borderColor = '#dc3545';
+                        e.target.title = 'Invalid date. Please enter in DD-MM-YYYY format';
+                    } else {
+                        e.target.style.borderColor = '';
+                        e.target.title = 'Enter return date in DD-MM-YYYY format';
+                    }
+                }
+            }
+        });
+        
         returnDateInput.addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key.toLowerCase() === 't') {
                 e.preventDefault();
@@ -1184,20 +1226,20 @@ document.addEventListener('DOMContentLoaded', function() {
             
             document.getElementById('returnProductsData').value = JSON.stringify(productsData);
             
-            // Validate return date format (DDMMYYYY)
+            // Validate return date format (DD-MM-YYYY)
             const returnDateInput = document.querySelector('input[name*="returninvoice_date"]');
             if (returnDateInput && returnDateInput.value) {
                 const dateValue = returnDateInput.value.trim();
                 
-                // Check if it's in DDMMYYYY format
-                if (dateValue.length === 8 && /^\d{8}$/.test(dateValue)) {
-                    // Validate the date
-                    const day = parseInt(dateValue.substring(0, 2));
-                    const month = parseInt(dateValue.substring(2, 4));
-                    const year = parseInt(dateValue.substring(4, 8));
+                // Check if it's in DD-MM-YYYY format
+                if (dateValue.length === 10 && /^\d{2}-\d{2}-\d{4}$/.test(dateValue)) {
+                    const parts = dateValue.split('-');
+                    const day = parseInt(parts[0]);
+                    const month = parseInt(parts[1]);
+                    const year = parseInt(parts[2]);
                     
                     if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) {
-                        alert('Please enter a valid return date in DDMMYYYY format.');
+                        alert('Please enter a valid return date in DD-MM-YYYY format.');
                         returnDateInput.focus();
                         return false;
                     }
@@ -1205,12 +1247,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Check for valid day in month
                     const daysInMonth = new Date(year, month, 0).getDate();
                     if (day > daysInMonth) {
-                        alert('Please enter a valid return date in DDMMYYYY format.');
+                        alert('Please enter a valid return date in DD-MM-YYYY format.');
                         returnDateInput.focus();
                         return false;
                     }
                 } else {
-                    alert('Please enter return date in DDMMYYYY format (8 digits).');
+                    alert('Please enter return date in DD-MM-YYYY format.');
                     returnDateInput.focus();
                     return false;
                 }

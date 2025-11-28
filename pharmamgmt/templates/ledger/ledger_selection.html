@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ledger Selection{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/ledger_selection.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="ledger-selection-wrapper">
+    <div class="ledger-selection-header">
+        <h1 class="ledger-selection-title"><i class="fas fa-book ledger-selection-title-icon"></i> Ledger Management</h1>
+        <p class="ledger-selection-subtitle">Choose the type of ledger you want to view</p>
+    </div>
+
+    <div class="ledger-selection-grid">
+        <a href="{% url 'supplier_ledger' %}" class="ledger-selection-card" id="supplierLedgerCard">
+            <div class="ledger-selection-card-icon">
+                <i class="fas fa-truck"></i>
+            </div>
+            <h3 class="ledger-selection-card-title">Supplier Ledger</h3>
+            <p class="ledger-selection-card-description">View supplier accounts, outstanding balances, payment history, and purchase transactions</p>
+        </a>
+
+        <a href="{% url 'customer_ledger' %}" class="ledger-selection-card" id="customerLedgerCard">
+            <div class="ledger-selection-card-icon">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <h3 class="ledger-selection-card-title">Customer Ledger</h3>
+            <p class="ledger-selection-card-description">View customer accounts, outstanding balances, payment history, and sales transactions</p>
+        </a>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const supplierCard = document.getElementById('supplierLedgerCard');
+    const customerCard = document.getElementById('customerLedgerCard');
+    
+    if (supplierCard) {
+        supplierCard.setAttribute('tabindex', '0');
+    }
+    
+    if (customerCard) {
+        customerCard.setAttribute('tabindex', '0');
+    }
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            if (document.activeElement === supplierCard) {
+                window.location.href = "{% url 'supplier_ledger' %}";
+            } else if (document.activeElement === customerCard) {
+                window.location.href = "{% url 'customer_ledger' %}";
+            }
+        }
+        
+        // Arrow key navigation
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'Tab') {
+            e.preventDefault();
+            customerCard.focus();
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            supplierCard.focus();
+        }
+    });
+});
+</script>
+{% endblock %}
