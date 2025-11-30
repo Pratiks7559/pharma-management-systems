@@ -11,33 +11,13 @@
         <div class="pharma-navbar-brand">
             <div class="pharma-brand-content">
                 <div class="pharma-logo-container">
-                    <div class="pharma-logo-main">
-                        <!-- Medical Cross with Glow -->
-                        <div class="medical-cross">
-                            <div class="cross-vertical"></div>
-                            <div class="cross-horizontal"></div>
-                            <div class="cross-glow"></div>
-                        </div>
-                        
-                        <!-- Rotating Pills -->
-                        <div class="pills-orbit">
-                            <div class="pill pill-1"></div>
-                            <div class="pill pill-2"></div>
-                            <div class="pill pill-3"></div>
-                        </div>
-                        
-                        <!-- Heartbeat Line -->
-                        <div class="heartbeat-line">
-                            <div class="heartbeat-wave"></div>
-                        </div>
-                        
-                        <!-- Pulse Rings -->
-                        <div class="pulse-ring ring-1"></div>
-                        <div class="pulse-ring ring-2"></div>
-                        <div class="pulse-ring ring-3"></div>
+                    <div class="logo-wrapper">
+                        <img src="{% static 'weblogo.png' %}" alt="MedicVista Pharma" class="pharma-logo-img">
+                        <div class="logo-shine"></div>
                     </div>
                 </div>
-                <span class="pharma-brand-text">MedicVista</span>
+             <span class="pharma-brand-text">MedicVista</span>
+            
             </div>
         </div>
     </div>
@@ -110,17 +90,90 @@
     padding: 5px;
 }
 
+.logo-wrapper {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+    border-radius: 12px;
+    padding: 5px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.logo-wrapper:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(255,215,0,0.3);
+}
+
+.pharma-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    position: relative;
+    z-index: 2;
+    animation: logoFloat 4s ease-in-out infinite, logoPulse 2s ease-in-out infinite;
+    filter: drop-shadow(0 2px 8px rgba(255,215,0,0.4));
+}
+
+.logo-shine {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.3) 50%,
+        transparent 70%
+    );
+    animation: shine 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes logoFloat {
+    0%, 100% { 
+        transform: translateY(0px) rotate(0deg);
+    }
+    25% { 
+        transform: translateY(-3px) rotate(1deg);
+    }
+    50% { 
+        transform: translateY(0px) rotate(0deg);
+    }
+    75% { 
+        transform: translateY(-3px) rotate(-1deg);
+    }
+}
+
+@keyframes logoPulse {
+    0%, 100% { 
+        filter: drop-shadow(0 2px 8px rgba(255,215,0,0.4));
+    }
+    50% { 
+        filter: drop-shadow(0 4px 15px rgba(255,215,0,0.7));
+    }
+}
+
+@keyframes shine {
+    0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+}
+
 .pharma-logo-main {
     position: relative;
     width: 55px;
     height: 55px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-    border-radius: 50%;
-    overflow: visible;
-    animation: logoRotate 20s linear infinite;
+    display: none;
 }
 
 /* Medical Cross with Glow */

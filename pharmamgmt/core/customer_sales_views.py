@@ -60,14 +60,23 @@ def customer_wise_sales_report(request):
                         'invoice_total': invoice_total
                     })
                 
+                # Get customer challans
+                customer_challans = list(CustomerChallanMaster.objects.filter(
+                    customer_name=customer,
+                    sales_entry_date__date__range=[from_date_obj, to_date_obj]
+                ).select_related('product_id'))
+                
                 if export_type == 'pdf':
-                    return export_customer_sales_pdf(customer, sales_data, from_date_obj, to_date_obj)
+                    return export_customer_sales_pdf(customer, sales_data, customer_challans, from_date_obj, to_date_obj)
                 elif export_type == 'print':
-                    return export_customer_sales_print_pdf(customer, sales_data, from_date_obj, to_date_obj)
+                    return export_customer_sales_print_pdf(customer, sales_data, customer_challans, from_date_obj, to_date_obj)
                 elif export_type == 'excel':
-                    return export_customer_sales_excel(customer, sales_data, from_date_obj, to_date_obj)
-            except:
-                return JsonResponse({'success': False, 'error': 'Export failed'})
+                    return export_customer_sales_excel(customer, sales_data, customer_challans, from_date_obj, to_date_obj)
+            except Exception as e:
+                import traceback
+                print(f"Export error: {str(e)}")
+                print(traceback.format_exc())
+                return JsonResponse({'success': False, 'error': f'Export failed: {str(e)}'})
     
     # If filters applied, get sales data
     if customer_id and from_date and to_date:
@@ -229,7 +238,7 @@ def customer_sales_summary(request, customer_id):
             'error': 'Customer not found'
         })
 
-def export_customer_sales_pdf(customer, sales_data, from_date, to_date):
+def export_customer_sales_pdf(customer, sales_data, customer_challans, from_date, to_date):
     """Export customer sales to professional PDF document"""
     from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
     from reportlab.lib.units import mm
@@ -237,7 +246,7 @@ def export_customer_sales_pdf(customer, sales_data, from_date, to_date):
     
     response = HttpResponse(content_type='application/pdf')
     filename = f'customer_sales_{customer.customer_name}_{from_date.strftime("%Y%m%d")}_{to_date.strftime("%Y%m%d")}.pdf'
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
     
     # A4 Portrait with professional margins
     doc = SimpleDocTemplate(response, pagesize=A4, rightMargin=20*mm, leftMargin=20*mm, topMargin=25*mm, bottomMargin=20*mm)
@@ -319,22 +328,24 @@ def export_customer_sales_pdf(customer, sales_data, from_date, to_date):
     elements.append(Spacer(1, 8*mm))
     
     # Sales Data Table
-    if sales_data:
+    if sales_data or customer_challans:
         # Table Headers
-        data = [['S.No.', 'Invoice No.', 'Date', 'Product Name', 'Batch', 'Qty', 'Rate (₹)', 'Amount (₹)']]
+        data = [['S.No.', 'Type', 'Invoice/Challan', 'Date', 'Product', 'Batch', 'Qty', 'Rate', 'Amount']]
         
         total_amount = 0
         total_qty = 0
         sr_no = 1
         
+        # Add invoice sales
         for sale_info in sales_data:
             invoice = sale_info['invoice']
             for item in sale_info['items']:
                 data.append([
                     str(sr_no),
+                    'Invoice',
                     str(invoice.sales_invoice_no),
                     invoice.sales_invoice_date.strftime('%d/%m/%Y'),
-                    item.product_name[:25] + '...' if len(item.product_name) > 25 else item.product_name,
+                    item.product_name[:20] + '...' if len(item.product_name) > 20 else item.product_name,
                     item.product_batch_no[:8] if item.product_batch_no else 'N/A',
                     f"{item.sale_quantity:.0f}",
                     f"{item.sale_rate:.2f}",
@@ -344,11 +355,28 @@ def export_customer_sales_pdf(customer, sales_data, from_date, to_date):
                 total_qty += item.sale_quantity
                 sr_no += 1
         
+        # Add challan sales
+        for challan in customer_challans:
+            data.append([
+                str(sr_no),
+                'Challan',
+                str(challan.customer_challan_no),
+                challan.sales_entry_date.strftime('%d/%m/%Y'),
+                challan.product_name[:20] + '...' if len(challan.product_name) > 20 else challan.product_name,
+                challan.product_batch_no[:8] if challan.product_batch_no else 'N/A',
+                f"{challan.sale_quantity:.0f}",
+                f"{challan.sale_rate:.2f}",
+                f"{challan.sale_total_amount:.2f}"
+            ])
+            total_amount += challan.sale_total_amount
+            total_qty += challan.sale_quantity
+            sr_no += 1
+        
         # Summary Row
-        data.append(['', '', '', 'TOTAL', '', f"{total_qty:.0f}", '', f"{total_amount:.2f}"])
+        data.append(['', '', '', '', 'TOTAL', '', f"{total_qty:.0f}", '', f"{total_amount:.2f}"])
         
         # Create table with proper column widths
-        col_widths = [12*mm, 25*mm, 20*mm, 50*mm, 18*mm, 15*mm, 20*mm, 25*mm]
+        col_widths = [10*mm, 15*mm, 22*mm, 18*mm, 42*mm, 16*mm, 12*mm, 18*mm, 22*mm]
         sales_table = Table(data, colWidths=col_widths, repeatRows=1)
         
         sales_table.setStyle(TableStyle([
@@ -363,18 +391,19 @@ def export_customer_sales_pdf(customer, sales_data, from_date, to_date):
             ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'),
             ('FONTSIZE', (0, 1), (-1, -2), 8),
             ('ALIGN', (0, 1), (0, -2), 'CENTER'),  # S.No.
-            ('ALIGN', (1, 1), (1, -2), 'LEFT'),    # Invoice
-            ('ALIGN', (2, 1), (2, -2), 'CENTER'),  # Date
-            ('ALIGN', (3, 1), (3, -2), 'LEFT'),    # Product
-            ('ALIGN', (4, 1), (4, -2), 'CENTER'),  # Batch
-            ('ALIGN', (5, 1), (-1, -2), 'RIGHT'),  # Qty, Rate, Amount
+            ('ALIGN', (1, 1), (1, -2), 'CENTER'),  # Type
+            ('ALIGN', (2, 1), (2, -2), 'LEFT'),    # Invoice
+            ('ALIGN', (3, 1), (3, -2), 'CENTER'),  # Date
+            ('ALIGN', (4, 1), (4, -2), 'LEFT'),    # Product
+            ('ALIGN', (5, 1), (5, -2), 'CENTER'),  # Batch
+            ('ALIGN', (6, 1), (-1, -2), 'RIGHT'),  # Qty, Rate, Amount
             
             # Total row styling
             ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
             ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, -1), (-1, -1), 9),
-            ('ALIGN', (0, -1), (4, -1), 'CENTER'),
-            ('ALIGN', (5, -1), (-1, -1), 'RIGHT'),
+            ('ALIGN', (0, -1), (5, -1), 'CENTER'),
+            ('ALIGN', (6, -1), (-1, -1), 'RIGHT'),
             
             # Grid and borders
             ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
@@ -436,7 +465,7 @@ def export_customer_sales_pdf(customer, sales_data, from_date, to_date):
     doc.build(elements)
     return response
 
-def export_customer_sales_excel(customer, sales_data, from_date, to_date):
+def export_customer_sales_excel(customer, sales_data, customer_challans, from_date, to_date):
     """Export customer sales to Excel"""
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     filename = f'customer_sales_{customer.customer_name}_{from_date.strftime("%Y%m%d")}_{to_date.strftime("%Y%m%d")}.xlsx'
@@ -447,7 +476,7 @@ def export_customer_sales_excel(customer, sales_data, from_date, to_date):
     worksheet.title = 'Customer Sales'
     
     # Headers
-    headers = ['Invoice No', 'Date', 'Product Name', 'Quantity', 'Rate', 'Amount']
+    headers = ['Type', 'Invoice/Challan', 'Date', 'Product Name', 'Batch', 'Quantity', 'Rate', 'Amount']
     for col, header in enumerate(headers, 1):
         cell = worksheet.cell(row=1, column=col, value=header)
         cell.font = Font(bold=True, color='FFFFFF')
@@ -457,21 +486,38 @@ def export_customer_sales_excel(customer, sales_data, from_date, to_date):
     # Data
     row = 2
     total_amount = 0
+    
+    # Invoice sales
     for sale_info in sales_data:
         invoice = sale_info['invoice']
         for item in sale_info['items']:
-            worksheet.cell(row=row, column=1, value=str(invoice.sales_invoice_no))
-            worksheet.cell(row=row, column=2, value=invoice.sales_invoice_date.strftime('%d/%m/%Y'))
-            worksheet.cell(row=row, column=3, value=item.product_name)
-            worksheet.cell(row=row, column=4, value=item.sale_quantity)
-            worksheet.cell(row=row, column=5, value=item.sale_rate)
-            worksheet.cell(row=row, column=6, value=item.sale_total_amount)
+            worksheet.cell(row=row, column=1, value='Invoice')
+            worksheet.cell(row=row, column=2, value=str(invoice.sales_invoice_no))
+            worksheet.cell(row=row, column=3, value=invoice.sales_invoice_date.strftime('%d/%m/%Y'))
+            worksheet.cell(row=row, column=4, value=item.product_name)
+            worksheet.cell(row=row, column=5, value=item.product_batch_no)
+            worksheet.cell(row=row, column=6, value=item.sale_quantity)
+            worksheet.cell(row=row, column=7, value=item.sale_rate)
+            worksheet.cell(row=row, column=8, value=item.sale_total_amount)
             total_amount += item.sale_total_amount
             row += 1
     
+    # Challan sales
+    for challan in customer_challans:
+        worksheet.cell(row=row, column=1, value='Challan')
+        worksheet.cell(row=row, column=2, value=str(challan.customer_challan_no))
+        worksheet.cell(row=row, column=3, value=challan.sales_entry_date.strftime('%d/%m/%Y'))
+        worksheet.cell(row=row, column=4, value=challan.product_name)
+        worksheet.cell(row=row, column=5, value=challan.product_batch_no)
+        worksheet.cell(row=row, column=6, value=challan.sale_quantity)
+        worksheet.cell(row=row, column=7, value=challan.sale_rate)
+        worksheet.cell(row=row, column=8, value=challan.sale_total_amount)
+        total_amount += challan.sale_total_amount
+        row += 1
+    
     # Total row
-    worksheet.cell(row=row, column=5, value='Total:').font = Font(bold=True)
-    worksheet.cell(row=row, column=6, value=total_amount).font = Font(bold=True)
+    worksheet.cell(row=row, column=7, value='Total:').font = Font(bold=True)
+    worksheet.cell(row=row, column=8, value=total_amount).font = Font(bold=True)
     
     # Auto-adjust columns
     for column in worksheet.columns:
@@ -489,7 +535,7 @@ def export_customer_sales_excel(customer, sales_data, from_date, to_date):
     workbook.save(response)
     return response
 
-def export_customer_sales_print_pdf(customer, sales_data, from_date, to_date):
+def export_customer_sales_print_pdf(customer, sales_data, customer_challans, from_date, to_date):
     """Export customer sales for print - optimized for printing"""
     from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
     from reportlab.lib.units import mm
@@ -524,20 +570,22 @@ def export_customer_sales_print_pdf(customer, sales_data, from_date, to_date):
     elements.append(Paragraph(info_text, info_style))
     
     # Sales Table
-    if sales_data:
-        data = [['S.No', 'Invoice', 'Date', 'Product', 'Qty', 'Rate', 'Amount']]
+    if sales_data or customer_challans:
+        data = [['S.No', 'Type', 'Inv/Chal', 'Date', 'Product', 'Qty', 'Rate', 'Amount']]
         
         total_amount = 0
         sr_no = 1
         
+        # Invoice sales
         for sale_info in sales_data:
             invoice = sale_info['invoice']
             for item in sale_info['items']:
                 data.append([
                     str(sr_no),
-                    str(invoice.sales_invoice_no),
+                    'Inv',
+                    str(invoice.sales_invoice_no)[:10],
                     invoice.sales_invoice_date.strftime('%d/%m/%y'),
-                    item.product_name[:20] + '...' if len(item.product_name) > 20 else item.product_name,
+                    item.product_name[:18] + '...' if len(item.product_name) > 18 else item.product_name,
                     f"{item.sale_quantity:.0f}",
                     f"{item.sale_rate:.0f}",
                     f"{item.sale_total_amount:.0f}"
@@ -545,11 +593,26 @@ def export_customer_sales_print_pdf(customer, sales_data, from_date, to_date):
                 total_amount += item.sale_total_amount
                 sr_no += 1
         
+        # Challan sales
+        for challan in customer_challans:
+            data.append([
+                str(sr_no),
+                'Chal',
+                str(challan.customer_challan_no)[:10],
+                challan.sales_entry_date.strftime('%d/%m/%y'),
+                challan.product_name[:18] + '...' if len(challan.product_name) > 18 else challan.product_name,
+                f"{challan.sale_quantity:.0f}",
+                f"{challan.sale_rate:.0f}",
+                f"{challan.sale_total_amount:.0f}"
+            ])
+            total_amount += challan.sale_total_amount
+            sr_no += 1
+        
         # Total row
-        data.append(['', '', '', 'TOTAL', '', '', f"{total_amount:.0f}"])
+        data.append(['', '', '', '', 'TOTAL', '', '', f"{total_amount:.0f}"])
         
         # Compact table for printing
-        table = Table(data, colWidths=[10*mm, 20*mm, 18*mm, 45*mm, 12*mm, 15*mm, 20*mm])
+        table = Table(data, colWidths=[8*mm, 12*mm, 18*mm, 16*mm, 40*mm, 12*mm, 15*mm, 20*mm])
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.black),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
@@ -558,9 +621,10 @@ def export_customer_sales_print_pdf(customer, sales_data, from_date, to_date):
             ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
             ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'),
             ('FONTSIZE', (0, 1), (-1, -2), 7),
-            ('ALIGN', (0, 1), (0, -1), 'CENTER'),
-            ('ALIGN', (1, 1), (3, -1), 'LEFT'),
-            ('ALIGN', (4, 1), (-1, -1), 'RIGHT'),
+            ('ALIGN', (0, 1), (0, -1), 'CENTER'),  # S.No
+            ('ALIGN', (1, 1), (1, -1), 'CENTER'),  # Type
+            ('ALIGN', (2, 1), (4, -1), 'LEFT'),    # Inv/Chal, Date, Product
+            ('ALIGN', (5, 1), (-1, -1), 'RIGHT'),  # Qty, Rate, Amount
             ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
             ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, -1), (-1, -1), 8),

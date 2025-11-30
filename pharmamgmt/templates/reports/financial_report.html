@@ -1,602 +1,360 @@
 {% extends 'base.html' %}
-{% load custom_filters %}
 {% load static %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block title %}Financial Report - Profit Analysis{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/financial_report_modern.css' %}">
-<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet" href="{% static 'css/financial_report.css' %}">
+<style>
+@media print {
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 0; }
+    body * { visibility: hidden; }
+    .fin-container, .fin-container * { visibility: visible; }
+    .fin-container { position: absolute; left: 0; top: 0; width: 100%; }
+    .fin-filter-section, .fin-export-buttons, .fin-pagination, .fin-pagination-bottom,
+    .sidebar-container, .navbar, button, .no-print { display: none !important; }
+    .fin-header { background: linear-gradient(135deg, #1a237e, #283593) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: white !important; padding: 12px 15px !important; margin-bottom: 10px !important; }
+    .fin-title { font-size: 18px !important; margin: 0 !important; color: white !important; text-align: center !important; }
+    .fin-summary-cards { display: grid !important; grid-template-columns: repeat(6, 1fr) !important; gap: 6px !important; margin-bottom: 10px !important; page-break-inside: avoid; }
+    .fin-summary-card { border: 1px solid #e5e7eb !important; border-radius: 4px !important; padding: 6px 8px !important; background: white !important; }
+    .fin-summary-label { font-size: 8px !important; font-weight: 600 !important; color: #6b7280 !important; }
+    .fin-summary-value { font-size: 12px !important; font-weight: bold !important; color: #111827 !important; }
+    .fin-table { width: 100% !important; border-collapse: collapse !important; font-size: 7px !important; }
+    .fin-table thead { background: #1a237e !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .fin-table th { padding: 4px 2px !important; font-size: 8px !important; border: 1px solid #1a237e !important; }
+    .fin-table td { padding: 3px 2px !important; font-size: 7px !important; border: 1px solid #e5e7eb !important; }
+    .fin-table tbody tr:nth-child(even) { background: #f9fafb !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .fin-type-badge { padding: 2px 4px !important; border-radius: 2px !important; font-size: 7px !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .fin-profit-positive { color: #10b981 !important; }
+    .fin-profit-negative { color: #ef4444 !important; }
+    @page { margin: 0.3in 0.25in; size: A4 landscape; }
+    .print-footer { margin-top: 10px !important; text-align: center !important; font-size: 8px !important; color: #6b7280 !important; padding: 6px !important; border-top: 1px solid #e5e7eb !important; }
+}
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="finrep-container">
-    <div class="finrep-header">
-        <h1 class="finrep-title">{{ title }}</h1>
-        <div class="finrep-actions no-print">
-            <a href="{% url 'export_financial_pdf' %}" class="finrep-btn finrep-btn-pdf">
-                <i class="fas fa-file-pdf"></i> PDF
-            </a>
-            <a href="{% url 'export_financial_excel' %}" class="finrep-btn finrep-btn-excel">
-                <i class="fas fa-file-csv"></i> Excel
-            </a>
-            <button onclick="window.print()" class="finrep-btn finrep-btn-print">
-                <i class="fas fa-print"></i> Print
-            </button>
+<div class="fin-container">
+    <div class="fin-card">
+        <div class="fin-header">
+            <h1 class="fin-title">
+                <i class="fas fa-chart-line"></i> Financial Report - Profit Analysis
+            </h1>
         </div>
-    </div>
 
-    <!-- Date Range Selector -->
-    <div class="finrep-datecard">
-        <div class="finrep-datecard-header">
-            <h6 class="finrep-datecard-title">Select Date Range</h6>
-        </div>
-        <div class="finrep-datecard-body">
-            <form method="get" class="finrep-dateform">
-                <div class="finrep-dateinputs">
-                    <div class="finrep-dategroup">
-                        <label for="start_date" class="finrep-datelabel">Start Date</label>
-                        <input type="date" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" class="finrep-dateinput">
+        <!-- Filter Section -->
+        <div class="fin-filter-section">
+            <form method="GET" action="{% url 'financial_report' %}">
+                <div class="fin-filter-row">
+                    <div class="fin-filter-group">
+                        <label for="start_date" class="fin-filter-label">
+                            <i class="fas fa-calendar-alt"></i> Start Date
+                        </label>
+                        <input type="date" id="start_date" name="start_date" value="{{ start_date }}" class="fin-filter-input">
                     </div>
-                    <div class="finrep-dategroup">
-                        <label for="end_date" class="finrep-datelabel">End Date</label>
-                        <input type="date" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" class="finrep-dateinput">
+                    <div class="fin-filter-group">
+                        <label for="end_date" class="fin-filter-label">
+                            <i class="fas fa-calendar-alt"></i> End Date
+                        </label>
+                        <input type="date" id="end_date" name="end_date" value="{{ end_date }}" class="fin-filter-input">
+                    </div>
+                    <div class="fin-filter-group">
+                        <label for="product_search" class="fin-filter-label">
+                            <i class="fas fa-pills"></i> Product
+                        </label>
+                        <input type="text" id="product_search" name="product_search" placeholder="Search product..." value="{{ product_search }}" autocomplete="off" class="fin-filter-input">
+                        <input type="hidden" id="product_id" name="product_id" value="{{ selected_product }}">
+                        <div id="product_suggestions" class="fin-suggestions"></div>
+                    </div>
+                    <div class="fin-filter-group">
+                        <button type="submit" class="fin-btn-filter">
+                            <i class="fas fa-filter"></i> Apply Filter
+                        </button>
                     </div>
                 </div>
-                <button type="submit" class="finrep-applybtn">Apply</button>
             </form>
         </div>
-    </div>
 
-    <!-- Financial Summary -->
-    <div class="finrep-summary">
-        <div class="finrep-summarycard">
-            <div class="finrep-summarycard-body">
-                <div class="finrep-summarycard-content">
-                    <div class="finrep-summarycard-text">
-                        <div class="finrep-summarycard-label">Gross Sales</div>
-                        <div class="finrep-summarycard-value">₹ {{ sales|floatformat:2 }}</div>
-                        <small class="finrep-summarycard-meta">{{ sales_data.invoice_count }} invoices</small>
-                    </div>
-                    <div class="finrep-summarycard-icon">
-                        <i class="fas fa-cart-plus"></i>
-                    </div>
-                </div>
+        <!-- Summary Cards -->
+        <div class="fin-summary-cards">
+            <div class="fin-summary-card">
+                <div class="fin-summary-label">Total Sales Value</div>
+                <div class="fin-summary-value">₹{{ summary.total_sales_value|floatformat:2 }}</div>
             </div>
-        </div>
-
-        <div class="finrep-summarycard">
-            <div class="finrep-summarycard-body">
-                <div class="finrep-summarycard-content">
-                    <div class="finrep-summarycard-text">
-                        <div class="finrep-summarycard-label">Gross Purchases</div>
-                        <div class="finrep-summarycard-value">₹ {{ purchases|floatformat:2 }}</div>
-                        <small class="finrep-summarycard-meta">{{ purchase_data.invoice_count }} invoices</small>
-                    </div>
-                    <div class="finrep-summarycard-icon">
-                        <i class="fas fa-shopping-bag"></i>
-                    </div>
-                </div>
+            <div class="fin-summary-card warning">
+                <div class="fin-summary-label">Total Purchase Cost</div>
+                <div class="fin-summary-value">₹{{ summary.total_purchase_cost|floatformat:2 }}</div>
+            </div>
+            <div class="fin-summary-card info">
+                <div class="fin-summary-label">Total GST</div>
+                <div class="fin-summary-value">₹{{ summary.total_gst|floatformat:2 }}</div>
+            </div>
+            <div class="fin-summary-card success">
+                <div class="fin-summary-label">Total Profit</div>
+                <div class="fin-summary-value">₹{{ summary.total_profit|floatformat:2 }}</div>
+            </div>
+            <div class="fin-summary-card">
+                <div class="fin-summary-label">Profit Margin</div>
+                <div class="fin-summary-value">{{ summary.profit_percentage|floatformat:2 }}%</div>
+            </div>
+            <div class="fin-summary-card info">
+                <div class="fin-summary-label">Total Transactions</div>
+                <div class="fin-summary-value">{{ summary.total_transactions }}</div>
             </div>
         </div>
 
-        <div class="finrep-summarycard finrep-summarycard-warning">
-            <div class="finrep-summarycard-body">
-                <div class="finrep-summarycard-content">
-                    <div class="finrep-summarycard-text">
-                        <div class="finrep-summarycard-label">Sales Returns</div>
-                        <div class="finrep-summarycard-value">₹ {{ sales_returns|floatformat:2 }}</div>
-                    </div>
-                    <div class="finrep-summarycard-icon">
-                        <i class="fas fa-undo"></i>
-                    </div>
-                </div>
-            </div>
+        <!-- Export Buttons -->
+        <div class="fin-export-buttons">
+            <button onclick="printReport()" class="fin-btn-export" style="background: #2e7d32; border-color: #2e7d32;">
+                <i class="fas fa-print"></i> Print
+            </button>
+            <button onclick="exportPDF()" class="fin-btn-export fin-btn-pdf">
+                <i class="fas fa-file-pdf"></i> Export PDF
+            </button>
+            <a href="{% url 'export_financial_excel' %}?{{ request.GET.urlencode }}" class="fin-btn-export fin-btn-excel">
+                <i class="fas fa-file-excel"></i> Export Excel
+            </a>
         </div>
 
-        <div class="finrep-summarycard finrep-summarycard-info">
-            <div class="finrep-summarycard-body">
-                <div class="finrep-summarycard-content">
-                    <div class="finrep-summarycard-text">
-                        <div class="finrep-summarycard-label">Purchase Returns</div>
-                        <div class="finrep-summarycard-value">₹ {{ purchase_returns|floatformat:2 }}</div>
-                    </div>
-                    <div class="finrep-summarycard-icon">
-                        <i class="fas fa-undo-alt"></i>
-                    </div>
+        <!-- Data Table -->
+        <div class="fin-table-container">
+            {% if financial_data %}
+            
+            <!-- Pagination Top -->
+            {% if financial_data.has_other_pages %}
+            <div class="fin-pagination">
+                <div class="fin-pagination-info">
+                    Page {{ financial_data.number }} of {{ financial_data.paginator.num_pages }} ({{ financial_data.paginator.count }} total records)
+                </div>
+                <div class="fin-pagination-controls">
+                    {% if financial_data.has_previous %}
+                    <a href="?page=1&start_date={{ start_date }}&end_date={{ end_date }}&product_id={{ selected_product }}&product_search={{ product_search }}" class="fin-pagination-btn">First</a>
+                    <a href="?page={{ financial_data.previous_page_number }}&start_date={{ start_date }}&end_date={{ end_date }}&product_id={{ selected_product }}&product_search={{ product_search }}" class="fin-pagination-btn">Previous</a>
+                    {% endif %}
+                    <span class="fin-pagination-current">{{ financial_data.number }}</span>
+                    {% if financial_data.has_next %}
+                    <a href="?page={{ financial_data.next_page_number }}&start_date={{ start_date }}&end_date={{ end_date }}&product_id={{ selected_product }}&product_search={{ product_search }}" class="fin-pagination-btn">Next</a>
+                    <a href="?page={{ financial_data.paginator.num_pages }}&start_date={{ start_date }}&end_date={{ end_date }}&product_id={{ selected_product }}&product_search={{ product_search }}" class="fin-pagination-btn">Last</a>
+                    {% endif %}
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Net Figures -->
-    <div class="financial-net-figures-row">
-        <div class="financial-net-sales-col">
-            <div class="financial-net-sales-card">
-                <div class="financial-net-sales-body">
-                    <div class="financial-net-sales-content">
-                        <div class="financial-net-sales-text">
-                            <div class="financial-net-sales-label">
-                                Net Sales (After Returns)</div>
-                            <div class="financial-net-sales-value">₹ {{ net_sales|floatformat:2 }}</div>
-                        </div>
-                        <div class="financial-net-sales-icon">
-                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
+            {% endif %}
+            
+            <table class="fin-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Invoice</th>
+                        <th>Party</th>
+                        <th>Product</th>
+                        <th>Batch</th>
+                        <th class="fin-text-center">Qty</th>
+                        <th class="fin-text-right">MRP</th>
+                        <th class="fin-text-right">Purchase Rate</th>
+                        <th class="fin-text-right">Sale Rate</th>
+                        <th class="fin-text-right">GST</th>
+                        <th class="fin-text-right">Purchase Cost</th>
+                        <th class="fin-text-right">Sales Value</th>
+                        <th class="fin-text-right">Profit</th>
+                        <th class="fin-text-right">Profit %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in financial_data %}
+                    <tr>
+                        <td>{{ item.date|date:"d-m-Y" }}</td>
+                        <td>
+                            <span class="fin-type-badge {% if item.type == 'Sale' %}fin-type-sale{% elif item.type == 'Customer Challan' %}fin-type-customer{% else %}fin-type-supplier{% endif %}">
+                                {{ item.type }}
+                            </span>
+                        </td>
+                        <td>{{ item.invoice_no }}</td>
+                        <td>{{ item.customer }}</td>
+                        <td>
+                            <div class="fin-product-name">{{ item.product_name }}</div>
+                            <div class="fin-product-company">{{ item.company }}</div>
+                        </td>
+                        <td>{{ item.batch_no }}</td>
+                        <td class="fin-text-center">{{ item.quantity|floatformat:0 }}</td>
+                        <td class="fin-text-right">₹{{ item.mrp|floatformat:2 }}</td>
+                        <td class="fin-text-right">₹{{ item.purchase_rate|floatformat:2 }}</td>
+                        <td class="fin-text-right">₹{{ item.sale_rate|floatformat:2 }}</td>
+                        <td class="fin-text-right">₹{{ item.gst_amount|floatformat:2 }}</td>
+                        <td class="fin-text-right">₹{{ item.purchase_cost|floatformat:2 }}</td>
+                        <td class="fin-text-right">₹{{ item.sales_value|floatformat:2 }}</td>
+                        <td class="fin-text-right {% if item.profit >= 0 %}fin-profit-positive{% else %}fin-profit-negative{% endif %}">
+                            ₹{{ item.profit|floatformat:2 }}
+                        </td>
+                        <td class="fin-text-right {% if item.profit_percentage >= 0 %}fin-profit-positive{% else %}fin-profit-negative{% endif %}">
+                            {{ item.profit_percentage|floatformat:1 }}%
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <!-- Pagination Bottom -->
+            {% if financial_data.has_other_pages %}
+            <div class="fin-pagination-bottom">
+                <div class="fin-pagination-controls">
+                    {% if financial_data.has_previous %}
+                    <a href="?page=1&start_date={{ start_date }}&end_date={{ end_date }}&product_id={{ selected_product }}&product_search={{ product_search }}" class="fin-pagination-btn">First</a>
+                    <a href="?page={{ financial_data.previous_page_number }}&start_date={{ start_date }}&end_date={{ end_date }}&product_id={{ selected_product }}&product_search={{ product_search }}" class="fin-pagination-btn">Previous</a>
+                    {% endif %}
+                    <span class="fin-pagination-current">Page {{ financial_data.number }} of {{ financial_data.paginator.num_pages }}</span>
+                    {% if financial_data.has_next %}
+                    <a href="?page={{ financial_data.next_page_number }}&start_date={{ start_date }}&end_date={{ end_date }}&product_id={{ selected_product }}&product_search={{ product_search }}" class="fin-pagination-btn">Next</a>
+                    <a href="?page={{ financial_data.paginator.num_pages }}&start_date={{ start_date }}&end_date={{ end_date }}&product_id={{ selected_product }}&product_search={{ product_search }}" class="fin-pagination-btn">Last</a>
+                    {% endif %}
                 </div>
             </div>
-        </div>
-
-        <div class="financial-net-purchases-col">
-            <div class="financial-net-purchases-card">
-                <div class="financial-net-purchases-body">
-                    <div class="financial-net-purchases-content">
-                        <div class="financial-net-purchases-text">
-                            <div class="financial-net-purchases-label">
-                                Net Purchases (After Returns)</div>
-                            <div class="financial-net-purchases-value">₹ {{ net_purchases|floatformat:2 }}</div>
-                        </div>
-                        <div class="financial-net-purchases-icon">
-                            <i class="fas fa-chart-bar fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+            {% endif %}
+            {% else %}
+            <div class="fin-no-data">
+                <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 15px; opacity: 0.3;"></i>
+                <p>No financial data found for the selected filters.</p>
             </div>
-        </div>
-    </div>
-
-    <!-- Gross Profit -->
-    <div class="financial-gross-profit-row">
-        <div class="financial-gross-profit-col">
-            <div class="financial-gross-profit-card">
-                <div class="financial-gross-profit-body">
-                    <div class="financial-gross-profit-content">
-                        <div class="financial-gross-profit-text">
-                            <div class="financial-gross-profit-label">
-                                Gross Profit</div>
-                            <div class="financial-gross-profit-value {% if gross_profit > 0 %}financial-profit{% else %}financial-loss{% endif %}">
-                                ₹ {{ gross_profit|floatformat:2 }}
-                                {% if gross_profit > 0 %}
-                                <small class="financial-profit-indicator">(Profit)</small>
-                                {% else %}
-                                <small class="financial-loss-indicator">(Loss)</small>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="financial-gross-profit-icon">
-                            <i class="fas {% if gross_profit > 0 %}fa-smile{% else %}fa-frown{% endif %} fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Key Performance Indicators -->
-    <div class="row financial-section">
-        <div class="col-md-3">
-            <div class="financial-kpi-card">
-                <div class="financial-metric-value">{{ profit_margin|floatformat:1 }}%</div>
-                <div class="financial-metric-label">Profit Margin</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="financial-kpi-card">
-                <div class="financial-metric-value">{{ inventory_turnover|floatformat:1 }}</div>
-                <div class="financial-metric-label">Inventory Turnover</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="financial-kpi-card">
-                <div class="financial-metric-value">{{ days_sales_outstanding|floatformat:0 }}</div>
-                <div class="financial-metric-label">Days Sales Outstanding</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="financial-kpi-card">
-                <div class="financial-metric-value">{{ sales_data.collection_ratio|floatformat:1 }}%</div>
-                <div class="financial-metric-label">Collection Ratio</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Charts Section -->
-    <div class="row financial-section">
-        <div class="col-md-6">
-            <div class="financial-chart-card">
-                <div class="financial-chart-header">
-                    <h6 class="financial-chart-title">Monthly Sales vs Purchases</h6>
-                </div>
-                <div class="financial-chart-body">
-                    <div class="chart-container">
-                        <canvas id="monthlySalesChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="financial-chart-card">
-                <div class="financial-chart-header">
-                    <h6 class="financial-chart-title">Cash Flow Trend</h6>
-                </div>
-                <div class="financial-chart-body">
-                    <div class="chart-container">
-                        <canvas id="cashFlowChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Top Performers Section -->
-    <div class="financial-section">
-        <h3>Top Performers</h3>
-        <div class="row">
-            <div class="col-md-4">
-                <div class="financial-table">
-                    <div class="card-header">
-                        <h6>Top Products by Sales</h6>
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Product</th>
-                                    <th>Sales (₹)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for product in top_performers.products|slice:":5" %}
-                                <tr>
-                                    <td>{{ product.productid__product_name|truncatechars:20 }}</td>
-                                    <td>₹{{ product.total_sales|floatformat:0 }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="financial-table">
-                    <div class="card-header">
-                        <h6>Top Customers</h6>
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Customer</th>
-                                    <th>Purchase (₹)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for customer in top_performers.customers|slice:":5" %}
-                                <tr>
-                                    <td>{{ customer.customerid__customer_name|truncatechars:20 }}</td>
-                                    <td>₹{{ customer.total_purchase|floatformat:0 }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="financial-table">
-                    <div class="card-header">
-                        <h6>Top Suppliers</h6>
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Supplier</th>
-                                    <th>Purchase (₹)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for supplier in top_performers.suppliers|slice:":5" %}
-                                <tr>
-                                    <td>{{ supplier.product_supplierid__supplier_name|truncatechars:20 }}</td>
-                                    <td>₹{{ supplier.total_purchase|floatformat:0 }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Inventory Metrics -->
-    <div class="financial-section">
-        <h3>Inventory Overview</h3>
-        <div class="row">
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h5 class="card-title">₹{{ inventory_metrics.total_stock_value|floatformat:0 }}</h5>
-                        <p class="card-text">Total Stock Value</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ inventory_metrics.total_items }}</h5>
-                        <p class="card-text">Total Items</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h5 class="card-title text-warning">{{ inventory_metrics.low_stock_items }}</h5>
-                        <p class="card-text">Low Stock Items</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h5 class="card-title text-danger">{{ inventory_metrics.expired_items }}</h5>
-                        <p class="card-text">Expired Items</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Outstanding Amounts -->
-    <div class="financial-outstanding-row">
-        <div class="financial-outstanding-col">
-            <div class="financial-outstanding-card">
-                <div class="financial-outstanding-header">
-                    <h6 class="financial-outstanding-title">Outstanding Receivables (Top Customers)</h6>
-                </div>
-                <div class="financial-outstanding-body">
-                    <div class="financial-table-wrapper">
-                        <table id="receivablesTable" class="financial-receivables-table" width="100%" cellspacing="0">
-                            <thead class="financial-receivables-thead">
-                                <tr class="financial-receivables-header-row">
-                                    <th class="financial-receivables-customer-header">Customer</th>
-                                    <th class="financial-receivables-amount-header">Outstanding Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody class="financial-receivables-tbody">
-                                {% for item in outstanding_receivables %}
-                                <tr class="financial-receivables-row">
-                                    <td class="financial-receivables-customer-cell">{{ item.customer_name }}</td>
-                                    <td class="financial-receivables-amount-cell">₹ {{ item.outstanding|floatformat:2 }}</td>
-                                </tr>
-                                {% empty %}
-                                <tr class="financial-receivables-empty-row">
-                                    <td colspan="2" class="financial-receivables-no-data">No outstanding receivables</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                            <tfoot class="financial-receivables-tfoot">
-                                <tr class="financial-receivables-total-row">
-                                    <th class="financial-receivables-total-label">Total Receivables:</th>
-                                    <th class="financial-receivables-total-value">₹ {{ total_receivables|floatformat:2 }}</th>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="financial-outstanding-col">
-            <div class="financial-outstanding-card">
-                <div class="financial-outstanding-header">
-                    <h6 class="financial-outstanding-title">Outstanding Payables (Top Suppliers)</h6>
-                </div>
-                <div class="financial-outstanding-body">
-                    <div class="financial-table-wrapper">
-                        <table id="payablesTable" class="financial-payables-table" width="100%" cellspacing="0">
-                            <thead class="financial-payables-thead">
-                                <tr class="financial-payables-header-row">
-                                    <th class="financial-payables-supplier-header">Supplier</th>
-                                    <th class="financial-payables-amount-header">Outstanding Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody class="financial-payables-tbody">
-                                {% for item in outstanding_payables %}
-                                <tr class="financial-payables-row">
-                                    <td class="financial-payables-supplier-cell">{{ item.supplier_name }}</td>
-                                    <td class="financial-payables-amount-cell">₹ {{ item.outstanding|floatformat:2 }}</td>
-                                </tr>
-                                {% empty %}
-                                <tr class="financial-payables-empty-row">
-                                    <td colspan="2" class="financial-payables-no-data">No outstanding payables</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                            <tfoot class="financial-payables-tfoot">
-                                <tr class="financial-payables-total-row">
-                                    <th class="financial-payables-total-label">Total Payables:</th>
-                                    <th class="financial-payables-total-value">₹ {{ total_payables|floatformat:2 }}</th>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            {% endif %}
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
-<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
 <script>
-    $(document).ready(function() {
-        // Initialize DataTables
-        $('#receivablesTable').DataTable({
-            "order": [[1, "desc"]],
-            "pageLength": 10,
-            "responsive": true
-        });
+    function printReport() {
+        const printInfo = document.createElement('div');
+        printInfo.className = 'print-footer';
+        printInfo.innerHTML = `<strong>Report Generated:</strong> ${new Date().toLocaleString('en-IN')} | <strong>Period:</strong> {{ start_date }} to {{ end_date }} | <strong>System:</strong> Pharma Financial Management`;
+        document.querySelector('.fin-container').appendChild(printInfo);
+        setTimeout(() => {
+            window.print();
+            setTimeout(() => printInfo.remove(), 500);
+        }, 100);
+    }
+    
+    function exportPDF() {
+        const url = "{% url 'export_financial_pdf' %}?{{ request.GET.urlencode }}";
+        window.open(url, '_blank');
+    }
+    
+    window.addEventListener('DOMContentLoaded', function() {
+        const startDate = document.getElementById('start_date');
+        const endDate = document.getElementById('end_date');
         
-        $('#payablesTable').DataTable({
-            "order": [[1, "desc"]],
-            "pageLength": 10,
-            "responsive": true
-        });
-
-        // Monthly Sales vs Purchases Chart
-        var monthlyLabels = [
-            {% for item in monthly_sales %}
-                "{{ item.month|date:'M Y' }}"{% if not forloop.last %},{% endif %}
-            {% endfor %}
-        ];
+        if (!startDate.value) {
+            const firstDay = new Date();
+            firstDay.setDate(1);
+            startDate.value = firstDay.toISOString().split('T')[0];
+        }
         
-        var monthlySalesData = [
-            {% for item in monthly_sales %}
-                {{ item.total|default:0 }}{% if not forloop.last %},{% endif %}
-            {% endfor %}
-        ];
+        if (!endDate.value) {
+            const today = new Date();
+            endDate.value = today.toISOString().split('T')[0];
+        }
+    });
 
-        var monthlyPurchasesData = [
-            {% for item in monthly_purchases %}
-                {{ item.total|default:0 }}{% if not forloop.last %},{% endif %}
-            {% endfor %}
-        ];
+    // Product search with suggestions and keyboard navigation
+    const productSearch = document.getElementById('product_search');
+    const productId = document.getElementById('product_id');
+    const suggestions = document.getElementById('product_suggestions');
+    let debounceTimer;
+    let selectedIndex = -1;
 
-        var ctx1 = document.getElementById('monthlySalesChart').getContext('2d');
-        var monthlySalesChart = new Chart(ctx1, {
-            type: 'line',
-            data: {
-                labels: monthlyLabels,
-                datasets: [{
-                    label: 'Sales',
-                    data: monthlySalesData,
-                    borderColor: 'rgb(75, 192, 192)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                    tension: 0.1
-                }, {
-                    label: 'Purchases',
-                    data: monthlyPurchasesData,
-                    borderColor: 'rgb(255, 99, 132)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.1)',
-                    tension: 0.1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '₹' + value.toLocaleString();
-                            }
-                        }
+    productSearch.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        const query = this.value.trim();
+        selectedIndex = -1;
+        
+        if (query.length < 1) {
+            suggestions.style.display = 'none';
+            productId.value = '';
+            return;
+        }
+        
+        debounceTimer = setTimeout(() => {
+            fetch(`/api/product-search-suggestions/?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.suggestions && data.suggestions.length > 0) {
+                        suggestions.innerHTML = data.suggestions.map((p, index) => 
+                            `<div class="fin-suggestion-item" data-id="${p.productid}" data-name="${p.product_name}" data-index="${index}">
+                                <strong>${p.product_name}</strong><br>
+                                <small style="color: #666;">${p.product_company} - ${p.product_packing}</small>
+                            </div>`
+                        ).join('');
+                        suggestions.style.display = 'block';
+                        
+                        document.querySelectorAll('.fin-suggestion-item').forEach(item => {
+                            item.addEventListener('click', function() {
+                                selectProduct(this);
+                            });
+                        });
+                    } else {
+                        suggestions.style.display = 'none';
                     }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.dataset.label + ': ₹' + context.raw.toLocaleString();
-                            }
-                        }
-                    }
-                }
+                })
+                .catch(error => {
+                    console.error('Search error:', error);
+                    suggestions.style.display = 'none';
+                });
+        }, 150);
+    });
+
+    // Keyboard navigation
+    productSearch.addEventListener('keydown', function(e) {
+        const items = suggestions.querySelectorAll('.fin-suggestion-item');
+        
+        if (items.length === 0) return;
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            selectedIndex = (selectedIndex + 1) % items.length;
+            updateSelection(items);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            selectedIndex = selectedIndex <= 0 ? items.length - 1 : selectedIndex - 1;
+            updateSelection(items);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (selectedIndex >= 0 && items[selectedIndex]) {
+                selectProduct(items[selectedIndex]);
+            }
+        } else if (e.key === 'Escape') {
+            suggestions.style.display = 'none';
+            selectedIndex = -1;
+        }
+    });
+
+    function updateSelection(items) {
+        items.forEach((item, index) => {
+            if (index === selectedIndex) {
+                item.style.background = '#667eea';
+                item.style.color = '#ffffff';
+                item.scrollIntoView({ block: 'nearest' });
+            } else {
+                item.style.background = '';
+                item.style.color = '';
             }
         });
+    }
 
-        // Cash Flow Chart
-        var cashFlowLabels = [
-            {% for item in cash_flow_data.daily_inflow %}
-                "{{ item.date|date:'M d' }}"{% if not forloop.last %},{% endif %}
-            {% endfor %}
-        ];
-        
-        var inflowData = [
-            {% for item in cash_flow_data.daily_inflow %}
-                {{ item.amount|default:0 }}{% if not forloop.last %},{% endif %}
-            {% endfor %}
-        ];
+    function selectProduct(item) {
+        const id = item.dataset.id;
+        const name = item.dataset.name;
+        productSearch.value = name;
+        productId.value = id;
+        suggestions.style.display = 'none';
+        selectedIndex = -1;
+    }
 
-        var outflowData = [
-            {% for item in cash_flow_data.daily_outflow %}
-                {{ item.amount|default:0 }}{% if not forloop.last %},{% endif %}
-            {% endfor %}
-        ];
-
-        var ctx2 = document.getElementById('cashFlowChart').getContext('2d');
-        var cashFlowChart = new Chart(ctx2, {
-            type: 'bar',
-            data: {
-                labels: cashFlowLabels,
-                datasets: [{
-                    label: 'Cash Inflow',
-                    data: inflowData,
-                    backgroundColor: 'rgba(40, 167, 69, 0.8)',
-                    borderColor: 'rgba(40, 167, 69, 1)',
-                    borderWidth: 1
-                }, {
-                    label: 'Cash Outflow',
-                    data: outflowData,
-                    backgroundColor: 'rgba(220, 53, 69, 0.8)',
-                    borderColor: 'rgba(220, 53, 69, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '₹' + value.toLocaleString();
-                            }
-                        }
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.dataset.label + ': ₹' + context.raw.toLocaleString();
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        // Auto-refresh data every 5 minutes
-        setInterval(function() {
-            $.ajax({
-                url: '{% url "financial_dashboard_api" %}',
-                method: 'GET',
-                success: function(data) {
-                    // Update key metrics without full page reload
-                    console.log('Financial data refreshed:', data);
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error refreshing financial data:', error);
-                }
-            });
-        }, 300000); // 5 minutes
+    document.addEventListener('click', function(e) {
+        if (!productSearch.contains(e.target) && !suggestions.contains(e.target)) {
+            suggestions.style.display = 'none';
+            selectedIndex = -1;
+        }
     });
 </script>
 {% endblock %}
-
-
-
-
-
-
-

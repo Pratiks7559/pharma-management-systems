@@ -58,7 +58,12 @@ function initializeKeyboardShortcuts() {
         // Ctrl/Cmd + Q: Export PDF
         if ((e.ctrlKey || e.metaKey) && e.key === 'q') {
             e.preventDefault();
-            exportReport('pdf');
+            const pdfLink = document.querySelector('a[href*="export_stock_statement_pdf"]');
+            if (pdfLink) {
+                window.open(pdfLink.href, '_blank');
+            } else {
+                exportReport('pdf');
+            }
         }
         
         // Ctrl/Cmd + E: Export Excel
@@ -152,100 +157,45 @@ function exportReport(format) {
     const exportUrl = window.location.pathname + '?' + urlParams.toString();
     
     if (format === 'pdf') {
-        // For PDF, first download then auto-open like enhanced sales report
-        fetch(exportUrl, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Export failed');
-            }
-            
-            const contentDisposition = response.headers.get('Content-Disposition');
-            let filename = `stock_statement_${new Date().toISOString().slice(0, 10)}.pdf`;
-            
-            if (contentDisposition) {
-                const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-                if (filenameMatch) {
-                    filename = filenameMatch[1];
-                }
-            }
-            
-            return response.blob().then(blob => ({ blob, filename }));
-        })
-        .then(({ blob, filename }) => {
-            // First download the PDF
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            
-            // Then auto-open in new tab
-            setTimeout(() => {
-                window.open(url, '_blank');
-                window.URL.revokeObjectURL(url);
-            }, 500);
-            
-            showNotification('PDF downloaded and opened in new tab', 'success');
-        })
-        .catch(error => {
-            console.error('Export error:', error);
-            showNotification('Export failed. Please try again.', 'error');
-        })
-        .finally(() => {
+        showNotification('Downloading PDF...', 'info');
+        
+        fetch(exportUrl)
+            .then(response => response.blob())
+            .then(blob => {
+                // Create download link
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = `stock_statement_${new Date().toISOString().slice(0, 10)}.pdf`;
+                link.click();
+                
+                showNotification('PDF downloaded successfully!', 'success');
+                
+                // Auto open after download
+                setTimeout(() => {
+                    window.open(downloadUrl, '_blank');
+                    window.URL.revokeObjectURL(downloadUrl);
+                }, 1000);
+                
+                hideLoading();
+            })
+            .catch(error => {
+                console.error('Export error:', error);
+                showNotification('Opening PDF in new tab...', 'info');
+                // Fallback to direct open
+                window.open(exportUrl, '_blank');
+                hideLoading();
+            });
+        
+    } else if (format === 'excel') {
+        showNotification('Generating Excel file...', 'info');
+        
+        window.location.href = exportUrl;
+        
+        setTimeout(() => {
+            showNotification('Excel file downloaded', 'success');
             hideLoading();
-        });
-    } else {
-        // For Excel, use download
-        fetch(exportUrl, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Export failed');
-            }
-            
-            const contentDisposition = response.headers.get('Content-Disposition');
-            let filename = `stock_statement_${new Date().toISOString().slice(0, 10)}.xlsx`;
-            
-            if (contentDisposition) {
-                const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-                if (filenameMatch) {
-                    filename = filenameMatch[1];
-                }
-            }
-            
-            return response.blob().then(blob => ({ blob, filename }));
-        })
-        .then(({ blob, filename }) => {
-            // Download Excel file
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-            
-            showNotification('Excel file downloaded successfully', 'success');
-        })
-        .catch(error => {
-            console.error('Export error:', error);
-            showNotification('Export failed. Please try again.', 'error');
-        })
-        .finally(() => {
-            hideLoading();
-        });
+        }, 1500);
     }
 }
 
@@ -277,14 +227,19 @@ function printReport() {
 function viewBatchDetails(productId) {
     showLoading();
     
-    fetch(`/stock-statement/batch-details/${productId}/`, {
+    fetch(`/reports/stock-statement/batch-details/${productId}/`, {
         method: 'GET',
         headers: {
             'X-Requested-With': 'XMLHttpRequest',
             'Content-Type': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             displayBatchDetails(data);
@@ -294,7 +249,7 @@ function viewBatchDetails(productId) {
     })
     .catch(error => {
         console.error('Batch details error:', error);
-        showNotification('Failed to load batch details', 'error');
+        showNotification('Failed to load batch details. Please try again.', 'error');
     })
     .finally(() => {
         hideLoading();

@@ -1331,3 +1331,23 @@
 2025-11-28 12:53:33,738 - core.combined_invoice_view - INFO - Moved challan entry to SupplierChallanMaster2: shilajit - 123
 2025-11-28 12:53:33,738 - core.combined_invoice_view - INFO - Total 1 challan entries moved to SupplierChallanMaster2
 2025-11-28 12:53:33,739 - core.combined_invoice_view - INFO - Invoice 111 created successfully with 1 products
+2025-11-29 10:41:03,781 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['TbgBGccHHuw00Z9hQ1aar4c5jiY2pLxaEub4NPPln5fMNE9ZydermOJP5poDOXPM'], 'invoice_no': ['8495748'], 'invoice_date': ['2025-11-29'], 'supplierid': ['2'], 'transport_charges': ['0'], 'invoice_total': ['1.05'], 'products_data': ['[{"productid":"254","batch_no":"1234","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"1","rate_b":"2","rate_c":"3","from_challan":false,"challan_no":"","challan_date":""}]'], 'is_from_challan': ['false']}>
+2025-11-29 10:41:03,795 - core.combined_invoice_view - INFO - Products data received: [{"productid":"254","batch_no":"1234","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"1","rate_b":"2","rate_c":"3","from_challan":false,"challan_no":"","challan_date":""}]
+2025-11-29 10:41:03,795 - core.combined_invoice_view - INFO - Challan flag: false
+2025-11-29 10:41:03,801 - core.combined_invoice_view - INFO - Invoice created with ID: 170
+2025-11-29 10:41:03,806 - core.combined_invoice_view - INFO - Challan data received: challan_no=, challan_date=
+2025-11-29 10:41:03,807 - core.combined_invoice_view - INFO - Setting rates for ASITUSS-A SYP 100ML: A=1.0, B=2.0, C=3.0
+2025-11-29 10:41:03,807 - core.combined_invoice_view - INFO - Product ASITUSS-A SYP 100ML: Base=1.0, CGST=0.025, SGST=0.025, Total=1.0499999999999998
+2025-11-29 10:41:03,810 - core.combined_invoice_view - INFO - Product ASITUSS-A SYP 100ML added to invoice
+2025-11-29 10:41:04,466 - core.combined_invoice_view - INFO - Products total: 1.0499999999999998, Transport: 0.0, Invoice total: 1.0499999999999998
+2025-11-29 10:41:04,468 - core.combined_invoice_view - INFO - Invoice 8495748 created successfully with 1 products
+2025-11-29 10:42:49,940 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['8RoYu9E3SDV0uiVnimyia8YQyDJJWx3vTajrBMhHyeEMhXV50yCz5SvAkK9klJl7'], 'invoice_no': ['249395'], 'invoice_date': ['2025-11-29'], 'supplierid': ['2'], 'transport_charges': ['0'], 'invoice_total': ['1.05'], 'products_data': ['[{"productid":"2","batch_no":"202020","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"1","rate_b":"2","rate_c":"3","from_challan":false,"challan_no":"","challan_date":""}]'], 'is_from_challan': ['false']}>
+2025-11-29 10:42:49,948 - core.combined_invoice_view - INFO - Products data received: [{"productid":"2","batch_no":"202020","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"1","rate_b":"2","rate_c":"3","from_challan":false,"challan_no":"","challan_date":""}]
+2025-11-29 10:42:49,948 - core.combined_invoice_view - INFO - Challan flag: false
+2025-11-29 10:42:49,953 - core.combined_invoice_view - INFO - Invoice created with ID: 171
+2025-11-29 10:42:49,956 - core.combined_invoice_view - INFO - Challan data received: challan_no=, challan_date=
+2025-11-29 10:42:49,957 - core.combined_invoice_view - INFO - Setting rates for 1ST AID TRANSPORE TAPE .5"": A=1.0, B=2.0, C=3.0
+2025-11-29 10:42:49,958 - core.combined_invoice_view - INFO - Product 1ST AID TRANSPORE TAPE .5"": Base=1.0, CGST=0.025, SGST=0.025, Total=1.0499999999999998
+2025-11-29 10:42:49,961 - core.combined_invoice_view - INFO - Product 1ST AID TRANSPORE TAPE .5"" added to invoice
+2025-11-29 10:42:49,988 - core.combined_invoice_view - INFO - Products total: 1.0499999999999998, Transport: 0.0, Invoice total: 1.0499999999999998
+2025-11-29 10:42:49,990 - core.combined_invoice_view - INFO - Invoice 249395 created successfully with 1 products

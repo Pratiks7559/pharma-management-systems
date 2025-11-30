@@ -160,14 +160,12 @@ def stock_statement_report(request):
                 'batches': []
             })
     
-    # Handle AJAX requests for export
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        export_type = request.GET.get('export')
-        
-        if export_type == 'pdf':
-            return export_stock_statement_pdf(request, stock_data)
-        elif export_type == 'excel':
-            return export_stock_statement_excel(request, stock_data)
+    # Handle export requests
+    export_type = request.GET.get('export')
+    if export_type == 'pdf':
+        return export_stock_statement_pdf(request)
+    elif export_type == 'excel':
+        return export_stock_statement_excel(request)
     
     context = {
         'stock_data': stock_data,
@@ -196,14 +194,52 @@ def stock_statement_report(request):
 @login_required
 def export_stock_statement_pdf(request):
     """Export stock statement to PDF"""
-    # Get all products
+    # Get filter parameters (same as main view)
+    search_query = request.GET.get('search', '').strip()
+    category_filter = request.GET.get('category', '')
+    company_filter = request.GET.get('company', '')
+    stock_status = request.GET.get('stock_status', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    page_number = request.GET.get('page', '1')
+    
+    # Base query
     products_query = ProductMaster.objects.all().order_by('product_name')
+    
+    # Check if any filter is applied
+    has_filters = any([search_query, category_filter, company_filter, stock_status and stock_status != 'all', date_from, date_to])
+    
+    # Apply filters
+    if search_query:
+        products_query = products_query.filter(
+            Q(product_name__icontains=search_query) |
+            Q(product_company__icontains=search_query) |
+            Q(product_salt__icontains=search_query) |
+            Q(product_barcode__icontains=search_query)
+        )
+    
+    if category_filter:
+        products_query = products_query.filter(product_category__icontains=category_filter)
+    
+    if company_filter:
+        products_query = products_query.filter(product_company__icontains=company_filter)
+    
+    # If no filters applied, use pagination (only current page)
+    if not has_filters:
+        paginator = Paginator(products_query, 25)
+        try:
+            products_query = paginator.page(page_number)
+        except:
+            products_query = paginator.page(1)
     
     # Process stock data
     stock_data = []
     totals = {'opening': 0, 'received': 0, 'sold': 0, 'balance': 0, 'value': 0}
     
-    for product in products_query:
+    # Get products list (handle both queryset and page object)
+    products_list = products_query.object_list if hasattr(products_query, 'object_list') else products_query
+    
+    for product in products_list:
         try:
             stock_summary = StockManager.get_stock_summary(product.productid)
             opening_stock = 0
@@ -233,6 +269,15 @@ def export_stock_statement_pdf(request):
                 status_label = 'Low Stock'
             else:
                 status_label = 'In Stock'
+            
+            # Apply stock status filter
+            if stock_status and stock_status != 'all':
+                if balance_stock <= 0 and stock_status != 'out_of_stock':
+                    continue
+                elif balance_stock > 0 and balance_stock < 10 and stock_status != 'low_stock':
+                    continue
+                elif balance_stock >= 10 and stock_status != 'in_stock':
+                    continue
             
             stock_data.append({
                 'product': product,
@@ -320,7 +365,102 @@ def export_stock_statement_pdf(request):
     return response
 
 
-def export_stock_statement_excel(request, stock_data):
+def export_stock_statement_excel(request, stock_data=None):
+    """Export stock statement to Excel"""
+    # If stock_data not provided, fetch with filters
+    if stock_data is None:
+        search_query = request.GET.get('search', '').strip()
+        category_filter = request.GET.get('category', '')
+        company_filter = request.GET.get('company', '')
+        stock_status = request.GET.get('stock_status', '')
+        page_number = request.GET.get('page', '1')
+        
+        products_query = ProductMaster.objects.all().order_by('product_name')
+        
+        # Check if any filter is applied
+        has_filters = any([search_query, category_filter, company_filter, stock_status and stock_status != 'all'])
+        
+        if search_query:
+            products_query = products_query.filter(
+                Q(product_name__icontains=search_query) |
+                Q(product_company__icontains=search_query) |
+                Q(product_salt__icontains=search_query) |
+                Q(product_barcode__icontains=search_query)
+            )
+        
+        if category_filter:
+            products_query = products_query.filter(product_category__icontains=category_filter)
+        
+        if company_filter:
+            products_query = products_query.filter(product_company__icontains=company_filter)
+        
+        # If no filters applied, use pagination (only current page)
+        if not has_filters:
+            paginator = Paginator(products_query, 25)
+            try:
+                products_query = paginator.page(page_number)
+            except:
+                products_query = paginator.page(1)
+        
+        # Get products list (handle both queryset and page object)
+        products_list = products_query.object_list if hasattr(products_query, 'object_list') else products_query
+        
+        stock_data = []
+        for product in products_list:
+            try:
+                stock_summary = StockManager.get_stock_summary(product.productid)
+                opening_stock = 0
+                received_stock = stock_summary['total_purchased'] + stock_summary['total_sales_returns']
+                sold_stock = stock_summary['total_sold'] + stock_summary['total_purchase_returns']
+                balance_stock = stock_summary['total_stock']
+                
+                avg_mrp = 0
+                if stock_summary['batches']:
+                    from .models import PurchaseMaster
+                    mrp_values = []
+                    for batch in stock_summary['batches']:
+                        purchase = PurchaseMaster.objects.filter(
+                            productid=product.productid,
+                            product_batch_no=batch['batch_no']
+                        ).first()
+                        if purchase and purchase.product_MRP:
+                            mrp_values.append(float(purchase.product_MRP))
+                    if mrp_values:
+                        avg_mrp = sum(mrp_values) / len(mrp_values)
+                
+                stock_value = balance_stock * avg_mrp
+                
+                if balance_stock <= 0:
+                    status_label = 'Out of Stock'
+                elif balance_stock < 10:
+                    status_label = 'Low Stock'
+                else:
+                    status_label = 'In Stock'
+                
+                # Apply stock status filter
+                if stock_status and stock_status != 'all':
+                    if balance_stock <= 0 and stock_status != 'out_of_stock':
+                        continue
+                    elif balance_stock > 0 and balance_stock < 10 and stock_status != 'low_stock':
+                        continue
+                    elif balance_stock >= 10 and stock_status != 'in_stock':
+                        continue
+                
+                stock_data.append({
+                    'product': product,
+                    'opening_stock': opening_stock,
+                    'received_stock': received_stock,
+                    'sold_stock': sold_stock,
+                    'balance_stock': balance_stock,
+                    'avg_mrp': avg_mrp,
+                    'stock_value': stock_value,
+                    'status_label': status_label
+                })
+            except:
+                continue
+    
+    # Original Excel export code
+
     """Export stock statement to Excel"""
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     filename = f'stock_statement_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'

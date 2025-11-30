@@ -275,9 +275,9 @@
                 Stock Statement Report
             </h1>
             <div class="header-actions">
-                <a href="{% url 'export_stock_statement_pdf' %}" class="btn btn-export" title="Export PDF">
+                <button class="btn btn-export" onclick="exportReport('pdf')" title="Export PDF (Ctrl+Q)">
                     <i class="fas fa-file-pdf"></i> Export PDF
-                </a>
+                </button>
                 <button class="btn btn-export" onclick="exportReport('excel')" title="Export Excel (Ctrl+E)">
                     <i class="fas fa-file-excel"></i> Export Excel
                 </button>
@@ -568,7 +568,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/stock_statement_report.js' %}"></script>
+<script src="{% static 'js/stock_statement_report.js' %}?v=2.0"></script>
 <script>
 // Enhanced Print Function
 function printReport() {

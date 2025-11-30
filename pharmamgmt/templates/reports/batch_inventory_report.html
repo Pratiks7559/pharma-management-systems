@@ -179,7 +179,7 @@
             e.preventDefault();
             const pdfBtn = document.getElementById('export-pdf-btn');
             if (pdfBtn) {
-                triggerExport(pdfBtn, 'PDF');
+                downloadAndOpenPDF(pdfBtn.href);
             }
         }
         
@@ -242,6 +242,36 @@
         }, 3000);
     }
     
+    // PDF download and auto-open function
+    function downloadAndOpenPDF(pdfUrl) {
+        showNotification('Downloading PDF...', 'info');
+        
+        fetch(pdfUrl)
+            .then(response => response.blob())
+            .then(blob => {
+                // Create download link
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = 'batch_inventory_report.pdf';
+                link.click();
+                
+                showNotification('PDF downloaded successfully!', 'success');
+                
+                // Auto open after download
+                setTimeout(() => {
+                    window.open(downloadUrl, '_blank');
+                    window.URL.revokeObjectURL(downloadUrl);
+                }, 1000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Opening PDF in new tab...', 'info');
+                // Fallback to direct open
+                window.open(pdfUrl, '_blank');
+            });
+    }
+    
     // Add CSS for slide-in animation
     const style = document.createElement('style');
     style.textContent = `
@@ -261,7 +291,7 @@
             pdfBtn.title = 'Export as PDF (Ctrl+Q)';
             pdfBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                triggerExport(this, 'PDF');
+                downloadAndOpenPDF(this.href);
             });
         }
         

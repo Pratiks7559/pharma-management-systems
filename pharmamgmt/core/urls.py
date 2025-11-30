@@ -24,7 +24,10 @@ from .inventory_export_views import (
     export_batch_inventory_pdf, export_batch_inventory_excel,
     export_dateexpiry_inventory_pdf, export_dateexpiry_inventory_excel
 )
-from .financial_report_views import financial_report, export_financial_pdf, export_financial_excel, financial_dashboard_api
+from .financial_views import financial_report, export_financial_pdf, export_financial_excel
+from .backup_views import backup_list, create_backup, restore_backup, download_backup, delete_backup
+from .return_receipt_views import print_purchase_return_receipt, print_sales_return_receipt
+
 urlpatterns = [
     # Authentication
     path('login/', views.login_view, name='login'),
@@ -107,6 +110,12 @@ urlpatterns = [
     # Purchase Receipt
     path('purchases/<int:invoice_id>/print-receipt/', views.print_purchase_receipt, name='print_purchase_receipt'),
     
+    # Purchase Return Receipt
+    path('purchase-returns/<str:return_id>/print-receipt/', print_purchase_return_receipt, name='print_purchase_return_receipt'),
+    
+    # Sales Return Receipt
+    path('sales-returns/<str:return_id>/print-receipt/', print_sales_return_receipt, name='print_sales_return_receipt'),
+    
     # Sales Invoices
     path('sales/', views.sales_invoice_list, name='sales_invoice_list'),
 
@@ -176,7 +185,9 @@ urlpatterns = [
     path('reports/purchase2/pdf/', purchase2_report_pdf, name='purchase2_report_pdf'),
     path('reports/purchase2/excel/', purchase2_report_excel, name='purchase2_report_excel'),
     path('reports/financial/', financial_report, name='financial_report'),
-    path('api/financial-dashboard/', financial_dashboard_api, name='financial_dashboard_api'),
+    path('reports/financial/pdf/', export_financial_pdf, name='export_financial_pdf'),
+    path('reports/financial/excel/', export_financial_excel, name='export_financial_excel'),
+
     
     # Customer Sales Reports
     path('reports/customer-sales/', customer_wise_sales_report, name='customer_wise_sales_report'),
@@ -205,8 +216,7 @@ urlpatterns = [
     path('export/purchases/pdf/', views.export_purchases_pdf, name='export_purchases_pdf'),
     # path('export/purchases/excel/', views.export_purchases_excel, name='export/financial/pdf/', views.export_financial_pdf, name='export_financial_pdf'),
     path('export/purchases/excel/', views.export_purchases_excel, name='export_purchases_excel'),
-path('export/financial/pdf/', export_financial_pdf, name='export_financial_pdf'),
-    path('export/financial/excel/', export_financial_excel, name='export_financial_excel'),
+
     
     # Sale Rate Management
     path('rates/', views.sale_rate_list, name='sale_rate_list'),
@@ -284,6 +294,13 @@ path('export/financial/pdf/', export_financial_pdf, name='export_financial_pdf')
     
     path('bulk-upload-invoices/', bulk_upload_invoices, name='bulk_upload_invoices'),
     path('api/get-suppliers-with-invoices/', views.get_suppliers_with_invoices, name='get_suppliers_with_invoices'),
+    
+    # Backup Management
+    path('system/backups/', backup_list, name='backup_list'),
+    path('system/backups/create/', create_backup, name='create_backup'),
+    path('system/backups/restore/', restore_backup, name='restore_backup'),
+    path('system/backups/download/<str:filename>/', download_backup, name='download_backup'),
+    path('system/backups/delete/', delete_backup, name='delete_backup'),
 ]
 
 

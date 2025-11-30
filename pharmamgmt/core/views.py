@@ -33,7 +33,7 @@ from .unified_payment_view import add_unified_payment, search_supplier_invoices,
 from .utils import get_stock_status, get_batch_stock_status, generate_invoice_pdf, generate_sales_invoice_pdf, get_avg_mrp, parse_expiry_date, generate_sales_invoice_number
 from .date_utils import parse_ddmmyyyy_date, format_date_for_display, format_date_for_backend, convert_legacy_dates
 from .low_stock_views import low_stock_update, update_low_stock_item, bulk_update_low_stock
-from .financial_report_views import financial_report, export_financial_pdf, export_financial_excel, financial_dashboard_api
+
 # Authentication views
 def login_view(request):
     if request.user.is_authenticated:
