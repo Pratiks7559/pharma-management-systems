@@ -26,7 +26,10 @@
         <div class="supplier-list-search">
             <div class="supplier-list-search-form">
                 <form method="GET" class="supplier-search-form">
-                    <input type="text" name="search" class="supplier-search-input" placeholder="Search suppliers..." value="{{ search_query }}">
+                    <div style="position: relative;">
+                        <input type="text" name="search" id="supplierSearchInput" class="supplier-search-input" placeholder="Search suppliers..." value="{{ search_query }}" autocomplete="off">
+                        <div id="supplierSuggestions" class="supplier-suggestions" style="display: none;"></div>
+                    </div>
                     <button type="submit" class="supplier-search-btn">
                         <i class="fas fa-search supplier-search-icon"></i>
                     </button>
@@ -342,7 +345,136 @@ document.getElementById('deleteDialog').addEventListener('click', function(e) {
         hideDeleteDialog();
     }
 });
+
+// Supplier Search Suggestions
+const searchInput = document.getElementById('supplierSearchInput');
+const suggestionsDiv = document.getElementById('supplierSuggestions');
+let selectedIndex = -1;
+let searchTimeout;
+
+searchInput.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    const query = this.value.trim();
+    
+    if (query.length < 2) {
+        suggestionsDiv.style.display = 'none';
+        return;
+    }
+    
+    searchTimeout = setTimeout(() => {
+        fetch(`/api/search-suppliers/?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.suppliers && data.suppliers.length > 0) {
+                    displaySuggestions(data.suppliers);
+                } else {
+                    suggestionsDiv.style.display = 'none';
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }, 300);
+});
+
+function displaySuggestions(suppliers) {
+    suggestionsDiv.innerHTML = suppliers.map((supplier, index) => `
+        <div class="suggestion-item ${index === 0 ? 'selected' : ''}" data-index="${index}" data-id="${supplier.id}">
+            <div class="suggestion-name">${supplier.name}</div>
+            <div class="suggestion-contact">${supplier.contact || ''}</div>
+        </div>
+    `).join('');
+    suggestionsDiv.style.display = 'block';
+    selectedIndex = 0;
+}
+
+searchInput.addEventListener('keydown', function(e) {
+    const items = suggestionsDiv.querySelectorAll('.suggestion-item');
+    
+    if (items.length === 0) return;
+    
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        selectedIndex = (selectedIndex + 1) % items.length;
+        updateSelection(items);
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+        updateSelection(items);
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (selectedIndex >= 0 && items[selectedIndex]) {
+            const supplierId = items[selectedIndex].getAttribute('data-id');
+            window.location.href = `/suppliers/${supplierId}/`;
+        }
+    } else if (e.key === 'Escape') {
+        suggestionsDiv.style.display = 'none';
+    }
+});
+
+function updateSelection(items) {
+    items.forEach((item, index) => {
+        item.classList.toggle('selected', index === selectedIndex);
+    });
+    items[selectedIndex].scrollIntoView({ block: 'nearest' });
+}
+
+suggestionsDiv.addEventListener('click', function(e) {
+    const item = e.target.closest('.suggestion-item');
+    if (item) {
+        const supplierId = item.getAttribute('data-id');
+        window.location.href = `/suppliers/${supplierId}/`;
+    }
+});
+
+document.addEventListener('click', function(e) {
+    if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+        suggestionsDiv.style.display = 'none';
+    }
+});
 </script>
+
+<style>
+.supplier-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    margin-top: 4px;
+}
+
+.suggestion-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.2s;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover,
+.suggestion-item.selected {
+    background: #f0f7ff;
+}
+
+.suggestion-name {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2px;
+}
+
+.suggestion-contact {
+    font-size: 12px;
+    color: #666;
+}
+</style>
 {% endblock %}
 
 

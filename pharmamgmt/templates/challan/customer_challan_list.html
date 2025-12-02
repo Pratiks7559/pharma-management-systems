@@ -23,19 +23,48 @@
 
     <!-- Search and Filter Controls -->
     <div class="cust-challan-controls">
-        <div class="cust-challan-search-wrapper">
-            <input 
-                type="text" 
-                class="cust-challan-search-input" 
-                placeholder="Search by challan number, customer name..."
-                id="custChallanSearch"
-            >
-            <i class="fas fa-search cust-challan-search-icon"></i>
-        </div>
-        <button class="cust-challan-filter-btn">
-            <i class="fas fa-filter"></i>
-            Filter
-        </button>
+        <form method="GET" action="{% url 'customer_challan_list' %}" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; width: 100%;">
+            <div class="cust-challan-search-wrapper" style="flex: 0 0 200px;">
+                <input 
+                    type="text" 
+                    class="cust-challan-search-input" 
+                    placeholder="Search..."
+                    name="search"
+                    value="{{ search_query }}"
+                >
+                <i class="fas fa-search cust-challan-search-icon"></i>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <label style="font-size: 0.85rem; font-weight: 500; color: #374151;">From:</label>
+                <input 
+                    type="date" 
+                    name="from_date" 
+                    value="{{ from_date }}"
+                    class="cust-challan-date-input"
+                    style="padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;"
+                >
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <label style="font-size: 0.85rem; font-weight: 500; color: #374151;">To:</label>
+                <input 
+                    type="date" 
+                    name="to_date" 
+                    value="{{ to_date }}"
+                    class="cust-challan-date-input"
+                    style="padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem;"
+                >
+            </div>
+            <button type="submit" class="cust-challan-filter-btn">
+                <i class="fas fa-filter"></i>
+                Filter
+            </button>
+            {% if from_date or to_date or search_query %}
+            <a href="{% url 'customer_challan_list' %}" class="cust-challan-filter-btn" style="background: #6b7280; text-decoration: none;">
+                <i class="fas fa-times"></i>
+                Clear
+            </a>
+            {% endif %}
+        </form>
     </div>
 
     <!-- Challan List Table -->
@@ -101,21 +130,6 @@
 
 
 <script>
-    // Search functionality
-    document.getElementById('custChallanSearch').addEventListener('input', function(e) {
-        const searchTerm = e.target.value.toLowerCase();
-        const rows = document.querySelectorAll('#custChallanTableBody tr');
-        
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(searchTerm) ? '' : 'none';
-        });
-        
-
-    });
-    
-
-    
     // Delete challan function
     function deleteCustChallan(challanId, challanNo) {
         if (confirm(`Are you sure you want to delete Challan ${challanNo}?`)) {

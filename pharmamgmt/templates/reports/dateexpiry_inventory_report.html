@@ -36,9 +36,10 @@
             <h6 class="date-report-card-title">Date-wise Inventory Report</h6>
             <small class="date-report-card-subtitle">Shows products grouped by expiry date with current stock</small>
             <div class="no-print">
-                <form action="{% url 'dateexpiry_inventory_report' %}" method="GET" class="date-filter-form">
-                    <div class="date-filter-group">
-                        <input type="text" name="search" value="{{ search_query }}" placeholder="Search..." aria-label="Search" class="date-filter-input">
+                <form action="{% url 'dateexpiry_inventory_report' %}" method="GET" class="date-filter-form" id="dateFilterForm">
+                    <div class="date-filter-group" style="position: relative;">
+                        <input type="text" name="search" id="dateSearchInput" value="{{ search_query }}" placeholder="Search..." aria-label="Search" class="date-filter-input" autocomplete="off">
+                        <div id="dateSearchSuggestions" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #d1d3e2; border-top: none; max-height: 300px; overflow-y: auto; z-index: 1000; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
                     </div>
                     <div class="date-filter-group">
                         <label style="font-size: 0.85rem; margin-bottom: 2px; color: #6b7280;">From Entry Date:</label>
@@ -143,10 +144,90 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function() {
-        // Nothing to do here as we're not using DataTables for this report
-        // We want to preserve the grouping by expiry date
+        // Autocomplete search suggestions
+        let searchTimeout, selectedIndex = -1;
+        
+        $('#dateSearchInput').on('input', function() {
+            const query = $(this).val().trim();
+            clearTimeout(searchTimeout);
+            selectedIndex = -1;
+            
+            if (query.length < 2) {
+                $('#dateSearchSuggestions').hide().empty();
+                return;
+            }
+            
+            searchTimeout = setTimeout(function() {
+                $.ajax({
+                    url: '{% url "inventory_search_suggestions" %}',
+                    data: { q: query },
+                    success: function(data) {
+                        const suggestions = data.suggestions;
+                        if (suggestions.length > 0) {
+                            let html = '';
+                            suggestions.forEach(function(item, idx) {
+                                html += `<div class="suggestion-item" data-index="${idx}" style="padding: 10px; cursor: pointer; border-bottom: 1px solid #eee;">${item}</div>`;
+                            });
+                            $('#dateSearchSuggestions').html(html).show();
+                            
+                            $('.suggestion-item').on('click', function() {
+                                const text = $(this).text().split(' - ')[0];
+                                $('#dateSearchInput').val(text);
+                                $('#dateSearchSuggestions').hide();
+                                $('#dateFilterForm').submit();
+                            }).on('mouseenter', function() {
+                                $('.suggestion-item').css('background', 'white');
+                                $(this).css('background', '#f0f0f0');
+                                selectedIndex = $(this).data('index');
+                            });
+                        } else {
+                            $('#dateSearchSuggestions').hide();
+                        }
+                    }
+                });
+            }, 300);
+        });
+        
+        // Keyboard navigation
+        $('#dateSearchInput').on('keydown', function(e) {
+            const items = $('.suggestion-item');
+            if (!items.length) return;
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedIndex = (selectedIndex + 1) % items.length;
+                updateSelection(items);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedIndex = selectedIndex <= 0 ? items.length - 1 : selectedIndex - 1;
+                updateSelection(items);
+            } else if (e.key === 'Enter' && selectedIndex >= 0) {
+                e.preventDefault();
+                const text = items.eq(selectedIndex).text().split(' - ')[0];
+                $('#dateSearchInput').val(text);
+                $('#dateSearchSuggestions').hide();
+                $('#dateFilterForm').submit();
+            } else if (e.key === 'Escape') {
+                $('#dateSearchSuggestions').hide();
+            }
+        });
+        
+        function updateSelection(items) {
+            items.css('background', 'white');
+            if (selectedIndex >= 0) {
+                items.eq(selectedIndex).css('background', '#e3f2fd');
+                items.eq(selectedIndex)[0].scrollIntoView({ block: 'nearest' });
+            }
+        }
+        
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.date-filter-group').length) {
+                $('#dateSearchSuggestions').hide();
+            }
+        });
     });
     
     // Enhanced keyboard shortcuts for export with feedback

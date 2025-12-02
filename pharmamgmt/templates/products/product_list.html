@@ -6,6 +6,10 @@
 <link rel="stylesheet" href="{% static 'css/product_list.css' %}">
 <link rel="stylesheet" href="{% static 'css/product-search-autocomplete.css' %}">
 <style>
+body.modal-open {
+    overflow: hidden;
+}
+
 
 .product-list-page-actions {
     display: flex;
@@ -21,8 +25,7 @@
 }
 
 .product-list-add-btn,
-.product-list-bulk-upload-btn,
-.product-list-export-btn {
+.product-list-bulk-upload-btn {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -51,45 +54,6 @@
 
 .product-list-bulk-upload-btn:hover {
     background: #1e7e34;
-}
-
-.product-list-export-buttons {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.product-list-export-btn {
-    background: #6c757d;
-    font-size: 14px;
-}
-
-.product-list-export-btn:hover {
-    background: #545b62;
-}
-
-.product-list-export-pdf {
-    background: #dc3545;
-}
-
-.product-list-export-pdf:hover {
-    background: #c82333;
-}
-
-.product-list-export-excel {
-    background: #28a745;
-}
-
-.product-list-export-excel:hover {
-    background: #1e7e34;
-}
-
-.product-list-export-print {
-    background: #17a2b8;
-}
-
-.product-list-export-print:hover {
-    background: #138496;
 }
 
 /* Search and Sort Styles */
@@ -429,7 +393,242 @@
     to { transform: translateX(100%); opacity: 0; }
 }
 
+/* Bulk Upload Modal Styles */
+.bulk-upload-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.bulk-upload-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.bulk-upload-modal-content {
+    position: relative;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+}
+
+.bulk-upload-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e9ecef;
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+    color: white;
+    border-radius: 12px 12px 0 0;
+}
+
+.bulk-upload-modal-header h3 {
+    margin: 0;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.bulk-upload-modal-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.bulk-upload-modal-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+.bulk-upload-modal-body {
+    padding: 24px;
+}
+
+.bulk-upload-instructions {
+    background: #fff3cd;
+    padding: 16px;
+    border-radius: 8px;
+    border-left: 4px solid #ffc107;
+    margin-bottom: 20px;
+}
+
+.bulk-upload-instructions h5 {
+    margin: 0 0 12px 0;
+    color: #856404;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bulk-upload-instructions ol {
+    margin: 0;
+    padding-left: 20px;
+    color: #856404;
+}
+
+.bulk-upload-instructions li {
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+.template-download-section {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.template-download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.template-download-btn:hover {
+    background: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.file-input-group {
+    margin-bottom: 20px;
+}
+
+.file-input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #333;
+}
+
+.file-input-group input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 2px dashed #dee2e6;
+    border-radius: 6px;
+    background: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.file-input-group input[type="file"]:hover {
+    border-color: #28a745;
+    background: #e8f5e9;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.btn-cancel, .btn-upload {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-cancel {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-cancel:hover {
+    background: #5a6268;
+}
+
+.btn-upload {
+    background: #28a745;
+    color: white;
+}
+
+.btn-upload:hover {
+    background: #1e7e34;
+    transform: translateY(-1px);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { 
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to { 
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
 @media (max-width: 768px) {
+    .bulk-upload-modal-content {
+        width: 95%;
+        max-height: 95vh;
+    }
+    
+    .bulk-upload-modal-header {
+        padding: 16px;
+    }
+    
+    .bulk-upload-modal-header h3 {
+        font-size: 18px;
+    }
+    
+    .bulk-upload-modal-body {
+        padding: 16px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn-cancel, .btn-upload {
+        width: 100%;
+        justify-content: center;
+    }
+    
     .product-list-pagination-section {
         flex-direction: column;
         text-align: center;
@@ -485,24 +684,10 @@
         <i class="fas fa-plus product-list-add-icon"></i>Add Product
     </a>
     {% if request.user.user_type == 'admin' or request.user.user_type == 'Admin' %}
-    <a href="{% url 'bulk_upload_products' %}" class="product-list-bulk-upload-btn">
+    <button type="button" onclick="openBulkUploadDialog()" class="product-list-bulk-upload-btn">
         <i class="fas fa-file-upload product-list-bulk-icon"></i>Bulk Upload
-    </a>
+    </button>
     {% endif %}
-    <div class="product-list-export-buttons">
-        <a href="{% url 'export_products_pdf' %}" class="product-list-export-btn product-list-export-pdf">
-            <i class="fas fa-file-pdf product-list-pdf-icon"></i> PDF
-        </a>
-        <a href="{% url 'export_products_excel' %}" class="product-list-export-btn product-list-export-excel">
-            <i class="fas fa-file-csv product-list-csv-icon"></i> CSV/Excel
-        </a>
-        <button onclick="window.print()" class="product-list-export-btn product-list-export-print">
-            <i class="fas fa-print product-list-print-icon"></i> Print (Ctrl+P)
-        </button>
-        <div class="keyboard-shortcuts-hint" style="margin-left: 15px; padding: 8px 12px; background: #e3f2fd; border: 1px solid #bbdefb; border-radius: 4px; font-size: 12px; color: #1976d2;">
-            <i class="fas fa-keyboard"></i> Tip: Press <kbd style="background: #fff; padding: 2px 6px; border-radius: 3px; font-family: monospace;">Ctrl+D</kbd> to delete selected item
-        </div>
-    </div>
 </div>
 {% endblock %}
 
@@ -540,10 +725,10 @@
                     <i class="fas fa-plus"></i>
                     Add Products
                 </a>
-                <a href="{% url 'bulk_upload_products' %}" class="product-list-header-add-btn" style="background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); margin-left: 10px;">
+                <button type="button" onclick="openBulkUploadDialog()" class="product-list-header-add-btn" style="background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); margin-left: 10px; border: none; cursor: pointer;">
                     <i class="fas fa-file-upload"></i>
                     Bulk Upload
-                </a>
+                </button>
             </div>
         </div>
         
@@ -696,12 +881,12 @@
                 <ul class="product-list-pagination">
                     {% if products.has_previous %}
                         <li class="product-list-page-item">
-                            <a class="product-list-page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">
+                            <a class="product-list-page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
                                 <i class="fas fa-angle-double-left"></i> First
                             </a>
                         </li>
                         <li class="product-list-page-item">
-                            <a class="product-list-page-link" href="?page={{ products.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                            <a class="product-list-page-link" href="?page={{ products.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
                                 <i class="fas fa-angle-left"></i> Previous
                             </a>
                         </li>
@@ -714,19 +899,19 @@
                             </li>
                         {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
                             <li class="product-list-page-item">
-                                <a class="product-list-page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+                                <a class="product-list-page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">{{ num }}</a>
                             </li>
                         {% endif %}
                     {% endfor %}
                     
                     {% if products.has_next %}
                         <li class="product-list-page-item">
-                            <a class="product-list-page-link" href="?page={{ products.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                            <a class="product-list-page-link" href="?page={{ products.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
                                 Next <i class="fas fa-angle-right"></i>
                             </a>
                         </li>
                         <li class="product-list-page-item">
-                            <a class="product-list-page-link" href="?page={{ products.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                            <a class="product-list-page-link" href="?page={{ products.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
                                 Last <i class="fas fa-angle-double-right"></i>
                             </a>
                         </li>
@@ -738,10 +923,83 @@
 
     </div>
 </div>
+<!-- Bulk Upload Dialog Modal -->
+<div id="bulkUploadModal" class="bulk-upload-modal" style="display: none;">
+    <div class="bulk-upload-modal-overlay" onclick="closeBulkUploadDialog()"></div>
+    <div class="bulk-upload-modal-content">
+        <div class="bulk-upload-modal-header">
+            <h3><i class="fas fa-file-upload"></i> Bulk Upload Products</h3>
+            <button class="bulk-upload-modal-close" onclick="closeBulkUploadDialog()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="bulk-upload-modal-body">
+            <div class="bulk-upload-instructions">
+                <h5><i class="fas fa-info-circle"></i> Instructions:</h5>
+                <ol>
+                    <li>Download the CSV template using the button below.</li>
+                    <li>Fill in the product details in the CSV file.</li>
+                    <li>Save the file and upload it using the form below.</li>
+                </ol>
+            </div>
+            
+            <div class="template-download-section">
+                <a href="{% url 'bulk_upload_products' %}?sample=true" class="template-download-btn" target="_blank">
+                    <i class="fas fa-download"></i> Download CSV Template
+                </a>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data" action="{% url 'bulk_upload_products' %}" id="bulkUploadForm">
+                {% csrf_token %}
+                <div class="file-input-group">
+                    <label for="csv_file">CSV File</label>
+                    <input type="file" name="csv_file" id="csv_file" accept=".csv" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="closeBulkUploadDialog()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn-upload">
+                        <i class="fas fa-upload"></i> Upload
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'js/product-search-autocomplete.js' %}"></script>
+<script>
+function openBulkUploadDialog() {
+    document.getElementById('bulkUploadModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeBulkUploadDialog() {
+    document.getElementById('bulkUploadModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+    document.getElementById('bulkUploadForm').reset();
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Close bulk upload dialog on Escape
+    if (e.key === 'Escape') {
+        closeBulkUploadDialog();
+    }
+});
+
+// Handle form submission
+document.getElementById('bulkUploadForm').addEventListener('submit', function(e) {
+    const fileInput = document.getElementById('csv_file');
+    if (!fileInput.files.length) {
+        e.preventDefault();
+        alert('Please select a CSV file');
+    }
+});
+</script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Fix cursor position in search input

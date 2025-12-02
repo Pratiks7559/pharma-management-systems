@@ -92,6 +92,10 @@
                                class="sr-list-btn sr-list-btn-outline-primary" title="View Details">
                                 <i class="sr-list-view-icon"></i>
                             </a>
+                            <a href="{% url 'print_sales_return_receipt' return_id=return.return_sales_invoice_no %}" target="_blank"
+                               class="sr-list-btn sr-list-btn-outline-secondary" title="Print Receipt">
+                                <i class="fas fa-print"></i>
+                            </a>
                             {% if request.user.user_type == 'admin' %}
                             <button type="button" class="sr-list-btn sr-list-btn-outline-danger" title="Delete"
                                     onclick="event.stopPropagation(); event.preventDefault(); showDeleteDialog('{{ return.return_sales_invoice_no }}', '{{ return.return_sales_invoice_no }}'); return false;"

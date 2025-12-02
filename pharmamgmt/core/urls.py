@@ -55,8 +55,6 @@ urlpatterns = [
     path('products/<int:pk>/', views.product_detail, name='product_detail'),
     path('products/<int:pk>/update/', views.update_product, name='update_product'),
     path('products/<int:pk>/delete/', views.delete_product, name='delete_product'),
-    path('products/export-pdf/', views.export_products_pdf, name='export_products_pdf'),
-    path('products/export-excel/', views.export_products_excel, name='export_products_excel'),
     
     # Suppliers
     path('suppliers/', views.supplier_list, name='supplier_list'),
@@ -64,6 +62,7 @@ urlpatterns = [
     path('suppliers/<int:pk>/', views.supplier_detail, name='supplier_detail'),
     path('suppliers/<int:pk>/update/', views.update_supplier, name='update_supplier'),
     path('suppliers/<int:pk>/delete/', views.delete_supplier, name='delete_supplier'),
+    path('api/search-suppliers/', views.search_suppliers_api, name='search_suppliers_api'),
     
     # Customers
     path('customers/', views.customer_list, name='customer_list'),
@@ -71,6 +70,7 @@ urlpatterns = [
     path('customers/<int:pk>/', views.customer_detail, name='customer_detail'),
     path('customers/<int:pk>/update/', views.update_customer, name='update_customer'),
     path('customers/<int:pk>/delete/', views.delete_customer, name='delete_customer'),
+    path('api/search-customers/', views.search_customers_api, name='search_customers_api'),
     
     # Challan
     path('challan/supplier/', supplier_challan_list, name='supplier_challan_list'),

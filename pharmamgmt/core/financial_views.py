@@ -41,16 +41,50 @@ def financial_report(request):
             pass
     
     # Apply product filter
-    if product_id and product_id.strip():
+    if product_id and str(product_id).strip() and str(product_id).strip() != '':
         try:
             pid = int(product_id)
             sales_query = sales_query.filter(productid_id=pid)
             supplier_challan_query = supplier_challan_query.filter(product_id=pid)
             customer_challan_query = customer_challan_query.filter(product_id=pid)
         except:
-            pass
+            # If product_id is invalid, try product_search
+            if product_search and product_search.strip():
+                search_term = product_search.strip()
+                sales_query = sales_query.filter(product_name__icontains=search_term)
+                supplier_challan_query = supplier_challan_query.filter(product_name__icontains=search_term)
+                customer_challan_query = customer_challan_query.filter(product_name__icontains=search_term)
+    elif product_search and product_search.strip():
+        # If no product_id but search text exists, filter by product name
+        search_term = product_search.strip()
+        sales_query = sales_query.filter(product_name__icontains=search_term)
+        supplier_challan_query = supplier_challan_query.filter(product_name__icontains=search_term)
+        customer_challan_query = customer_challan_query.filter(product_name__icontains=search_term)
     
-    # Calculate profit for each transaction
+    # Fetch all data
+    sales_list = list(sales_query)
+    customer_challan_list = list(customer_challan_query)
+    supplier_challan_list = list(supplier_challan_query)
+    
+    # Build batch lookup (single query)
+    batch_keys = set()
+    for sale in sales_list:
+        batch_keys.add((sale.productid_id, sale.product_batch_no))
+    for challan in customer_challan_list:
+        batch_keys.add((challan.product_id_id, challan.product_batch_no))
+    
+    purchase_lookup = {}
+    if batch_keys:
+        q_objects = Q()
+        for prod_id, batch_no in batch_keys:
+            q_objects |= Q(productid_id=prod_id, product_batch_no=batch_no)
+        purchases = PurchaseMaster.objects.filter(q_objects).values('productid_id', 'product_batch_no', 'product_purchase_rate')
+        for p in purchases:
+            key = (p['productid_id'], p['product_batch_no'])
+            if key not in purchase_lookup:
+                purchase_lookup[key] = float(p['product_purchase_rate'])
+    
+    # Calculate profit
     financial_data = []
     total_sales_value = 0.0
     total_purchase_cost = 0.0
@@ -58,13 +92,8 @@ def financial_report(request):
     total_gst = 0.0
     
     # Process Sales
-    for sale in sales_query:
-        purchase = PurchaseMaster.objects.filter(
-            productid=sale.productid,
-            product_batch_no=sale.product_batch_no
-        ).first()
-        
-        purchase_rate = float(purchase.product_purchase_rate) if purchase else 0.0
+    for sale in sales_list:
+        purchase_rate = purchase_lookup.get((sale.productid_id, sale.product_batch_no), 0.0)
         quantity = float(sale.sale_quantity)
         sale_rate = float(sale.sale_rate)
         cgst = float(sale.sale_cgst)
@@ -102,13 +131,8 @@ def financial_report(request):
         total_gst += gst_amount
     
     # Process Customer Challans
-    for challan in customer_challan_query:
-        purchase = PurchaseMaster.objects.filter(
-            productid=challan.product_id,
-            product_batch_no=challan.product_batch_no
-        ).first()
-        
-        purchase_rate = float(purchase.product_purchase_rate) if purchase else 0.0
+    for challan in customer_challan_list:
+        purchase_rate = purchase_lookup.get((challan.product_id_id, challan.product_batch_no), 0.0)
         quantity = float(challan.sale_quantity)
         sale_rate = float(challan.sale_rate)
         cgst = float(challan.sale_cgst)
@@ -146,7 +170,7 @@ def financial_report(request):
         total_gst += gst_amount
     
     # Process Supplier Challans
-    for challan in supplier_challan_query:
+    for challan in supplier_challan_list:
         quantity = float(challan.product_quantity)
         purchase_rate = float(challan.product_purchase_rate)
         cgst = float(challan.cgst)
@@ -180,6 +204,9 @@ def financial_report(request):
         total_profit -= purchase_cost
         total_gst += gst_amount
     
+    # Stock valuation removed for performance
+    stock_valuation = 0.0
+    
     # Summary statistics
     summary = {
         'total_sales_value': round(total_sales_value, 2),
@@ -187,7 +214,8 @@ def financial_report(request):
         'total_gst': round(total_gst, 2),
         'total_profit': round(total_profit, 2),
         'profit_percentage': round((total_profit / total_sales_value * 100), 2) if total_sales_value > 0 else 0,
-        'total_transactions': len(financial_data)
+        'total_transactions': len(financial_data),
+        'stock_valuation': round(stock_valuation, 2)
     }
     
     # Pagination - 20 records per page

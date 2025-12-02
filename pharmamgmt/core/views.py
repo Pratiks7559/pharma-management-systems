@@ -251,6 +251,19 @@ def dashboard(request):
         invoice_date__gte=current_month_start
     ).aggregate(total=Sum('invoice_total'))['total'] or 0
     
+    # Today's sales
+    today_sales_invoices = SalesInvoiceMaster.objects.filter(
+        sales_invoice_date=today
+    )
+    today_sales = SalesMaster.objects.filter(
+        sales_invoice_no__in=today_sales_invoices
+    ).aggregate(total=Sum('sale_total_amount'))['total'] or 0
+    
+    # Today's purchases
+    today_purchases = InvoiceMaster.objects.filter(
+        invoice_date=today
+    ).aggregate(total=Sum('invoice_total'))['total'] or 0
+    
     # Total outstanding payments from customers
     # Calculate total sales amounts
     sales_totals = SalesMaster.objects.values('sales_invoice_no').annotate(
@@ -292,6 +305,8 @@ def dashboard(request):
         'expired_products': expired_products,
         'monthly_sales': monthly_sales,
         'monthly_purchases': monthly_purchases,
+        'today_sales': today_sales,
+        'today_purchases': today_purchases,
         'total_receivable': total_receivable,
         'total_payable': total_payable
     }
@@ -667,6 +682,28 @@ def supplier_list(request):
     return render(request, 'suppliers/supplier_list.html', context)
 
 @login_required
+def search_suppliers_api(request):
+    """API endpoint for supplier search suggestions"""
+    query = request.GET.get('q', '').strip()
+    
+    if len(query) < 2:
+        return JsonResponse({'suppliers': []})
+    
+    suppliers = SupplierMaster.objects.filter(
+        Q(supplier_name__icontains=query) |
+        Q(supplier_mobile__icontains=query) |
+        Q(supplier_emailid__icontains=query)
+    ).order_by('supplier_name')[:10]
+    
+    supplier_list = [{
+        'id': s.supplierid,
+        'name': s.supplier_name,
+        'contact': s.supplier_mobile or s.supplier_emailid
+    } for s in suppliers]
+    
+    return JsonResponse({'suppliers': supplier_list})
+
+@login_required
 def add_supplier(request):
     if request.method == 'POST':
         # Handle AJAX request
@@ -809,6 +846,29 @@ def customer_list(request):
         'title': 'Customer List'
     }
     return render(request, 'customers/customer_list.html', context)
+
+@login_required
+def search_customers_api(request):
+    """API endpoint for customer search suggestions"""
+    query = request.GET.get('q', '').strip()
+    
+    if len(query) < 2:
+        return JsonResponse({'customers': []})
+    
+    customers = CustomerMaster.objects.filter(
+        Q(customer_name__icontains=query) |
+        Q(customer_mobile__icontains=query) |
+        Q(customer_emailid__icontains=query)
+    ).order_by('customer_name')[:10]
+    
+    customer_list = [{
+        'id': c.customerid,
+        'name': c.customer_name,
+        'contact': c.customer_mobile or c.customer_emailid,
+        'type': c.customer_type
+    } for c in customers]
+    
+    return JsonResponse({'customers': customer_list})
 
 @login_required
 def add_customer(request):
@@ -6813,91 +6873,6 @@ def export_inventory_excel(request):
             batch.product_batch_no if batch else 'N/A',
             stock_info.get('avg_mrp', 0),
             stock_info['current_stock'] * stock_info.get('avg_mrp', 0)
-        ])
-    
-    return response
-
-@login_required
-def export_products_pdf(request):
-    from django.http import HttpResponse
-    
-    response = HttpResponse(content_type='text/html')
-    response['Content-Disposition'] = 'inline; filename="products_report.html"'
-    
-    products = ProductMaster.objects.all()[:100]
-    
-    html_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Products Report</title>
-        <style>
-            body {{ font-family: Arial, sans-serif; margin: 20px; }}
-            table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
-            th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
-            th {{ background-color: #f2f2f2; font-weight: bold; }}
-            h1 {{ color: #333; text-align: center; }}
-            @media print {{ body {{ margin: 0; }} }}
-        </style>
-    </head>
-    <body>
-        <h1>Products Report</h1>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Product Name</th>
-                    <th>Company</th>
-                    <th>Batch No</th>
-                    <th>Category</th>
-                </tr>
-            </thead>
-            <tbody>
-    """
-    
-    for product in products:
-        batch = PurchaseMaster.objects.filter(productid=product.productid).first()
-        html_content += f"""
-                <tr>
-                    <td>{product.productid}</td>
-                    <td>{product.product_name}</td>
-                    <td>{product.product_company}</td>
-                    <td>{batch.product_batch_no if batch else 'N/A'}</td>
-                    <td>{product.product_category or 'N/A'}</td>
-                </tr>
-        """
-    
-    html_content += """
-            </tbody>
-        </table>
-        <script>window.print();</script>
-    </body>
-    </html>
-    """
-    
-    response.write(html_content)
-    return response
-
-@login_required
-def export_products_excel(request):
-    import csv
-    from django.http import HttpResponse
-    
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="products_report.csv"'
-    
-    writer = csv.writer(response)
-    writer.writerow(['ID', 'Product Name', 'Company', 'Batch No', 'Category'])
-    
-    products = ProductMaster.objects.all()[:100]
-    for product in products:
-        batch = PurchaseMaster.objects.filter(productid=product.productid).first()
-        writer.writerow([
-            product.productid,
-            product.product_name,
-            product.product_company,
-            batch.product_batch_no if batch else 'N/A',
-            product.product_category or 'N/A'
         ])
     
     return response

@@ -5,6 +5,7 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
+from django.db.models import Q
 
 @login_required
 def supplier_challan_list(request):
@@ -212,9 +213,35 @@ def delete_supplier_challan(request, challan_id):
 def customer_challan_list(request):
     """View for customer challan list - only show non-invoiced challans"""
     from core.models import CustomerChallan, InvoiceSeries
+    from datetime import datetime
     
     # Only show challans that haven't been invoiced yet
-    challans = CustomerChallan.objects.select_related('customer_name').filter(is_invoiced=False).order_by('-customer_challan_date', '-customer_challan_id')
+    challans = CustomerChallan.objects.select_related('customer_name').filter(is_invoiced=False)
+    
+    # Apply date filters
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+    search_query = request.GET.get('search', '')
+    
+    if from_date:
+        try:
+            challans = challans.filter(customer_challan_date__gte=from_date)
+        except:
+            pass
+    
+    if to_date:
+        try:
+            challans = challans.filter(customer_challan_date__lte=to_date)
+        except:
+            pass
+    
+    if search_query:
+        challans = challans.filter(
+            Q(customer_challan_no__icontains=search_query) |
+            Q(customer_name__customer_name__icontains=search_query)
+        )
+    
+    challans = challans.order_by('-customer_challan_date', '-customer_challan_id')
     
     # Get all active invoice series for the dropdown
     invoice_series = InvoiceSeries.objects.filter(is_active=True).order_by('series_name')
@@ -222,7 +249,10 @@ def customer_challan_list(request):
     context = {
         'title': 'Customer Challan List',
         'challans': challans,
-        'invoice_series': invoice_series
+        'invoice_series': invoice_series,
+        'from_date': from_date,
+        'to_date': to_date,
+        'search_query': search_query
     }
     return render(request, 'challan/customer_challan_list.html', context)
 

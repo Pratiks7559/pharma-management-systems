@@ -18,7 +18,10 @@
         
         <div class="search-section">
             <form method="GET" class="search-form">
-                <input type="text" name="search" class="search-input" placeholder="Search customers..." value="{{ search_query }}">
+                <div style="position: relative;">
+                    <input type="text" name="search" id="customerSearchInput" class="search-input" placeholder="Search customers..." value="{{ search_query }}" autocomplete="off">
+                    <div id="customerSuggestions" class="customer-suggestions" style="display: none;"></div>
+                </div>
                 <button type="submit" class="search-btn">
                     <i class="fas fa-search"></i>
                 </button>
@@ -305,5 +308,135 @@ document.getElementById('deleteDialog').addEventListener('click', function(e) {
         hideDeleteDialog();
     }
 });
+
+// Customer Search Suggestions
+const customerSearchInput = document.getElementById('customerSearchInput');
+const customerSuggestionsDiv = document.getElementById('customerSuggestions');
+let customerSelectedIndex = -1;
+let customerSearchTimeout;
+
+if (customerSearchInput) {
+    customerSearchInput.addEventListener('input', function() {
+        clearTimeout(customerSearchTimeout);
+        const query = this.value.trim();
+        
+        if (query.length < 2) {
+            customerSuggestionsDiv.style.display = 'none';
+            return;
+        }
+        
+        customerSearchTimeout = setTimeout(() => {
+            fetch(`/api/search-customers/?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.customers && data.customers.length > 0) {
+                        displayCustomerSuggestions(data.customers);
+                    } else {
+                        customerSuggestionsDiv.style.display = 'none';
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }, 300);
+    });
+
+    customerSearchInput.addEventListener('keydown', function(e) {
+        const items = customerSuggestionsDiv.querySelectorAll('.suggestion-item');
+        if (items.length === 0) return;
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            customerSelectedIndex = (customerSelectedIndex + 1) % items.length;
+            updateCustomerSelection(items);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            customerSelectedIndex = (customerSelectedIndex - 1 + items.length) % items.length;
+            updateCustomerSelection(items);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (customerSelectedIndex >= 0 && items[customerSelectedIndex]) {
+                const customerId = items[customerSelectedIndex].getAttribute('data-id');
+                window.location.href = `/customers/${customerId}/`;
+            }
+        } else if (e.key === 'Escape') {
+            customerSuggestionsDiv.style.display = 'none';
+        }
+    });
+
+    customerSuggestionsDiv.addEventListener('click', function(e) {
+        const item = e.target.closest('.suggestion-item');
+        if (item) {
+            const customerId = item.getAttribute('data-id');
+            window.location.href = `/customers/${customerId}/`;
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!customerSearchInput.contains(e.target) && !customerSuggestionsDiv.contains(e.target)) {
+            customerSuggestionsDiv.style.display = 'none';
+        }
+    });
+}
+
+function displayCustomerSuggestions(customers) {
+    customerSuggestionsDiv.innerHTML = customers.map((customer, index) => `
+        <div class="suggestion-item ${index === 0 ? 'selected' : ''}" data-index="${index}" data-id="${customer.id}">
+            <div class="suggestion-name">${customer.name}</div>
+            <div class="suggestion-contact">${customer.contact || ''} ${customer.type ? '| ' + customer.type : ''}</div>
+        </div>
+    `).join('');
+    customerSuggestionsDiv.style.display = 'block';
+    customerSelectedIndex = 0;
+}
+
+function updateCustomerSelection(items) {
+    items.forEach((item, index) => {
+        item.classList.toggle('selected', index === customerSelectedIndex);
+    });
+    items[customerSelectedIndex].scrollIntoView({ block: 'nearest' });
+}
 </script>
+
+<style>
+.customer-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    margin-top: 4px;
+}
+
+.suggestion-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.2s;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover,
+.suggestion-item.selected {
+    background: #f0f7ff;
+}
+
+.suggestion-name {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2px;
+}
+
+.suggestion-contact {
+    font-size: 12px;
+    color: #666;
+}
+</style>
 {% endblock %}

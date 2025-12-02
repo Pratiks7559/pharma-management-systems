@@ -89,6 +89,14 @@
                     <p class="financial-label">Monthly Purchases</p>
                     <p class="financial-value">{{ monthly_purchases|currency }}</p>
                 </div>
+                <div class="financial-item financial-item-emerald" style="border-left: 3px solid #10b981;">
+                    <p class="financial-label">Today's Sales</p>
+                    <p class="financial-value">{{ today_sales|currency }}</p>
+                </div>
+                <div class="financial-item financial-item-blue" style="border-left: 3px solid #3b82f6;">
+                    <p class="financial-label">Today's Purchases</p>
+                    <p class="financial-value">{{ today_purchases|currency }}</p>
+                </div>
                 <div class="financial-item financial-item-amber">
                     <p class="financial-label">Total Receivable</p>
                     <p class="financial-value">{{ total_receivable|currency }}</p>
