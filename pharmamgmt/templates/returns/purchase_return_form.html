@@ -58,15 +58,6 @@
                     <div class="ci-form-row">
                         <div class="ci-form-column">
                             <div class="ci-field-group">
-                                <label for="{{ form.return_charges.id_for_label }}" class="ci-field-label">Return Charges</label>
-                                {{ form.return_charges }}
-                                {% if form.return_charges.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.return_charges.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="ci-form-column">
-                            <div class="ci-field-group">
                                 <label for="{{ form.returninvoice_total.id_for_label }}" class="ci-field-label required">Return Total*</label>
                                 {{ form.returninvoice_total }}
 
@@ -99,8 +90,8 @@
                                     <th class="ci-th-mrp">MRP</th>
                                     <th class="ci-th-purchase-rate">Return Rate</th>
                                     <th class="ci-th-qty">Return Qty</th>
-                                    <th class="ci-th-discount">Scheme</th>
-                                    <th class="ci-th-charges">Charges</th>
+                                    <th class="ci-th-gst">CGST %</th>
+                                    <th class="ci-th-gst">SGST %</th>
                                     <th class="ci-th-reason">Reason</th>
                                     <th class="ci-th-total">Total</th>
                                     <th class="ci-th-action">Action</th>
@@ -179,8 +170,8 @@ function addReturnProductRow() {
             <div class="available-stock" style="font-size: 0.8rem; color: #666; margin-top: 2px;"></div>
             <div class="stock-error" style="display: none; color: #dc3545; font-size: 0.75rem; margin-top: 4px; padding: 2px 4px; background: #f8d7da; border-radius: 3px; border-left: 3px solid #dc3545;"></div>
         </td>
-        <td><input type="number" class="scheme" step="0.01" placeholder="Scheme" min="0" onchange="calculateReturnRowTotal(${returnProductRowIndex})"></td>
-        <td><input type="number" class="charges" step="0.01" placeholder="Charges" min="0" onchange="calculateReturnRowTotal(${returnProductRowIndex})"></td>
+        <td><input type="number" class="cgst" step="0.01" placeholder="CGST %" value="2.5" min="0" onchange="calculateReturnRowTotal(${returnProductRowIndex})"></td>
+        <td><input type="number" class="sgst" step="0.01" placeholder="SGST %" value="2.5" min="0" onchange="calculateReturnRowTotal(${returnProductRowIndex})"></td>
         <td><select class="reason" required>
             <option value="">Select Reason</option>
             <option value="Expiry">Expiry</option>
@@ -364,12 +355,12 @@ function calculateReturnRowTotal(rowIndex) {
     
     const rate = parseFloat(row.querySelector('.return-rate').value) || 0;
     const qty = parseFloat(row.querySelector('.return-qty').value) || 0;
-    const scheme = parseFloat(row.querySelector('.scheme').value) || 0;
-    const charges = parseFloat(row.querySelector('.charges').value) || 0;
+    const cgst = parseFloat(row.querySelector('.cgst').value) || 0;
+    const sgst = parseFloat(row.querySelector('.sgst').value) || 0;
     
     const subtotal = rate * qty;
-    const afterScheme = subtotal - scheme;
-    const total = afterScheme + charges;
+    const gstAmount = subtotal * (cgst + sgst) / 100;
+    const total = subtotal + gstAmount;
     
     row.querySelector('.return-row-total').textContent = total.toFixed(2);
     calculateReturnTotal();
@@ -381,18 +372,11 @@ function calculateReturnTotal() {
         total += parseFloat(span.textContent) || 0;
     });
     
-    const returnCharges = parseFloat(document.querySelector('input[name*="return_charges"]')?.value) || 0;
-    const finalTotal = total + returnCharges;
-    
-    if (returnCharges > 0) {
-        document.getElementById('returnTotal').innerHTML = `${total.toFixed(2)} + ${returnCharges.toFixed(2)} = <strong>${finalTotal.toFixed(2)}</strong>`;
-    } else {
-        document.getElementById('returnTotal').textContent = finalTotal.toFixed(2);
-    }
+    document.getElementById('returnTotal').textContent = total.toFixed(2);
     
     const returnTotalInput = document.querySelector('input[name*="returninvoice_total"]');
     if (returnTotalInput) {
-        returnTotalInput.value = finalTotal.toFixed(2);
+        returnTotalInput.value = total.toFixed(2);
     }
 }
 function setCurrentReturnDate() {
@@ -486,8 +470,8 @@ function collectReturnProductsData() {
             const mrp = row.querySelector('.mrp')?.value?.trim() || '0';
             const returnRate = row.querySelector('.return-rate')?.value?.trim() || '0';
             const returnQty = row.querySelector('.return-qty')?.value?.trim() || '0';
-            const scheme = row.querySelector('.scheme')?.value?.trim() || '0';
-            const charges = row.querySelector('.charges')?.value?.trim() || '0';
+            const cgst = row.querySelector('.cgst')?.value?.trim() || '0';
+            const sgst = row.querySelector('.sgst')?.value?.trim() || '0';
             const reason = row.querySelector('.reason')?.value?.trim() || '';
             
             const product = {
@@ -497,8 +481,8 @@ function collectReturnProductsData() {
                 mrp: mrp,
                 return_rate: returnRate,
                 return_quantity: returnQty,
-                scheme: scheme,
-                charges: charges,
+                cgst: cgst,
+                sgst: sgst,
                 reason: reason
             };
             
@@ -1035,11 +1019,6 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(focusSupplierSelect, 100);
     setTimeout(focusSupplierSelect, 300);
     setTimeout(focusSupplierSelect, 500);
-    
-    const returnChargesInput = document.querySelector('input[name*="return_charges"]');
-    if (returnChargesInput) {
-        returnChargesInput.addEventListener('input', calculateReturnTotal);
-    }
     
     // Handle return date input with DD-MM-YYYY format
     const returnDateInput = document.querySelector('input[name*="returninvoice_date"]');

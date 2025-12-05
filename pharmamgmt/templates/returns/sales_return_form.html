@@ -86,7 +86,8 @@
                                         <th class="rate-col">Rate</th>
                                         <th class="qty-col">Qty</th>
                                         <th class="discount-col">Discount</th>
-                                        <th class="gst-col">GST%</th>
+                                        <th class="gst-col">CGST%</th>
+                                        <th class="gst-col">SGST%</th>
                                         <th class="total-col">Total</th>
                                         <th class="action-col">Action</th>
                                     </tr>
@@ -164,7 +165,8 @@ function addProductRow() {
         <td class="rate-cell"><input type="number" class="return-rate" step="0.01" placeholder="0.00" min="0" onchange="calculateRowTotal(${productRowCount})" required></td>
         <td class="qty-cell"><input type="number" class="return-quantity" step="0.01" placeholder="0" min="0.01" onchange="calculateRowTotal(${productRowCount})" required></td>
         <td class="discount-cell"><input type="number" class="discount" step="0.01" placeholder="0.00" min="0" onchange="calculateRowTotal(${productRowCount})" value="0"></td>
-        <td class="gst-cell"><input type="number" class="gst" step="0.01" placeholder="0.00" min="0" max="100" onchange="calculateRowTotal(${productRowCount})" value="0"></td>
+        <td class="gst-cell"><input type="number" class="cgst" step="0.01" placeholder="CGST%" min="0" max="100" onchange="calculateRowTotal(${productRowCount})" value="2.5"></td>
+        <td class="gst-cell"><input type="number" class="sgst" step="0.01" placeholder="SGST%" min="0" max="100" onchange="calculateRowTotal(${productRowCount})" value="2.5"></td>
         <td class="total-cell"><strong class="row-total">₹0.00</strong></td>
         <td class="action-cell"><button type="button" class="sr-remove-btn" onclick="removeProductRow(${productRowCount})" title="Remove Product"><i class="fas fa-trash"></i></button></td>
     `;
@@ -204,11 +206,12 @@ function calculateRowTotal(index) {
         const rate = parseFloat(row.querySelector('.return-rate').value) || 0;
         const quantity = parseFloat(row.querySelector('.return-quantity').value) || 0;
         const discount = parseFloat(row.querySelector('.discount').value) || 0;
-        const gst = parseFloat(row.querySelector('.gst').value) || 0;
+        const cgst = parseFloat(row.querySelector('.cgst').value) || 0;
+        const sgst = parseFloat(row.querySelector('.sgst').value) || 0;
         
         const baseAmount = rate * quantity;
         const discountedAmount = baseAmount - discount;
-        const totalAmount = discountedAmount * (1 + (gst / 100));
+        const totalAmount = discountedAmount * (1 + ((cgst + sgst) / 100));
         
         row.querySelector('.row-total').textContent = '₹' + totalAmount.toFixed(2);
         calculateGrandTotal();
@@ -313,7 +316,8 @@ document.getElementById('salesReturnForm').addEventListener('submit', function(e
                 return_rate: row.querySelector('.return-rate').value,
                 return_quantity: row.querySelector('.return-quantity').value,
                 discount: row.querySelector('.discount').value,
-                gst: row.querySelector('.gst').value
+                cgst: row.querySelector('.cgst').value,
+                sgst: row.querySelector('.sgst').value
             });
         }
     });
@@ -656,7 +660,8 @@ function selectBatch(batchNo, rowIndex, batchData) {
         }
         
         row.querySelector('.return-rate').value = selectedRate;
-        row.querySelector('.gst').value = batchData.gst_rate || '12';
+        row.querySelector('.cgst').value = '2.5';
+        row.querySelector('.sgst').value = '2.5';
         
         // Show updated stock info
         const stockInfo = document.createElement('small');
@@ -1008,7 +1013,8 @@ function fetchBatchDetails(productId, batchNo, rowIndex) {
                     }
                     
                     row.querySelector('.return-rate').value = selectedRate;
-                    row.querySelector('.gst').value = data.gst_rate || '12';
+                    row.querySelector('.cgst').value = '2.5';
+                    row.querySelector('.sgst').value = '2.5';
                     
                     calculateRowTotal(rowIndex);
                     

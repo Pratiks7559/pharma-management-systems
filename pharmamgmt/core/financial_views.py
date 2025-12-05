@@ -21,13 +21,15 @@ def financial_report(request):
     
     # Base querysets
     sales_query = SalesMaster.objects.select_related('productid', 'sales_invoice_no', 'customerid')
-    supplier_challan_query = SupplierChallanMaster.objects.select_related('product_id', 'product_suppliername', 'product_challan_id')
+    purchase_query = PurchaseMaster.objects.select_related('productid', 'product_invoiceid', 'product_supplierid')
+    supplier_challan_query = SupplierChallanMaster.objects.select_related('product_id', 'product_suppliername', 'product_challan_id').filter(product_challan_id__is_invoiced=False)
     customer_challan_query = CustomerChallanMaster.objects.select_related('product_id', 'customer_name', 'customer_challan_id')
     
     # Apply date filters
     if start_date:
         try:
             sales_query = sales_query.filter(sale_entry_date__date__gte=start_date)
+            purchase_query = purchase_query.filter(purchase_entry_date__date__gte=start_date)
             supplier_challan_query = supplier_challan_query.filter(challan_entry_date__date__gte=start_date)
             customer_challan_query = customer_challan_query.filter(sales_entry_date__date__gte=start_date)
         except:
@@ -35,6 +37,7 @@ def financial_report(request):
     if end_date:
         try:
             sales_query = sales_query.filter(sale_entry_date__date__lte=end_date)
+            purchase_query = purchase_query.filter(purchase_entry_date__date__lte=end_date)
             supplier_challan_query = supplier_challan_query.filter(challan_entry_date__date__lte=end_date)
             customer_challan_query = customer_challan_query.filter(sales_entry_date__date__lte=end_date)
         except:
@@ -45,24 +48,26 @@ def financial_report(request):
         try:
             pid = int(product_id)
             sales_query = sales_query.filter(productid_id=pid)
+            purchase_query = purchase_query.filter(productid_id=pid)
             supplier_challan_query = supplier_challan_query.filter(product_id=pid)
             customer_challan_query = customer_challan_query.filter(product_id=pid)
         except:
-            # If product_id is invalid, try product_search
             if product_search and product_search.strip():
                 search_term = product_search.strip()
                 sales_query = sales_query.filter(product_name__icontains=search_term)
+                purchase_query = purchase_query.filter(product_name__icontains=search_term)
                 supplier_challan_query = supplier_challan_query.filter(product_name__icontains=search_term)
                 customer_challan_query = customer_challan_query.filter(product_name__icontains=search_term)
     elif product_search and product_search.strip():
-        # If no product_id but search text exists, filter by product name
         search_term = product_search.strip()
         sales_query = sales_query.filter(product_name__icontains=search_term)
+        purchase_query = purchase_query.filter(product_name__icontains=search_term)
         supplier_challan_query = supplier_challan_query.filter(product_name__icontains=search_term)
         customer_challan_query = customer_challan_query.filter(product_name__icontains=search_term)
     
     # Fetch all data
     sales_list = list(sales_query)
+    purchase_list = list(purchase_query)
     customer_challan_list = list(customer_challan_query)
     supplier_challan_list = list(supplier_challan_query)
     
@@ -169,7 +174,42 @@ def financial_report(request):
         total_profit += profit
         total_gst += gst_amount
     
-    # Process Supplier Challans
+    # Process Purchases
+    for purchase in purchase_list:
+        quantity = float(purchase.product_quantity)
+        purchase_rate = float(purchase.product_purchase_rate)
+        cgst = float(purchase.CGST)
+        sgst = float(purchase.SGST)
+        
+        purchase_cost = purchase_rate * quantity
+        gst_amount = (cgst + sgst) * quantity
+        
+        financial_data.append({
+            'type': 'Purchase',
+            'date': purchase.purchase_entry_date,
+            'invoice_no': purchase.product_invoice_no,
+            'customer': purchase.product_supplierid.supplier_name,
+            'product_name': purchase.product_name,
+            'company': purchase.product_company,
+            'batch_no': purchase.product_batch_no,
+            'quantity': quantity,
+            'mrp': float(purchase.product_MRP),
+            'purchase_rate': purchase_rate,
+            'sale_rate': 0.0,
+            'cgst': cgst,
+            'sgst': sgst,
+            'gst_amount': gst_amount,
+            'purchase_cost': purchase_cost,
+            'sales_value': 0.0,
+            'profit': -purchase_cost,
+            'profit_percentage': 0.0
+        })
+        
+        total_purchase_cost += purchase_cost
+        total_profit -= purchase_cost
+        total_gst += gst_amount
+    
+    # Process Supplier Challans (only non-invoiced)
     for challan in supplier_challan_list:
         quantity = float(challan.product_quantity)
         purchase_rate = float(challan.product_purchase_rate)

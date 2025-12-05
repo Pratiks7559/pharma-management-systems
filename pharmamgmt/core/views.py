@@ -3100,12 +3100,12 @@ def add_purchase_return(request):
                                 # Calculate total amount
                                 return_rate = float(product_data.get('return_rate', 0))
                                 return_quantity = float(product_data.get('return_quantity', 0))
-                                scheme = float(product_data.get('scheme', 0))
-                                charges = float(product_data.get('charges', 0))
+                                cgst = float(product_data.get('cgst', 2.5))
+                                sgst = float(product_data.get('sgst', 2.5))
                                 
                                 subtotal = return_rate * return_quantity
-                                after_scheme = subtotal - scheme
-                                total_amount = after_scheme + charges
+                                gst_amount = subtotal * (cgst + sgst) / 100
+                                total_amount = subtotal + gst_amount
                                 
                                 # Create return item
                                 return_item = ReturnPurchaseMaster.objects.create(
@@ -3117,8 +3117,8 @@ def add_purchase_return(request):
                                     returnproduct_MRP=float(product_data.get('mrp', 0)),
                                     returnproduct_purchase_rate=return_rate,
                                     returnproduct_quantity=return_quantity,
-                                    returnproduct_scheme=scheme,
-                                    returnproduct_charges=charges,
+                                    returnproduct_cgst=cgst,
+                                    returnproduct_sgst=sgst,
                                     returntotal_amount=total_amount,
                                     return_reason=product_data.get('reason', '')
                                 )
@@ -3157,7 +3157,7 @@ def add_purchase_return(request):
                                 returninvoiceid=return_invoice
                             ).aggregate(Sum('returntotal_amount'))['returntotal_amount__sum'] or 0
                             
-                            return_invoice.returninvoice_total = total_items + return_invoice.return_charges
+                            return_invoice.returninvoice_total = total_items
                             return_invoice.save()
                             
                         except json.JSONDecodeError as e:
@@ -3658,11 +3658,12 @@ def add_sales_return(request):
                             return_rate = float(product_data.get('return_rate', 0))
                             return_quantity = float(product_data.get('return_quantity', 0))
                             discount = float(product_data.get('discount', 0))
-                            gst = float(product_data.get('gst', 0))
+                            cgst = float(product_data.get('cgst', 2.5))
+                            sgst = float(product_data.get('sgst', 2.5))
                             
                             base_price = return_rate * return_quantity
                             discounted_amount = base_price - discount
-                            item_total = discounted_amount + (discounted_amount * gst / 100)
+                            item_total = discounted_amount + (discounted_amount * (cgst + sgst) / 100)
                             
                             # Convert expiry date format
                             expiry_date = product_data.get('expiry', '')
@@ -3698,7 +3699,8 @@ def add_sales_return(request):
                                 return_sale_quantity=return_quantity,
                                 return_sale_discount=discount,
                                 return_sale_calculation_mode='flat',
-                                return_sale_igst=gst,
+                                return_sale_cgst=cgst,
+                                return_sale_sgst=sgst,
                                 return_sale_total_amount=item_total
                             )
                             
