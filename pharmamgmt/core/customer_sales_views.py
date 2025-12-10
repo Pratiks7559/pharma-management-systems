@@ -36,9 +36,9 @@ def customer_wise_sales_report(request):
     }
     
     # Handle export requests
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        export_type = request.GET.get('export')
-        if export_type and customer_id and from_date and to_date:
+    export_type = request.GET.get('export')
+    if export_type and customer_id and from_date and to_date:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or export_type == 'print':
             try:
                 customer = CustomerMaster.objects.get(customerid=customer_id)
                 from_date_obj = datetime.strptime(from_date, '%Y-%m-%d').date()
@@ -69,7 +69,22 @@ def customer_wise_sales_report(request):
                 if export_type == 'pdf':
                     return export_customer_sales_pdf(customer, sales_data, customer_challans, from_date_obj, to_date_obj)
                 elif export_type == 'print':
-                    return export_customer_sales_print_pdf(customer, sales_data, customer_challans, from_date_obj, to_date_obj)
+                    # Render print view HTML
+                    from .models import Pharmacy_Details
+                    pharmacy = Pharmacy_Details.objects.first()
+                    context = {
+                        'pharmacy': pharmacy,
+                        'customer': customer,
+                        'sales_data': sales_data,
+                        'customer_challans': customer_challans,
+                        'from_date': from_date_obj,
+                        'to_date': to_date_obj,
+                        'summary': {
+                            'total_amount': sum(s['invoice_total'] for s in sales_data) + sum(c.sale_total_amount for c in customer_challans),
+                            'total_qty': sum(sum(i.sale_quantity for i in s['items']) for s in sales_data) + sum(c.sale_quantity for c in customer_challans)
+                        }
+                    }
+                    return render(request, 'reports/customer_sales_print.html', context)
                 elif export_type == 'excel':
                     return export_customer_sales_excel(customer, sales_data, customer_challans, from_date_obj, to_date_obj)
             except Exception as e:
@@ -467,24 +482,93 @@ def export_customer_sales_pdf(customer, sales_data, customer_challans, from_date
 
 def export_customer_sales_excel(customer, sales_data, customer_challans, from_date, to_date):
     """Export customer sales to Excel"""
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    filename = f'customer_sales_{customer.customer_name}_{from_date.strftime("%Y%m%d")}_{to_date.strftime("%Y%m%d")}.xlsx'
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    from io import BytesIO
     
+    # Create workbook in memory
     workbook = openpyxl.Workbook()
     worksheet = workbook.active
     worksheet.title = 'Customer Sales'
     
-    # Headers
+    # Fetch pharmacy details from database
+    row = 1
+    try:
+        from .models import Pharmacy_Details
+        pharmacy = Pharmacy_Details.objects.first()
+        if pharmacy:
+            # Pharmacy Name
+            if pharmacy.pharmaname:
+                cell = worksheet.cell(row=row, column=1, value=pharmacy.pharmaname)
+                cell.font = Font(bold=True, size=14)
+                cell.alignment = Alignment(horizontal='center')
+                worksheet.merge_cells(f'A{row}:H{row}')
+                row += 1
+            
+            # Proprietor Name
+            if pharmacy.proprietorname:
+                cell = worksheet.cell(row=row, column=1, value=f"Proprietor: {pharmacy.proprietorname}")
+                cell.font = Font(size=11)
+                cell.alignment = Alignment(horizontal='center')
+                worksheet.merge_cells(f'A{row}:H{row}')
+                row += 1
+            
+            # Contact Details
+            if pharmacy.proprietorcontact:
+                cell = worksheet.cell(row=row, column=1, value=f"Contact: {pharmacy.proprietorcontact}")
+                cell.font = Font(size=10)
+                cell.alignment = Alignment(horizontal='center')
+                worksheet.merge_cells(f'A{row}:H{row}')
+                row += 1
+            
+            # Email
+            if pharmacy.proprietoremail:
+                cell = worksheet.cell(row=row, column=1, value=f"Email: {pharmacy.proprietoremail}")
+                cell.font = Font(size=10)
+                cell.alignment = Alignment(horizontal='center')
+                worksheet.merge_cells(f'A{row}:H{row}')
+                row += 1
+            
+            # Website URL
+            if pharmacy.pharmaweburl:
+                cell = worksheet.cell(row=row, column=1, value=f"Website: {pharmacy.pharmaweburl}")
+                cell.font = Font(size=10)
+                cell.alignment = Alignment(horizontal='center')
+                worksheet.merge_cells(f'A{row}:H{row}')
+                row += 1
+            
+            # Empty row for spacing
+            row += 1
+    except Exception as e:
+        print(f"Error fetching pharmacy details: {e}")
+    
+    # Report Title
+    cell = worksheet.cell(row=row, column=1, value='CUSTOMER WISE SALES REPORT')
+    cell.font = Font(bold=True, size=12)
+    cell.alignment = Alignment(horizontal='center')
+    worksheet.merge_cells(f'A{row}:H{row}')
+    row += 1
+    
+    # Customer and Date Info
+    cell = worksheet.cell(row=row, column=1, value=f"Customer: {customer.customer_name}")
+    cell.font = Font(bold=True, size=11)
+    worksheet.merge_cells(f'A{row}:D{row}')
+    cell = worksheet.cell(row=row, column=5, value=f"Period: {from_date.strftime('%d/%m/%Y')} to {to_date.strftime('%d/%m/%Y')}")
+    cell.font = Font(bold=True, size=11)
+    worksheet.merge_cells(f'E{row}:H{row}')
+    row += 1
+    
+    # Empty row
+    row += 1
+    
+    # Column Headers
     headers = ['Type', 'Invoice/Challan', 'Date', 'Product Name', 'Batch', 'Quantity', 'Rate', 'Amount']
     for col, header in enumerate(headers, 1):
-        cell = worksheet.cell(row=1, column=col, value=header)
+        cell = worksheet.cell(row=row, column=col, value=header)
         cell.font = Font(bold=True, color='FFFFFF')
         cell.fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
         cell.alignment = Alignment(horizontal='center', vertical='center')
+    row += 1
     
     # Data
-    row = 2
     total_amount = 0
     
     # Invoice sales
@@ -520,133 +604,33 @@ def export_customer_sales_excel(customer, sales_data, customer_challans, from_da
     worksheet.cell(row=row, column=8, value=total_amount).font = Font(bold=True)
     
     # Auto-adjust columns
-    for column in worksheet.columns:
+    from openpyxl.utils import get_column_letter
+    for col_idx in range(1, 9):  # Columns A to H (1 to 8)
         max_length = 0
-        column_letter = column[0].column_letter
-        for cell in column:
-            try:
-                if len(str(cell.value)) > max_length:
-                    max_length = len(str(cell.value))
-            except:
-                pass
+        column_letter = get_column_letter(col_idx)
+        for row_cells in worksheet.iter_rows(min_col=col_idx, max_col=col_idx):
+            for cell in row_cells:
+                try:
+                    if cell.value and len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
         adjusted_width = min(max_length + 2, 50)
         worksheet.column_dimensions[column_letter].width = adjusted_width
     
-    workbook.save(response)
+    # Save to BytesIO buffer
+    excel_buffer = BytesIO()
+    workbook.save(excel_buffer)
+    excel_buffer.seek(0)
+    
+    # Create response with proper headers
+    response = HttpResponse(
+        excel_buffer.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    filename = f'customer_sales_{customer.customer_name}_{from_date.strftime("%Y%m%d")}_{to_date.strftime("%Y%m%d")}.xlsx'
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    response['Content-Length'] = excel_buffer.tell()
+    
     return response
 
-def export_customer_sales_print_pdf(customer, sales_data, customer_challans, from_date, to_date):
-    """Export customer sales for print - optimized for printing"""
-    from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-    from reportlab.lib.units import mm
-    from datetime import datetime
-    
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'inline; filename="customer_sales_print.pdf"'
-    
-    # A4 Portrait optimized for printing
-    doc = SimpleDocTemplate(response, pagesize=A4, rightMargin=15*mm, leftMargin=15*mm, topMargin=20*mm, bottomMargin=15*mm)
-    elements = []
-    
-    styles = getSampleStyleSheet()
-    
-    # Company Header
-    try:
-        from .models import Pharmacy_Details
-        pharmacy = Pharmacy_Details.objects.first()
-        if pharmacy and pharmacy.pharmaname:
-            company_style = ParagraphStyle('CompanyStyle', parent=styles['Heading1'], fontSize=16, textColor=colors.black, alignment=TA_CENTER, spaceAfter=3*mm, fontName='Helvetica-Bold')
-            elements.append(Paragraph(pharmacy.pharmaname.upper(), company_style))
-    except:
-        pass
-    
-    # Report Title
-    title_style = ParagraphStyle('TitleStyle', parent=styles['Heading2'], fontSize=12, textColor=colors.black, alignment=TA_CENTER, spaceAfter=5*mm, fontName='Helvetica-Bold')
-    elements.append(Paragraph("CUSTOMER SALES REPORT", title_style))
-    
-    # Customer & Date Info in single line
-    info_style = ParagraphStyle('InfoStyle', parent=styles['Normal'], fontSize=10, textColor=colors.black, alignment=TA_CENTER, spaceAfter=5*mm)
-    info_text = f"Customer: {customer.customer_name} | Period: {from_date.strftime('%d/%m/%Y')} to {to_date.strftime('%d/%m/%Y')}"
-    elements.append(Paragraph(info_text, info_style))
-    
-    # Sales Table
-    if sales_data or customer_challans:
-        data = [['S.No', 'Type', 'Inv/Chal', 'Date', 'Product', 'Qty', 'Rate', 'Amount']]
-        
-        total_amount = 0
-        sr_no = 1
-        
-        # Invoice sales
-        for sale_info in sales_data:
-            invoice = sale_info['invoice']
-            for item in sale_info['items']:
-                data.append([
-                    str(sr_no),
-                    'Inv',
-                    str(invoice.sales_invoice_no)[:10],
-                    invoice.sales_invoice_date.strftime('%d/%m/%y'),
-                    item.product_name[:18] + '...' if len(item.product_name) > 18 else item.product_name,
-                    f"{item.sale_quantity:.0f}",
-                    f"{item.sale_rate:.0f}",
-                    f"{item.sale_total_amount:.0f}"
-                ])
-                total_amount += item.sale_total_amount
-                sr_no += 1
-        
-        # Challan sales
-        for challan in customer_challans:
-            data.append([
-                str(sr_no),
-                'Chal',
-                str(challan.customer_challan_no)[:10],
-                challan.sales_entry_date.strftime('%d/%m/%y'),
-                challan.product_name[:18] + '...' if len(challan.product_name) > 18 else challan.product_name,
-                f"{challan.sale_quantity:.0f}",
-                f"{challan.sale_rate:.0f}",
-                f"{challan.sale_total_amount:.0f}"
-            ])
-            total_amount += challan.sale_total_amount
-            sr_no += 1
-        
-        # Total row
-        data.append(['', '', '', '', 'TOTAL', '', '', f"{total_amount:.0f}"])
-        
-        # Compact table for printing
-        table = Table(data, colWidths=[8*mm, 12*mm, 18*mm, 16*mm, 40*mm, 12*mm, 15*mm, 20*mm])
-        table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.black),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 8),
-            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-            ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (-1, -2), 7),
-            ('ALIGN', (0, 1), (0, -1), 'CENTER'),  # S.No
-            ('ALIGN', (1, 1), (1, -1), 'CENTER'),  # Type
-            ('ALIGN', (2, 1), (4, -1), 'LEFT'),    # Inv/Chal, Date, Product
-            ('ALIGN', (5, 1), (-1, -1), 'RIGHT'),  # Qty, Rate, Amount
-            ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
-            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, -1), (-1, -1), 8),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 2),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-            ('TOPPADDING', (0, 0), (-1, -1), 2),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2)
-        ]))
-        
-        elements.append(table)
-        
-        # Summary
-        elements.append(Spacer(1, 5*mm))
-        summary_style = ParagraphStyle('SummaryStyle', parent=styles['Normal'], fontSize=10, textColor=colors.black, alignment=TA_RIGHT, fontName='Helvetica-Bold')
-        elements.append(Paragraph(f"Total Amount: ₹ {total_amount:,.0f}", summary_style))
-    
-    # Footer
-    elements.append(Spacer(1, 5*mm))
-    footer_style = ParagraphStyle('FooterStyle', parent=styles['Normal'], fontSize=8, textColor=colors.grey, alignment=TA_CENTER)
-    elements.append(Paragraph(f"Printed on {datetime.now().strftime('%d/%m/%Y %H:%M')}", footer_style))
-    
-    doc.build(elements)
-    return response

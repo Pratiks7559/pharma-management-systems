@@ -22,21 +22,33 @@
     .no-print, .inventory-actions, .search-section, .action-buttons,
     .sidebar-container, .navbar, .load-more-container, .th-actions, .td-actions { display: none !important; }
     
-    /* Header - Compact */
+    /* Header - Compact with Pharmacy Details */
     .inventory-header { 
-        background: linear-gradient(135deg, #6366f1, #8b5cf6) !important; 
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-        color: white !important;
-        padding: 12px 15px !important;
-        margin-bottom: 10px !important;
-        border-radius: 0 !important;
+        background: white !important; 
+        color: #000 !important;
+        padding: 10px !important;
+        margin-bottom: 8px !important;
+        border-bottom: 2px solid #000 !important;
+        text-align: center !important;
+    }
+    .inventory-header::before {
+        content: "{{ pharmacy.pharmaname|default:'Pharmacy Name' }}" !important;
+        display: block !important;
+        font-size: 16px !important;
+        font-weight: bold !important;
+        margin-bottom: 3px !important;
+    }
+    .inventory-header::after {
+        content: "{% if pharmacy.proprietorcontact %}{{ pharmacy.proprietorcontact }}{% endif %}{% if pharmacy.proprietoremail %} | {{ pharmacy.proprietoremail }}{% endif %}" !important;
+        display: block !important;
+        font-size: 8px !important;
+        margin-bottom: 5px !important;
     }
     .inventory-title { 
-        font-size: 18px !important; 
+        font-size: 14px !important; 
         margin: 0 !important;
-        color: white !important;
-        text-align: center !important;
+        color: #000 !important;
+        font-weight: bold !important;
     }
     
     /* Summary Cards - Compact */
@@ -228,9 +240,10 @@
                 <a href="{% url 'export_inventory_excel' %}" class="export-btn export-excel">
                     <i class="fas fa-file-csv"></i>Excel(Ctrl+E)
                 </a>
-                <button onclick="printInventoryReport()" class="export-btn export-print">
+                <!-- Print button hidden as per requirement -->
+                <!-- <button onclick="printInventoryReport()" class="export-btn export-print" style="display:none;">
                     <i class="fas fa-print"></i> Print (Ctrl+P)
-                </button>
+                </button> -->
             </div>
         </div>
     </div>
@@ -633,20 +646,35 @@
         
         // Enhanced Print Function
         window.printInventoryReport = function() {
+            // Add pharmacy header for print
+            const pharmHeader = $('<div class="print-pharm-header" style="display:none;"></div>');
+            pharmHeader.html(`
+                <div style="text-align:center; border-bottom:2px solid #000; padding:10px; margin-bottom:10px;">
+                    <div style="font-size:16px; font-weight:bold;">{{ pharmacy.pharmaname|default:'Pharmacy Name' }}</div>
+                    {% if pharmacy.proprietorname %}<div style="font-size:9px;">Proprietor: {{ pharmacy.proprietorname }}</div>{% endif %}
+                    <div style="font-size:8px;">{% if pharmacy.proprietorcontact %}{{ pharmacy.proprietorcontact }}{% endif %}{% if pharmacy.proprietoremail %} | {{ pharmacy.proprietoremail }}{% endif %}</div>
+                    {% if pharmacy.pharmaweburl %}<div style="font-size:8px;">{{ pharmacy.pharmaweburl }}</div>{% endif %}
+                    <div style="font-size:14px; font-weight:bold; margin-top:5px;">ALL PRODUCTS INVENTORY REPORT</div>
+                </div>
+            `);
+            $('.inventory-container').prepend(pharmHeader);
+            
             // Add print timestamp
             const printInfo = $('<div class="print-footer"></div>');
             printInfo.html(`
-                <strong>Report Generated:</strong> ${new Date().toLocaleString('en-IN')} | 
-                <strong>Total Products:</strong> {{ total_products }} | 
-                <strong>System:</strong> Pharma Inventory Management
+                <strong>Generated:</strong> ${new Date().toLocaleString('en-IN')} | 
+                <strong>Total Products:</strong> {{ total_products }}
             `);
             $('.inventory-container').append(printInfo);
+            
+            // Show pharmacy header only for print
+            $('<style>@media print { .print-pharm-header { display:block !important; } .inventory-header { display:none !important; } }</style>').appendTo('head');
             
             // Print
             setTimeout(() => {
                 window.print();
-                // Remove print info after print
-                setTimeout(() => printInfo.remove(), 500);
+                // Remove print elements after print
+                setTimeout(() => { pharmHeader.remove(); printInfo.remove(); }, 500);
             }, 100);
         };
         
@@ -810,20 +838,7 @@
         // Initial highlighting
         highlightSearchTerms();
         
-        // Make print function globally available
-        window.printInventoryReport = window.printInventoryReport || function() {
-            const printInfo = $('<div class="print-footer"></div>');
-            printInfo.html(`
-                <strong>Report Generated:</strong> ${new Date().toLocaleString('en-IN')} | 
-                <strong>Total Products:</strong> {{ total_products }} | 
-                <strong>System:</strong> Pharma Inventory Management
-            `);
-            $('.inventory-container').append(printInfo);
-            setTimeout(() => {
-                window.print();
-                setTimeout(() => printInfo.remove(), 500);
-            }, 100);
-        };
+
         
         // Load More button hover effect
         $(document).on('mouseenter', '#loadMoreBtn', function() {

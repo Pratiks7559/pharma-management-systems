@@ -301,17 +301,52 @@ def export_stock_statement_pdf(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="stock_statement_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
     
-    doc = SimpleDocTemplate(response, pagesize=landscape(A4), rightMargin=20, leftMargin=20, topMargin=20, bottomMargin=20)
+    doc = SimpleDocTemplate(response, pagesize=landscape(A4), rightMargin=20, leftMargin=20, topMargin=30, bottomMargin=20)
     elements = []
     styles = getSampleStyleSheet()
     
-    title = Paragraph("<b>Stock Statement Report</b>", ParagraphStyle('Title', parent=styles['Heading1'], fontSize=18, alignment=1))
+    # Get pharmacy details from database
+    from .models import Pharmacy_Details
+    try:
+        pharmacy = Pharmacy_Details.objects.first()
+    except:
+        pharmacy = None
+    
+    # Add pharmacy details header
+    if pharmacy:
+        pharma_name = Paragraph(f"<b>{pharmacy.pharmaname}</b>", ParagraphStyle('PharmaName', parent=styles['Heading1'], fontSize=16, alignment=1))
+        elements.append(pharma_name)
+        elements.append(Spacer(1, 6))
+        
+        if pharmacy.proprietorname:
+            proprietor = Paragraph(f"Proprietor: {pharmacy.proprietorname}", ParagraphStyle('Info', parent=styles['Normal'], fontSize=10, alignment=1))
+            elements.append(proprietor)
+            elements.append(Spacer(1, 4))
+        
+        contact_info = []
+        if pharmacy.proprietorcontact:
+            contact_info.append(f"Contact: {pharmacy.proprietorcontact}")
+        if pharmacy.proprietoremail:
+            contact_info.append(f"Email: {pharmacy.proprietoremail}")
+        
+        if contact_info:
+            contact = Paragraph(" | ".join(contact_info), ParagraphStyle('Contact', parent=styles['Normal'], fontSize=9, alignment=1))
+            elements.append(contact)
+            elements.append(Spacer(1, 4))
+        
+        if pharmacy.pharmaweburl:
+            website = Paragraph(f"Website: {pharmacy.pharmaweburl}", ParagraphStyle('Website', parent=styles['Normal'], fontSize=9, alignment=1))
+            elements.append(website)
+            elements.append(Spacer(1, 10))
+    
+    # Report title
+    title = Paragraph("<b>Stock Statement Report</b>", ParagraphStyle('Title', parent=styles['Heading2'], fontSize=14, alignment=1))
     elements.append(title)
-    elements.append(Spacer(1, 12))
+    elements.append(Spacer(1, 8))
     
     date_text = f"Generated: {datetime.now().strftime('%d/%m/%Y %H:%M')}"
     elements.append(Paragraph(date_text, ParagraphStyle('Date', parent=styles['Normal'], fontSize=9, alignment=1)))
-    elements.append(Spacer(1, 15))
+    elements.append(Spacer(1, 12))
     
     # Summary
     summary_data = [[
@@ -332,22 +367,20 @@ def export_stock_statement_pdf(request):
     elements.append(summary_table)
     elements.append(Spacer(1, 15))
     
-    # Main table
-    data = [['Product', 'Company', 'Opening', 'Received', 'Sold', 'Balance', 'MRP', 'Value', 'Status']]
+    # Main table (removed MRP and Status columns)
+    data = [['Product', 'Company', 'Opening', 'Received', 'Sold', 'Balance', 'Value']]
     for item in stock_data:
         data.append([
-            item['product'].product_name[:30],
-            item['product'].product_company[:15],
+            item['product'].product_name[:35],
+            item['product'].product_company[:20],
             str(int(item['opening_stock'])),
             str(int(item['received_stock'])),
             str(int(item['sold_stock'])),
             str(int(item['balance_stock'])),
-            f"₹{item['avg_mrp']:.2f}",
-            f"₹{item['stock_value']:.2f}",
-            item['status_label']
+            f"₹{item['stock_value']:.2f}"
         ])
     
-    table = Table(data, colWidths=[2.5*inch, 1.3*inch, 0.7*inch, 0.7*inch, 0.7*inch, 0.7*inch, 0.8*inch, 1*inch, 0.8*inch])
+    table = Table(data, colWidths=[3*inch, 1.8*inch, 0.9*inch, 0.9*inch, 0.9*inch, 0.9*inch, 1.2*inch])
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -470,36 +503,111 @@ def export_stock_statement_excel(request, stock_data=None):
     worksheet = workbook.active
     worksheet.title = 'Stock Statement'
     
+    # Get pharmacy details and date range
+    from .models import Pharmacy_Details
+    try:
+        pharmacy = Pharmacy_Details.objects.first()
+    except:
+        pharmacy = None
+    
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    
     # Define styles
+    title_font = Font(bold=True, size=16, color='000080')
+    info_font = Font(size=10)
+    subtitle_font = Font(bold=True, size=12)
+    date_font = Font(size=10, italic=True, bold=True)
     header_font = Font(bold=True, color='FFFFFF')
     header_fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
     header_alignment = Alignment(horizontal='center', vertical='center')
+    center_alignment = Alignment(horizontal='center')
     
-    # Add headers
+    current_row = 1
+    
+    # Add pharmacy details
+    if pharmacy:
+        worksheet.cell(row=current_row, column=1, value=pharmacy.pharmaname).font = title_font
+        worksheet.cell(row=current_row, column=1).alignment = center_alignment
+        worksheet.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=7)
+        current_row += 1
+        
+        if pharmacy.proprietorname:
+            worksheet.cell(row=current_row, column=1, value=f"Proprietor: {pharmacy.proprietorname}").font = info_font
+            worksheet.cell(row=current_row, column=1).alignment = center_alignment
+            worksheet.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=7)
+            current_row += 1
+        
+        if pharmacy.proprietorcontact:
+            worksheet.cell(row=current_row, column=1, value=f"Contact: {pharmacy.proprietorcontact}").font = info_font
+            worksheet.cell(row=current_row, column=1).alignment = center_alignment
+            worksheet.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=7)
+            current_row += 1
+        
+        if pharmacy.proprietoremail:
+            worksheet.cell(row=current_row, column=1, value=f"Email: {pharmacy.proprietoremail}").font = info_font
+            worksheet.cell(row=current_row, column=1).alignment = center_alignment
+            worksheet.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=7)
+            current_row += 1
+        
+        if pharmacy.pharmaweburl:
+            worksheet.cell(row=current_row, column=1, value=f"Website: {pharmacy.pharmaweburl}").font = info_font
+            worksheet.cell(row=current_row, column=1).alignment = center_alignment
+            worksheet.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=7)
+            current_row += 1
+        
+        current_row += 1
+    
+    # Add report title
+    worksheet.cell(row=current_row, column=1, value="STOCK STATEMENT REPORT").font = subtitle_font
+    worksheet.cell(row=current_row, column=1).alignment = center_alignment
+    worksheet.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=7)
+    current_row += 1
+    
+    # Add date range
+    if date_from and date_to:
+        try:
+            from_date_obj = datetime.strptime(date_from, '%Y-%m-%d')
+            to_date_obj = datetime.strptime(date_to, '%Y-%m-%d')
+            date_range = f"Period: {from_date_obj.strftime('%d/%m/%Y')} to {to_date_obj.strftime('%d/%m/%Y')}"
+        except:
+            date_range = f"Period: {date_from} to {date_to}"
+        worksheet.cell(row=current_row, column=1, value=date_range).font = date_font
+        worksheet.cell(row=current_row, column=1).alignment = center_alignment
+        worksheet.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=7)
+        current_row += 1
+    
+    # Add generated date
+    generated_date = f"Generated on: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"
+    worksheet.cell(row=current_row, column=1, value=generated_date).font = date_font
+    worksheet.cell(row=current_row, column=1).alignment = center_alignment
+    worksheet.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=7)
+    current_row += 2
+    
+    # Add column headers
     headers = [
-        'Product Name', 'Company', 'Category', 'Packing', 'Opening Stock',
-        'Received', 'Sold', 'Balance', 'Avg MRP', 'Stock Value', 'Status'
+        'Product Name', 'Packing', 'Opening Stock',
+        'Received', 'Sold', 'Balance', 'Stock Value'
     ]
     
     for col, header in enumerate(headers, 1):
-        cell = worksheet.cell(row=1, column=col, value=header)
+        cell = worksheet.cell(row=current_row, column=col, value=header)
         cell.font = header_font
         cell.fill = header_fill
         cell.alignment = header_alignment
     
+    current_row += 1
+    
     # Add data
-    for row, item in enumerate(stock_data, 2):
-        worksheet.cell(row=row, column=1, value=item['product'].product_name)
-        worksheet.cell(row=row, column=2, value=item['product'].product_company)
-        worksheet.cell(row=row, column=3, value=item['product'].product_category)
-        worksheet.cell(row=row, column=4, value=item['product'].product_packing)
-        worksheet.cell(row=row, column=5, value=item['opening_stock'])
-        worksheet.cell(row=row, column=6, value=item['received_stock'])
-        worksheet.cell(row=row, column=7, value=item['sold_stock'])
-        worksheet.cell(row=row, column=8, value=item['balance_stock'])
-        worksheet.cell(row=row, column=9, value=item['avg_mrp'])
-        worksheet.cell(row=row, column=10, value=item['stock_value'])
-        worksheet.cell(row=row, column=11, value=item['status_label'])
+    for item in stock_data:
+        worksheet.cell(row=current_row, column=1, value=item['product'].product_name)
+        worksheet.cell(row=current_row, column=2, value=item['product'].product_packing)
+        worksheet.cell(row=current_row, column=3, value=item['opening_stock'])
+        worksheet.cell(row=current_row, column=4, value=item['received_stock'])
+        worksheet.cell(row=current_row, column=5, value=item['sold_stock'])
+        worksheet.cell(row=current_row, column=6, value=item['balance_stock'])
+        worksheet.cell(row=current_row, column=7, value=item['stock_value'])
+        current_row += 1
     
     # Auto-adjust column widths
     for column in worksheet.columns:

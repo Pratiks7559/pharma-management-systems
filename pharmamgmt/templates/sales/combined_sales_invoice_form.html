@@ -74,7 +74,7 @@
                             </div>
                             <div class="pull-challan-section">
                                 <button type="button" class="pull-challan-btn" onclick="openPullChallanDialog()">
-                                    <i class="fas fa-file-import"></i> Pull Challan
+                                    <i class="fas fa-file-import"></i>  Challan
                                 </button>
                             </div>
                         </div>
@@ -921,18 +921,18 @@ function addProductRow() {
         </td>
         <td class="batch-cell"><input type="text" class="batch-no form-control" placeholder="Enter Batch Number" required></td>
         <td class="expiry-cell"><input type="text" class="expiry form-control" placeholder="MM-YYYY" title="Expiry in MM-YYYY format" required></td>
-        <td class="mrp-cell"><input type="number" class="mrp form-control" step="0.01" placeholder="0.00" min="0" required></td>
-        <td class="rate-cell"><input type="number" class="rate form-control" step="0.01" placeholder="0.00" min="0" onchange="calculateRowTotal(${productRowIndex})" required></td>
+        <td class="mrp-cell"><input type="number" class="mrp form-control" step="any" placeholder="0.00" min="0" required></td>
+        <td class="rate-cell"><input type="number" class="rate form-control" step="any" placeholder="0.00" min="0" onchange="calculateRowTotal(${productRowIndex})" required></td>
         <td class="qty-cell">
-            <input type="number" class="quantity form-control" step="0.01" placeholder="0" min="0.01" 
+            <input type="number" class="quantity form-control" step="any" placeholder="0" min="0.01" 
                    oninput="validateStockAndCalculate(${productRowIndex})" 
                    onchange="validateStockAndCalculate(${productRowIndex})" 
                    onblur="validateStockAndCalculate(${productRowIndex})" required>
             <div class="stock-error" style="display: none; color: #dc3545; font-size: 0.75rem; margin-top: 4px; padding: 2px 4px; background: #f8d7da; border-radius: 3px; border-left: 3px solid #dc3545;"></div>
         </td>
-        <td class="discount-cell"><input type="number" class="discount form-control" step="0.01" placeholder="0.00" min="0" onchange="calculateRowTotal(${productRowIndex})" value="0"></td>
-        <td class="cgst-cell"><input type="number" class="cgst form-control" step="0.01" placeholder="0.00" min="0" max="100" onchange="calculateRowTotal(${productRowIndex})" value="2.5"></td>
-        <td class="sgst-cell"><input type="number" class="sgst form-control" step="0.01" placeholder="0.00" min="0" max="100" onchange="calculateRowTotal(${productRowIndex})" value="2.5"></td>
+        <td class="discount-cell"><input type="number" class="discount form-control" step="any" placeholder="0.00" min="0" onchange="calculateRowTotal(${productRowIndex})" value="0"></td>
+        <td class="cgst-cell"><input type="number" class="cgst form-control" step="any" placeholder="0.00" min="0" max="100" onchange="calculateRowTotal(${productRowIndex})" value="2.5"></td>
+        <td class="sgst-cell"><input type="number" class="sgst form-control" step="any" placeholder="0.00" min="0" max="100" onchange="calculateRowTotal(${productRowIndex})" value="2.5"></td>
         <td class="total-cell"><strong class="row-total">₹0.00</strong></td>
         <td class="action-cell"><button type="button" class="remove-btn btn btn-sm btn-danger" onclick="removeProductRow(${productRowIndex})" title="Remove Product"><i class="fas fa-trash"></i></button></td>
     `;
@@ -1155,7 +1155,32 @@ function lockFormInputs(lock) {
 
 // Debounced row calculation to prevent excessive calculations
 let calculationTimeout;
-function calculateRowTotal(index) {
+function calculateRowTotal(index, immediate = false) {
+    if (immediate) {
+        // Direct calculation without debounce
+        const row = document.getElementById(`productRow_${index}`);
+        if (!row) return;
+        
+        const rate = parseFloat(row.querySelector('.rate').value) || 0;
+        const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
+        const discount = parseFloat(row.querySelector('.discount').value) || 0;
+        const cgst = parseFloat(row.querySelector('.cgst').value) || 0;
+        const sgst = parseFloat(row.querySelector('.sgst').value) || 0;
+        
+        const baseAmount = rate * quantity;
+        const discountedAmount = baseAmount - discount;
+        const totalAmount = discountedAmount * (1 + ((cgst + sgst) / 100));
+        
+        row.querySelector('.row-total').textContent = '₹' + totalAmount.toFixed(2);
+        
+        if (rate > 0 && quantity > 0) {
+            row.classList.add('table-success');
+        } else {
+            row.classList.remove('table-success');
+        }
+        return;
+    }
+    
     clearTimeout(calculationTimeout);
     calculationTimeout = setTimeout(() => {
         const row = document.getElementById(`productRow_${index}`);
@@ -3014,11 +3039,12 @@ function pullSelectedChallans() {
 }
 
 function fillChallanProducts(products) {
+    // Add all products first
     products.forEach(product => {
         addProductRow();
         const rows = document.querySelectorAll('#productRows tr');
         const lastRow = rows[rows.length - 1];
-        const rowIndex = lastRow.id.split('_')[1];
+        const rowIndex = parseInt(lastRow.id.split('_')[1]);
         
         lastRow.querySelector('.product-select').value = product.product_id;
         lastRow.querySelector('.batch-no').value = product.batch_no;
@@ -3034,9 +3060,11 @@ function fillChallanProducts(products) {
         lastRow.setAttribute('data-challan-no', product.challan_no);
         lastRow.setAttribute('data-challan-date', product.challan_date);
         
-        calculateRowTotal(rowIndex);
+        // Calculate immediately without debounce
+        calculateRowTotal(rowIndex, true);
     });
     
+    // Calculate grand total
     calculateGrandTotal();
 }
 

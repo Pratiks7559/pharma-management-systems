@@ -21,9 +21,10 @@
                     <i class="fas fa-file-excel"></i> Export Excel
                     <span class="purchase2-shortcut">Ctrl+E</span>
                 </button>
-                <button onclick="window.print()" class="purchase2-print-btn">
+                <!-- Print button hidden as per requirement -->
+                <!-- <button onclick="window.print()" class="purchase2-print-btn" style="display:none;">
                     <i class="fas fa-print"></i> Print
-                </button>
+                </button> -->
             </div>
         </div>
     </div>
@@ -194,19 +195,26 @@ function exportToPDF() {
     {% if start_date and end_date %}
         const url = '{% url "purchase2_report_pdf" %}?start_date={{ start_date|date:"Y-m-d" }}&end_date={{ end_date|date:"Y-m-d" }}';
         
-        const downloadLink = document.createElement('a');
-        downloadLink.href = url;
-        downloadLink.download = 'purchase_report_{{ start_date|date:"Y-m-d" }}_{{ end_date|date:"Y-m-d" }}.pdf';
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-        
-        setTimeout(() => {
-            const pdfWindow = window.open(url, '_blank');
-            if (pdfWindow) {
-                pdfWindow.focus();
-            }
-        }, 100);
+        fetch(url)
+            .then(response => response.blob())
+            .then(blob => {
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = 'purchase_report_{{ start_date|date:"Y-m-d" }}_{{ end_date|date:"Y-m-d" }}.pdf';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                setTimeout(() => {
+                    window.open(blobUrl, '_blank');
+                    setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+                }, 500);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                window.open(url, '_blank');
+            });
     {% else %}
         alert('Please select date range first');
     {% endif %}

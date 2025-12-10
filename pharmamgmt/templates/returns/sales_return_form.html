@@ -29,7 +29,6 @@
                         <div class="sr-form-group required">
                             <label for="return_date" class="sr-field-label">Return Date</label>
                             <input type="date" name="return_sales_invoice_date" id="return_date" class="sr-form-input" 
-                                   value="{{ form.return_sales_invoice_date.value|default:'' }}" 
                                    title="Enter return date" required>
                             <small class="sr-text-muted">📅 Current date auto-filled</small>
                         </div>
@@ -88,6 +87,7 @@
                                         <th class="discount-col">Discount</th>
                                         <th class="gst-col">CGST%</th>
                                         <th class="gst-col">SGST%</th>
+                                        <th class="reason-col">Reason</th>
                                         <th class="total-col">Total</th>
                                         <th class="action-col">Action</th>
                                     </tr>
@@ -167,6 +167,14 @@ function addProductRow() {
         <td class="discount-cell"><input type="number" class="discount" step="0.01" placeholder="0.00" min="0" onchange="calculateRowTotal(${productRowCount})" value="0"></td>
         <td class="gst-cell"><input type="number" class="cgst" step="0.01" placeholder="CGST%" min="0" max="100" onchange="calculateRowTotal(${productRowCount})" value="2.5"></td>
         <td class="gst-cell"><input type="number" class="sgst" step="0.01" placeholder="SGST%" min="0" max="100" onchange="calculateRowTotal(${productRowCount})" value="2.5"></td>
+        <td class="reason-cell">
+            <select class="return-reason">
+                <option value="">Select Reason</option>
+                <option value="non_moving">Non Moving</option>
+                <option value="breakage">Breakage</option>
+                <option value="expiry">Expiry</option>
+            </select>
+        </td>
         <td class="total-cell"><strong class="row-total">₹0.00</strong></td>
         <td class="action-cell"><button type="button" class="sr-remove-btn" onclick="removeProductRow(${productRowCount})" title="Remove Product"><i class="fas fa-trash"></i></button></td>
     `;
@@ -317,7 +325,8 @@ document.getElementById('salesReturnForm').addEventListener('submit', function(e
                 return_quantity: row.querySelector('.return-quantity').value,
                 discount: row.querySelector('.discount').value,
                 cgst: row.querySelector('.cgst').value,
-                sgst: row.querySelector('.sgst').value
+                sgst: row.querySelector('.sgst').value,
+                return_reason: row.querySelector('.return-reason').value
             });
         }
     });

@@ -21,9 +21,10 @@
                     <i class="fas fa-file-excel"></i> Export Excel
                     <span class="sales2-shortcut">Ctrl+E</span>
                 </button>
-                <button onclick="window.print()" class="sales2-print-btn">
+                <!-- Print button hidden as per requirement -->
+                <!-- <button onclick="window.print()" class="sales2-print-btn" style="display:none;">
                     <i class="fas fa-print"></i> Print
-                </button>
+                </button> -->
             </div>
         </div>
     </div>
@@ -199,19 +200,26 @@ function exportToPDF() {
         url += `?start_date=${startDate}&end_date=${endDate}`;
     }
     
-    const downloadLink = document.createElement('a');
-    downloadLink.href = url;
-    downloadLink.download = startDate && endDate ? `sales_report_${startDate}_${endDate}.pdf` : 'sales_report_all.pdf';
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-    
-    setTimeout(() => {
-        const pdfWindow = window.open(url, '_blank');
-        if (pdfWindow) {
-            pdfWindow.focus();
-        }
-    }, 100);
+    fetch(url)
+        .then(response => response.blob())
+        .then(blob => {
+            const blobUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = startDate && endDate ? `sales_report_${startDate}_${endDate}.pdf` : 'sales_report_all.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            setTimeout(() => {
+                window.open(blobUrl, '_blank');
+                setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+            }, 500);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            window.open(url, '_blank');
+        });
 }
 
 function exportToExcel() {

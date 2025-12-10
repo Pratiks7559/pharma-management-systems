@@ -279,6 +279,7 @@ class ReturnSalesInvoiceMaster(models.Model):
     return_sales_invoice_date=models.DateField(null=False, blank=False)
     return_sales_customerid=models.ForeignKey(CustomerMaster, on_delete=models.CASCADE)
     return_sales_charges=models.FloatField(default=0)
+    transport_charges=models.FloatField(default=0)
     sales_invoice_no = models.ForeignKey(SalesMaster, on_delete=models.CASCADE, related_name='returns',null=True)
     return_sales_invoice_total=models.FloatField(null=False, blank=False)
     return_sales_invoice_paid=models.FloatField(null=False, blank=False, default=0)
@@ -303,6 +304,13 @@ class ReturnSalesInvoicePaid(models.Model):
         return f"Return Payment of {self.return_sales_payment_amount} for Return Sales Invoice #{self.return_sales_ip_invoice_no.return_sales_invoice_no}"
 
 class ReturnSalesMaster(models.Model):
+    RETURN_REASON_CHOICES = [
+        ('', 'Select Reason'),
+        ('non_moving', 'Non Moving'),
+        ('breakage', 'Breakage'),
+        ('expiry', 'Expiry'),
+    ]
+    
     return_sales_id=models.BigAutoField(primary_key=True, auto_created=True)
     return_sales_invoice_no=models.ForeignKey(ReturnSalesInvoiceMaster, on_delete=models.CASCADE)
     return_customerid=models.ForeignKey(CustomerMaster, on_delete=models.CASCADE)
@@ -320,7 +328,7 @@ class ReturnSalesMaster(models.Model):
     return_sale_cgst=models.FloatField(default=0.0)
     return_sale_sgst=models.FloatField(default=0.0)
     return_sale_total_amount=models.FloatField(default=0.0)
-    return_reason=models.CharField(max_length=200, blank=True, null=True)
+    return_reason=models.CharField(max_length=200, blank=True, null=True, choices=RETURN_REASON_CHOICES)
     return_sale_entry_date=models.DateTimeField(default=timezone.now)
     return_sale_calculation_mode=models.CharField(max_length=20, default='percentage', choices=[('percentage', 'Percentage'), ('fixed', 'Fixed Amount')])
     

@@ -1,21 +1,27 @@
-﻿/* Combined challan Form Styles - Optimized for Compact Layout */
+/* Combined challan Form Styles - Optimized for Compact Layout */
+
+* {
+    color-scheme: light !important;
+}
 
 .ci-main-container {
     padding: 10px;
-    background-color: #f8f9fa;
+    background-color: #f8f9fa !important;
     min-height: 100vh;
+    color: #212529 !important;
 }
 
 .ci-wrapper-card {
-    background: white;
+    background: white !important;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     overflow: hidden;
+    color: #212529 !important;
 }
 
 .ci-page-header {
-    background: linear-gradient(135deg, #007bff, #0056b3);
-    color: white;
+    background: linear-gradient(135deg, #007bff, #0056b3) !important;
+    color: white !important;
     padding: 12px 20px;
     text-align: center;
 }
@@ -24,10 +30,13 @@
     margin: 0;
     font-size: 1.3rem;
     font-weight: 600;
+    color: white !important;
 }
 
 .ci-content-body {
     padding: 15px;
+    background: white !important;
+    color: #212529 !important;
 }
 
 .ci-main-form {
@@ -36,14 +45,15 @@
 
 /* challan Details Section */
 .ci-challan-details-section {
-    background: #f8f9fa;
+    background: #f8f9fa !important;
     padding: 12px;
     border-radius: 6px;
     margin-bottom: 15px;
+    color: #212529 !important;
 }
 
 .ci-section-title {
-    color: #495057;
+    color: #495057 !important;
     font-size: 1rem;
     font-weight: 600;
     margin-bottom: 8px;
@@ -69,7 +79,7 @@
 
 .ci-field-label {
     font-weight: 500;
-    color: #495057;
+    color: #495057 !important;
     margin-bottom: 3px;
     font-size: 0.85rem;
 }
@@ -82,7 +92,7 @@
 
 .ci-supplier-label {
     font-weight: 500;
-    color: #495057;
+    color: #495057 !important;
     margin-bottom: 3px;
     font-size: 0.85rem;
 }
@@ -94,8 +104,8 @@
 }
 
 .ci-add-supplier-btn {
-    background: #28a745;
-    color: white;
+    background: #28a745 !important;
+    color: white !important;
     border: none;
     padding: 6px 10px;
     border-radius: 4px;
@@ -105,7 +115,7 @@
 }
 
 .ci-add-supplier-btn:hover {
-    background: #218838;
+    background: #218838 !important;
 }
 
 /* Charges Section */
@@ -130,7 +140,7 @@
 }
 
 .ci-keyboard-shortcuts {
-    color: #6c757d;
+    color: #6c757d !important;
     font-style: italic;
     display: block;
     margin-top: 2px;
@@ -138,8 +148,8 @@
 }
 
 .ci-add-product-btn {
-    background: #007bff;
-    color: white;
+    background: #007bff !important;
+    color: white !important;
     border: none;
     padding: 8px 12px;
     border-radius: 4px;
@@ -149,7 +159,7 @@
 }
 
 .ci-add-product-btn:hover {
-    background: #0056b3;
+    background: #0056b3 !important;
 }
 
 /* Table Styles - Compact Layout */
@@ -169,7 +179,7 @@
 }
 
 .ci-table-header {
-    background: #f8f9fa;
+    background: #f8f9fa !important;
     position: sticky;
     top: 0;
     z-index: 10;
@@ -179,7 +189,8 @@
     padding: 8px 6px;
     text-align: left;
     font-weight: 600;
-    color: #495057;
+    color: #495057 !important;
+    background: #f8f9fa !important;
     border-bottom: 2px solid #dee2e6;
     font-size: 0.8rem;
 }
@@ -188,6 +199,8 @@
     padding: 5px;
     border-bottom: 1px solid #dee2e6;
     vertical-align: middle;
+    background: white !important;
+    color: #212529 !important;
 }
 
 .ci-table-body input,
@@ -197,7 +210,9 @@
     border: 1px solid #ced4da;
     border-radius: 3px;
     font-size: 0.8rem;
-    color-scheme: light; 
+    color-scheme: light !important;
+    background: white !important;
+    color: #212529 !important;
 }
 
 .ci-table-body input:focus,
@@ -215,7 +230,8 @@
 .ci-th-challan-rate { width: 85px; }
 .ci-th-qty { width: 60px; }
 .ci-th-discount { width: 70px; }
-.ci-th-gst { width: 60px; }
+.ci-th-cgst { width: 60px; }
+.ci-th-sgst { width: 60px; }
 .ci-th-rate-a { width: 70px; }
 .ci-th-rate-b { width: 70px; }
 .ci-th-rate-c { width: 70px; }
@@ -223,8 +239,8 @@
 .ci-th-action { width: 50px; }
 
 .remove-btn {
-    background: #dc3545;
-    color: white;
+    background: #dc3545 !important;
+    color: white !important;
     border: none;
     padding: 4px 6px;
     border-radius: 3px;
@@ -233,12 +249,12 @@
 }
 
 .remove-btn:hover {
-    background: #c82333;
+    background: #c82333 !important;
 }
 
 .row-total {
     font-weight: 600;
-    color: #495057;
+    color: #495057 !important;
     font-size: 0.8rem;
 }
 
@@ -246,8 +262,9 @@
 .ci-total-section {
     text-align: right;
     padding: 10px;
-    background: #f8f9fa;
+    background: #f8f9fa !important;
     border-radius: 6px;
+    color: #212529 !important;
 }
 
 .ci-grand-total-display {
@@ -255,11 +272,11 @@
 }
 
 .ci-total-text {
-    color: #495057;
+    color: #495057 !important;
 }
 
 .ci-total-amount {
-    color: #007bff;
+    color: #007bff !important;
     font-weight: 700;
 }
 
@@ -273,8 +290,8 @@
 }
 
 .ci-save-btn {
-    background: #28a745;
-    color: white;
+    background: #28a745 !important;
+    color: white !important;
     border: none;
     padding: 10px 25px;
     border-radius: 6px;
@@ -285,19 +302,19 @@
 }
 
 .ci-save-btn:hover {
-    background: #218838;
+    background: #218838 !important;
     transform: translateY(-1px);
 }
 
 .ci-save-btn:disabled {
-    background: #6c757d;
+    background: #6c757d !important;
     cursor: not-allowed;
     transform: none;
 }
 
 .ci-back-btn {
-    background: #6c757d;
-    color: white;
+    background: #6c757d !important;
+    color: white !important;
     text-decoration: none;
     padding: 10px 25px;
     border-radius: 6px;
@@ -307,8 +324,8 @@
 }
 
 .ci-back-btn:hover {
-    background: #5a6268;
-    color: white;
+    background: #5a6268 !important;
+    color: white !important;
     text-decoration: none;
     transform: translateY(-1px);
 }
@@ -403,6 +420,9 @@
     border: 1px solid #ced4da;
     padding: 6px 10px;
     font-size: 0.85rem;
+    background: white !important;
+    color: #212529 !important;
+    color-scheme: light !important;
 }
 
 .form-control:focus {
@@ -414,7 +434,7 @@
 input[name*="challan_no"]:focus {
     border-color: #28a745;
     box-shadow: 0 0 0 3px rgba(40,167,69,0.3);
-    background-color: #f8fff8;
+    background-color: #f8fff8 !important;
     transform: scale(1.02);
     transition: all 0.3s ease;
 }
@@ -426,15 +446,15 @@ input[name*="challan_no"]:focus {
 }
 
 .alert-danger {
-    background-color: #f8d7da;
+    background-color: #f8d7da !important;
     border-color: #f5c6cb;
-    color: #721c24;
+    color: #721c24 !important;
 }
 
 .alert-success {
-    background-color: #d4edda;
+    background-color: #d4edda !important;
     border-color: #c3e6cb;
-    color: #155724;
+    color: #155724 !important;
 }
 
 /* Quick Search Modal */
@@ -453,13 +473,14 @@ input[name*="challan_no"]:focus {
 }
 
 .quick-search-content {
-    background: white;
+    background: white !important;
     border-radius: 15px;
     width: 90%;
     max-width: 500px;
     box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
     overflow: hidden;
     animation: quickSearchSlide 0.3s ease-out;
+    color: #212529 !important;
 }
 
 @keyframes quickSearchSlide {
@@ -468,8 +489,8 @@ input[name*="challan_no"]:focus {
 }
 
 .quick-search-header {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-    color: white;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+    color: white !important;
     padding: 1.5rem;
     text-align: center;
 }
@@ -478,6 +499,7 @@ input[name*="challan_no"]:focus {
     margin: 0 0 0.5rem 0;
     font-size: 1.25rem;
     font-weight: 700;
+    color: white !important;
 }
 
 .quick-search-header small {
@@ -498,6 +520,8 @@ input[name*="challan_no"]:focus {
     font-size: 1.1rem;
     font-weight: 500;
     transition: all 0.3s ease;
+    background: white !important;
+    color: #212529 !important;
 }
 
 .quick-search-input input:focus {
@@ -520,7 +544,8 @@ input[name*="challan_no"]:focus {
     margin-bottom: 0.5rem;
     cursor: pointer;
     transition: all 0.3s ease;
-    background: #f8f9fa;
+    background: #f8f9fa !important;
+    color: #212529 !important;
 }
 
 .quick-result-item:hover,
@@ -533,14 +558,14 @@ input[name*="challan_no"]:focus {
 
 .quick-result-item .product-name {
     font-weight: 700;
-    color: #495057;
+    color: #495057 !important;
     margin-bottom: 0.25rem;
     font-size: 1rem;
 }
 
 .quick-result-item .product-company {
     font-size: 0.85rem;
-    color: #6c757d;
+    color: #6c757d !important;
     font-weight: 500;
 }
 
@@ -548,13 +573,13 @@ input[name*="challan_no"]:focus {
 .no-results {
     text-align: center;
     padding: 2rem;
-    color: #6c757d;
+    color: #6c757d !important;
     font-style: italic;
     font-size: 1rem;
 }
 
 .no-results {
-    color: #dc3545;
+    color: #dc3545 !important;
 }
 
 .quick-search-footer {
@@ -586,18 +611,19 @@ input[name*="challan_no"]:focus {
 }
 
 .batch-modal-content {
-    background: white;
+    background: white !important;
     border-radius: 12px;
     width: 90%;
     max-width: 600px;
     max-height: 80vh;
     overflow: hidden;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    color: #212529 !important;
 }
 
 .batch-modal-header {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-    color: white;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+    color: white !important;
     padding: 1.5rem;
     display: flex;
     justify-content: space-between;
@@ -607,7 +633,7 @@ input[name*="challan_no"]:focus {
 .batch-modal-close {
     background: none;
     border: none;
-    color: white;
+    color: white !important;
     font-size: 1.5rem;
     cursor: pointer;
     padding: 0.5rem;
@@ -632,6 +658,8 @@ input[name*="challan_no"]:focus {
     border-radius: 8px;
     margin-bottom: 1rem;
     font-size: 1rem;
+    background: white !important;
+    color: #212529 !important;
 }
 
 .batch-item {
@@ -644,6 +672,8 @@ input[name*="challan_no"]:focus {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: white !important;
+    color: #212529 !important;
 }
 
 .batch-item:hover,
@@ -673,7 +703,7 @@ input[name*="challan_no"]:focus {
     display: flex;
     gap: 1rem;
     font-size: 0.9rem;
-    color: #6c757d;
+    color: #6c757d !important;
 }
 
 .batch-modal-footer {
@@ -686,7 +716,7 @@ input[name*="challan_no"]:focus {
 }
 
 .batch-shortcuts {
-    color: #6c757d;
+    color: #6c757d !important;
     font-weight: 500;
     font-size: 0.85rem;
 }

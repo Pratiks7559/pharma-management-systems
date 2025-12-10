@@ -61,8 +61,29 @@ def login_view(request):
     }
     return render(request, 'login.html', context)
 def logout_view(request):
+    if request.method == 'POST':
+        backup_choice = request.POST.get('backup', 'no')
+        if backup_choice == 'yes':
+            from django.http import JsonResponse
+            from .backup_views import create_backup_file
+            backup_path = create_backup_file()
+            return JsonResponse({'success': True, 'backup_url': f'/download-backup-logout/{backup_path}'})
+        logout(request)
+        messages.info(request, "You have successfully logged out.")
+        return redirect('login')
+    return render(request, 'logout_confirm.html')
+
+def download_backup_and_logout(request, filename):
+    from django.http import FileResponse
+    import os
+    filepath = os.path.join('backups', filename)
+    if os.path.exists(filepath):
+        response = FileResponse(open(filepath, 'rb'), as_attachment=True)
+        response['Content-Type'] = 'application/x-sqlite3'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        logout(request)
+        return response
     logout(request)
-    messages.info(request, "You have successfully logged out.")
     return redirect('login')
 @login_required
 def register_user(request):
@@ -259,9 +280,39 @@ def dashboard(request):
         sales_invoice_no__in=today_sales_invoices
     ).aggregate(total=Sum('sale_total_amount'))['total'] or 0
     
-    # Today's purchases
+    # Today's purchases (cost only, without transport)
+    today_purchases_data = PurchaseMaster.objects.filter(
+        purchase_entry_date=today
+    ).aggregate(
+        total_cost=Sum(F('product_purchase_rate') * F('product_quantity')),
+        total_gst=Sum((F('product_purchase_rate') * F('product_quantity') * (F('CGST') + F('SGST'))) / 100),
+        total_transport=Sum('product_transportation_charges')
+    )
+    today_purchase_cost = (today_purchases_data['total_cost'] or 0) + (today_purchases_data['total_gst'] or 0) + (today_purchases_data['total_transport'] or 0)
+    
+    # Calculate today's profit: Sales MRP - (Purchase Cost + GST + Transport)
+    today_profit = today_sales - today_purchase_cost
+    
+    # Monthly purchases (cost only, without transport)
+    monthly_purchases_data = PurchaseMaster.objects.filter(
+        purchase_entry_date__gte=current_month_start
+    ).aggregate(
+        total_cost=Sum(F('product_purchase_rate') * F('product_quantity')),
+        total_gst=Sum((F('product_purchase_rate') * F('product_quantity') * (F('CGST') + F('SGST'))) / 100),
+        total_transport=Sum('product_transportation_charges')
+    )
+    monthly_purchase_cost = (monthly_purchases_data['total_cost'] or 0) + (monthly_purchases_data['total_gst'] or 0) + (monthly_purchases_data['total_transport'] or 0)
+    
+    # Calculate monthly profit: Sales MRP - (Purchase Cost + GST + Transport)
+    monthly_profit = monthly_sales - monthly_purchase_cost
+    
+    # Keep original purchase totals for display
     today_purchases = InvoiceMaster.objects.filter(
         invoice_date=today
+    ).aggregate(total=Sum('invoice_total'))['total'] or 0
+    
+    monthly_purchases = InvoiceMaster.objects.filter(
+        invoice_date__gte=current_month_start
     ).aggregate(total=Sum('invoice_total'))['total'] or 0
     
     # Total outstanding payments from customers
@@ -307,6 +358,8 @@ def dashboard(request):
         'monthly_purchases': monthly_purchases,
         'today_sales': today_sales,
         'today_purchases': today_purchases,
+        'today_profit': today_profit,
+        'monthly_profit': monthly_profit,
         'total_receivable': total_receivable,
         'total_payable': total_payable
     }
@@ -3701,7 +3754,8 @@ def add_sales_return(request):
                                 return_sale_calculation_mode='flat',
                                 return_sale_cgst=cgst,
                                 return_sale_sgst=sgst,
-                                return_sale_total_amount=item_total
+                                return_sale_total_amount=item_total,
+                                return_reason=product_data.get('return_reason', '')
                             )
                             
                             # STOCK UPDATE: Sales return increases stock
@@ -5392,6 +5446,12 @@ def inventory_list(request):
     page_out_of_stock = sum(1 for item in inventory_data if item['current_stock'] <= 0)
     page_low_stock = sum(1 for item in inventory_data if 0 < item['current_stock'] < 10)
     
+    # Get pharmacy details
+    try:
+        pharmacy = Pharmacy_Details.objects.first()
+    except:
+        pharmacy = None
+    
     context = {
         'inventory_data': inventory_data,
         'total_products': total_products,
@@ -5401,7 +5461,8 @@ def inventory_list(request):
         'search_query': search_query,
         'has_more': (offset + limit) < total_products,
         'next_offset': offset + limit,
-        'title': 'Inventory - All Products'
+        'title': 'Inventory - All Products',
+        'pharmacy': pharmacy
     }
     return render(request, 'inventory/inventory_list.html', context)
 
@@ -5445,12 +5506,19 @@ def dateexpiry_inventory_report(request):
     
     expiry_data, total_value = FastInventory.get_dateexpiry_inventory_data(search_query)
     
+    # Get pharmacy details
+    try:
+        pharmacy = Pharmacy_Details.objects.first()
+    except:
+        pharmacy = None
+    
     context = {
         'expiry_data': expiry_data,
         'total_value': total_value,
         'search_query': search_query,
         'expiry_from': expiry_from,
         'expiry_to': expiry_to,
+        'pharmacy': pharmacy,
         'title': 'Date-wise Inventory Report'
     }
     return render(request, 'reports/dateexpiry_inventory_report.html', context)
@@ -6761,10 +6829,36 @@ def export_inventory_pdf(request):
                 print(f"Error processing product {product.product_name}: {e}")
                 continue
 
+        # Pharmacy details header
+        try:
+            pharmacy = Pharmacy_Details.objects.first()
+            if pharmacy:
+                title_style = styles['Heading1']
+                title_style.alignment = 1
+                if pharmacy.pharmaname:
+                    story.append(Paragraph(pharmacy.pharmaname.upper(), title_style))
+                info_style = styles['Normal']
+                info_style.alignment = 1
+                info_style.fontSize = 9
+                pharmacy_info = []
+                if pharmacy.proprietorname:
+                    pharmacy_info.append(f"Proprietor: {pharmacy.proprietorname}")
+                if pharmacy.proprietorcontact:
+                    pharmacy_info.append(f"Contact: {pharmacy.proprietorcontact}")
+                if pharmacy.proprietoremail:
+                    pharmacy_info.append(f"Email: {pharmacy.proprietoremail}")
+                if pharmacy.pharmaweburl:
+                    pharmacy_info.append(f"Website: {pharmacy.pharmaweburl}")
+                if pharmacy_info:
+                    story.append(Paragraph(" | ".join(pharmacy_info), info_style))
+                story.append(Spacer(1, 0.15*inch))
+        except:
+            pass
+        
         # Title
         title_style = styles['Heading1']
-        title_style.alignment = 1  # Center
-        title = Paragraph("Inventory Report", title_style)
+        title_style.alignment = 1
+        title = Paragraph("ALL PRODUCTS INVENTORY REPORT", title_style)
         story.append(title)
         
         # Date
@@ -6856,27 +6950,85 @@ def export_inventory_pdf(request):
 
 @login_required
 def export_inventory_excel(request):
-    import csv
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, PatternFill
     from django.http import HttpResponse
+    from io import BytesIO
     
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="inventory_report.csv"'
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Inventory Report'
     
-    writer = csv.writer(response)
-    writer.writerow(['Product Name', 'Company', 'Batch No', 'MRP', 'Value'])
+    row = 1
+    # Pharmacy details
+    try:
+        pharmacy = Pharmacy_Details.objects.first()
+        if pharmacy:
+            if pharmacy.pharmaname:
+                ws.merge_cells(f'A{row}:G{row}')
+                ws[f'A{row}'] = pharmacy.pharmaname.upper()
+                ws[f'A{row}'].font = Font(bold=True, size=14)
+                ws[f'A{row}'].alignment = Alignment(horizontal='center')
+                row += 1
+            pharmacy_info = []
+            if pharmacy.proprietorname:
+                pharmacy_info.append(f"Proprietor: {pharmacy.proprietorname}")
+            if pharmacy.proprietorcontact:
+                pharmacy_info.append(f"Contact: {pharmacy.proprietorcontact}")
+            if pharmacy.proprietoremail:
+                pharmacy_info.append(f"Email: {pharmacy.proprietoremail}")
+            if pharmacy.pharmaweburl:
+                pharmacy_info.append(f"Website: {pharmacy.pharmaweburl}")
+            if pharmacy_info:
+                ws.merge_cells(f'A{row}:G{row}')
+                ws[f'A{row}'] = " | ".join(pharmacy_info)
+                ws[f'A{row}'].font = Font(size=10)
+                ws[f'A{row}'].alignment = Alignment(horizontal='center')
+                row += 1
+            row += 1
+    except:
+        pass
     
+    # Title
+    ws.merge_cells(f'A{row}:G{row}')
+    ws[f'A{row}'] = 'ALL PRODUCTS INVENTORY REPORT'
+    ws[f'A{row}'].font = Font(bold=True, size=12)
+    ws[f'A{row}'].alignment = Alignment(horizontal='center')
+    row += 2
+    
+    # Headers
+    headers = ['Product Name', 'Company', 'Category', 'Batch No', 'Stock', 'MRP', 'Value']
+    for col, header in enumerate(headers, 1):
+        ws.cell(row=row, column=col, value=header)
+        ws.cell(row=row, column=col).font = Font(bold=True, color='FFFFFF')
+        ws.cell(row=row, column=col).fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+        ws.cell(row=row, column=col).alignment = Alignment(horizontal='center')
+    row += 1
+    
+    # Data
     products = ProductMaster.objects.all()[:100]
     for product in products:
         stock_info = get_stock_status(product.productid)
         batch = PurchaseMaster.objects.filter(productid=product.productid).first()
-        writer.writerow([
-            product.product_name,
-            product.product_company,
-            batch.product_batch_no if batch else 'N/A',
-            stock_info.get('avg_mrp', 0),
-            stock_info['current_stock'] * stock_info.get('avg_mrp', 0)
-        ])
+        ws.cell(row=row, column=1, value=product.product_name)
+        ws.cell(row=row, column=2, value=product.product_company)
+        ws.cell(row=row, column=3, value=product.product_category or 'N/A')
+        ws.cell(row=row, column=4, value=batch.product_batch_no if batch else 'N/A')
+        ws.cell(row=row, column=5, value=stock_info['current_stock'])
+        ws.cell(row=row, column=6, value=stock_info.get('avg_mrp', 0))
+        ws.cell(row=row, column=7, value=stock_info['current_stock'] * stock_info.get('avg_mrp', 0))
+        row += 1
     
+    # Auto-adjust columns
+    for col in range(1, 8):
+        ws.column_dimensions[chr(64+col)].width = 20
+    
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    response = HttpResponse(buffer.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="inventory_report.xlsx"'
     return response
 
 @login_required

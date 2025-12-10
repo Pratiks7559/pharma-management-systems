@@ -445,6 +445,36 @@
         margin-bottom: 20px;
     }
     
+    /* Show pharmacy details in print */
+    .pharmacy-details {
+        display: block !important;
+        text-align: center;
+        margin-bottom: 15px;
+        padding: 10px;
+        border-bottom: 1px solid #000;
+    }
+    
+    .pharmacy-details h2 {
+        margin: 0 0 5px 0;
+        font-size: 18px;
+        color: black !important;
+    }
+    
+    .pharmacy-details p {
+        margin: 2px 0;
+        font-size: 11px;
+        color: black !important;
+    }
+    
+    .filter-info {
+        display: block !important;
+        text-align: center;
+        margin: 10px 0;
+        font-size: 11px;
+        font-weight: bold;
+        color: black !important;
+    }
+    
     .date-report-title {
         color: black !important;
         font-size: 24px;
@@ -463,6 +493,7 @@
     
     .date-report-card-title {
         color: black !important;
+        font-size: 16px;
     }
     
     .date-report-card-subtitle {
@@ -578,7 +609,14 @@
     /* Page break control */
     @page {
         size: A4 landscape;
-        margin: 1cm;
+        margin: 0.8cm;
+    }
+    
+    /* Print header with pharmacy info */
+    @page {
+        @top-center {
+            content: element(header);
+        }
     }
 }
 

@@ -63,9 +63,9 @@
                 <a href="{% url 'export_supplier_ledger_excel' supplier.supplierid %}{% if request.GET.start_date %}?start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}{% endif %}" class="supplier-ledger-btn supplier-ledger-btn-excel" id="exportExcelBtn">
                     <i class="fas fa-file-excel"></i> Excel <span class="shortcut-badge">Ctrl+E</span>
                 </a>
-                <button onclick="printLedger()" class="supplier-ledger-btn supplier-ledger-btn-print">
+                <a href="{% url 'supplier_ledger_print' supplier.supplierid %}{% if request.GET.start_date %}?start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}{% endif %}" target="_blank" class="supplier-ledger-btn supplier-ledger-btn-print">
                     <i class="fas fa-print"></i> Print
-                </button>
+                </a>
                 <a href="{% url 'supplier_ledger' %}" class="supplier-ledger-btn supplier-ledger-btn-back">
                     <i class="fas fa-arrow-left"></i> Back
                 </a>
@@ -272,10 +272,6 @@
 </div>
 
 <script>
-function printLedger() {
-    window.print();
-}
-
 // PDF export with auto-open and download
 function exportPDF() {
     const pdfUrl = document.getElementById('exportPdfBtn').getAttribute('data-url');

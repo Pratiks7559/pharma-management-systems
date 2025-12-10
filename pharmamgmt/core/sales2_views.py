@@ -143,10 +143,24 @@ def sales2_report_pdf(request):
     story = []
     styles = getSampleStyleSheet()
     
-    # Header
+    # Pharmacy Header
     title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], alignment=1, fontSize=16)
-    story.append(Paragraph(pharmacy.pharmaname if pharmacy else 'PHARMACY NAME', title_style))
-    story.append(Paragraph(f'Contact: {pharmacy.proprietorcontact if pharmacy else "N/A"}', styles['Normal']))
+    info_style = ParagraphStyle('InfoStyle', parent=styles['Normal'], alignment=1, fontSize=9)
+    
+    if pharmacy:
+        if pharmacy.pharmaname:
+            story.append(Paragraph(pharmacy.pharmaname.upper(), title_style))
+        pharmacy_info = []
+        if pharmacy.proprietorname:
+            pharmacy_info.append(f"Proprietor: {pharmacy.proprietorname}")
+        if pharmacy.proprietorcontact:
+            pharmacy_info.append(f"Contact: {pharmacy.proprietorcontact}")
+        if pharmacy.proprietoremail:
+            pharmacy_info.append(f"Email: {pharmacy.proprietoremail}")
+        if pharmacy.pharmaweburl:
+            pharmacy_info.append(f"Website: {pharmacy.pharmaweburl}")
+        if pharmacy_info:
+            story.append(Paragraph(" | ".join(pharmacy_info), info_style))
     story.append(Spacer(1, 12))
     
     # Report title
@@ -266,16 +280,32 @@ def sales2_report_excel(request):
         # Get pharmacy details for header
         pharmacy = Pharmacy_Details.objects.first()
         
-        # Add header information
-        worksheet['A1'] = pharmacy.pharmaname if pharmacy else 'PHARMACY NAME'
-        worksheet['A1'].font = Font(size=16, bold=True)
-        worksheet['A1'].alignment = Alignment(horizontal='center')
-        worksheet.merge_cells('A1:F1')
-        
-        worksheet['A2'] = f'Contact: {pharmacy.proprietorcontact if pharmacy else "N/A"}'
-        worksheet['A2'].font = Font(size=10)
-        worksheet['A2'].alignment = Alignment(horizontal='center')
-        worksheet.merge_cells('A2:F2')
+        # Add pharmacy header
+        row = 1
+        if pharmacy:
+            if pharmacy.pharmaname:
+                worksheet[f'A{row}'] = pharmacy.pharmaname.upper()
+                worksheet[f'A{row}'].font = Font(size=16, bold=True)
+                worksheet[f'A{row}'].alignment = Alignment(horizontal='center')
+                worksheet.merge_cells(f'A{row}:F{row}')
+                row += 1
+            
+            pharmacy_info = []
+            if pharmacy.proprietorname:
+                pharmacy_info.append(f"Proprietor: {pharmacy.proprietorname}")
+            if pharmacy.proprietorcontact:
+                pharmacy_info.append(f"Contact: {pharmacy.proprietorcontact}")
+            if pharmacy.proprietoremail:
+                pharmacy_info.append(f"Email: {pharmacy.proprietoremail}")
+            if pharmacy.pharmaweburl:
+                pharmacy_info.append(f"Website: {pharmacy.pharmaweburl}")
+            
+            if pharmacy_info:
+                worksheet[f'A{row}'] = " | ".join(pharmacy_info)
+                worksheet[f'A{row}'].font = Font(size=10)
+                worksheet[f'A{row}'].alignment = Alignment(horizontal='center')
+                worksheet.merge_cells(f'A{row}:F{row}')
+                row += 1
         
         report_title = f'SALES REPORT - Period: {start_date.strftime("%d-%m-%Y")} to {end_date.strftime("%d-%m-%Y")}' if start_date and end_date else 'SALES REPORT - All Records'
         worksheet['A3'] = report_title

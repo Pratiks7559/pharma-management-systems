@@ -1040,15 +1040,25 @@ function loadProductInfo(rowIndex, productId) {
         // Clear fields when no product selected
         const row = document.getElementById(`productRow_${rowIndex}`);
         if (row) {
-            row.querySelector('.batch-no').value = '';
-            row.querySelector('.expiry').value = '';
-            row.querySelector('.mrp').value = '';
-            row.querySelector('.challan-rate').value = '';
-            row.querySelector('.cgst-rate').value = '';
-            row.querySelector('.sgst-rate').value = '';
-            row.querySelector('.rate-a').value = '';
-            row.querySelector('.rate-b').value = '';
-            row.querySelector('.rate-c').value = '';
+            const batchNo = row.querySelector('.batch-no');
+            const expiry = row.querySelector('.expiry');
+            const mrp = row.querySelector('.mrp');
+            const challanRate = row.querySelector('.challan-rate');
+            const cgstRate = row.querySelector('.cgst-rate');
+            const sgstRate = row.querySelector('.sgst-rate');
+            const rateA = row.querySelector('.rate-a');
+            const rateB = row.querySelector('.rate-b');
+            const rateC = row.querySelector('.rate-c');
+            
+            if (batchNo) batchNo.value = '';
+            if (expiry) expiry.value = '';
+            if (mrp) mrp.value = '';
+            if (challanRate) challanRate.value = '';
+            if (cgstRate) cgstRate.value = '';
+            if (sgstRate) sgstRate.value = '';
+            if (rateA) rateA.value = '';
+            if (rateB) rateB.value = '';
+            if (rateC) rateC.value = '';
             calculateRowTotal(rowIndex);
         }
         return;
@@ -1063,10 +1073,24 @@ function loadProductInfo(rowIndex, productId) {
             }
             
             const row = document.getElementById(`productRow_${rowIndex}`);
-            if (row) {
-                // Auto-fill fields
-                row.querySelector('.batch-no').value = data.last_batch_no || '';
-                // Ensure expiry is in MM-YYYY format
+            if (!row) return;
+            
+            // Get all fields with null checks
+            const batchNo = row.querySelector('.batch-no');
+            const expiryField = row.querySelector('.expiry');
+            const mrp = row.querySelector('.mrp');
+            const challanRate = row.querySelector('.challan-rate');
+            const cgstRate = row.querySelector('.cgst-rate');
+            const sgstRate = row.querySelector('.sgst-rate');
+            const rateA = row.querySelector('.rate-a');
+            const rateB = row.querySelector('.rate-b');
+            const rateC = row.querySelector('.rate-c');
+            
+            // Auto-fill fields with null checks
+            if (batchNo) batchNo.value = data.last_batch_no || '';
+            
+            // Ensure expiry is in MM-YYYY format
+            if (expiryField) {
                 let expiry = data.last_expiry || '';
                 if (expiry && expiry.length === 10 && expiry.includes('-')) {
                     // Convert YYYY-MM-DD to MM-YYYY
@@ -1075,17 +1099,24 @@ function loadProductInfo(rowIndex, productId) {
                         expiry = `${parts[1]}-${parts[0]}`;
                     }
                 }
-                row.querySelector('.expiry').value = expiry;
-                row.querySelector('.mrp').value = data.product_MRP || '';
-                row.querySelector('.challan-rate').value = data.last_challan_rate || '';
-                row.querySelector('.gst-rate').value = data.gst_rate || '';
-                row.querySelector('.rate-a').value = data.rate_A || '';
-                row.querySelector('.rate-b').value = data.rate_B || '';
-                row.querySelector('.rate-c').value = data.rate_C || '';
-                
-                // Recalculate row total
-                calculateRowTotal(rowIndex);
+                expiryField.value = expiry;
             }
+            
+            if (mrp) mrp.value = data.product_MRP || '';
+            if (challanRate) challanRate.value = data.last_challan_rate || '';
+            
+            // Set GST rates - use cgst and sgst separately
+            const gstRate = data.gst_rate || 0;
+            const halfGst = gstRate / 2;
+            if (cgstRate) cgstRate.value = halfGst || '2.5';
+            if (sgstRate) sgstRate.value = halfGst || '2.5';
+            
+            if (rateA) rateA.value = data.rate_A || '';
+            if (rateB) rateB.value = data.rate_B || '';
+            if (rateC) rateC.value = data.rate_C || '';
+            
+            // Recalculate row total
+            calculateRowTotal(rowIndex);
         })
         .catch(error => {
             console.error('Error fetching product info:', error);

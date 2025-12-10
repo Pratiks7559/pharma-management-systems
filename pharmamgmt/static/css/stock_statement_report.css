@@ -28,11 +28,11 @@
     --radius-md: 0.5rem;
     --radius-lg: 0.75rem;
     
-    --spacing-xs: 0.25rem;
-    --spacing-sm: 0.5rem;
-    --spacing-md: 1rem;
-    --spacing-lg: 1.5rem;
-    --spacing-xl: 2rem;
+    --spacing-xs: 0.2rem;
+    --spacing-sm: 0.4rem;
+    --spacing-md: 0.75rem;
+    --spacing-lg: 1rem;
+    --spacing-xl: 1.25rem;
 }
 
 /* Dark theme support */
@@ -79,7 +79,7 @@
 }
 
 .report-title {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 700;
     margin: 0;
     display: flex;
@@ -88,7 +88,7 @@
 }
 
 .report-title i {
-    font-size: 1.75rem;
+    font-size: 1.25rem;
 }
 
 .header-actions {
@@ -102,10 +102,10 @@
     display: inline-flex;
     align-items: center;
     gap: var(--spacing-xs);
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: 0.4rem 0.75rem;
     border: none;
     border-radius: var(--radius-md);
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     font-weight: 500;
     text-decoration: none;
     cursor: pointer;
@@ -245,7 +245,7 @@
 
 .summary-card {
     background-color: var(--bg-primary);
-    padding: var(--spacing-lg);
+    padding: 0.75rem;
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
     border: 1px solid var(--border-color);
@@ -260,13 +260,13 @@
 }
 
 .card-icon {
-    width: 60px;
-    height: 60px;
+    width: 45px;
+    height: 45px;
     border-radius: var(--radius-lg);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     color: white;
 }
 
@@ -291,14 +291,14 @@
 }
 
 .card-content h3 {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 500;
     color: var(--text-secondary);
     margin: 0 0 var(--spacing-xs) 0;
 }
 
 .card-value {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: var(--text-primary);
     margin: 0;
@@ -350,16 +350,18 @@
     background-color: var(--bg-tertiary);
     color: var(--text-primary);
     font-weight: 600;
-    padding: var(--spacing-md);
+    padding: 0.6rem 0.75rem;
     text-align: left;
     border-bottom: 2px solid var(--border-color);
     white-space: nowrap;
+    font-size: 0.8rem;
 }
 
 .stock-table td {
-    padding: var(--spacing-md);
+    padding: 0.6rem 0.75rem;
     border-bottom: 1px solid var(--border-light);
     vertical-align: middle;
+    font-size: 0.85rem;
 }
 
 .stock-row:hover {

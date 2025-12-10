@@ -419,6 +419,39 @@
         padding: 0;
         background: white;
     }
+    @page {
+        size: A4;
+        margin: 10mm;
+    }
+    * {
+        box-sizing: border-box;
+        page-break-inside: avoid;
+    }
+    .supplier-ledger-container {
+        margin: 0;
+        padding: 10mm;
+        max-width: 100%;
+    }
+    .supplier-ledger-header-card,
+    .supplier-ledger-filter-card,
+    .supplier-ledger-summary-grid,
+    .supplier-ledger-table-card {
+        box-shadow: none;
+        page-break-inside: avoid;
+    }
+    .supplier-ledger-table-card {
+        page-break-before: auto;
+    }
+    .supplier-ledger-table thead {
+        display: table-header-group;
+    }
+    .supplier-ledger-table tbody tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+    .supplier-ledger-table tfoot {
+        display: table-footer-group;
+    }
 }
 
 /* Mobile Responsive */

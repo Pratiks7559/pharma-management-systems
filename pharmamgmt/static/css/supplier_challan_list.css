@@ -1,22 +1,28 @@
-/* Supplier Challan List - Theme Independent & Mobile Responsive */
+/* Supplier Challan List - Light Theme Only */
+
+body, html {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+}
+
 :root {
-    --bg-primary: #ffffff;
-    --bg-secondary: #f8f9fa;
-    --text-primary: #212529;
-    --text-secondary: #6c757d;
-    --border-color: #dee2e6;
-    --hover-bg: #e9ecef;
-    --shadow: 0 2px 8px rgba(0,0,0,0.1);
+    --bg-primary: #ffffff !important;
+    --bg-secondary: #f8f9fa !important;
+    --text-primary: #212529 !important;
+    --text-secondary: #6c757d !important;
+    --border-color: #dee2e6 !important;
+    --hover-bg: #e9ecef !important;
+    --shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
 }
 
 [data-theme="dark"] {
-    --bg-primary: #1a1d23;
-    --bg-secondary: #2d3139;
-    --text-primary: #e9ecef;
-    --text-secondary: #adb5bd;
-    --border-color: #495057;
-    --hover-bg: #343a40;
-    --shadow: 0 2px 8px rgba(0,0,0,0.3);
+    --bg-primary: #ffffff !important;
+    --bg-secondary: #f8f9fa !important;
+    --text-primary: #212529 !important;
+    --text-secondary: #6c757d !important;
+    --border-color: #dee2e6 !important;
+    --hover-bg: #e9ecef !important;
+    --shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
 }
 
 .supplier-challan-container {

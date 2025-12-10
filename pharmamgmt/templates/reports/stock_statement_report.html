@@ -281,9 +281,10 @@
                 <button class="btn btn-export" onclick="exportReport('excel')" title="Export Excel (Ctrl+E)">
                     <i class="fas fa-file-excel"></i> Export Excel
                 </button>
-                <button class="btn btn-print" onclick="printReport()" title="Print (Ctrl+P)">
+                <!-- Print button hidden as per requirement -->
+                <!-- <button class="btn btn-print" onclick="printReport()" title="Print (Ctrl+P)" style="display:none;">
                     <i class="fas fa-print"></i> Print
-                </button>
+                </button> -->
             </div>
         </div>
     </div>
@@ -440,9 +441,7 @@
                         <th class="col-received">Received</th>
                         <th class="col-sold">Sold</th>
                         <th class="col-balance">Balance</th>
-                        <th class="col-mrp">Avg MRP</th>
                         <th class="col-value">Stock Value</th>
-                        <th class="col-status">Status</th>
                         <th class="col-actions">Actions</th>
                     </tr>
                 </thead>
@@ -477,16 +476,8 @@
                                 {{ item.balance_stock|floatformat:0 }}
                             </span>
                         </td>
-                        <td class="col-mrp">
-                            <span class="currency-value">₹{{ item.avg_mrp|floatformat:2 }}</span>
-                        </td>
                         <td class="col-value">
                             <span class="currency-value">₹{{ item.stock_value|floatformat:2 }}</span>
-                        </td>
-                        <td class="col-status">
-                            <span class="status-badge status-{{ item.status_class }}">
-                                {{ item.status_label }}
-                            </span>
                         </td>
                         <td class="col-actions">
                             <button class="btn-action" 
@@ -503,7 +494,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="9" class="no-data">
+                        <td colspan="7" class="no-data">
                             <div class="no-data-message">
                                 <i class="fas fa-search"></i>
                                 <p>No products found matching your criteria.</p>

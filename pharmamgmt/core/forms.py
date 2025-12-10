@@ -420,7 +420,7 @@ class PurchaseReturnInvoiceForm(forms.ModelForm):
         })
     )
     returnsupplierid = forms.ModelChoiceField(queryset=SupplierMaster.objects.all(), widget=forms.Select(attrs={'class': 'form-control'}))
-    return_charges = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), initial=0.0)
+    return_charges = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), initial=0.0, required=False)
     returninvoice_total = forms.FloatField(widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), initial=0.0)
     
     def clean_returninvoice_date(self):

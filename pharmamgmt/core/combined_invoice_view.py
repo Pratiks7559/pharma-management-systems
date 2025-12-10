@@ -734,10 +734,16 @@ def get_supplier_challans(request):
         if not supplier_id:
             return JsonResponse({'success': False, 'error': 'Supplier ID required'})
         
-        # Get non-invoiced challans for the supplier
+        # Get challans that have entries in SupplierChallanMaster (not yet moved to SupplierChallanMaster2)
+        # This ensures that once all products from a challan are invoiced and moved to SupplierChallanMaster2,
+        # the challan won't appear in the Pull Challan list anymore
+        challan_ids_with_entries = SupplierChallanMaster.objects.filter(
+            product_suppliername_id=supplier_id
+        ).values_list('product_challan_id', flat=True).distinct()
+        
         challans = Challan1.objects.filter(
-            supplier_id=supplier_id,
-            is_invoiced=False
+            challan_id__in=challan_ids_with_entries,
+            supplier_id=supplier_id
         ).order_by('-challan_date', '-challan_id')
         
         challan_data = []
@@ -776,7 +782,8 @@ def get_challan_products(request):
         if not challan_ids:
             return JsonResponse({'success': False, 'error': 'No challan IDs provided'})
         
-        # Get all products from the selected challans
+        # Get all products from the selected challans (only from SupplierChallanMaster, not SupplierChallanMaster2)
+        # This ensures that once products are moved to SupplierChallanMaster2, they won't appear in Pull Challan list
         challan_products = SupplierChallanMaster.objects.filter(
             product_challan_id__in=challan_ids
         ).select_related('product_id', 'product_suppliername')

@@ -11,15 +11,22 @@ from django.db.models import Q
 def supplier_challan_list(request):
     """View for supplier challan list"""
     from core.models import Challan1, SupplierMaster
+    from django.core.paginator import Paginator
     
     # Only show challans that haven't been invoiced yet
     challans = Challan1.objects.select_related('supplier').filter(is_invoiced=False).order_by('-challan_date', '-challan_id')
     suppliers = SupplierMaster.objects.all().order_by('supplier_name')
     
+    # Pagination
+    paginator = Paginator(challans, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
     context = {
         'title': 'Supplier Challan List',
-        'challans': challans,
-        'suppliers': suppliers
+        'challans': page_obj,
+        'suppliers': suppliers,
+        'page_obj': page_obj
     }
     return render(request, 'challan/supplier_challan_list.html', context)
 
@@ -214,6 +221,7 @@ def customer_challan_list(request):
     """View for customer challan list - only show non-invoiced challans"""
     from core.models import CustomerChallan, InvoiceSeries
     from datetime import datetime
+    from django.core.paginator import Paginator
     
     # Only show challans that haven't been invoiced yet
     challans = CustomerChallan.objects.select_related('customer_name').filter(is_invoiced=False)
@@ -243,16 +251,22 @@ def customer_challan_list(request):
     
     challans = challans.order_by('-customer_challan_date', '-customer_challan_id')
     
+    # Pagination
+    paginator = Paginator(challans, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
     # Get all active invoice series for the dropdown
     invoice_series = InvoiceSeries.objects.filter(is_active=True).order_by('series_name')
     
     context = {
         'title': 'Customer Challan List',
-        'challans': challans,
+        'challans': page_obj,
         'invoice_series': invoice_series,
         'from_date': from_date,
         'to_date': to_date,
-        'search_query': search_query
+        'search_query': search_query,
+        'page_obj': page_obj
     }
     return render(request, 'challan/customer_challan_list.html', context)
 
@@ -539,10 +553,16 @@ def get_customer_challans_api(request):
         if not customer_id:
             return JsonResponse({'success': False, 'error': 'Customer ID required'})
         
-        # Get non-invoiced challans for this customer
+        # Get challans that have entries in CustomerChallanMaster (not yet moved to CustomerChallanMaster2)
+        # This ensures that once all products from a challan are invoiced and moved to CustomerChallanMaster2,
+        # the challan won't appear in the Pull Challan list anymore
+        challan_ids_with_entries = CustomerChallanMaster.objects.filter(
+            customer_name_id=customer_id
+        ).values_list('customer_challan_id', flat=True).distinct()
+        
         challans = CustomerChallan.objects.filter(
-            customer_name_id=customer_id,
-            is_invoiced=False
+            customer_challan_id__in=challan_ids_with_entries,
+            customer_name_id=customer_id
         ).annotate(
             product_count=Count('customerchallanmaster')
         ).order_by('-customer_challan_date')
@@ -578,7 +598,8 @@ def get_challan_products_api(request):
         if not challan_ids:
             return JsonResponse({'success': False, 'error': 'No challans selected'})
         
-        # Get all products from selected challans
+        # Get all products from selected challans (only from CustomerChallanMaster, not CustomerChallanMaster2)
+        # This ensures that once products are moved to CustomerChallanMaster2, they won't appear in Pull Challan list
         challan_items = CustomerChallanMaster.objects.filter(
             customer_challan_id__in=challan_ids
         ).select_related('product_id', 'customer_challan_id')

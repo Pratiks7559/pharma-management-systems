@@ -31,21 +31,25 @@
         }
 
         .header {
-            background-color: #2e7d32;
-            color: white;
             text-align: center;
-            padding: 8px;
-            margin-bottom: 8px;
-            font-size: 14px;
+            padding: 6px;
+            margin-bottom: 6px;
+            border: 2px solid #000;
+            font-size: 12px;
             font-weight: bold;
+        }
+
+        .header-title {
+            font-size: 14px;
+            margin-bottom: 2px;
         }
 
         .pharmacy-info {
             text-align: center;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             font-size: 8px;
-            border: 1px solid #ddd;
-            padding: 5px;
+            border: 1px solid #000;
+            padding: 4px;
         }
 
         .page-info {
@@ -185,8 +189,7 @@
             }
             
             .header {
-                background-color: #2e7d32 !important;
-                color: white !important;
+                border: 2px solid #000 !important;
             }
             
             th {
@@ -197,21 +200,24 @@
 </head>
 <body>
     <div class="wrapper">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title">PURCHASE INVOICE</div>
+        </div>
 
-
-            <!-- Pharmacy Info -->
-            <div class="pharmacy-info">
-                {% if pharmacy %}
-                <strong>{{ pharmacy.pharmaname|upper }}</strong><br>
-                Proprietor: {{ pharmacy.proprietorname }} | Contact: {{ pharmacy.proprietorcontact }}<br>
-                {% if pharmacy.pharmaweburl %}Website: {{ pharmacy.pharmaweburl }}<br>{% endif %}
-                {% if pharmacy.proprietoremail %}Email: {{ pharmacy.proprietoremail }}{% endif %}
-                {% else %}
-                <strong>MEDICVISTA PHARMACY</strong><br>
-                Proprietor: Admin | Contact: +91 98765 43210<br>
-                Website: www.medicvista.com | Email: info@medicvista.com
-                {% endif %}
-            </div>
+        <!-- Pharmacy Info -->
+        <div class="pharmacy-info">
+            {% if pharmacy %}
+            <strong>{{ pharmacy.pharmaname|upper }}</strong><br>
+            Proprietor: {{ pharmacy.proprietorname }} | Contact: {{ pharmacy.proprietorcontact }}<br>
+            {% if pharmacy.pharmaweburl %}Website: {{ pharmacy.pharmaweburl }}<br>{% endif %}
+            {% if pharmacy.proprietoremail %}Email: {{ pharmacy.proprietoremail }}{% endif %}
+            {% else %}
+            <strong>MEDICVISTA PHARMACY</strong><br>
+            Proprietor: Admin | Contact: +91 98765 43210<br>
+            Website: www.medicvista.com | Email: info@medicvista.com
+            {% endif %}
+        </div>
 
             <!-- Supplier and Invoice Info -->
             <div class="info-section">
@@ -262,8 +268,8 @@
                     {% if forloop.last and not no_challan_products %}
                     <div class="last-table-section">
                     {% endif %}
-                    <div style="margin-top: 10px; margin-bottom: 5px; padding: 5px; background-color: #e8f5e8; border-left: 4px solid #2e7d32; font-weight: bold; font-size: 10px;">
-                        📋 Challan Date: {{ challan_date|date:"d/m/Y" }}
+                    <div style="margin-top: 10px; margin-bottom: 5px; padding: 5px; border: 1px solid #000; font-weight: bold; font-size: 10px;">
+                        Challan Date: {{ challan_date|date:"d/m/Y" }}
                     </div>
                     <table>
                         <thead>
@@ -314,8 +320,8 @@
             <!-- Direct Invoice Products Table -->
             {% if no_challan_products %}
                 <div class="last-table-section">
-                    <div style="margin-top: 15px; margin-bottom: 5px; padding: 5px; background-color: #fff3e0; border-left: 4px solid #ff9800; font-weight: bold; font-size: 10px;">
-                        📦 Direct Invoice Products
+                    <div style="margin-top: 15px; margin-bottom: 5px; padding: 5px; border: 1px solid #000; font-weight: bold; font-size: 10px;">
+                        Direct Invoice Products
                     </div>
                     <table>
                     <thead>
@@ -400,14 +406,6 @@
                 <div class="total-row final">
                     <span>Grand Total:</span>
                     <span>₹{{ invoice.invoice_total|floatformat:2 }}</span>
-                </div>
-                <div class="total-row">
-                    <span>Amount Paid:</span>
-                    <span>₹{{ invoice.invoice_paid|floatformat:2 }}</span>
-                </div>
-                <div class="total-row final">
-                    <span>Balance Due:</span>
-                    <span>₹{{ invoice.balance_due|floatformat:2 }}</span>
                 </div>
             </div>
 

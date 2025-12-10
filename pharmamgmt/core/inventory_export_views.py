@@ -55,38 +55,30 @@ def export_batch_inventory_pdf(request):
         except:
             pharmacy = None
 
-        # Title section
-        title_style = ParagraphStyle(
-            'CustomTitle',
-            parent=styles['Heading1'],
-            fontSize=16,
-            spaceAfter=12,
-            alignment=TA_CENTER,
-            textColor=colors.darkblue
-        )
+        # Styles
+        title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=16, spaceAfter=8, alignment=TA_CENTER, textColor=colors.darkblue)
+        info_style = ParagraphStyle('InfoStyle', parent=styles['Normal'], fontSize=9, alignment=TA_CENTER, spaceAfter=4)
+        date_style = ParagraphStyle('DateStyle', parent=styles['Normal'], fontSize=10, alignment=TA_CENTER, spaceAfter=6)
         
-        if pharmacy and pharmacy.pharmaname:
-            pharmacy_title = Paragraph(f"{pharmacy.pharmaname}", title_style)
-            story.append(pharmacy_title)
+        # Pharmacy details
+        if pharmacy:
+            if pharmacy.pharmaname:
+                story.append(Paragraph(f"{pharmacy.pharmaname}", title_style))
+            if pharmacy.proprietorname:
+                story.append(Paragraph(f"Proprietor: {pharmacy.proprietorname}", info_style))
+            if pharmacy.proprietorcontact:
+                story.append(Paragraph(f"Contact: {pharmacy.proprietorcontact}", info_style))
+            if pharmacy.proprietoremail:
+                story.append(Paragraph(f"Email: {pharmacy.proprietoremail}", info_style))
+            if pharmacy.pharmaweburl:
+                story.append(Paragraph(f"Website: {pharmacy.pharmaweburl}", info_style))
+            story.append(Spacer(1, 0.1*inch))
         
-        report_title = Paragraph("Batch-wise Inventory Report", title_style)
-        story.append(report_title)
-        
-        # Date and search info
-        date_style = ParagraphStyle(
-            'DateStyle',
-            parent=styles['Normal'],
-            fontSize=10,
-            alignment=TA_CENTER,
-            spaceAfter=6
-        )
-        
-        date_text = Paragraph(f"Generated on: {datetime.now().strftime('%d %B %Y at %H:%M')}", date_style)
-        story.append(date_text)
+        story.append(Paragraph("Batch-wise Inventory Report", title_style))
+        story.append(Paragraph(f"Generated on: {datetime.now().strftime('%d %B %Y at %H:%M')}", date_style))
         
         if search_query:
-            search_text = Paragraph(f"Search Filter: {search_query}", date_style)
-            story.append(search_text)
+            story.append(Paragraph(f"Search Filter: {search_query}", date_style))
         
         story.append(Spacer(1, 0.2*inch))
 
@@ -225,12 +217,41 @@ def export_batch_inventory_excel(request):
         )
         
         # Title section
+        info_font = Font(name='Arial', size=10)
         current_row = 1
-        if pharmacy and pharmacy.pharmaname:
-            ws.merge_cells(f'A{current_row}:H{current_row}')
-            ws[f'A{current_row}'] = pharmacy.pharmaname
-            ws[f'A{current_row}'].font = title_font
-            ws[f'A{current_row}'].alignment = Alignment(horizontal='center')
+        
+        # Pharmacy details
+        if pharmacy:
+            if pharmacy.pharmaname:
+                ws.merge_cells(f'A{current_row}:H{current_row}')
+                ws[f'A{current_row}'] = pharmacy.pharmaname
+                ws[f'A{current_row}'].font = title_font
+                ws[f'A{current_row}'].alignment = Alignment(horizontal='center')
+                current_row += 1
+            if pharmacy.proprietorname:
+                ws.merge_cells(f'A{current_row}:H{current_row}')
+                ws[f'A{current_row}'] = f"Proprietor: {pharmacy.proprietorname}"
+                ws[f'A{current_row}'].font = info_font
+                ws[f'A{current_row}'].alignment = Alignment(horizontal='center')
+                current_row += 1
+            if pharmacy.proprietorcontact:
+                ws.merge_cells(f'A{current_row}:H{current_row}')
+                ws[f'A{current_row}'] = f"Contact: {pharmacy.proprietorcontact}"
+                ws[f'A{current_row}'].font = info_font
+                ws[f'A{current_row}'].alignment = Alignment(horizontal='center')
+                current_row += 1
+            if pharmacy.proprietoremail:
+                ws.merge_cells(f'A{current_row}:H{current_row}')
+                ws[f'A{current_row}'] = f"Email: {pharmacy.proprietoremail}"
+                ws[f'A{current_row}'].font = info_font
+                ws[f'A{current_row}'].alignment = Alignment(horizontal='center')
+                current_row += 1
+            if pharmacy.pharmaweburl:
+                ws.merge_cells(f'A{current_row}:H{current_row}')
+                ws[f'A{current_row}'] = f"Website: {pharmacy.pharmaweburl}"
+                ws[f'A{current_row}'].font = info_font
+                ws[f'A{current_row}'].alignment = Alignment(horizontal='center')
+                current_row += 1
             current_row += 1
         
         ws.merge_cells(f'A{current_row}:H{current_row}')
@@ -241,14 +262,14 @@ def export_batch_inventory_excel(request):
         
         ws.merge_cells(f'A{current_row}:H{current_row}')
         ws[f'A{current_row}'] = f"Generated on: {datetime.now().strftime('%d %B %Y at %H:%M')}"
-        ws[f'A{current_row}'].font = Font(name='Arial', size=10)
+        ws[f'A{current_row}'].font = info_font
         ws[f'A{current_row}'].alignment = Alignment(horizontal='center')
         current_row += 1
         
         if search_query:
             ws.merge_cells(f'A{current_row}:H{current_row}')
             ws[f'A{current_row}'] = f"Search Filter: {search_query}"
-            ws[f'A{current_row}'].font = Font(name='Arial', size=10)
+            ws[f'A{current_row}'].font = info_font
             ws[f'A{current_row}'].alignment = Alignment(horizontal='center')
             current_row += 1
         
@@ -386,38 +407,37 @@ def export_dateexpiry_inventory_pdf(request):
         except:
             pharmacy = None
 
-        # Title section
-        title_style = ParagraphStyle(
-            'CustomTitle',
-            parent=styles['Heading1'],
-            fontSize=16,
-            spaceAfter=12,
-            alignment=TA_CENTER,
-            textColor=colors.darkblue
-        )
+        # Styles
+        title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=16, spaceAfter=8, alignment=TA_CENTER, textColor=colors.darkblue)
+        info_style = ParagraphStyle('InfoStyle', parent=styles['Normal'], fontSize=9, alignment=TA_CENTER, spaceAfter=4)
+        date_style = ParagraphStyle('DateStyle', parent=styles['Normal'], fontSize=10, alignment=TA_CENTER, spaceAfter=6)
         
-        if pharmacy and pharmacy.pharmaname:
-            pharmacy_title = Paragraph(f"{pharmacy.pharmaname}", title_style)
-            story.append(pharmacy_title)
+        # Pharmacy details
+        if pharmacy:
+            if pharmacy.pharmaname:
+                story.append(Paragraph(f"{pharmacy.pharmaname}", title_style))
+            if pharmacy.proprietorname:
+                story.append(Paragraph(f"Proprietor: {pharmacy.proprietorname}", info_style))
+            if pharmacy.proprietorcontact:
+                story.append(Paragraph(f"Contact: {pharmacy.proprietorcontact}", info_style))
+            if pharmacy.proprietoremail:
+                story.append(Paragraph(f"Email: {pharmacy.proprietoremail}", info_style))
+            if pharmacy.pharmaweburl:
+                story.append(Paragraph(f"Website: {pharmacy.pharmaweburl}", info_style))
+            story.append(Spacer(1, 0.1*inch))
         
-        report_title = Paragraph("Date-wise Inventory Report", title_style)
-        story.append(report_title)
+        story.append(Paragraph("Date-wise Inventory Report", title_style))
+        story.append(Paragraph(f"Generated on: {datetime.now().strftime('%d %B %Y at %H:%M')}", date_style))
         
-        # Date and search info
-        date_style = ParagraphStyle(
-            'DateStyle',
-            parent=styles['Normal'],
-            fontSize=10,
-            alignment=TA_CENTER,
-            spaceAfter=6
-        )
-        
-        date_text = Paragraph(f"Generated on: {datetime.now().strftime('%d %B %Y at %H:%M')}", date_style)
-        story.append(date_text)
+        if expiry_from and expiry_to:
+            story.append(Paragraph(f"Entry Date Filter: {expiry_from} to {expiry_to}", date_style))
+        elif expiry_from:
+            story.append(Paragraph(f"Entry Date From: {expiry_from}", date_style))
+        elif expiry_to:
+            story.append(Paragraph(f"Entry Date To: {expiry_to}", date_style))
         
         if search_query:
-            search_text = Paragraph(f"Search Filter: {search_query}", date_style)
-            story.append(search_text)
+            story.append(Paragraph(f"Search Filter: {search_query}", date_style))
         
         story.append(Spacer(1, 0.2*inch))
 
@@ -467,29 +487,19 @@ def export_dateexpiry_inventory_pdf(request):
                     else:
                         days_info = f" ({days} days remaining)"
                 
-                group_header = Paragraph(
-                    f"{expiry_display}{days_info} - Value: ₹{group_value:,.2f}",
-                    group_style
-                )
-                story.append(group_header)
-                
-                # Products table for this group
-                table_data = [['Product Name', 'Company', 'Packing', 'Batch No', 'Quantity', 'Purchase Rate', 'MRP', 'Stock Value']]
+                # Products table for this group - 4 columns matching HTML template
+                table_data = [['Product Name', 'Purchase Rate', 'MRP', 'Stock Value']]
                 
                 for product in expiry_group['products']:
                     table_data.append([
-                        product['product_name'][:25] + '...' if len(product['product_name']) > 25 else product['product_name'],
-                        product['product_company'][:15] + '...' if len(product['product_company']) > 15 else product['product_company'],
-                        product['product_packing'][:10] + '...' if len(product['product_packing']) > 10 else product['product_packing'],
-                        product['batch_no'][:10] + '...' if len(product['batch_no']) > 10 else product['batch_no'],
-                        str(int(product['quantity'])),
+                        product['product_name'][:40] + '...' if len(product['product_name']) > 40 else product['product_name'],
                         f"₹{product['purchase_rate']:.2f}",
                         f"₹{product['mrp']:.2f}",
                         f"₹{product['value']:.2f}"
                     ])
                 
-                # Create table
-                col_widths = [2.2*inch, 1.3*inch, 0.8*inch, 0.8*inch, 0.6*inch, 0.8*inch, 0.7*inch, 0.9*inch]
+                # Create table with 4 columns
+                col_widths = [4*inch, 1.5*inch, 1.5*inch, 1.5*inch]
                 products_table = Table(table_data, colWidths=col_widths, repeatRows=1)
                 
                 # Determine row color based on expiry status
@@ -506,16 +516,16 @@ def export_dateexpiry_inventory_pdf(request):
                 products_table.setStyle(TableStyle([
                     # Header style
                     ('FONT', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 8),
+                    ('FONTSIZE', (0, 0), (-1, 0), 9),
                     ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
                     ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                     ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
                     
                     # Data rows style
                     ('FONT', (0, 1), (-1, -1), 'Helvetica'),
-                    ('FONTSIZE', (0, 1), (-1, -1), 7),
-                    ('ALIGN', (0, 1), (3, -1), 'LEFT'),
-                    ('ALIGN', (4, 1), (-1, -1), 'RIGHT'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 8),
+                    ('ALIGN', (0, 1), (0, -1), 'LEFT'),
+                    ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
                     ('BACKGROUND', (0, 1), (-1, -1), row_color),
                     
                     # Grid
@@ -584,30 +594,78 @@ def export_dateexpiry_inventory_excel(request):
         )
         
         # Title section
+        info_font = Font(name='Arial', size=10)
         current_row = 1
-        if pharmacy and pharmacy.pharmaname:
-            ws.merge_cells(f'A{current_row}:H{current_row}')
-            ws[f'A{current_row}'] = pharmacy.pharmaname
-            ws[f'A{current_row}'].font = title_font
-            ws[f'A{current_row}'].alignment = Alignment(horizontal='center')
+        
+        # Pharmacy details
+        if pharmacy:
+            if pharmacy.pharmaname:
+                ws.merge_cells(f'A{current_row}:D{current_row}')
+                ws[f'A{current_row}'] = pharmacy.pharmaname
+                ws[f'A{current_row}'].font = title_font
+                ws[f'A{current_row}'].alignment = Alignment(horizontal='center')
+                current_row += 1
+            if pharmacy.proprietorname:
+                ws.merge_cells(f'A{current_row}:D{current_row}')
+                ws[f'A{current_row}'] = f"Proprietor: {pharmacy.proprietorname}"
+                ws[f'A{current_row}'].font = info_font
+                ws[f'A{current_row}'].alignment = Alignment(horizontal='center')
+                current_row += 1
+            if pharmacy.proprietorcontact:
+                ws.merge_cells(f'A{current_row}:D{current_row}')
+                ws[f'A{current_row}'] = f"Contact: {pharmacy.proprietorcontact}"
+                ws[f'A{current_row}'].font = info_font
+                ws[f'A{current_row}'].alignment = Alignment(horizontal='center')
+                current_row += 1
+            if pharmacy.proprietoremail:
+                ws.merge_cells(f'A{current_row}:D{current_row}')
+                ws[f'A{current_row}'] = f"Email: {pharmacy.proprietoremail}"
+                ws[f'A{current_row}'].font = info_font
+                ws[f'A{current_row}'].alignment = Alignment(horizontal='center')
+                current_row += 1
+            if pharmacy.pharmaweburl:
+                ws.merge_cells(f'A{current_row}:D{current_row}')
+                ws[f'A{current_row}'] = f"Website: {pharmacy.pharmaweburl}"
+                ws[f'A{current_row}'].font = info_font
+                ws[f'A{current_row}'].alignment = Alignment(horizontal='center')
+                current_row += 1
             current_row += 1
         
-        ws.merge_cells(f'A{current_row}:H{current_row}')
+        ws.merge_cells(f'A{current_row}:D{current_row}')
         ws[f'A{current_row}'] = "Date-wise Inventory Report"
         ws[f'A{current_row}'].font = title_font
         ws[f'A{current_row}'].alignment = Alignment(horizontal='center')
         current_row += 1
         
-        ws.merge_cells(f'A{current_row}:H{current_row}')
+        ws.merge_cells(f'A{current_row}:D{current_row}')
         ws[f'A{current_row}'] = f"Generated on: {datetime.now().strftime('%d %B %Y at %H:%M')}"
-        ws[f'A{current_row}'].font = Font(name='Arial', size=10)
+        ws[f'A{current_row}'].font = info_font
         ws[f'A{current_row}'].alignment = Alignment(horizontal='center')
         current_row += 1
         
+        if expiry_from and expiry_to:
+            ws.merge_cells(f'A{current_row}:D{current_row}')
+            ws[f'A{current_row}'] = f"Entry Date Filter: {expiry_from} to {expiry_to}"
+            ws[f'A{current_row}'].font = info_font
+            ws[f'A{current_row}'].alignment = Alignment(horizontal='center')
+            current_row += 1
+        elif expiry_from:
+            ws.merge_cells(f'A{current_row}:D{current_row}')
+            ws[f'A{current_row}'] = f"Entry Date From: {expiry_from}"
+            ws[f'A{current_row}'].font = info_font
+            ws[f'A{current_row}'].alignment = Alignment(horizontal='center')
+            current_row += 1
+        elif expiry_to:
+            ws.merge_cells(f'A{current_row}:D{current_row}')
+            ws[f'A{current_row}'] = f"Entry Date To: {expiry_to}"
+            ws[f'A{current_row}'].font = info_font
+            ws[f'A{current_row}'].alignment = Alignment(horizontal='center')
+            current_row += 1
+        
         if search_query:
-            ws.merge_cells(f'A{current_row}:H{current_row}')
+            ws.merge_cells(f'A{current_row}:D{current_row}')
             ws[f'A{current_row}'] = f"Search Filter: {search_query}"
-            ws[f'A{current_row}'].font = Font(name='Arial', size=10)
+            ws[f'A{current_row}'].font = info_font
             ws[f'A{current_row}'].alignment = Alignment(horizontal='center')
             current_row += 1
         
@@ -637,8 +695,8 @@ def export_dateexpiry_inventory_excel(request):
             cell.border = thin_border
         current_row += 2  # Empty row
         
-        # Data headers
-        headers = ['Expiry Date', 'Product Name', 'Company', 'Packing', 'Batch No', 'Quantity', 'Purchase Rate', 'MRP', 'Stock Value']
+        # Data headers - 4 columns matching HTML template
+        headers = ['Product Name', 'Purchase Rate', 'MRP', 'Stock Value']
         for col, header in enumerate(headers, 1):
             cell = ws.cell(row=current_row, column=col, value=header)
             cell.font = header_font
@@ -663,24 +721,6 @@ def export_dateexpiry_inventory_excel(request):
                 else:
                     days_info = f" ({days} days remaining)"
             
-            # Merge cells for group header
-            ws.merge_cells(f'A{current_row}:H{current_row}')
-            group_cell = ws[f'A{current_row}']
-            group_cell.value = f"{expiry_display}{days_info} - Value: ₹{group_value:,.2f}"
-            group_cell.font = group_font
-            group_cell.fill = group_fill
-            group_cell.alignment = Alignment(horizontal='left')
-            group_cell.border = thin_border
-            
-            # Value cell
-            value_cell = ws.cell(row=current_row, column=9, value=f"₹{group_value:,.2f}")
-            value_cell.font = group_font
-            value_cell.fill = group_fill
-            value_cell.alignment = Alignment(horizontal='right')
-            value_cell.border = thin_border
-            
-            current_row += 1
-            
             # Determine fill color based on expiry status
             row_fill = None
             if expiry_group.get('days_to_expiry') is not None:
@@ -690,15 +730,10 @@ def export_dateexpiry_inventory_excel(request):
                 elif days <= 30:
                     row_fill = expiring_fill  # Expiring soon
             
-            # Products in this group
+            # Products in this group - 4 columns
             for product in expiry_group['products']:
                 row_data = [
-                    '',  # Empty for expiry date (already shown in group header)
                     product['product_name'],
-                    product['product_company'],
-                    product['product_packing'],
-                    product['batch_no'],
-                    int(product['quantity']),
                     f"₹{product['purchase_rate']:.2f}",
                     f"₹{product['mrp']:.2f}",
                     f"₹{product['value']:.2f}"
@@ -713,7 +748,7 @@ def export_dateexpiry_inventory_excel(request):
                         cell.fill = row_fill
                     
                     # Alignment
-                    if col in [6, 7, 8, 9]:  # Numeric columns
+                    if col in [2, 3, 4]:  # Numeric columns
                         cell.alignment = Alignment(horizontal='right')
                     else:
                         cell.alignment = Alignment(horizontal='left')
@@ -722,8 +757,8 @@ def export_dateexpiry_inventory_excel(request):
             
             current_row += 1  # Empty row between groups
         
-        # Auto-adjust column widths
-        column_widths = [15, 30, 20, 15, 15, 12, 15, 12, 15]
+        # Auto-adjust column widths - 4 columns
+        column_widths = [40, 18, 18, 18]
         for i, width in enumerate(column_widths, 1):
             ws.column_dimensions[get_column_letter(i)].width = width
         

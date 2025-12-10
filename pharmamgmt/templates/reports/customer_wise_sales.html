@@ -20,9 +20,10 @@
                 <button class="cws-export-btn cws-excel-btn" onclick="exportReport('excel')" title="Export Excel (Ctrl+E)">
                     <i class="fas fa-file-excel"></i> Export Excel
                 </button>
-                <button class="cws-export-btn cws-print-btn" onclick="printReport()" title="Print (Ctrl+P)">
+                <!-- Print button hidden as per requirement -->
+                <!-- <button class="cws-export-btn cws-print-btn" onclick="printReport()" title="Print (Ctrl+P)" style="display:none;">
                     <i class="fas fa-print"></i> Print
-                </button>
+                </button> -->
             </div>
         </div>
     </div>
@@ -102,9 +103,6 @@
                 <thead>
                     <tr>
                         <th>Invoice No</th>
-                        <th>Date</th>
-                        <th>Items</th>
-                        <th>Quantity</th>
                         <th>Amount</th>
                         <th>Balance Due</th>
                     </tr>
@@ -112,17 +110,7 @@
                 <tbody>
                     {% for sale in sales_data %}
                     <tr>
-                        <td>
-                            <strong class="cws-invoice-number">{{ sale.invoice.sales_invoice_no }}</strong>
-                            <div class="cws-invoice-items">
-                                {% for item in sale.items %}
-                                {{ item.product_name }} ({{ item.product_batch_no }}){% if not forloop.last %}, {% endif %}
-                                {% endfor %}
-                            </div>
-                        </td>
-                        <td>{{ sale.invoice.sales_invoice_date|date:"d-m-Y" }}</td>
-                        <td>{{ sale.items|length }} items</td>
-                        <td>{{ sale.invoice_qty|floatformat:0 }}</td>
+                        <td><strong class="cws-invoice-number">{{ sale.invoice.sales_invoice_no }}</strong></td>
                         <td class="cws-amount">₹{{ sale.invoice_total|floatformat:2 }}</td>
                         <td class="cws-balance-due">₹{{ sale.balance_due|floatformat:2 }}</td>
                     </tr>
@@ -428,7 +416,17 @@ function exportReport(format) {
 }
 
 function printReport() {
-    window.print();
+    const customerId = document.getElementById('cwsCustomerSelect').value;
+    const fromDate = document.querySelector('input[name="from_date"]').value;
+    const toDate = document.querySelector('input[name="to_date"]').value;
+    
+    if (!customerId || !fromDate || !toDate) {
+        alert('Please select customer and date range first');
+        return;
+    }
+    
+    const printUrl = `/reports/customer-sales/?customer_id=${customerId}&from_date=${fromDate}&to_date=${toDate}&export=print`;
+    window.open(printUrl, '_blank');
 }
 </script>
 {% endblock %}

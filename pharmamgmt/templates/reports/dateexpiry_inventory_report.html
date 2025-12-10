@@ -11,6 +11,31 @@
 
 {% block content %}
 <div class="date-report-container">
+    <!-- Pharmacy Details for Print -->
+    <div class="pharmacy-details" style="display: none;">
+        {% if pharmacy %}
+            {% if pharmacy.pharmaname %}<h2>{{ pharmacy.pharmaname }}</h2>{% endif %}
+            {% if pharmacy.proprietorname %}<p>Proprietor: {{ pharmacy.proprietorname }}</p>{% endif %}
+            {% if pharmacy.proprietorcontact %}<p>Contact: {{ pharmacy.proprietorcontact }}</p>{% endif %}
+            {% if pharmacy.proprietoremail %}<p>Email: {{ pharmacy.proprietoremail }}</p>{% endif %}
+            {% if pharmacy.pharmaweburl %}<p>Website: {{ pharmacy.pharmaweburl }}</p>{% endif %}
+        {% endif %}
+    </div>
+    
+    <!-- Filter Info for Print -->
+    <div class="filter-info" style="display: none;">
+        {% if expiry_from and expiry_to %}
+            <p>Entry Date Filter: {{ expiry_from }} to {{ expiry_to }}</p>
+        {% elif expiry_from %}
+            <p>Entry Date From: {{ expiry_from }}</p>
+        {% elif expiry_to %}
+            <p>Entry Date To: {{ expiry_to }}</p>
+        {% endif %}
+        {% if search_query %}
+            <p>Search Filter: {{ search_query }}</p>
+        {% endif %}
+    </div>
+    
     <div class="date-report-header">
         <h1 class="date-report-title">{{ title }}</h1>
         <div class="date-report-actions">
@@ -18,9 +43,10 @@
                 <i class="fas fa-boxes fa-sm"></i> Batch-wise Inventory
             </a>
 
-            <button onclick="window.print()" class="date-report-btn date-report-btn-warning" id="print-btn" title="Print Report (Ctrl+P)">
+            <!-- Print button hidden as per requirement -->
+            <!-- <button onclick="window.print()" class="date-report-btn date-report-btn-warning" id="print-btn" title="Print Report (Ctrl+P)" style="display:none;">
                 <i class="fas fa-print fa-sm"></i> Print (Ctrl+P)
-            </button>
+            </button> -->
 
             <a href="{% url 'export_dateexpiry_inventory_pdf' %}{% if search_query or expiry_from or expiry_to %}?{% if search_query %}search={{ search_query }}{% endif %}{% if expiry_from %}{% if search_query %}&{% endif %}expiry_from={{ expiry_from }}{% endif %}{% if expiry_to %}{% if search_query or expiry_from %}&{% endif %}expiry_to={{ expiry_to }}{% endif %}{% endif %}" class="date-report-btn date-report-btn-success" id="export-pdf-btn">
                 <i class="fas fa-file-pdf fa-sm"></i> Export PDF (Ctrl+Q)
@@ -43,11 +69,11 @@
                     </div>
                     <div class="date-filter-group">
                         <label style="font-size: 0.85rem; margin-bottom: 2px; color: #6b7280;">From Entry Date:</label>
-                        <input type="date" name="expiry_from" value="{{ expiry_from }}" placeholder="From Date" class="date-filter-input" title="Filter by purchase entry date (when expiry was added)">
+                        <input type="date" name="expiry_from" value="{{ expiry_from|default:'' }}" placeholder="From Date" class="date-filter-input" title="Filter by purchase entry date (when expiry was added)">
                     </div>
                     <div class="date-filter-group">
                         <label style="font-size: 0.85rem; margin-bottom: 2px; color: #6b7280;">To Entry Date:</label>
-                        <input type="date" name="expiry_to" value="{{ expiry_to }}" placeholder="To Date" class="date-filter-input" title="Filter by purchase entry date (when expiry was added)">
+                        <input type="date" name="expiry_to" value="{{ expiry_to|default:'' }}" placeholder="To Date" class="date-filter-input" title="Filter by purchase entry date (when expiry was added)">
                     </div>
                     <div class="date-filter-actions">
                         <button type="submit" class="date-filter-btn date-filter-btn-primary">
@@ -69,49 +95,17 @@
                 <table class="date-inventory-table">
                     <thead class="date-table-header">
                         <tr>
-                            <th width="15%">Expiry Date</th>
-                            <th width="15%">Product Name</th>
-                            <th width="10%">Company</th>
-                            <th width="10%">Packing</th>
-                            <th width="10%">Batch No</th>
-                            <th width="10%">Quantity</th>
-                            <th width="10%">Purchase Rate</th>
-                            <th width="10%">MRP</th>
-                            <th width="10%">Stock Value</th>
+                            <th width="40%">Product Name</th>
+                            <th width="20%">Purchase Rate</th>
+                            <th width="20%">MRP</th>
+                            <th width="20%">Stock Value</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for expiry_group in expiry_data %}
-                        <tr class="date-expiry-heading {% if expiry_group.days_to_expiry < 0 and expiry_group.expiry_date %}date-expired{% elif expiry_group.days_to_expiry <= 30 and expiry_group.expiry_date %}date-expiring-soon{% elif expiry_group.days_to_expiry <= 90 and expiry_group.expiry_date %}date-expiring-warning{% elif expiry_group.expiry_date %}date-expiring-later{% else %}date-no-expiry{% endif %}">
-                            <td colspan="8">
-                                {% if expiry_group.expiry_date %}
-                                    <strong>{{ expiry_group.expiry_display }}</strong>
-                                    <span class="date-expiry-days">
-                                        {% if expiry_group.days_to_expiry < 0 %}
-                                            (Expired {{ expiry_group.days_to_expiry|absolute }} days ago)
-                                        {% elif expiry_group.days_to_expiry == 0 %}
-                                            (Expires today)
-                                        {% else %}
-                                            ({{ expiry_group.days_to_expiry }} days remaining)
-                                        {% endif %}
-                                    </span>
-                                {% else %}
-                                    <strong>{{ expiry_group.expiry_display }}</strong>
-                                    <span class="date-expiry-days">(Products without expiry date)</span>
-                                {% endif %}
-                            </td>
-                            <td class="date-expiry-value">
-                                <strong>₹{{ expiry_group.total_value|floatformat:2 }}</strong>
-                            </td>
-                        </tr>
                         {% for item in expiry_group.products %}
                         <tr class="{% if item.days_to_expiry < 0 %}expired-product{% elif item.days_to_expiry <= 30 %}expiring-soon{% elif item.days_to_expiry <= 90 %}expiring-warning{% endif %}">
-                            <td></td>
                             <td>{{ item.product_name }}</td>
-                            <td>{{ item.product_company }}</td>
-                            <td>{{ item.product_packing }}</td>
-                            <td>{{ item.batch_no }}</td>
-                            <td>{{ item.quantity }}</td>
                             <td>₹{{ item.purchase_rate|floatformat:2 }}</td>
                             <td>₹{{ item.mrp|floatformat:2 }}</td>
                             <td>₹{{ item.value|floatformat:2 }}</td>
@@ -121,7 +115,7 @@
                     </tbody>
                     <tfoot class="date-table-footer">
                         <tr>
-                            <td colspan="8" class="date-total-label">Total Inventory Value:</td>
+                            <td colspan="3" class="date-total-label">Total Inventory Value:</td>
                             <td>₹{{ total_value|floatformat:2 }}</td>
                         </tr>
                     </tfoot>
@@ -147,6 +141,20 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function() {
+        // PDF download and auto-open function
+        function downloadAndOpenPDF(pdfUrl) {
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = pdfUrl;
+            document.body.appendChild(iframe);
+            setTimeout(() => {
+                window.open(pdfUrl, '_blank');
+                setTimeout(() => document.body.removeChild(iframe), 2000);
+            }, 1500);
+        }
+        
+        // This code moved to DOMContentLoaded below
+        
         // Autocomplete search suggestions
         let searchTimeout, selectedIndex = -1;
         
@@ -374,6 +382,67 @@
                 showNotification('💡 Tip: Use Ctrl+Q for PDF export, Ctrl+E for Excel export', 'info');
                 localStorage.setItem('inventory_shortcuts_shown', 'true');
             }, 2000);
+        }
+    });
+    
+    // Simple notification function
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type === 'success' ? 'success' : 'info'} fade show`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            padding: 12px 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        `;
+        notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i> ${message}`;
+        document.body.appendChild(notification);
+        setTimeout(() => { if (notification.parentNode) notification.remove(); }, 3000);
+    }
+    
+    // PDF download and auto-open function
+    function downloadAndOpenPDF(pdfUrl) {
+        showNotification('Downloading PDF...', 'info');
+        fetch(pdfUrl)
+            .then(response => response.blob())
+            .then(blob => {
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = 'dateexpiry_inventory_report.pdf';
+                link.click();
+                showNotification('PDF downloaded successfully!', 'success');
+                setTimeout(() => {
+                    window.open(downloadUrl, '_blank');
+                    window.URL.revokeObjectURL(downloadUrl);
+                }, 1000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Opening PDF in new tab...', 'info');
+                window.open(pdfUrl, '_blank');
+            });
+    }
+    
+    // Enhanced tooltips and click handlers
+    document.addEventListener('DOMContentLoaded', function() {
+        const pdfBtn = document.getElementById('export-pdf-btn');
+        const excelBtn = document.getElementById('export-excel-btn');
+        
+        if (pdfBtn) {
+            pdfBtn.title = 'Export as PDF (Ctrl+Q)';
+            pdfBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                downloadAndOpenPDF(this.href);
+            });
+        }
+        
+        if (excelBtn) {
+            excelBtn.title = 'Export as Excel (Ctrl+E)';
         }
     });
 </script>

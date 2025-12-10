@@ -1431,3 +1431,128 @@
 2025-12-02 17:16:31,643 - core.combined_invoice_view - INFO - Moved challan entry to SupplierChallanMaster2: FEBRIHIST TABS 10 TABS - 1
 2025-12-02 17:16:31,646 - core.combined_invoice_view - INFO - Total 4 challan entries moved to SupplierChallanMaster2
 2025-12-02 17:16:31,648 - core.combined_invoice_view - INFO - Invoice 0101 created successfully with 4 products
+2025-12-05 16:46:54,144 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['J6MRvIQn5fWFtYrRHxBWxTJeu3lgWGXJFQ1v4oNDmTnO55u9WmXyDBlXC2qkA9RE'], 'invoice_no': ['123'], 'invoice_date': ['2025-12-05'], 'supplierid': ['2'], 'transport_charges': ['0'], 'invoice_total': ['12600.00'], 'products_data': ['[{"productid":"2735","batch_no":"12343","expiry":"12-2026","mrp":"84","purchase_rate":"14","quantity":"500","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"0","rate_b":"0","rate_c":"0","from_challan":true,"challan_no":"12","challan_date":"05-12-2025"},{"productid":"2755","batch_no":"5643","expiry":"05-2027","mrp":"199","purchase_rate":"50","quantity":"100","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"0","rate_b":"0","rate_c":"0","from_challan":false,"challan_no":"","challan_date":""}]'], 'is_from_challan': ['true']}>
+2025-12-05 16:46:54,162 - core.combined_invoice_view - INFO - Products data received: [{"productid":"2735","batch_no":"12343","expiry":"12-2026","mrp":"84","purchase_rate":"14","quantity":"500","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"0","rate_b":"0","rate_c":"0","from_challan":true,"challan_no":"12","challan_date":"05-12-2025"},{"productid":"2755","batch_no":"5643","expiry":"05-2027","mrp":"199","purchase_rate":"50","quantity":"100","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"0","rate_b":"0","rate_c":"0","from_challan":false,"challan_no":"","challan_date":""}]
+2025-12-05 16:46:54,167 - core.combined_invoice_view - INFO - Challan flag: true
+2025-12-05 16:46:54,170 - core.combined_invoice_view - INFO - Invoice created with ID: 174
+2025-12-05 16:46:54,180 - core.combined_invoice_view - INFO - Challan data received: challan_no=12, challan_date=05-12-2025
+2025-12-05 16:46:54,181 - core.combined_invoice_view - INFO - Set source_challan_no: 12
+2025-12-05 16:46:54,182 - core.combined_invoice_view - INFO - Set source_challan_date: 2025-12-05
+2025-12-05 16:46:54,183 - core.combined_invoice_view - INFO - Setting rates for REBICID DSR CAP 10 CAP: A=0.0, B=0.0, C=0.0
+2025-12-05 16:46:54,183 - core.combined_invoice_view - INFO - Product REBICID DSR CAP 10 CAP: Base=7000.0, CGST=175.0, SGST=175.0, Total=7350.0
+2025-12-05 16:46:54,187 - core.combined_invoice_view - INFO - Product REBICID DSR CAP 10 CAP added to invoice
+2025-12-05 16:46:54,434 - core.combined_invoice_view - INFO - Challan data received: challan_no=, challan_date=
+2025-12-05 16:46:54,435 - core.combined_invoice_view - INFO - Setting rates for RESTUSS SYP 100ML: A=0.0, B=0.0, C=0.0
+2025-12-05 16:46:54,435 - core.combined_invoice_view - INFO - Product RESTUSS SYP 100ML: Base=5000.0, CGST=125.0, SGST=125.0, Total=5250.0
+2025-12-05 16:46:54,437 - core.combined_invoice_view - INFO - Product RESTUSS SYP 100ML added to invoice
+2025-12-05 16:46:54,460 - core.combined_invoice_view - INFO - Products total: 12600.0, Transport: 0.0, Invoice total: 12600.0
+2025-12-05 16:46:54,472 - core.combined_invoice_view - INFO - Moved challan entry to SupplierChallanMaster2: REBICID DSR CAP 10 CAP - 12343
+2025-12-05 16:46:54,472 - core.combined_invoice_view - INFO - Total 1 challan entries moved to SupplierChallanMaster2
+2025-12-05 16:46:54,474 - core.combined_invoice_view - INFO - Invoice 123 created successfully with 2 products
+2025-12-05 19:49:31,825 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['9k8ZuwbKVA803dBVmM9kvjnvzhGxFDsnhfsKEbd03BvfW9CvNfJjo9zLyWT56dWs'], 'invoice_no': ['0101010'], 'invoice_date': ['2025-12-05'], 'supplierid': ['8'], 'transport_charges': ['0'], 'invoice_total': ['150.15'], 'products_data': ['[{"productid":"3368","batch_no":"1234","expiry":"12-2034","mrp":"12","purchase_rate":"13","quantity":"11","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"1","rate_b":"2","rate_c":"3","from_challan":true,"challan_no":"1234","challan_date":"05-12-2025"}]'], 'is_from_challan': ['true']}>
+2025-12-05 19:49:31,833 - core.combined_invoice_view - INFO - Products data received: [{"productid":"3368","batch_no":"1234","expiry":"12-2034","mrp":"12","purchase_rate":"13","quantity":"11","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"1","rate_b":"2","rate_c":"3","from_challan":true,"challan_no":"1234","challan_date":"05-12-2025"}]
+2025-12-05 19:49:31,834 - core.combined_invoice_view - INFO - Challan flag: true
+2025-12-05 19:49:31,836 - core.combined_invoice_view - INFO - Invoice created with ID: 175
+2025-12-05 19:49:31,840 - core.combined_invoice_view - INFO - Challan data received: challan_no=1234, challan_date=05-12-2025
+2025-12-05 19:49:31,841 - core.combined_invoice_view - INFO - Set source_challan_no: 1234
+2025-12-05 19:49:31,843 - core.combined_invoice_view - INFO - Set source_challan_date: 2025-12-05
+2025-12-05 19:49:31,845 - core.combined_invoice_view - INFO - Setting rates for shilajit: A=1.0, B=2.0, C=3.0
+2025-12-05 19:49:31,845 - core.combined_invoice_view - INFO - Product shilajit: Base=143.0, CGST=3.575, SGST=3.575, Total=150.14999999999998
+2025-12-05 19:49:31,848 - core.combined_invoice_view - INFO - Product shilajit added to invoice
+2025-12-05 19:49:32,083 - core.combined_invoice_view - INFO - Products total: 150.14999999999998, Transport: 0.0, Invoice total: 150.14999999999998
+2025-12-05 19:49:32,096 - core.combined_invoice_view - INFO - Moved challan entry to SupplierChallanMaster2: shilajit - 1234
+2025-12-05 19:49:32,097 - core.combined_invoice_view - INFO - Total 1 challan entries moved to SupplierChallanMaster2
+2025-12-05 19:49:32,098 - core.combined_invoice_view - INFO - Invoice 0101010 created successfully with 1 products
+2025-12-05 19:59:57,633 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['M1m5bnQ6VXMqPzX3u1FN2sBvF7ka58neUWGQl2Sm3Y9FIvYDVufMViNLEMxIwIRj'], 'invoice_no': ['123'], 'invoice_date': ['2025-12-05'], 'supplierid': ['8'], 'transport_charges': ['0'], 'invoice_total': ['1.05'], 'products_data': ['[{"productid":"3377","batch_no":"1234","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"1","rate_b":"2","rate_c":"3","from_challan":true,"challan_no":"134","challan_date":"05-12-2025"}]'], 'is_from_challan': ['true']}>
+2025-12-05 19:59:57,639 - core.combined_invoice_view - INFO - Products data received: [{"productid":"3377","batch_no":"1234","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"1","rate_b":"2","rate_c":"3","from_challan":true,"challan_no":"134","challan_date":"05-12-2025"}]
+2025-12-05 19:59:57,640 - core.combined_invoice_view - INFO - Challan flag: true
+2025-12-05 19:59:57,643 - core.combined_invoice_view - INFO - Invoice created with ID: 176
+2025-12-05 19:59:57,648 - core.combined_invoice_view - INFO - Challan data received: challan_no=134, challan_date=05-12-2025
+2025-12-05 19:59:57,648 - core.combined_invoice_view - INFO - Set source_challan_no: 134
+2025-12-05 19:59:57,650 - core.combined_invoice_view - INFO - Set source_challan_date: 2025-12-05
+2025-12-05 19:59:57,650 - core.combined_invoice_view - INFO - Setting rates for paracetamol: A=1.0, B=2.0, C=3.0
+2025-12-05 19:59:57,651 - core.combined_invoice_view - INFO - Product paracetamol: Base=1.0, CGST=0.025, SGST=0.025, Total=1.0499999999999998
+2025-12-05 19:59:57,654 - core.combined_invoice_view - INFO - Product paracetamol added to invoice
+2025-12-05 19:59:57,701 - core.combined_invoice_view - INFO - Products total: 1.0499999999999998, Transport: 0.0, Invoice total: 1.0499999999999998
+2025-12-05 19:59:57,714 - core.combined_invoice_view - INFO - Moved challan entry to SupplierChallanMaster2: paracetamol - 1234
+2025-12-05 19:59:57,714 - core.combined_invoice_view - INFO - Total 1 challan entries moved to SupplierChallanMaster2
+2025-12-05 19:59:57,715 - core.combined_invoice_view - INFO - Invoice 123 created successfully with 1 products
+2025-12-06 18:47:24,491 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['VzhFknMpDrzr7Z24zlGDWnjaEOTsVvyU3uBqu2OFLsWG0V3E0OgCPdvqDt60m52Z'], 'invoice_no': ['1122'], 'invoice_date': ['2025-12-06'], 'supplierid': ['2'], 'transport_charges': ['0'], 'invoice_total': ['12.60'], 'products_data': ['[{"productid":"3377","batch_no":"1234","expiry":"12-2034","mrp":"12","purchase_rate":"12","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"0","rate_b":"0","rate_c":"0","from_challan":false,"challan_no":"","challan_date":""}]'], 'is_from_challan': ['false']}>
+2025-12-06 18:47:24,502 - core.combined_invoice_view - INFO - Products data received: [{"productid":"3377","batch_no":"1234","expiry":"12-2034","mrp":"12","purchase_rate":"12","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"0","rate_b":"0","rate_c":"0","from_challan":false,"challan_no":"","challan_date":""}]
+2025-12-06 18:47:24,503 - core.combined_invoice_view - INFO - Challan flag: false
+2025-12-06 18:47:24,508 - core.combined_invoice_view - INFO - Invoice created with ID: 177
+2025-12-06 18:47:24,512 - core.combined_invoice_view - INFO - Challan data received: challan_no=, challan_date=
+2025-12-06 18:47:24,513 - core.combined_invoice_view - INFO - Setting rates for paracetamol: A=0.0, B=0.0, C=0.0
+2025-12-06 18:47:24,514 - core.combined_invoice_view - INFO - Product paracetamol: Base=12.0, CGST=0.30000000000000004, SGST=0.30000000000000004, Total=12.600000000000001
+2025-12-06 18:47:24,517 - core.combined_invoice_view - INFO - Product paracetamol added to invoice
+2025-12-06 18:47:24,771 - core.combined_invoice_view - INFO - Products total: 12.600000000000001, Transport: 0.0, Invoice total: 12.600000000000001
+2025-12-06 18:47:24,772 - core.combined_invoice_view - INFO - Invoice 1122 created successfully with 1 products
+2025-12-08 12:33:25,038 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['0qsibGKlZcYuQJVYkIUXCvdEXB8mItR1Q6KoLodK3txiyfaift4Lz6hyEklDBfTc'], 'invoice_no': ['123456'], 'invoice_date': ['2025-12-08'], 'supplierid': ['2'], 'transport_charges': ['0'], 'invoice_total': ['150284.73'], 'products_data': ['[{"productid":"925","batch_no":"B2245","expiry":"08-2027","mrp":"1114.1815790033863","purchase_rate":"797.8134744878814","quantity":"49","scheme":"0","discount":"2.1705297331163886","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"0","rate_b":"0","rate_c":"0","from_challan":true,"challan_no":"CH20251208000631","challan_date":"08-12-2025"},{"productid":"668","batch_no":"B7402","expiry":"03-2027","mrp":"1247.4982988442614","purchase_rate":"935.2426118516381","quantity":"19","scheme":"0","discount":"9.221431482767079","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"0","rate_b":"0","rate_c":"0","from_challan":true,"challan_no":"CH20251208000631","challan_date":"08-12-2025"},{"productid":"3092","batch_no":"B2234","expiry":"05-2027","mrp":"610.5359258198513","purchase_rate":"498.79404609133934","quantity":"23","scheme":"0","discount":"25.522025218623607","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"0","rate_b":"0","rate_c":"0","from_challan":true,"challan_no":"CH20251208000631","challan_date":"08-12-2025"},{"productid":"898","batch_no":"B9472","expiry":"03-2026","mrp":"1303.2471671509645","purchase_rate":"902.3411689366317","quantity":"58","scheme":"0","discount":"21.941906808526017","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"0","rate_b":"0","rate_c":"0","from_challan":true,"challan_no":"CH20251208000205","challan_date":"08-12-2025"},{"productid":"777","batch_no":"B8140","expiry":"01-2027","mrp":"483.88450934701206","purchase_rate":"358.12172360973216","quantity":"38","scheme":"0","discount":"29.199545257547506","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"0","rate_b":"0","rate_c":"0","from_challan":true,"challan_no":"CH20251208000205","challan_date":"08-12-2025"},{"productid":"12","batch_no":"B1837","expiry":"09-2028","mrp":"986.9328342343131","purchase_rate":"689.9781483958178","quantity":"13","scheme":"0","discount":"32.500166333823095","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"0","rate_b":"0","rate_c":"0","from_challan":true,"challan_no":"CH20251208000205","challan_date":"08-12-2025"}]'], 'is_from_challan': ['true']}>
+2025-12-08 12:33:25,054 - core.combined_invoice_view - INFO - Products data received: [{"productid":"925","batch_no":"B2245","expiry":"08-2027","mrp":"1114.1815790033863","purchase_rate":"797.8134744878814","quantity":"49","scheme":"0","discount":"2.1705297331163886","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"0","rate_b":"0","rate_c":"0","from_challan":true,"challan_no":"CH20251208000631","challan_date":"08-12-2025"},{"productid":"668","batch_no":"B7402","expiry":"03-2027","mrp":"1247.4982988442614","purchase_rate":"935.2426118516381","quantity":"19","scheme":"0","discount":"9.221431482767079","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"0","rate_b":"0","rate_c":"0","from_challan":true,"challan_no":"CH20251208000631","challan_date":"08-12-2025"},{"productid":"3092","batch_no":"B2234","expiry":"05-2027","mrp":"610.5359258198513","purchase_rate":"498.79404609133934","quantity":"23","scheme":"0","discount":"25.522025218623607","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"0","rate_b":"0","rate_c":"0","from_challan":true,"challan_no":"CH20251208000631","challan_date":"08-12-2025"},{"productid":"898","batch_no":"B9472","expiry":"03-2026","mrp":"1303.2471671509645","purchase_rate":"902.3411689366317","quantity":"58","scheme":"0","discount":"21.941906808526017","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"0","rate_b":"0","rate_c":"0","from_challan":true,"challan_no":"CH20251208000205","challan_date":"08-12-2025"},{"productid":"777","batch_no":"B8140","expiry":"01-2027","mrp":"483.88450934701206","purchase_rate":"358.12172360973216","quantity":"38","scheme":"0","discount":"29.199545257547506","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"0","rate_b":"0","rate_c":"0","from_challan":true,"challan_no":"CH20251208000205","challan_date":"08-12-2025"},{"productid":"12","batch_no":"B1837","expiry":"09-2028","mrp":"986.9328342343131","purchase_rate":"689.9781483958178","quantity":"13","scheme":"0","discount":"32.500166333823095","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"0","rate_b":"0","rate_c":"0","from_challan":true,"challan_no":"CH20251208000205","challan_date":"08-12-2025"}]
+2025-12-08 12:33:25,055 - core.combined_invoice_view - INFO - Challan flag: true
+2025-12-08 12:33:25,063 - core.combined_invoice_view - INFO - Invoice created with ID: 165178
+2025-12-08 12:33:25,068 - core.combined_invoice_view - INFO - Challan data received: challan_no=CH20251208000631, challan_date=08-12-2025
+2025-12-08 12:33:25,069 - core.combined_invoice_view - INFO - Set source_challan_no: CH20251208000631
+2025-12-08 12:33:25,074 - core.combined_invoice_view - INFO - Set source_challan_date: 2025-12-08
+2025-12-08 12:33:25,075 - core.combined_invoice_view - INFO - Setting rates for DICYCLOMINE TAB 100 TAB: A=0.0, B=0.0, C=0.0
+2025-12-08 12:33:25,076 - core.combined_invoice_view - INFO - Product DICYCLOMINE TAB 100 TAB: Base=39090.68972017307, CGST=977.2672430043267, SGST=977.2672430043267, Total=41045.224206181716
+2025-12-08 12:33:25,081 - core.combined_invoice_view - INFO - Product DICYCLOMINE TAB 100 TAB added to invoice
+2025-12-08 12:33:25,391 - core.combined_invoice_view - INFO - Challan data received: challan_no=CH20251208000631, challan_date=08-12-2025
+2025-12-08 12:33:25,392 - core.combined_invoice_view - INFO - Set source_challan_no: CH20251208000631
+2025-12-08 12:33:25,393 - core.combined_invoice_view - INFO - Set source_challan_date: 2025-12-08
+2025-12-08 12:33:25,394 - core.combined_invoice_view - INFO - Setting rates for CLESSAR SOFTGEL 3': A=0.0, B=0.0, C=0.0
+2025-12-08 12:33:25,395 - core.combined_invoice_view - INFO - Product CLESSAR SOFTGEL 3': Base=17760.388193698356, CGST=444.0097048424589, SGST=444.0097048424589, Total=18648.40760338327
+2025-12-08 12:33:25,397 - core.combined_invoice_view - INFO - Product CLESSAR SOFTGEL 3' added to invoice
+2025-12-08 12:33:25,422 - core.combined_invoice_view - INFO - Challan data received: challan_no=CH20251208000631, challan_date=08-12-2025
+2025-12-08 12:33:25,424 - core.combined_invoice_view - INFO - Set source_challan_no: CH20251208000631
+2025-12-08 12:33:25,425 - core.combined_invoice_view - INFO - Set source_challan_date: 2025-12-08
+2025-12-08 12:33:25,425 - core.combined_invoice_view - INFO - Setting rates for TONOCALCIUM SYRUP 100 ML: A=0.0, B=0.0, C=0.0
+2025-12-08 12:33:25,426 - core.combined_invoice_view - INFO - Product TONOCALCIUM SYRUP 100 ML: Base=11446.741034882181, CGST=286.16852587205454, SGST=286.16852587205454, Total=12019.078086626292
+2025-12-08 12:33:25,428 - core.combined_invoice_view - INFO - Product TONOCALCIUM SYRUP 100 ML added to invoice
+2025-12-08 12:33:25,449 - core.combined_invoice_view - INFO - Challan data received: challan_no=CH20251208000205, challan_date=08-12-2025
+2025-12-08 12:33:25,450 - core.combined_invoice_view - INFO - Set source_challan_no: CH20251208000205
+2025-12-08 12:33:25,451 - core.combined_invoice_view - INFO - Set source_challan_date: 2025-12-08
+2025-12-08 12:33:25,451 - core.combined_invoice_view - INFO - Setting rates for DEXTROSE 5 % 1000 ML 1000 ML: A=0.0, B=0.0, C=0.0
+2025-12-08 12:33:25,452 - core.combined_invoice_view - INFO - Product DEXTROSE 5 % 1000 ML 1000 ML: Base=52313.84589151611, CGST=1307.8461472879028, SGST=1307.8461472879028, Total=54929.53818609192
+2025-12-08 12:33:25,454 - core.combined_invoice_view - INFO - Product DEXTROSE 5 % 1000 ML 1000 ML added to invoice
+2025-12-08 12:33:25,477 - core.combined_invoice_view - INFO - Challan data received: challan_no=CH20251208000205, challan_date=08-12-2025
+2025-12-08 12:33:25,477 - core.combined_invoice_view - INFO - Set source_challan_no: CH20251208000205
+2025-12-08 12:33:25,478 - core.combined_invoice_view - INFO - Set source_challan_date: 2025-12-08
+2025-12-08 12:33:25,478 - core.combined_invoice_view - INFO - Setting rates for CREPE BANDAGE 10CM*4M 1: A=0.0, B=0.0, C=0.0
+2025-12-08 12:33:25,479 - core.combined_invoice_view - INFO - Product CREPE BANDAGE 10CM*4M 1: Base=13579.425951912273, CGST=339.48564879780685, SGST=339.48564879780685, Total=14258.397249507887
+2025-12-08 12:33:25,481 - core.combined_invoice_view - INFO - Product CREPE BANDAGE 10CM*4M 1 added to invoice
+2025-12-08 12:33:25,503 - core.combined_invoice_view - INFO - Challan data received: challan_no=CH20251208000205, challan_date=08-12-2025
+2025-12-08 12:33:25,503 - core.combined_invoice_view - INFO - Set source_challan_no: CH20251208000205
+2025-12-08 12:33:25,504 - core.combined_invoice_view - INFO - Set source_challan_date: 2025-12-08
+2025-12-08 12:33:25,505 - core.combined_invoice_view - INFO - Setting rates for ABHRALOH TAB 30TAB: A=0.0, B=0.0, C=0.0
+2025-12-08 12:33:25,505 - core.combined_invoice_view - INFO - Product ABHRALOH TAB 30TAB: Base=8937.215762811808, CGST=223.4303940702952, SGST=223.4303940702952, Total=9384.076550952399
+2025-12-08 12:33:25,508 - core.combined_invoice_view - INFO - Product ABHRALOH TAB 30TAB added to invoice
+2025-12-08 12:33:25,529 - core.combined_invoice_view - INFO - Products total: 150284.7218827435, Transport: 0.0, Invoice total: 150284.7218827435
+2025-12-08 12:33:25,549 - core.combined_invoice_view - INFO - Moved challan entry to SupplierChallanMaster2: DICYCLOMINE TAB 100 TAB - B2245
+2025-12-08 12:33:25,566 - core.combined_invoice_view - INFO - Moved challan entry to SupplierChallanMaster2: CLESSAR SOFTGEL 3' - B7402
+2025-12-08 12:33:25,586 - core.combined_invoice_view - INFO - Moved challan entry to SupplierChallanMaster2: TONOCALCIUM SYRUP 100 ML - B2234
+2025-12-08 12:33:25,604 - core.combined_invoice_view - INFO - Moved challan entry to SupplierChallanMaster2: DEXTROSE 5 % 1000 ML 1000 ML - B9472
+2025-12-08 12:33:25,620 - core.combined_invoice_view - INFO - Moved challan entry to SupplierChallanMaster2: CREPE BANDAGE 10CM*4M 1 - B8140
+2025-12-08 12:33:25,637 - core.combined_invoice_view - INFO - Moved challan entry to SupplierChallanMaster2: ABHRALOH TAB 30TAB - B1837
+2025-12-08 12:33:25,638 - core.combined_invoice_view - INFO - Total 6 challan entries moved to SupplierChallanMaster2
+2025-12-08 12:33:25,638 - core.combined_invoice_view - INFO - Invoice 123456 created successfully with 6 products
+2025-12-08 18:42:50,360 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['dzFIBccLiDIXXDt3hYNNuapPszzNtvN9zL2NNxP5mVswIVjpi6Pb6UcY9oAN2PPx'], 'invoice_no': ['10101010'], 'invoice_date': ['2025-12-08'], 'supplierid': ['8'], 'transport_charges': ['0'], 'invoice_total': ['11.55'], 'products_data': ['[{"productid":"3377","batch_no":"123","expiry":"12-2034","mrp":"12","purchase_rate":"11","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"1","rate_b":"2","rate_c":"3","from_challan":false,"challan_no":"","challan_date":""}]'], 'is_from_challan': ['false']}>
+2025-12-08 18:42:50,373 - core.combined_invoice_view - INFO - Products data received: [{"productid":"3377","batch_no":"123","expiry":"12-2034","mrp":"12","purchase_rate":"11","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"1","rate_b":"2","rate_c":"3","from_challan":false,"challan_no":"","challan_date":""}]
+2025-12-08 18:42:50,373 - core.combined_invoice_view - INFO - Challan flag: false
+2025-12-08 18:42:50,376 - core.combined_invoice_view - INFO - Invoice created with ID: 165179
+2025-12-08 18:42:50,379 - core.combined_invoice_view - INFO - Challan data received: challan_no=, challan_date=
+2025-12-08 18:42:50,382 - core.combined_invoice_view - INFO - Setting rates for paracetamol: A=1.0, B=2.0, C=3.0
+2025-12-08 18:42:50,383 - core.combined_invoice_view - INFO - Product paracetamol: Base=11.0, CGST=0.275, SGST=0.275, Total=11.55
+2025-12-08 18:42:50,387 - core.combined_invoice_view - INFO - Product paracetamol added to invoice
+2025-12-08 18:42:50,453 - core.combined_invoice_view - INFO - Products total: 11.55, Transport: 0.0, Invoice total: 11.55
+2025-12-08 18:42:50,453 - core.combined_invoice_view - INFO - Invoice 10101010 created successfully with 1 products
+2025-12-09 20:16:25,523 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['723wTbPM7BxlkiaI0rO5JS1GORk6lE8rteqB5ws6bThU5A041zQtlCOPvGl6UYaP'], 'invoice_no': ['12345'], 'invoice_date': ['2025-12-09'], 'supplierid': ['8'], 'transport_charges': ['0'], 'invoice_total': ['1155.00'], 'products_data': ['[{"productid":"3377","batch_no":"1234","expiry":"12-2034","mrp":"120","purchase_rate":"110","quantity":"10","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"115","rate_b":"113","rate_c":"112","from_challan":false,"challan_no":"","challan_date":""}]'], 'is_from_challan': ['false']}>
+2025-12-09 20:16:25,538 - core.combined_invoice_view - INFO - Products data received: [{"productid":"3377","batch_no":"1234","expiry":"12-2034","mrp":"120","purchase_rate":"110","quantity":"10","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"115","rate_b":"113","rate_c":"112","from_challan":false,"challan_no":"","challan_date":""}]
+2025-12-09 20:16:25,539 - core.combined_invoice_view - INFO - Challan flag: false
+2025-12-09 20:16:25,542 - core.combined_invoice_view - INFO - Invoice created with ID: 165180
+2025-12-09 20:16:25,546 - core.combined_invoice_view - INFO - Challan data received: challan_no=, challan_date=
+2025-12-09 20:16:25,547 - core.combined_invoice_view - INFO - Setting rates for paracetamol: A=115.0, B=113.0, C=112.0
+2025-12-09 20:16:25,548 - core.combined_invoice_view - INFO - Product paracetamol: Base=1100.0, CGST=27.5, SGST=27.5, Total=1155.0
+2025-12-09 20:16:25,555 - core.combined_invoice_view - INFO - Product paracetamol added to invoice
+2025-12-09 20:16:25,865 - core.combined_invoice_view - INFO - Products total: 1155.0, Transport: 0.0, Invoice total: 1155.0
+2025-12-09 20:16:25,866 - core.combined_invoice_view - INFO - Invoice 12345 created successfully with 1 products

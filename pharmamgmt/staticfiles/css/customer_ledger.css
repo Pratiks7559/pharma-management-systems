@@ -361,6 +361,41 @@
     }
     body {
         background: white !important;
+        margin: 0;
+        padding: 0;
+    }
+    @page {
+        size: A4;
+        margin: 10mm;
+    }
+    * {
+        box-sizing: border-box;
+        page-break-inside: avoid;
+    }
+    .ledger-container {
+        margin: 0;
+        padding: 10mm;
+        max-width: 100%;
+    }
+    .ledger-header-card,
+    .ledger-filter-card,
+    .ledger-summary-grid,
+    .ledger-table-card {
+        box-shadow: none;
+        page-break-inside: avoid;
+    }
+    .ledger-table-card {
+        page-break-before: auto;
+    }
+    .ledger-table thead {
+        display: table-header-group;
+    }
+    .ledger-table tbody tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+    .ledger-table tfoot {
+        display: table-footer-group;
     }
 }
 

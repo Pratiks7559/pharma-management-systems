@@ -580,7 +580,8 @@ th, td { display: table-cell !important; }
                         <th>Rate</th>
                         <th>Qty</th>
                         <th>Discount</th>
-                        <th>GST%</th>
+                        <th>CGST%</th>
+                        <th>SGST%</th>
                         <th>Amount</th>
                         <th>Reason</th>
                         <th>Actions</th>
@@ -599,7 +600,8 @@ th, td { display: table-cell !important; }
                         <td>₹{{ item.return_sale_rate|floatformat:2 }}</td>
                         <td>{{ item.return_sale_quantity }}</td>
                         <td>{{ item.return_sale_discount }}{% if item.return_sale_calculation_mode == 'percentage' %}%{% else %} ₹{% endif %}</td>
-                        <td>{{ item.return_sale_igst }}%</td>
+                        <td>{{ item.return_sale_cgst }}%</td>
+                        <td>{{ item.return_sale_sgst }}%</td>
                         <td>₹{{ item.return_sale_total_amount|floatformat:2 }}</td>
                         <td>{{ item.return_reason|default:"-" }}</td>
                         <td class="sr-detail-item-actions-cell">
@@ -617,7 +619,7 @@ th, td { display: table-cell !important; }
                 </tbody>
                 <tfoot>
                     <tr>
-                        <th colspan="8">Total:</th>
+                        <th colspan="9">Total:</th>
                         <th>₹{{ items_total|floatformat:2 }}</th>
                         <th colspan="2"></th>
                     </tr>

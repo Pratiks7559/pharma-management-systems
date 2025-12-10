@@ -259,7 +259,7 @@ body.select2-open {
                                             </div>
                                             <button type="button" class="ci-pull-challan-btn" 
                                             onclick="openPullChallanDialog()" id="pullChallanBtn" disabled>
-                                                <i class="fas fa-file-import"></i> Pull Challan
+                                                <i class="fas fa-file-import"></i>  Challan
                                             </button>
                                         </div>
                                     </div>
@@ -1064,15 +1064,15 @@ function addProductRow() {
         </select></td>
         <td><input type="text" class="batch-no" placeholder="Batch No" required></td>
         <td><input type="text" class="expiry" placeholder="MM-YYYY" maxlength="7" title="Enter expiry in MM-YYYY format (e.g., 12-2025)" required></td>
-        <td><input type="number" class="mrp" step="0.01" placeholder="MRP" min="0.01" required></td>
-        <td><input type="number" class="purchase-rate" step="0.01" placeholder="Rate" min="0.01" onchange="calculateRowTotal(${productRowIndex})" required></td>
-        <td><input type="number" class="qty" placeholder="Qty" min="0.01" step="0.01" onchange="calculateRowTotal(${productRowIndex})" required></td>
-        <td><input type="number" class="discount" step="0.01" placeholder="Discount" min="0" onchange="calculateRowTotal(${productRowIndex})"></td>
-        <td><input type="number" class="cgst-rate" step="0.01" placeholder="CGST %" min="0" max="50" value="2.5" onchange="calculateRowTotal(${productRowIndex})"></td>
-        <td><input type="number" class="sgst-rate" step="0.01" placeholder="SGST %" min="0" max="50" value="2.5" onchange="calculateRowTotal(${productRowIndex})"></td>
-        <td><input type="number" class="rate-a" step="0.01" placeholder="Rate A" min="0"></td>
-        <td><input type="number" class="rate-b" step="0.01" placeholder="Rate B" min="0"></td>
-        <td><input type="number" class="rate-c" step="0.01" placeholder="Rate C" min="0"></td>
+        <td><input type="number" class="mrp" step="any" placeholder="MRP" min="0.01" required></td>
+        <td><input type="number" class="purchase-rate" step="any" placeholder="Rate" min="0.01" onchange="calculateRowTotal(${productRowIndex})" required></td>
+        <td><input type="number" class="qty" placeholder="Qty" min="0.01" step="any" onchange="calculateRowTotal(${productRowIndex})" required></td>
+        <td><input type="number" class="discount" step="any" placeholder="Discount" min="0" onchange="calculateRowTotal(${productRowIndex})"></td>
+        <td><input type="number" class="cgst-rate" step="any" placeholder="CGST %" min="0" max="50" value="2.5" onchange="calculateRowTotal(${productRowIndex})"></td>
+        <td><input type="number" class="sgst-rate" step="any" placeholder="SGST %" min="0" max="50" value="2.5" onchange="calculateRowTotal(${productRowIndex})"></td>
+        <td><input type="number" class="rate-a" step="any" placeholder="Rate A" min="0"></td>
+        <td><input type="number" class="rate-b" step="any" placeholder="Rate B" min="0"></td>
+        <td><input type="number" class="rate-c" step="any" placeholder="Rate C" min="0"></td>
         <td><span class="row-total">0.00</span></td>
         <td><button type="button" class="remove-btn" onclick="removeProductRow(${productRowIndex})" title="Remove Row"><i class="fas fa-trash"></i></button></td>
     `;
@@ -1512,15 +1512,25 @@ function loadProductInfo(rowIndex, productId) {
         // Clear fields when no product selected
         const row = document.getElementById(`productRow_${rowIndex}`);
         if (row) {
-            row.querySelector('.batch-no').value = '';
-            row.querySelector('.expiry').value = '';
-            row.querySelector('.mrp').value = '';
-            row.querySelector('.purchase-rate').value = '';
-            row.querySelector('.cgst-rate').value = '';
-            row.querySelector('.sgst-rate').value = '';
-            row.querySelector('.rate-a').value = '';
-            row.querySelector('.rate-b').value = '';
-            row.querySelector('.rate-c').value = '';
+            const batchNo = row.querySelector('.batch-no');
+            const expiry = row.querySelector('.expiry');
+            const mrp = row.querySelector('.mrp');
+            const purchaseRate = row.querySelector('.purchase-rate');
+            const cgstRate = row.querySelector('.cgst-rate');
+            const sgstRate = row.querySelector('.sgst-rate');
+            const rateA = row.querySelector('.rate-a');
+            const rateB = row.querySelector('.rate-b');
+            const rateC = row.querySelector('.rate-c');
+            
+            if (batchNo) batchNo.value = '';
+            if (expiry) expiry.value = '';
+            if (mrp) mrp.value = '';
+            if (purchaseRate) purchaseRate.value = '';
+            if (cgstRate) cgstRate.value = '';
+            if (sgstRate) sgstRate.value = '';
+            if (rateA) rateA.value = '';
+            if (rateB) rateB.value = '';
+            if (rateC) rateC.value = '';
             calculateRowTotal(rowIndex);
         }
         return;
@@ -1535,10 +1545,24 @@ function loadProductInfo(rowIndex, productId) {
             }
             
             const row = document.getElementById(`productRow_${rowIndex}`);
-            if (row) {
-                // Auto-fill fields
-                row.querySelector('.batch-no').value = data.last_batch_no || '';
-                // Ensure expiry is in MM-YYYY format
+            if (!row) return;
+            
+            // Get all fields with null checks
+            const batchNo = row.querySelector('.batch-no');
+            const expiryField = row.querySelector('.expiry');
+            const mrp = row.querySelector('.mrp');
+            const purchaseRate = row.querySelector('.purchase-rate');
+            const cgstRate = row.querySelector('.cgst-rate');
+            const sgstRate = row.querySelector('.sgst-rate');
+            const rateA = row.querySelector('.rate-a');
+            const rateB = row.querySelector('.rate-b');
+            const rateC = row.querySelector('.rate-c');
+            
+            // Auto-fill fields with null checks
+            if (batchNo) batchNo.value = data.last_batch_no || '';
+            
+            // Ensure expiry is in MM-YYYY format
+            if (expiryField) {
                 let expiry = data.last_expiry || '';
                 if (expiry && expiry.length === 10 && expiry.includes('-')) {
                     // Convert YYYY-MM-DD to MM-YYYY
@@ -1547,17 +1571,24 @@ function loadProductInfo(rowIndex, productId) {
                         expiry = `${parts[1]}-${parts[0]}`;
                     }
                 }
-                row.querySelector('.expiry').value = expiry;
-                row.querySelector('.mrp').value = data.product_MRP || '';
-                row.querySelector('.purchase-rate').value = data.last_purchase_rate || '';
-                row.querySelector('.gst-rate').value = data.gst_rate || '';
-                row.querySelector('.rate-a').value = data.rate_A || '';
-                row.querySelector('.rate-b').value = data.rate_B || '';
-                row.querySelector('.rate-c').value = data.rate_C || '';
-                
-                // Recalculate row total
-                calculateRowTotal(rowIndex);
+                expiryField.value = expiry;
             }
+            
+            if (mrp) mrp.value = data.product_MRP || '';
+            if (purchaseRate) purchaseRate.value = data.last_purchase_rate || '';
+            
+            // Set GST rates - use cgst and sgst separately
+            const gstRate = data.gst_rate || 0;
+            const halfGst = gstRate / 2;
+            if (cgstRate) cgstRate.value = halfGst || '2.5';
+            if (sgstRate) sgstRate.value = halfGst || '2.5';
+            
+            if (rateA) rateA.value = data.rate_A || '';
+            if (rateB) rateB.value = data.rate_B || '';
+            if (rateC) rateC.value = data.rate_C || '';
+            
+            // Recalculate row total
+            calculateRowTotal(rowIndex);
         })
         .catch(error => {
             console.error('Error fetching product info:', error);
@@ -2596,10 +2627,8 @@ function pullSelectedChallans() {
             // Mark as from challan
             document.getElementById('isFromChallan').value = 'true';
             
-            // Calculate invoice total
-            setTimeout(() => {
-                calculateInvoiceTotal();
-            }, 200);
+            // Calculate invoice total immediately
+            calculateInvoiceTotal();
             
             // Close dialog
             closePullChallanDialog();
@@ -2608,13 +2637,11 @@ function pullSelectedChallans() {
             alert(`Successfully pulled ${data.products.length} products from ${selectedChallans.length} challan(s)!`);
             
             // Focus on transport charges input
-            setTimeout(() => {
-                const transportInput = document.querySelector('input[name*="transport_charges"]');
-                if (transportInput) {
-                    transportInput.focus();
-                    transportInput.select();
-                }
-            }, 1200);
+            const transportInput = document.querySelector('input[name*="transport_charges"]');
+            if (transportInput) {
+                transportInput.focus();
+                transportInput.select();
+            }
         } else {
             alert('Error: ' + (data.error || 'Failed to pull challan products'));
         }
@@ -2659,15 +2686,15 @@ function addProductRowFromChallan(product) {
         </select></td>
         <td><input type="text" class="batch-no" placeholder="Batch No" value="${String(product.product_batch_no || '')}" required></td>
         <td><input type="text" class="expiry" placeholder="MM-YYYY" maxlength="7" title="Enter expiry in MM-YYYY format (e.g., 12-2025)" value="${String(expiry)}" required></td>
-        <td><input type="number" class="mrp" step="0.01" placeholder="MRP" min="0.01" value="${String(product.product_mrp || '')}" required></td>
-        <td><input type="number" class="purchase-rate" step="0.01" placeholder="Rate" min="0.01" value="${String(product.product_purchase_rate || '')}" onchange="calculateRowTotal(${productRowIndex})" required></td>
-        <td><input type="number" class="qty" placeholder="Qty" min="0.01" step="0.01" value="${String(product.product_quantity || '')}" onchange="calculateRowTotal(${productRowIndex})" required></td>
-        <td><input type="number" class="discount" step="0.01" placeholder="Discount" min="0" value="${String(product.product_discount || '0')}" onchange="calculateRowTotal(${productRowIndex})"></td>
-        <td><input type="number" class="cgst-rate" step="0.01" placeholder="CGST %" min="0" max="50" value="${String(product.cgst || '2.5')}" onchange="calculateRowTotal(${productRowIndex})"></td>
-        <td><input type="number" class="sgst-rate" step="0.01" placeholder="SGST %" min="0" max="50" value="${String(product.sgst || '2.5')}" onchange="calculateRowTotal(${productRowIndex})"></td>
-        <td><input type="number" class="rate-a" step="0.01" placeholder="Rate A" min="0" value="${String(product.rate_a || '')}"></td>
-        <td><input type="number" class="rate-b" step="0.01" placeholder="Rate B" min="0" value="${String(product.rate_b || '')}"></td>
-        <td><input type="number" class="rate-c" step="0.01" placeholder="Rate C" min="0" value="${String(product.rate_c || '')}"></td>
+        <td><input type="number" class="mrp" step="any" placeholder="MRP" min="0.01" value="${String(product.product_mrp || '')}" required></td>
+        <td><input type="number" class="purchase-rate" step="any" placeholder="Rate" min="0.01" value="${String(product.product_purchase_rate || '')}" onchange="calculateRowTotal(${productRowIndex})" required></td>
+        <td><input type="number" class="qty" placeholder="Qty" min="0.01" step="any" value="${String(product.product_quantity || '')}" onchange="calculateRowTotal(${productRowIndex})" required></td>
+        <td><input type="number" class="discount" step="any" placeholder="Discount" min="0" value="${String(product.product_discount || '0')}" onchange="calculateRowTotal(${productRowIndex})"></td>
+        <td><input type="number" class="cgst-rate" step="any" placeholder="CGST %" min="0" max="50" value="${String(product.cgst || '2.5')}" onchange="calculateRowTotal(${productRowIndex})"></td>
+        <td><input type="number" class="sgst-rate" step="any" placeholder="SGST %" min="0" max="50" value="${String(product.sgst || '2.5')}" onchange="calculateRowTotal(${productRowIndex})"></td>
+        <td><input type="number" class="rate-a" step="any" placeholder="Rate A" min="0" value="${String(product.rate_a || '')}"></td>
+        <td><input type="number" class="rate-b" step="any" placeholder="Rate B" min="0" value="${String(product.rate_b || '')}"></td>
+        <td><input type="number" class="rate-c" step="any" placeholder="Rate C" min="0" value="${String(product.rate_c || '')}"></td>
         <td><span class="row-total">0.00</span></td>
         <td><button type="button" class="remove-btn" onclick="removeProductRow(${productRowIndex})" title="Remove Row"><i class="fas fa-trash"></i></button></td>
         <input type="hidden" class="from-challan-flag" value="true">
@@ -2685,9 +2712,8 @@ function addProductRowFromChallan(product) {
     const currentRowIndex = productRowIndex;
     productRowIndex++;
     
-    setTimeout(() => {
-        calculateRowTotal(currentRowIndex);
-    }, 100);
+    // Calculate row total immediately
+    calculateRowTotal(currentRowIndex);
 }
 
 // Close dialog when clicking outside

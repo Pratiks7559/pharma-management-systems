@@ -136,6 +136,29 @@ def restore_backup(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
+def create_backup_file():
+    """Create backup file and return filename"""
+    import sqlite3
+    
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    backup_dir = 'backups'
+    os.makedirs(backup_dir, exist_ok=True)
+    
+    source = 'db.sqlite3'
+    filename = f'backup_{timestamp}.sqlite3'
+    destination = os.path.join(backup_dir, filename)
+    
+    source_conn = sqlite3.connect(source)
+    backup_conn = sqlite3.connect(destination)
+    
+    with backup_conn:
+        source_conn.backup(backup_conn)
+    
+    source_conn.close()
+    backup_conn.close()
+    
+    return filename
+
 @login_required
 def download_backup(request, filename):
     if request.user.user_type != 'admin':

@@ -10,7 +10,7 @@ from .combined_invoice_view import add_invoice_with_products, get_existing_batch
 from .low_stock_views import low_stock_update, update_low_stock_item, bulk_update_low_stock, get_batch_suggestions
 from .bulk_upload_views import bulk_upload_products, download_product_template
 from core.bulk_upload_view import bulk_upload_invoices
-from .ledger_views import customer_ledger, supplier_ledger, ledger_selection, export_supplier_ledger_pdf, export_supplier_ledger_excel, export_customer_ledger_pdf, export_customer_ledger_excel
+from .ledger_views import customer_ledger, supplier_ledger, ledger_selection, customer_ledger_print, supplier_ledger_print, export_supplier_ledger_pdf, export_supplier_ledger_excel, export_customer_ledger_pdf, export_customer_ledger_excel
 from .sales2_views import sales2_report, sales2_report_pdf, sales2_report_excel
 from .purchase2_views import purchase2_report, purchase2_report_pdf, purchase2_report_excel
 from .customer_sales_views import customer_wise_sales_report, quick_customer_search, customer_sales_summary
@@ -282,8 +282,10 @@ urlpatterns = [
     path('ledger/', ledger_selection, name='ledger_selection'),
     path('ledger/customer/', customer_ledger, name='customer_ledger'),
     path('ledger/customer/<int:customer_id>/', customer_ledger, name='customer_ledger_detail'),
+    path('ledger/customer/<int:customer_id>/print/', customer_ledger_print, name='customer_ledger_print'),
     path('ledger/supplier/', supplier_ledger, name='supplier_ledger'),
     path('ledger/supplier/<int:supplier_id>/', supplier_ledger, name='supplier_ledger_detail'),
+    path('ledger/supplier/<int:supplier_id>/print/', supplier_ledger_print, name='supplier_ledger_print'),
     path('ledger/supplier/<int:supplier_id>/export-pdf/', export_supplier_ledger_pdf, name='export_supplier_ledger_pdf'),
     path('ledger/supplier/<int:supplier_id>/export-excel/', export_supplier_ledger_excel, name='export_supplier_ledger_excel'),
     path('ledger/customer/<int:customer_id>/export-pdf/', export_customer_ledger_pdf, name='export_customer_ledger_pdf'),
@@ -301,6 +303,7 @@ urlpatterns = [
     path('system/backups/restore/', restore_backup, name='restore_backup'),
     path('system/backups/download/<str:filename>/', download_backup, name='download_backup'),
     path('system/backups/delete/', delete_backup, name='delete_backup'),
+    path('download-backup-logout/<str:filename>/', views.download_backup_and_logout, name='download_backup_and_logout'),
 ]
 
 

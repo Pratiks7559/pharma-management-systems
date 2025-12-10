@@ -26,7 +26,6 @@
     color: white !important;
 }
 </style>
-
 <!-- Modern Sidebar -->
 <aside class="sidebar-container" id="sidebar">
     <div class="sidebar-content">
@@ -74,38 +73,42 @@
                     </button>
                     <ul id="purchaseSubmenu" class="submenu hidden">
                         <li>
+                            <a href="{% url 'supplier_challan_list' %}" class="nav-submenu-link" style="text-decoration: none;">
+                                <i class="fas fa-file-alt"></i>
+                                <span class="nav-text">Purchase Challan</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'add_invoice_with_products' %}" class="nav-submenu-link" style="text-decoration: none;">
+                                <i class="fas fa-plus"></i>
+                                <span class="nav-text">New Invoice</span>
+                            </a>
+                        </li>
+                        <li>
                             <a href="{% url 'invoice_list' %}" class="nav-submenu-link" style="text-decoration: none;">
                                 <i class="fas fa-file-invoice"></i>
                                 <span class="nav-text">Invoices</span>
                             </a>
                         </li>
                         <li>
-                            <a href="{% url 'add_invoice_with_products' %}" class="nav-submenu-link" style="text-decoration: none;">
-                                <i class="fas fa-plus"></i>
-                                <span class="nav-text">New Invoice + Products</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{% url 'supplier_challan_list' %}" class="nav-submenu-link" style="text-decoration: none;">
-                                <i class="fas fa-file-alt"></i>
-                                <span class="nav-text">Supplier Challan</span>
+                            <a href="{% url 'supplier_list' %}" class="nav-submenu-link" style="text-decoration: none;">
+                                <i class="fas fa-truck"></i>
+                                <span class="nav-text">Suppliers</span>
                             </a>
                         </li>
                         <li>
                             <a href="{% url 'purchase_return_list' %}" class="nav-submenu-link" style="text-decoration: none;">
                                 <i class="fas fa-undo"></i>
-                                <span class="nav-text">Purchase Returns</span>
+                                <span class="nav-text">Purchase Return</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'add_unified_payment' %}" class="nav-submenu-link" style="text-decoration: none; color: #a3d2ae;">
+                                <i class="fas fa-money-check-alt"></i>
+                                <span class="nav-text">Payment</span>
                             </a>
                         </li>
                     </ul>
-                </li>
-                
-                <!-- Suppliers -->
-                <li>
-                    <a href="{% url 'supplier_list' %}" class="nav-link" style="text-decoration: none;">
-                        <i class="fas fa-truck"></i>
-                        <span class="nav-text">Suppliers</span>
-                    </a>
                 </li>
                 
                 <!-- Sales Menu -->
@@ -119,39 +122,49 @@
                     </button>
                     <ul id="salesSubmenu" class="submenu hidden">
                         <li>
+                            <a href="{% url 'customer_challan_list' %}" class="nav-submenu-link" style="text-decoration: none;">
+                                <i class="fas fa-file-alt"></i>
+                                <span class="nav-text">sales Challan</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'add_sales_invoice_with_products' %}" id="quickInvoiceLink" class="nav-submenu-link"style="text-decoration: none;">
+                                <i class="fas fa-plus"></i>
+                                <span class="nav-text">New Invoice</span>
+                                <span class="shortcut-badge">Ctrl+SI</span>
+                            </a>
+                        </li>
+                        <li>
                             <a href="{% url 'sales_invoice_list' %}" class="nav-submenu-link"style="text-decoration: none;">
                                 <i class="fas fa-file-invoice-dollar"></i>
                                 <span class="nav-text">Invoices</span>
                             </a>
                         </li>
                         <li>
-                            <a href="{% url 'add_sales_invoice_with_products' %}" id="quickInvoiceLink" class="nav-submenu-link"style="text-decoration: none;">
-                                <i class="fas fa-bolt"></i>
-                                <span class="nav-text">Quick Invoice+Products</span>
-                                <span class="shortcut-badge">Ctrl+SI</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{% url 'customer_challan_list' %}" class="nav-submenu-link" style="text-decoration: none;">
-                                <i class="fas fa-file-alt"></i>
-                                <span class="nav-text">Customer Challan</span>
+                            <a href="{% url 'customer_list' %}" class="nav-submenu-link" style="text-decoration: none;">
+                                <i class="fas fa-users"></i>
+                                <span class="nav-text">Customers</span>
                             </a>
                         </li>
                         <li>
                             <a href="{% url 'sales_return_list' %}" class="nav-submenu-link" style="text-decoration: none;">
                                 <i class="fas fa-undo-alt"></i>
-                                <span class="nav-text">Sales Returns</span>
+                                <span class="nav-text">Sales Return</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'add_unified_payment' %}" class="nav-submenu-link" style="text-decoration: none; color: #8ac397;">
+                                <i class="fas fa-money-check-alt"></i>
+                                <span class="nav-text">Receipt</span>
+                            </a>
+                        </li>
+                        <li role="none">
+                            <a href="{% url 'stock_issue_list' %}" class="nav-submenu-link" role="menuitem" style="text-decoration: none; color: #d0a2a2;">
+                                <i class="fas fa-minus-circle"></i>
+                                <span class="nav-text">Stock Issues</span>
                             </a>
                         </li>
                     </ul>
-                </li>
-                
-                <!-- Customers -->
-                <li>
-                    <a href="{% url 'customer_list' %}" class="nav-link" style="text-decoration: none;">
-                        <i class="fas fa-users"></i>
-                        <span class="nav-text">Customers</span>
-                    </a>
                 </li>
                 
 
@@ -167,13 +180,19 @@
                     </button>
                     <ul id="inventorySubmenu" class="submenu hidden" role="menu">
                         <li role="none">
+                            <a href="{% url 'product_list' %}" class="nav-submenu-link" role="menuitem"style="text-decoration: none;">
+                                <i class="fas fa-pills"></i>
+                                <span class="nav-text">Product List</span>
+                            </a>
+                        </li>
+                        <li role="none">
                             <a href="{% url 'inventory_list' %}" class="nav-submenu-link" role="menuitem"style="text-decoration: none;">
                                 <i class="fas fa-list"></i>
                                 <span class="nav-text">All Products Inventory</span>
                             </a>
                         </li>
                         <li role="none">
-                            <a href="{% url 'low_stock_update' %}" class="nav-submenu-link" role="menuitem" style="text-decoration: none; color: #ff9800;">
+                            <a href="{% url 'low_stock_update' %}" class="nav-submenu-link" role="menuitem" style="text-decoration: none; color: #e7cba1;">
                                 <i class="fas fa-plus-circle"></i>
                                 <span class="nav-text">Update Low Stock</span>
                             </a>
@@ -196,32 +215,6 @@
                                 <span class="nav-text">Stock Statement</span>
                             </a>
                         </li>
-                        <li role="none">
-                            <a href="{% url 'stock_issue_list' %}" class="nav-submenu-link" role="menuitem" style="text-decoration: none; color: #ff6b6b;">
-                                <i class="fas fa-minus-circle"></i>
-                                <span class="nav-text">Stock Issues</span>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                
-                <!-- Enhanced Products Menu -->
-                <li class="nav-item" role="none">
-                    <button type="button" class="nav-menu-button" onclick="toggleSubmenu('productsSubmenu')" aria-expanded="false" aria-controls="productsSubmenu" role="menuitem">
-                        <div class="nav-button-content">
-                            <i class="fas fa-pills"></i>
-                            <span class="nav-text">Products</span>
-                        </div>
-                        <i class="fas fa-angle-down nav-arrow"></i>
-                    </button>
-                    <ul id="productsSubmenu" class="submenu hidden" role="menu">
-                        <li role="none">
-                            <a href="{% url 'product_list' %}" class="nav-submenu-link" role="menuitem"style="text-decoration: none;">
-                                <i class="fas fa-list"></i>
-                                <span class="nav-text">Product List</span>
-                            </a>
-                        </li>
-
                     </ul>
                 </li>
                 
@@ -235,14 +228,6 @@
                         <i class="fas fa-angle-down nav-arrow"></i>
                     </button>
                     <ul id="reportsSubmenu" class="submenu hidden" role="menu">
-                        {% comment %}
-                        <li role="none">
-                            <a href="{% url 'sales_report' %}" class="nav-submenu-link" role="menuitem"style="text-decoration: none;">
-                                <i class="fas fa-chart-line"></i>
-                                <span class="nav-text">Sales</span>
-                            </a>
-                        </li>
-                        {% endcomment %}
                         <li role="none">
                             <a href="{% url 'sales2_report' %}" class="nav-submenu-link" role="menuitem"style="text-decoration: none;">
                                 <i class="fas fa-file-invoice-dollar"></i>
@@ -267,61 +252,15 @@
                                 <span class="nav-text">Financial</span>
                             </a>
                         </li>
-                        {% comment %}
                         <li role="none">
-                            <a href="{% url 'purchase_report' %}" class="nav-submenu-link" role="menuitem"style="text-decoration: none;">
-                                <i class="fas fa-shopping-basket"></i>
-                                <span class="nav-text">Purchases</span>
-                            </a>
-                        </li>
-                        {% endcomment %}
-                        {% comment %}
-                        <li role="none">
-                            <a href="{% url 'financial_report' %}" class="nav-submenu-link" role="menuitem"style="text-decoration: none;">
-                                <i class="fas fa-coins"></i>
-                                <span class="nav-text">Financial</span>
-                            </a>
-                        </li>
-                        {% endcomment %}
-                    </ul>
-                </li>
-                
-
-                
-                <!-- Ledger -->
-                <li>
-                    <a href="{% url 'ledger_selection' %}" class="nav-link" style="text-decoration: none;">
-                        <i class="fas fa-book"></i>
-                        <span class="nav-text">Ledger</span>
-                    </a>
-                </li>
-                
-                <!-- Enhanced Dashboard -->
-                <li role="none">
-                    <a href="{% url 'dashboard' %}" class="nav-link" role="menuitem"style="text-decoration: none;">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span class="nav-text">Dashboard</span>
-                    </a>
-                </li>
-                
-                <!-- Finance Menu -->
-                <li class="nav-item" role="none">
-                    <button type="button" class="nav-menu-button" onclick="toggleSubmenu('financeSubmenu')" aria-expanded="false" aria-controls="financeSubmenu" role="menuitem">
-                        <div class="nav-button-content">
-                            <i class="fas fa-money-bill-wave"></i>
-                            <span class="nav-text">Finance</span>
-                        </div>
-                        <i class="fas fa-angle-down nav-arrow"></i>
-                    </button>
-                    <ul id="financeSubmenu" class="submenu hidden" role="menu">
-                        <li role="none">
-                            <a href="{% url 'add_unified_payment' %}" class="nav-submenu-link" role="menuitem" style="text-decoration: none;">
-                                <i class="fas fa-layer-group"></i>
-                                <span class="nav-text">Bulk Payment</span>
+                            <a href="{% url 'ledger_selection' %}" class="nav-submenu-link" role="menuitem" style="text-decoration: none;">
+                                <i class="fas fa-book"></i>
+                                <span class="nav-text">Ledger</span>
                             </a>
                         </li>
                     </ul>
                 </li>
+                
                 <!-- Enhanced Admin Menu (Conditional) -->
                 {% if user.user_type == 'admin' %}
                 <li class="nav-item" role="none">
@@ -333,6 +272,12 @@
                         <i class="fas fa-angle-down nav-arrow"></i>
                     </button>
                     <ul id="adminSubmenu" class="submenu hidden" role="menu">
+                        <li role="none">
+                            <a href="{% url 'dashboard' %}" class="nav-submenu-link" role="menuitem"style="text-decoration: none;">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span class="nav-text">Dashboard</span>
+                            </a>
+                        </li>
                         <li role="none">
                             <a href="{% url 'register' %}" class="nav-submenu-link" role="menuitem"style="text-decoration: none;">
                                 <i class="fas fa-user-plus"></i>
@@ -346,9 +291,15 @@
                             </a>
                         </li>
                         <li role="none">
-                            <a href="{% url 'backup_list' %}" class="nav-submenu-link" role="menuitem" style="text-decoration: none; color: #4caf50;">
+                            <a href="{% url 'backup_list' %}" class="nav-submenu-link" role="menuitem" style="text-decoration: none; color: #8bd18e;">
                                 <i class="fas fa-database"></i>
                                 <span class="nav-text">Database Backup</span>
+                            </a>
+                        </li>
+                        <li role="none">
+                            <a href="{% url 'add_unified_payment' %}" class="nav-submenu-link" role="menuitem" style="text-decoration: none;">
+                                <i class="fas fa-layer-group"></i>
+                                <span class="nav-text">Bulk Payment</span>
                             </a>
                         </li>
                     </ul>
@@ -360,7 +311,7 @@
         <!-- Footer with logout -->
         <div class="sidebar-footer">
             <div class="footer-content">
-                <a href="{% url 'logout' %}" class="footer-link logout-link" title="Logout"style="text-decoration: none;">
+                <a href="{% url 'logout' %}" class="footer-link logout-link" title="Logout (Alt+L)" style="text-decoration: none;" id="logoutLink">
                     <i class="fas fa-sign-out-alt"></i>
                     <span class="nav-text">Logout</span>
                 </a>
@@ -368,6 +319,14 @@
         </div>
     </div>
 </aside>
+<script>
+    document.addEventListener('keydown', function(e) {
+        if (e.altKey && e.key === 'l') {
+            e.preventDefault();
+            document.getElementById('logoutLink').click();
+        }
+    });
+</script>
 
 
 
