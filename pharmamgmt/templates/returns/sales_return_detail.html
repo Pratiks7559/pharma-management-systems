@@ -600,8 +600,8 @@ th, td { display: table-cell !important; }
                         <td>₹{{ item.return_sale_rate|floatformat:2 }}</td>
                         <td>{{ item.return_sale_quantity }}</td>
                         <td>{{ item.return_sale_discount }}{% if item.return_sale_calculation_mode == 'percentage' %}%{% else %} ₹{% endif %}</td>
-                        <td>{{ item.return_sale_cgst }}%</td>
-                        <td>{{ item.return_sale_sgst }}%</td>
+                        <td>{{ item.return_sale_cgst|floatformat:2 }}%</td>
+                        <td>{{ item.return_sale_sgst|floatformat:2 }}%</td>
                         <td>₹{{ item.return_sale_total_amount|floatformat:2 }}</td>
                         <td>{{ item.return_reason|default:"-" }}</td>
                         <td class="sr-detail-item-actions-cell">
@@ -654,7 +654,7 @@ th, td { display: table-cell !important; }
                     {% for payment in payments %}
                     <tr>
                         <td>{{ payment.return_sales_payment_date|date:"d-m-Y" }}</td>
-                        <td>₹{{ payment.return_sales_payment_amount|floatformat:2 }}</td>
+                        <td>₹{{ payment.return_sales_payment_amount }}</td>
                         <td>{{ payment.return_sales_payment_mode|title }}</td>
                         <td>{{ payment.return_sales_payment_ref_no|default:"-" }}</td>
                         <td class="sr-detail-payment-actions-cell">
@@ -678,7 +678,7 @@ th, td { display: table-cell !important; }
                 <tfoot>
                     <tr>
                         <th colspan="3">Total Refunded:</th>
-                        <th>₹{{ return_invoice.return_sales_invoice_paid|floatformat:2 }}</th>
+                        <th>₹{{ return_invoice.return_sales_invoice_paid }}</th>
                         <th></th>
                     </tr>
                 </tfoot>
@@ -764,7 +764,8 @@ th, td { display: table-cell !important; }
                                     <th>Rate</th>
                                     <th>Qty</th>
                                     <th>Discount</th>
-                                    <th>GST%</th>
+                                    <th>CGST%</th>
+                                    <th>SGST%</th>
                                     <th>Reason</th>
                                     <th>Total</th>
                                     <th>Action</th>
@@ -794,9 +795,20 @@ th, td { display: table-cell !important; }
                                         <div class="stock-error-edit" style="display: none;"></div>
                                     </td>
                                     <td><input type="number" class="form-control form-control-sm discount" value="{{ item.return_sale_discount }}" step="0.01" onchange="calculateEditReturnRowTotal({{ forloop.counter0 }})"></td>
-                                    <td><input type="number" class="form-control form-control-sm gst" value="{{ item.return_sale_igst }}" step="0.01" onchange="calculateEditReturnRowTotal({{ forloop.counter0 }})"></td>
-                                    <td><input type="text" class="form-control form-control-sm reason" value="{{ item.return_reason }}" maxlength="200"></td>
-                                    <td><span class="edit-return-row-total">{{ item.return_sale_total_amount|floatformat:2 }}</span></td>
+                                    <td><input type="number" class="form-control form-control-sm cgst" value="{{ item.return_sale_cgst }}" step="0.01" onchange="calculateEditReturnRowTotal({{ forloop.counter0 }})"></td>
+                                    <td><input type="number" class="form-control form-control-sm sgst" value="{{ item.return_sale_sgst }}" step="0.01" onchange="calculateEditReturnRowTotal({{ forloop.counter0 }})"></td>
+                                    <td>
+                                        <select class="form-control form-control-sm reason">
+                                            <option value="">Select Reason</option>
+                                            <option value="Non Moving" {% if item.return_reason == 'Non Moving' or item.return_reason == 'non moving' %}selected{% endif %}>Non Moving</option>
+                                            <option value="Breakage" {% if item.return_reason == 'Breakage' or item.return_reason == 'breakage' %}selected{% endif %}>Breakage</option>
+                                            <option value="Expiry" {% if item.return_reason == 'Expiry' or item.return_reason == 'expiry' %}selected{% endif %}>Expiry</option>
+                                            {% if item.return_reason and item.return_reason not in 'Non Moving,non moving,Breakage,breakage,Expiry,expiry,' %}
+                                            <option value="{{ item.return_reason }}" selected>{{ item.return_reason }}</option>
+                                            {% endif %}
+                                        </select>
+                                    </td>
+                                    <td><span class="edit-return-row-total">{{ item.return_sale_total_amount }}</span></td>
                                     <td><button type="button" class="btn btn-sm btn-danger" onclick="removeEditReturnProductRow({{ forloop.counter0 }})"><i class="fas fa-trash"></i></button></td>
                                 </tr>
                                 {% endfor %}
@@ -1006,7 +1018,8 @@ function saveEditSalesReturn() {
                 return_rate: row.querySelector('.return-rate').value,
                 return_quantity: row.querySelector('.return-qty').value,
                 discount: row.querySelector('.discount').value || 0,
-                gst: row.querySelector('.gst').value || 0,
+                cgst: row.querySelector('.cgst').value || 2.5,
+                sgst: row.querySelector('.sgst').value || 2.5,
                 reason: row.querySelector('.reason').value || ''
             });
         }
@@ -1085,12 +1098,14 @@ function calculateEditReturnRowTotal(rowIndex) {
     const rate = parseFloat(row.querySelector('.return-rate').value) || 0;
     const qty = parseFloat(row.querySelector('.return-qty').value) || 0;
     const discount = parseFloat(row.querySelector('.discount').value) || 0;
-    const gst = parseFloat(row.querySelector('.gst').value) || 0;
+    const cgst = parseFloat(row.querySelector('.cgst').value) || 0;
+    const sgst = parseFloat(row.querySelector('.sgst').value) || 0;
     
     const subtotal = rate * qty;
     const afterDiscount = subtotal - discount;
-    const gstAmount = (afterDiscount * gst) / 100;
-    const total = afterDiscount + gstAmount;
+    const cgstAmount = (afterDiscount * cgst) / 100;
+    const sgstAmount = (afterDiscount * sgst) / 100;
+    const total = afterDiscount + cgstAmount + sgstAmount;
     
     row.querySelector('.edit-return-row-total').textContent = total.toFixed(2);
     calculateEditReturnTotal();
@@ -1303,8 +1318,16 @@ function quickSelectEditReturnProduct(productId, productName) {
             <div class="stock-error-edit" style="display: none;"></div>
         </td>
         <td><input type="number" class="form-control form-control-sm discount" step="0.01" onchange="calculateEditReturnRowTotal(${currentRowIndex})"></td>
-        <td><input type="number" class="form-control form-control-sm gst" step="0.01" onchange="calculateEditReturnRowTotal(${currentRowIndex})"></td>
-        <td><input type="text" class="form-control form-control-sm reason" maxlength="200"></td>
+        <td><input type="number" class="form-control form-control-sm cgst" value="2.5" step="0.01" onchange="calculateEditReturnRowTotal(${currentRowIndex})"></td>
+        <td><input type="number" class="form-control form-control-sm sgst" value="2.5" step="0.01" onchange="calculateEditReturnRowTotal(${currentRowIndex})"></td>
+        <td>
+            <select class="form-control form-control-sm reason">
+                <option value="">Select Reason</option>
+                <option value="Non Moving">Non Moving</option>
+                <option value="Breakage">Breakage</option>
+                <option value="Expiry">Expiry</option>
+            </select>
+        </td>
         <td><span class="edit-return-row-total">0.00</span></td>
         <td><button type="button" class="btn btn-sm btn-danger" onclick="removeEditReturnProductRow(${currentRowIndex})"><i class="fas fa-trash"></i></button></td>
     `;
@@ -1566,7 +1589,7 @@ function handleBatchInputKeydown(event, rowIndex) {
     // No keyboard shortcuts needed
 }
 
-// Keyboard shortcuts
+// Keyboard shortcuts for modal
 document.addEventListener('keydown', function(e) {
     const editModal = document.getElementById('editSalesReturnModal');
     if (editModal && editModal.style.display === 'flex') {
@@ -1622,31 +1645,41 @@ window.addEventListener('beforeunload', function(e) {
     }
 });
 
-// Keyboard shortcuts
-document.addEventListener('keydown', function(e) {
-    // Ctrl+E for edit
-    if (e.ctrlKey && e.key === 'e') {
+// Global keyboard shortcuts - using capture phase to intercept before base.html
+window.addEventListener('keydown', function(e) {
+    // Ctrl+E for edit (works anywhere on page)
+    if (e.ctrlKey && (e.key === 'e' || e.key === 'E')) {
         e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         openEditSalesReturnModal();
+        return false;
     }
     
     // Ctrl+P for print
-    if (e.ctrlKey && e.key === 'p') {
+    if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) {
         e.preventDefault();
+        e.stopPropagation();
         window.open('{% url "print_sales_return_receipt" return_id=return_invoice.return_sales_invoice_no %}', '_blank');
+        return false;
     }
     
     // Delete dialog keyboard shortcuts
-    if (document.getElementById('deleteItemDialog').style.display === 'flex') {
+    const deleteDialog = document.getElementById('deleteItemDialog');
+    if (deleteDialog && deleteDialog.style.display === 'flex') {
         if (e.key === 'Escape') {
             e.preventDefault();
+            e.stopPropagation();
             closeDeleteItemDialog();
+            return false;
         } else if (e.key === 'Enter') {
             e.preventDefault();
+            e.stopPropagation();
             confirmDeleteItem();
+            return false;
         }
     }
-});
+}, true);
 
 // Close dialog on overlay click
 document.getElementById('deleteItemDialog').addEventListener('click', function(e) {

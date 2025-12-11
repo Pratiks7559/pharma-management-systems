@@ -1119,92 +1119,118 @@ def edit_invoice(request, pk):
     invoice = get_object_or_404(InvoiceMaster, invoiceid=pk)
     
     try:
-        # Update invoice basic details
-        invoice.invoice_no = request.POST.get('invoice_no')
-        invoice.invoice_date = request.POST.get('invoice_date')
-        invoice.supplierid_id = request.POST.get('supplierid')
-        invoice.scroll_no = request.POST.get('scroll_no') or ''
-        invoice.transport_charges = float(request.POST.get('transport_charges', 0))
-        
-        # Process products data if provided
-        products_data = request.POST.get('products_data')
-        if products_data:
-            try:
-                products = json.loads(products_data)
+        with transaction.atomic():
+            # Update invoice basic details
+            invoice.invoice_no = request.POST.get('invoice_no')
+            invoice.invoice_date = request.POST.get('invoice_date')
+            invoice.supplierid_id = request.POST.get('supplierid')
+            invoice.scroll_no = request.POST.get('scroll_no') or ''
+            invoice.transport_charges = float(request.POST.get('transport_charges', 0))
+            
+            # Process products data if provided
+            products_data = request.POST.get('products_data')
+            if products_data:
+                try:
+                    products = json.loads(products_data)
+                    
+                    # Get existing products for this invoice
+                    existing_products = list(PurchaseMaster.objects.filter(product_invoiceid=invoice))
+                    
+                    # Clear all existing products first
+                    for purchase in existing_products:
+                        purchase.delete()
                 
-                # Get existing products for this invoice
-                existing_products = list(PurchaseMaster.objects.filter(product_invoiceid=invoice))
-                
-                # Clear all existing products first
-                for purchase in existing_products:
-                    purchase.delete()
-                
-                # Add all products from the form (both existing and new)
-                for product_data in products:
-                    try:
-                        product = ProductMaster.objects.get(productid=product_data['productid'])
-                        
-                        # Create purchase entry
-                        purchase = PurchaseMaster(
-                            product_supplierid=invoice.supplierid,
-                            product_invoiceid=invoice,
-                            product_invoice_no=invoice.invoice_no,
-                            productid=product,
-                            product_name=product.product_name,
-                            product_company=product.product_company,
-                            product_packing=product.product_packing,
-                            product_batch_no=product_data.get('batch_no', ''),
-                            product_expiry=product_data.get('expiry', ''),
-                            product_MRP=float(product_data.get('mrp', 0)),
-                            product_purchase_rate=float(product_data.get('purchase_rate', 0)),
-                            product_quantity=float(product_data.get('quantity', 0)),
-                            product_scheme=float(product_data.get('scheme', 0)),
-                            product_discount_got=float(product_data.get('discount', 0)),
-                            CGST=float(product_data.get('cgst', 0)),
-                            SGST=float(product_data.get('sgst', 0)),
-                            purchase_calculation_mode=product_data.get('calculation_mode', 'flat'),
-                            product_transportation_charges=0
-                        )
-                        
-                        # Calculate actual rate and total
-                        if purchase.purchase_calculation_mode == 'flat':
-                            purchase.actual_rate_per_qty = purchase.product_purchase_rate - (purchase.product_discount_got / purchase.product_quantity) if purchase.product_quantity > 0 else purchase.product_purchase_rate
-                        else:
-                            purchase.actual_rate_per_qty = purchase.product_purchase_rate * (1 - (purchase.product_discount_got / 100))
-                        
-                        purchase.product_actual_rate = purchase.actual_rate_per_qty
-                        purchase.total_amount = purchase.product_actual_rate * purchase.product_quantity
-                        purchase.save()
-                        
-                        # Update sale rates if provided
-                        rate_A = product_data.get('rate_A')
-                        rate_B = product_data.get('rate_B')
-                        rate_C = product_data.get('rate_C')
-                        
-                        if any([rate_A, rate_B, rate_C]):
+                    # Add all products from the form (both existing and new)
+                    for product_data in products:
+                        try:
+                            product = ProductMaster.objects.get(productid=product_data['productid'])
+                            
+                            # Create purchase entry
+                            purchase = PurchaseMaster(
+                                product_supplierid=invoice.supplierid,
+                                product_invoiceid=invoice,
+                                product_invoice_no=invoice.invoice_no,
+                                productid=product,
+                                product_name=product.product_name,
+                                product_company=product.product_company,
+                                product_packing=product.product_packing,
+                                product_batch_no=product_data.get('batch_no', ''),
+                                product_expiry=product_data.get('expiry', ''),
+                                product_MRP=float(product_data.get('mrp', 0)),
+                                product_purchase_rate=float(product_data.get('purchase_rate', 0)),
+                                product_quantity=float(product_data.get('quantity', 0)),
+                                product_scheme=float(product_data.get('scheme', 0)),
+                                product_discount_got=float(product_data.get('discount', 0)),
+                                CGST=float(product_data.get('cgst', 0)),
+                                SGST=float(product_data.get('sgst', 0)),
+                                purchase_calculation_mode=product_data.get('calculation_mode', 'flat'),
+                                product_transportation_charges=0
+                            )
+                            
+                            # Store rates in PurchaseMaster (fix for rates becoming 0.00)
+                            purchase.rate_a = float(product_data.get('rate_A', 0) or product_data.get('rate_a', 0) or 0)
+                            purchase.rate_b = float(product_data.get('rate_B', 0) or product_data.get('rate_b', 0) or 0)
+                            purchase.rate_c = float(product_data.get('rate_C', 0) or product_data.get('rate_c', 0) or 0)
+                            
+                            # Calculate actual rate and total with proper precision using Decimal
+                            from decimal import Decimal, ROUND_HALF_UP
+                            
+                            base_amount = Decimal(str(purchase.product_purchase_rate)) * Decimal(str(purchase.product_quantity))
+                            
+                            if purchase.purchase_calculation_mode == 'flat':
+                                discounted_amount = base_amount - Decimal(str(purchase.product_discount_got))
+                                purchase.actual_rate_per_qty = float(discounted_amount / Decimal(str(purchase.product_quantity))) if purchase.product_quantity > 0 else 0
+                            else:
+                                discounted_amount = base_amount * (Decimal('1') - (Decimal(str(purchase.product_discount_got)) / Decimal('100')))
+                                purchase.actual_rate_per_qty = float(discounted_amount / Decimal(str(purchase.product_quantity))) if purchase.product_quantity > 0 else 0
+                            
+                            purchase.product_actual_rate = purchase.actual_rate_per_qty
+                            
+                            # Calculate GST amounts with proper precision
+                            cgst_amount = discounted_amount * (Decimal(str(purchase.CGST)) / Decimal('100'))
+                            sgst_amount = discounted_amount * (Decimal(str(purchase.SGST)) / Decimal('100'))
+                            
+                            # Total amount including GST with proper rounding (fix for proper total calculation)
+                            total_with_gst = discounted_amount + cgst_amount + sgst_amount
+                            purchase.total_amount = float(total_with_gst.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
+                            
+                            purchase.save()
+                            
+                            # Update sale rates - always save (fix for rates becoming 0.00)
+                            rate_A = float(product_data.get('rate_A', 0) or product_data.get('rate_a', 0) or 0)
+                            rate_B = float(product_data.get('rate_B', 0) or product_data.get('rate_b', 0) or 0)
+                            rate_C = float(product_data.get('rate_C', 0) or product_data.get('rate_c', 0) or 0)
+                            
                             SaleRateMaster.objects.update_or_create(
                                 productid=purchase.productid,
                                 product_batch_no=purchase.product_batch_no,
                                 defaults={
-                                    'rate_A': float(rate_A) if rate_A else 0,
-                                    'rate_B': float(rate_B) if rate_B else 0,
-                                    'rate_C': float(rate_C) if rate_C else 0
+                                    'rate_A': rate_A,
+                                    'rate_B': rate_B,
+                                    'rate_C': rate_C
                                 }
                             )
-                            
-                    except ProductMaster.DoesNotExist:
-                        continue
+                                
+                        except ProductMaster.DoesNotExist:
+                            continue
 
-                
-                # Recalculate invoice total
-                new_total = PurchaseMaster.objects.filter(product_invoiceid=invoice).aggregate(
-                    total=Sum('total_amount')
-                )['total'] or 0
-                
-                invoice.invoice_total = new_total
-                
-            except json.JSONDecodeError:
-                pass  # If products_data is invalid, just update basic fields
+                    # Recalculate invoice total (products + transport charges) with proper precision
+                    from decimal import Decimal, ROUND_HALF_UP
+                    
+                    products_total = PurchaseMaster.objects.filter(product_invoiceid=invoice).aggregate(
+                        total=Sum('total_amount')
+                    )['total'] or 0
+                    
+                    # Use Decimal for precise calculation (fix for round-off issue)
+                    products_decimal = Decimal(str(products_total))
+                    transport_decimal = Decimal(str(invoice.transport_charges or 0))
+                    total_decimal = products_decimal + transport_decimal
+                    
+                    # Keep exact total with proper precision
+                    invoice.invoice_total = float(total_decimal.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
+                    
+                except json.JSONDecodeError:
+                    pass  # If products_data is invalid, just update basic fields
         
         invoice.save()
         
@@ -1227,20 +1253,25 @@ def invoice_detail(request, pk):
     # Get all purchases under this invoice
     purchases = PurchaseMaster.objects.filter(product_invoiceid=pk).select_related('productid')
     
-    # Add batch-specific rates to each purchase
+    # Add batch-specific rates to each purchase - fetch from PurchaseMaster first, then SaleRateMaster
     for purchase in purchases:
-        try:
-            batch_rate = SaleRateMaster.objects.get(
-                productid=purchase.productid,
-                product_batch_no=purchase.product_batch_no
-            )
-            purchase.rate_A = batch_rate.rate_A
-            purchase.rate_B = batch_rate.rate_B
-            purchase.rate_C = batch_rate.rate_C
-        except SaleRateMaster.DoesNotExist:
-            purchase.rate_A = 0
-            purchase.rate_B = 0
-            purchase.rate_C = 0
+        if purchase.rate_a or purchase.rate_b or purchase.rate_c:
+            purchase.rate_A = purchase.rate_a
+            purchase.rate_B = purchase.rate_b
+            purchase.rate_C = purchase.rate_c
+        else:
+            try:
+                batch_rate = SaleRateMaster.objects.get(
+                    productid=purchase.productid,
+                    product_batch_no=purchase.product_batch_no
+                )
+                purchase.rate_A = batch_rate.rate_A
+                purchase.rate_B = batch_rate.rate_B
+                purchase.rate_C = batch_rate.rate_C
+            except SaleRateMaster.DoesNotExist:
+                purchase.rate_A = 0
+                purchase.rate_B = 0
+                purchase.rate_C = 0
     
     # Calculate the sum of all purchase entries
     purchases_total = purchases.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
@@ -1535,60 +1566,62 @@ def edit_purchase(request, invoice_id, purchase_id):
                 invoice.invoice_total = new_invoice_total
                 invoice.save()
             
-            # Save batch-specific sale rates to SaleRateMaster
-            rate_A = form.cleaned_data.get('rate_A')
-            rate_B = form.cleaned_data.get('rate_B')
-            rate_C = form.cleaned_data.get('rate_C')
+            # Save batch-specific sale rates to both PurchaseMaster and SaleRateMaster
+            rate_A = form.cleaned_data.get('rate_A') or 0.0
+            rate_B = form.cleaned_data.get('rate_B') or 0.0
+            rate_C = form.cleaned_data.get('rate_C') or 0.0
             
-            # Check if any of the rates were specified
-            if rate_A is not None or rate_B is not None or rate_C is not None:
-                # Default to product master rates if not specified
-                if rate_A is None:
-                    # Get rates from SaleRateMaster or default values
-                    rate_A = 0.0
-                    rate_B = 0.0
-                    rate_C = 0.0
-                
-                # Check if a rate entry already exists for this product batch
-                try:
-                    batch_rate = SaleRateMaster.objects.get(
-                        productid=product,
-                        product_batch_no=purchase.product_batch_no
-                    )
-                    # Update existing entry
-                    batch_rate.rate_A = rate_A
-                    batch_rate.rate_B = rate_B
-                    batch_rate.rate_C = rate_C
-                    batch_rate.save()
-                except SaleRateMaster.DoesNotExist:
-                    # Create new entry
-                    SaleRateMaster.objects.create(
-                        productid=product,
-                        product_batch_no=purchase.product_batch_no,
-                        rate_A=rate_A,
-                        rate_B=rate_B,
-                        rate_C=rate_C
-                    )
+            # Store rates in PurchaseMaster
+            purchase.rate_a = rate_A
+            purchase.rate_b = rate_B
+            purchase.rate_c = rate_C
+            purchase.save()
+            
+            # Also update SaleRateMaster
+            try:
+                batch_rate = SaleRateMaster.objects.get(
+                    productid=product,
+                    product_batch_no=purchase.product_batch_no
+                )
+                batch_rate.rate_A = rate_A
+                batch_rate.rate_B = rate_B
+                batch_rate.rate_C = rate_C
+                batch_rate.save()
+            except SaleRateMaster.DoesNotExist:
+                SaleRateMaster.objects.create(
+                    productid=product,
+                    product_batch_no=purchase.product_batch_no,
+                    rate_A=rate_A,
+                    rate_B=rate_B,
+                    rate_C=rate_C
+                )
             
             messages.success(request, f"Purchase for {purchase.product_name} updated successfully!")
             return redirect('invoice_detail', pk=invoice_id)
     else:
-        # Try to get current rates for this product and batch
-        try:
-            batch_rate = SaleRateMaster.objects.get(
-                productid=purchase.productid,
-                product_batch_no=purchase.product_batch_no
-            )
-            
-            # Initialize the form with current values including rates
-            form = PurchaseForm(instance=purchase, initial={
-                'rate_A': batch_rate.rate_A,
-                'rate_B': batch_rate.rate_B,
-                'rate_C': batch_rate.rate_C
-            })
-        except SaleRateMaster.DoesNotExist:
-            # No batch-specific rates found, use default form
-            form = PurchaseForm(instance=purchase)
+        # Try to get current rates - first from PurchaseMaster, then from SaleRateMaster
+        rate_A = purchase.rate_a if purchase.rate_a else 0.0
+        rate_B = purchase.rate_b if purchase.rate_b else 0.0
+        rate_C = purchase.rate_c if purchase.rate_c else 0.0
+        
+        if not (rate_A or rate_B or rate_C):
+            try:
+                batch_rate = SaleRateMaster.objects.get(
+                    productid=purchase.productid,
+                    product_batch_no=purchase.product_batch_no
+                )
+                rate_A = batch_rate.rate_A
+                rate_B = batch_rate.rate_B
+                rate_C = batch_rate.rate_C
+            except SaleRateMaster.DoesNotExist:
+                pass
+        
+        # Initialize the form with current values including rates
+        form = PurchaseForm(instance=purchase, initial={
+            'rate_A': rate_A,
+            'rate_B': rate_B,
+            'rate_C': rate_C
+        })
     
     context = {
         'form': form,
@@ -2417,6 +2450,12 @@ def edit_sales_invoice(request, pk):
                             except:
                                 pass  # Keep original format if conversion fails
                         
+                        # Get rate_applied from product_data or derive from customer type
+                        rate_applied = product_data.get('rate_applied')
+                        if not rate_applied:
+                            customer_type = invoice.customerid.customer_type
+                            rate_applied = customer_type.split('-')[1] if '-' in customer_type else 'A'
+                        
                         # Create sale entry
                         sale = SalesMaster(
                             sales_invoice_no=invoice,
@@ -2435,7 +2474,7 @@ def edit_sales_invoice(request, pk):
                             sale_calculation_mode=product_data.get('calculation_mode', 'flat'),
                             sale_cgst=cgst,
                             sale_sgst=sgst,
-                            rate_applied=product_data.get('rate_applied', rate_letter),
+                            rate_applied=rate_applied,
                             sale_total_amount=total_amount
                         )
                         sale.save()
@@ -3394,13 +3433,14 @@ def update_purchase_return_api(request):
             
             # Calculate total amount
             return_rate = float(product_data.get('return_rate', 0))
-            return_quantity = float(product_data.get('return_quantity', 0))
-            scheme = float(product_data.get('scheme', 0))
-            charges = float(product_data.get('charges', 0))
+            return_quantity = float(product_data.get('return_quantity', 1))
+            cgst = float(product_data.get('cgst', 2.5))
+            sgst = float(product_data.get('sgst', 2.5))
             
             subtotal = return_rate * return_quantity
-            after_scheme = subtotal - scheme
-            item_total = after_scheme + charges
+            cgst_amount = (subtotal * cgst) / 100
+            sgst_amount = (subtotal * sgst) / 100
+            item_total = round(subtotal + cgst_amount + sgst_amount, 2)
             
             # Convert expiry date
             expiry_date = product_data.get('expiry', '')
@@ -3426,8 +3466,8 @@ def update_purchase_return_api(request):
                 returnproduct_MRP=float(product_data.get('mrp', 0)),
                 returnproduct_purchase_rate=return_rate,
                 returnproduct_quantity=return_quantity,
-                returnproduct_scheme=scheme,
-                returnproduct_charges=charges,
+                returnproduct_cgst=cgst,
+                returnproduct_sgst=sgst,
                 returntotal_amount=item_total,
                 return_reason=product_data.get('reason', '')
             )
@@ -4377,6 +4417,7 @@ def update_sales_return_api(request):
         customer_id = data.get('customer_id')
         return_date = data.get('return_date')
         return_charges = float(data.get('return_charges', 0))
+        transport_charges = float(data.get('transport_charges', 0))
         products = data.get('products', [])
         
         # Use select_for_update to prevent database locking issues
@@ -4405,12 +4446,14 @@ def update_sales_return_api(request):
                     rate = float(product_data.get('return_rate', 0))
                     qty = float(product_data.get('return_quantity', 0))
                     discount = float(product_data.get('discount', 0))
-                    gst = float(product_data.get('gst', 0))
+                    cgst = float(product_data.get('cgst', 2.5))
+                    sgst = float(product_data.get('sgst', 2.5))
                     
                     subtotal = rate * qty
                     after_discount = subtotal - discount
-                    gst_amount = (after_discount * gst) / 100
-                    item_total = after_discount + gst_amount
+                    cgst_amount = (after_discount * cgst) / 100
+                    sgst_amount = (after_discount * sgst) / 100
+                    item_total = round(after_discount + cgst_amount + sgst_amount, 2)
                     
                     new_item = ReturnSalesMaster(
                         return_sales_invoice_no=return_invoice,
@@ -4426,7 +4469,8 @@ def update_sales_return_api(request):
                         return_sale_quantity=qty,
                         return_sale_discount=discount,
                         return_sale_calculation_mode='flat',
-                        return_sale_igst=gst,
+                        return_sale_cgst=cgst,
+                        return_sale_sgst=sgst,
                         return_sale_total_amount=item_total,
                         return_reason=product_data.get('reason', '')
                     )
@@ -4445,7 +4489,9 @@ def update_sales_return_api(request):
                 ReturnSalesMaster.objects.bulk_create(new_items)
             
             # Update total and save (products + additional charges + transport charges)
-            return_invoice.return_sales_invoice_total = total_amount + return_charges + transport_charges
+            final_total = round(total_amount + return_charges + transport_charges, 2)
+            return_invoice.return_sales_invoice_total = final_total
+            return_invoice.transport_charges = transport_charges
             return_invoice.save()
             
             return JsonResponse({

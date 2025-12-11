@@ -297,6 +297,21 @@
                     <i class="fas fa-plus"></i> Add New Product
                 </button>
                 
+                <div class="invoice-total-display" style="margin-top: 1.5rem; padding: 1rem; background: #e8f5e9; border-radius: 8px; border-left: 4px solid #27ae60;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="font-weight: 600;">Products Total:</span>
+                        <span id="productsTotal" style="font-weight: 600; color: #27ae60;">₹0.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="font-weight: 600;">Transport Charges:</span>
+                        <span id="transportChargesDisplay" style="font-weight: 600; color: #3498db;">₹0.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding-top: 0.5rem; border-top: 2px solid #27ae60;">
+                        <span style="font-weight: 700; font-size: 1.1rem;">Invoice Total:</span>
+                        <span id="invoiceTotal" style="font-weight: 700; font-size: 1.1rem; color: #27ae60;">₹0.00</span>
+                    </div>
+                </div>
+                
                 <div class="modal-footer">
                     <button type="button" onclick="closeEditInvoiceModal()" class="btn btn-secondary">Cancel</button>
                     <button type="submit" class="btn btn-primary">Update Invoice</button>
@@ -313,6 +328,12 @@
 function openEditInvoiceModal() {
     document.getElementById('editInvoiceModal').style.display = 'block';
     loadExistingProducts();
+    
+    // Add event listener for transport charges
+    const transportInput = document.getElementById('transport_charges');
+    if (transportInput) {
+        transportInput.addEventListener('input', updateInvoiceTotal);
+    }
 }
 
 function closeEditInvoiceModal() {
@@ -604,9 +625,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         discount: discountInput ? parseFloat(discountInput.value) || 0 : 0,
                         cgst: cgstInput ? parseFloat(cgstInput.value) || 0 : 0,
                         sgst: sgstInput ? parseFloat(sgstInput.value) || 0 : 0,
-                        rate_A: rateAInput ? parseFloat(rateAInput.value) || 0 : 0,
-                        rate_B: rateBInput ? parseFloat(rateBInput.value) || 0 : 0,
-                        rate_C: rateCInput ? parseFloat(rateCInput.value) || 0 : 0,
+                        rate_A: rateAInput ? (parseFloat(rateAInput.value) || 0) : 0,
+                        rate_B: rateBInput ? (parseFloat(rateBInput.value) || 0) : 0,
+                        rate_C: rateCInput ? (parseFloat(rateCInput.value) || 0) : 0,
+                        rate_a: rateAInput ? (parseFloat(rateAInput.value) || 0) : 0,
+                        rate_b: rateBInput ? (parseFloat(rateBInput.value) || 0) : 0,
+                        rate_c: rateCInput ? (parseFloat(rateCInput.value) || 0) : 0,
                         calculation_mode: 'flat'
                     });
                 }
@@ -625,7 +649,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Invoice updated successfully!');
                     location.reload();
                 } else {
                     alert('Error: ' + (data.error || 'Unknown error'));
@@ -678,11 +701,49 @@ function loadExistingProducts() {
         purchase_calculation_mode: '{{ purchase.purchase_calculation_mode }}',
         CGST: {{ purchase.CGST }},
         SGST: {{ purchase.SGST }},
-        rate_A: {{ purchase.rate_A|default:0 }},
-        rate_B: {{ purchase.rate_B|default:0 }},
-        rate_C: {{ purchase.rate_C|default:0 }}
+        rate_A: {{ purchase.rate_a|default:0 }},
+        rate_B: {{ purchase.rate_b|default:0 }},
+        rate_C: {{ purchase.rate_c|default:0 }}
     });
     {% endfor %}
+    
+    updateInvoiceTotal();
+}
+
+function updateInvoiceTotal() {
+    let productsTotal = 0;
+    const productRows = document.querySelectorAll('.product-row');
+    
+    productRows.forEach(row => {
+        const rateInput = row.querySelector('input[name*="[purchase_rate]"]');
+        const qtyInput = row.querySelector('input[name*="[quantity]"]');
+        const discountInput = row.querySelector('input[name*="[discount]"]');
+        const cgstInput = row.querySelector('input[name*="[cgst]"]');
+        const sgstInput = row.querySelector('input[name*="[sgst]"]');
+        
+        if (rateInput && qtyInput) {
+            const rate = parseFloat(rateInput.value) || 0;
+            const qty = parseFloat(qtyInput.value) || 0;
+            const discount = parseFloat(discountInput?.value) || 0;
+            const cgst = parseFloat(cgstInput?.value) || 0;
+            const sgst = parseFloat(sgstInput?.value) || 0;
+            
+            const baseAmount = rate * qty;
+            const afterDiscount = baseAmount - discount;
+            const gstAmount = (afterDiscount * (cgst + sgst)) / 100;
+            const total = afterDiscount + gstAmount;
+            
+            productsTotal += total;
+        }
+    });
+    
+    const transportCharges = parseFloat(document.getElementById('transport_charges')?.value) || 0;
+    const invoiceTotal = productsTotal + transportCharges;
+    
+    // Show exact amounts without rounding to fix the 2.00 vs 2.10 issue
+    document.getElementById('productsTotal').textContent = '₹' + productsTotal.toFixed(2);
+    document.getElementById('transportChargesDisplay').textContent = '₹' + transportCharges.toFixed(2);
+    document.getElementById('invoiceTotal').textContent = '₹' + invoiceTotal.toFixed(2);
 }
 
 function addNewProduct() {
@@ -744,15 +805,15 @@ function addProductRow(data = {}) {
             </div>
             <div class="form-group">
                 <label>Rate A:</label>
-                <input type="number" name="products[${productId}][rate_a]" value="${data.rate_A !== undefined ? data.rate_A : 0}" step="0.01">
+                <input type="number" name="products[${productId}][rate_a]" value="${data.rate_A || data.rate_a || data.rate_A || 0}" step="0.01">
             </div>
             <div class="form-group">
                 <label>Rate B:</label>
-                <input type="number" name="products[${productId}][rate_b]" value="${data.rate_B !== undefined ? data.rate_B : 0}" step="0.01">
+                <input type="number" name="products[${productId}][rate_b]" value="${data.rate_B || data.rate_b || data.rate_B || 0}" step="0.01">
             </div>
             <div class="form-group">
                 <label>Rate C:</label>
-                <input type="number" name="products[${productId}][rate_c]" value="${data.rate_C !== undefined ? data.rate_C : 0}" step="0.01">
+                <input type="number" name="products[${productId}][rate_c]" value="${data.rate_C || data.rate_c || data.rate_C || 0}" step="0.01">
             </div>
             <div class="form-group">
                 <button type="button" onclick="removeProduct(this)" class="btn btn-danger">
@@ -763,6 +824,12 @@ function addProductRow(data = {}) {
     `;
     
     container.appendChild(productRow);
+    
+    // Add event listeners for real-time calculation
+    const calcInputs = productRow.querySelectorAll('input[type="number"]');
+    calcInputs.forEach(input => {
+        input.addEventListener('input', updateInvoiceTotal);
+    });
     
     // Add event listener for expiry date formatting
     const expiryInput = productRow.querySelector(`input[name="products[${productId}][expiry]"]`);

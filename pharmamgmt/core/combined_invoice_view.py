@@ -255,11 +255,11 @@ def add_invoice_with_products(request):
                             else:
                                 purchase.source_challan_date = None
                             
-                            # Optional rate fields
+                            # Optional rate fields - store in PurchaseMaster
                             try:
-                                rate_a_val = product_data.get('rate_a', 0)
-                                rate_b_val = product_data.get('rate_b', 0)
-                                rate_c_val = product_data.get('rate_c', 0)
+                                rate_a_val = product_data.get('rate_a', 0) or product_data.get('rate_A', 0)
+                                rate_b_val = product_data.get('rate_b', 0) or product_data.get('rate_B', 0)
+                                rate_c_val = product_data.get('rate_c', 0) or product_data.get('rate_C', 0)
                                 
                                 purchase.rate_a = float(str(rate_a_val)) if rate_a_val else 0.0
                                 purchase.rate_b = float(str(rate_b_val)) if rate_b_val else 0.0
@@ -304,7 +304,7 @@ def add_invoice_with_products(request):
                             products_added += 1
                             logger.info(f"Product {product.product_name} added to invoice")
                             
-                            logger.info(f"✅ PURCHASE CREATED: {product.product_name}, Batch: {batch_no}, Qty: {quantity}")
+                            logger.info(f"PURCHASE CREATED: {product.product_name}, Batch: {batch_no}, Qty: {quantity}")
                             
                             # Save sale rates if provided
                             rate_A = product_data.get('rate_a') or product_data.get('rate_A')

@@ -82,8 +82,10 @@
                                 <th>Product</th>
                                 <th>Batch No</th>
                                 <th>Expiry</th>
-                                <th>Quantity</th>
                                 <th>Rate</th>
+                                <th>Qty</th>
+                                <th>CGST%</th>
+                                <th>SGST%</th>
                                 <th>Total</th>
                                 <th>Reason</th>
                                 <th>Actions</th>
@@ -100,8 +102,10 @@
                                 </td>
                                 <td>{{ item.returnproduct_batch_no }}</td>
                                 <td>{{ item.returnproduct_expiry|date:"m-Y" }}</td>
-                                <td class="quantity-cell">{{ item.returnproduct_quantity }}</td>
                                 <td class="amount-cell">₹{{ item.returnproduct_purchase_rate|floatformat:2 }}</td>
+                                <td class="quantity-cell">{{ item.returnproduct_quantity }}</td>
+                                <td>{{ item.returnproduct_cgst|default:2.5|floatformat:2 }}%</td>
+                                <td>{{ item.returnproduct_sgst|default:2.5|floatformat:2 }}%</td>
                                 <td class="amount-cell">₹{{ item.returntotal_amount|floatformat:2 }}</td>
                                 <td>
                                     {% if item.return_reason %}
@@ -251,8 +255,8 @@
                                     <th>MRP</th>
                                     <th>Rate</th>
                                     <th>Qty</th>
-                                    <th>Scheme</th>
-                                    <th>Charges</th>
+                                    <th>CGST%</th>
+                                    <th>SGST%</th>
                                     <th>Reason</th>
                                     <th>Total</th>
                                     <th>Action</th>
@@ -274,14 +278,17 @@
                                     <td><input type="text" class="form-control form-control-sm expiry" value="{{ item.returnproduct_expiry|date:'m-Y' }}" placeholder="MM-YYYY" maxlength="7" required></td>
                                     <td><input type="number" class="form-control form-control-sm mrp" value="{{ item.returnproduct_MRP }}" step="0.01" required></td>
                                     <td><input type="number" class="form-control form-control-sm return-rate" value="{{ item.returnproduct_purchase_rate }}" step="0.01" onchange="calculateEditReturnRowTotal({{ forloop.counter0 }})" required></td>
+                                    <td><input type="number" class="form-control form-control-sm return-qty" value="{{ item.returnproduct_quantity }}" step="0.01" onchange="calculateEditReturnRowTotal({{ forloop.counter0 }})" required></td>
+                                    <td><input type="number" class="form-control form-control-sm cgst" value="{{ item.returnproduct_cgst|default:2.5 }}" step="0.01" onchange="calculateEditReturnRowTotal({{ forloop.counter0 }})"></td>
+                                    <td><input type="number" class="form-control form-control-sm sgst" value="{{ item.returnproduct_sgst|default:2.5 }}" step="0.01" onchange="calculateEditReturnRowTotal({{ forloop.counter0 }})"></td>
                                     <td>
-                                        <input type="number" class="form-control form-control-sm return-qty" value="{{ item.returnproduct_quantity }}" step="0.01" oninput="validateEditReturnStock({{ forloop.counter0 }})" onchange="validateEditReturnStock({{ forloop.counter0 }})" required>
-                                        <div class="stock-info-edit" style="display: none;"></div>
-                                        <div class="stock-error-edit" style="display: none;"></div>
+                                        <select class="form-control form-control-sm reason">
+                                            <option value="">Select Reason</option>
+                                            <option value="Non Moving" {% if item.return_reason == 'Non Moving' %}selected{% endif %}>Non Moving</option>
+                                            <option value="Breakage" {% if item.return_reason == 'Breakage' %}selected{% endif %}>Breakage</option>
+                                            <option value="Expiry" {% if item.return_reason == 'Expiry' %}selected{% endif %}>Expiry</option>
+                                        </select>
                                     </td>
-                                    <td><input type="number" class="form-control form-control-sm scheme" value="{{ item.returnproduct_scheme }}" step="0.01" onchange="calculateEditReturnRowTotal({{ forloop.counter0 }})"></td>
-                                    <td><input type="number" class="form-control form-control-sm charges" value="{{ item.returnproduct_charges }}" step="0.01" onchange="calculateEditReturnRowTotal({{ forloop.counter0 }})"></td>
-                                    <td><input type="text" class="form-control form-control-sm reason" value="{{ item.return_reason }}" maxlength="200"></td>
                                     <td><span class="edit-return-row-total">{{ item.returntotal_amount|floatformat:2 }}</span></td>
                                     <td><button type="button" class="btn btn-sm btn-danger" onclick="removeEditReturnProductRow({{ forloop.counter0 }})"><i class="fas fa-trash"></i></button></td>
                                 </tr>
@@ -592,22 +599,31 @@ function saveEditPurchaseReturn() {
     const returnCharges = document.getElementById('editReturnCharges').value;
     
     const products = [];
+    const seenProducts = new Set();
+    
     document.querySelectorAll('#editReturnProductRows tr').forEach(row => {
         const productSelect = row.querySelector('.product-select');
         const productId = productSelect ? productSelect.value : row.querySelector('.product-id')?.value;
-        if (productId) {
-            products.push({
-                item_id: row.dataset.itemId || null,
-                productid: productId,
-                batch_no: row.querySelector('.batch-no').value,
-                expiry: row.querySelector('.expiry').value,
-                mrp: row.querySelector('.mrp').value,
-                return_rate: row.querySelector('.return-rate').value,
-                return_quantity: row.querySelector('.return-qty').value,
-                scheme: row.querySelector('.scheme').value || 0,
-                charges: row.querySelector('.charges').value || 0,
-                reason: row.querySelector('.reason').value || ''
-            });
+        const batchNo = row.querySelector('.batch-no')?.value;
+        
+        if (productId && batchNo) {
+            const uniqueKey = `${productId}_${batchNo}`;
+            
+            if (!seenProducts.has(uniqueKey)) {
+                seenProducts.add(uniqueKey);
+                products.push({
+                    item_id: row.dataset.itemId || null,
+                    productid: productId,
+                    batch_no: batchNo,
+                    expiry: row.querySelector('.expiry').value,
+                    mrp: row.querySelector('.mrp').value,
+                    return_rate: row.querySelector('.return-rate').value,
+                    return_quantity: row.querySelector('.return-qty').value,
+                    cgst: row.querySelector('.cgst').value || 2.5,
+                    sgst: row.querySelector('.sgst').value || 2.5,
+                    reason: row.querySelector('.reason').value || ''
+                });
+            }
         }
     });
     
@@ -653,12 +669,13 @@ function calculateEditReturnRowTotal(rowIndex) {
     
     const rate = parseFloat(row.querySelector('.return-rate').value) || 0;
     const qty = parseFloat(row.querySelector('.return-qty').value) || 0;
-    const scheme = parseFloat(row.querySelector('.scheme').value) || 0;
-    const charges = parseFloat(row.querySelector('.charges').value) || 0;
+    const cgst = parseFloat(row.querySelector('.cgst').value) || 0;
+    const sgst = parseFloat(row.querySelector('.sgst').value) || 0;
     
     const subtotal = rate * qty;
-    const afterScheme = subtotal - scheme;
-    const total = afterScheme + charges;
+    const cgstAmount = (subtotal * cgst) / 100;
+    const sgstAmount = (subtotal * sgst) / 100;
+    const total = subtotal + cgstAmount + sgstAmount;
     
     row.querySelector('.edit-return-row-total').textContent = total.toFixed(2);
     calculateEditReturnTotal();
@@ -1041,14 +1058,17 @@ function quickSelectEditReturnProduct(productId, productName) {
         <td><input type="text" class="form-control form-control-sm expiry" placeholder="Auto-filled"></td>
         <td><input type="number" class="form-control form-control-sm mrp" step="0.01" placeholder="Auto-filled"></td>
         <td><input type="number" class="form-control form-control-sm return-rate" step="0.01" onchange="calculateEditReturnRowTotal(${currentRowIndex})" placeholder="Return rate" required></td>
+        <td><input type="number" class="form-control form-control-sm return-qty" value="1" step="0.01" onchange="calculateEditReturnRowTotal(${currentRowIndex})" required></td>
+        <td><input type="number" class="form-control form-control-sm cgst" value="2.5" step="0.01" onchange="calculateEditReturnRowTotal(${currentRowIndex})"></td>
+        <td><input type="number" class="form-control form-control-sm sgst" value="2.5" step="0.01" onchange="calculateEditReturnRowTotal(${currentRowIndex})"></td>
         <td>
-            <input type="number" class="form-control form-control-sm return-qty" step="0.01" oninput="validateEditReturnStock(${currentRowIndex})" onchange="validateEditReturnStock(${currentRowIndex})" placeholder="Quantity" required>
-            <div class="stock-info-edit" style="display: none;"></div>
-            <div class="stock-error-edit" style="display: none;"></div>
+            <select class="form-control form-control-sm reason">
+                <option value="">Select Reason</option>
+                <option value="Non Moving">Non Moving</option>
+                <option value="Breakage">Breakage</option>
+                <option value="Expiry">Expiry</option>
+            </select>
         </td>
-        <td><input type="number" class="form-control form-control-sm scheme" step="0.01" onchange="calculateEditReturnRowTotal(${currentRowIndex})" placeholder="Scheme"></td>
-        <td><input type="number" class="form-control form-control-sm charges" step="0.01" onchange="calculateEditReturnRowTotal(${currentRowIndex})" placeholder="Charges"></td>
-        <td><input type="text" class="form-control form-control-sm reason" maxlength="200" placeholder="Return reason"></td>
         <td><span class="edit-return-row-total">0.00</span></td>
         <td><button type="button" class="btn btn-sm btn-danger" onclick="removeEditReturnProductRow(${currentRowIndex})"><i class="fas fa-trash"></i></button></td>
     `;

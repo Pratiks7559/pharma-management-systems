@@ -1556,3 +1556,67 @@
 2025-12-09 20:16:25,555 - core.combined_invoice_view - INFO - Product paracetamol added to invoice
 2025-12-09 20:16:25,865 - core.combined_invoice_view - INFO - Products total: 1155.0, Transport: 0.0, Invoice total: 1155.0
 2025-12-09 20:16:25,866 - core.combined_invoice_view - INFO - Invoice 12345 created successfully with 1 products
+2025-12-11 10:11:14,008 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['yGLw0fiLNY91gEywcGyDRNfEgHFUaTJ7US8BcAV5RgTA1WoSdOA1tx2NXwGUJdLv'], 'invoice_no': ['12345'], 'invoice_date': ['2025-12-11'], 'supplierid': ['2'], 'transport_charges': ['0'], 'invoice_total': ['1.05'], 'products_data': ['[{"productid":"3377","batch_no":"12345","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"2","rate_b":"3","rate_c":"4","from_challan":false,"challan_no":"","challan_date":""}]'], 'is_from_challan': ['false']}>
+2025-12-11 10:11:14,020 - core.combined_invoice_view - INFO - Products data received: [{"productid":"3377","batch_no":"12345","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"2","rate_b":"3","rate_c":"4","from_challan":false,"challan_no":"","challan_date":""}]
+2025-12-11 10:11:14,021 - core.combined_invoice_view - INFO - Challan flag: false
+2025-12-11 10:11:14,024 - core.combined_invoice_view - INFO - Invoice created with ID: 165181
+2025-12-11 10:11:14,026 - core.combined_invoice_view - INFO - Challan data received: challan_no=, challan_date=
+2025-12-11 10:11:14,027 - core.combined_invoice_view - INFO - Setting rates for paracetamol: A=2.0, B=3.0, C=4.0
+2025-12-11 10:11:14,027 - core.combined_invoice_view - INFO - Product paracetamol: Base=1.0, CGST=0.025, SGST=0.025, Total=1.0499999999999998
+2025-12-11 10:11:14,031 - core.combined_invoice_view - INFO - Product paracetamol added to invoice
+2025-12-11 10:11:14,279 - core.combined_invoice_view - INFO - Products total: 1.0499999999999998, Transport: 0.0, Invoice total: 1.0499999999999998
+2025-12-11 10:11:14,280 - core.combined_invoice_view - INFO - Invoice 12345 created successfully with 1 products
+2025-12-11 10:18:37,002 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['l1eOivwyAQWFRwWATbhS8Akf25AqTR1dHdBTuQ9SE8GeCOMWUjjgKk7oJUBqsb3B'], 'invoice_no': ['1234'], 'invoice_date': ['2025-12-11'], 'supplierid': ['2'], 'transport_charges': ['0'], 'invoice_total': ['1.05'], 'products_data': ['[{"productid":"3377","batch_no":"1234","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"2","rate_b":"3","rate_c":"4","from_challan":false,"challan_no":"","challan_date":""}]'], 'is_from_challan': ['false']}>
+2025-12-11 10:18:37,011 - core.combined_invoice_view - INFO - Products data received: [{"productid":"3377","batch_no":"1234","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"2","rate_b":"3","rate_c":"4","from_challan":false,"challan_no":"","challan_date":""}]
+2025-12-11 10:18:37,012 - core.combined_invoice_view - INFO - Challan flag: false
+2025-12-11 10:18:37,018 - core.combined_invoice_view - INFO - Invoice created with ID: 165182
+2025-12-11 10:18:37,021 - core.combined_invoice_view - INFO - Challan data received: challan_no=, challan_date=
+2025-12-11 10:18:37,021 - core.combined_invoice_view - INFO - Setting rates for paracetamol: A=2.0, B=3.0, C=4.0
+2025-12-11 10:18:37,022 - core.combined_invoice_view - INFO - Product paracetamol: Base=1.0, CGST=0.025, SGST=0.025, Total=1.0499999999999998
+2025-12-11 10:18:37,025 - core.combined_invoice_view - INFO - Product paracetamol added to invoice
+2025-12-11 10:18:37,083 - core.combined_invoice_view - INFO - Products total: 1.0499999999999998, Transport: 0.0, Invoice total: 1.0499999999999998
+2025-12-11 10:18:37,084 - core.combined_invoice_view - INFO - Invoice 1234 created successfully with 1 products
+2025-12-11 10:23:08,161 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['7UY8O7NHX6mTQSLtpMK9wSwx7GYkFEmQt6ld0sq11o6sBaBPqUMx8CjGOvZkeYoe'], 'invoice_no': ['1122'], 'invoice_date': ['2025-12-11'], 'supplierid': ['2'], 'transport_charges': ['0'], 'invoice_total': ['1.05'], 'products_data': ['[{"productid":"3377","batch_no":"1234","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"2","rate_b":"3","rate_c":"4","from_challan":false,"challan_no":"","challan_date":""}]'], 'is_from_challan': ['false']}>
+2025-12-11 10:23:08,172 - core.combined_invoice_view - INFO - Products data received: [{"productid":"3377","batch_no":"1234","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"2","rate_b":"3","rate_c":"4","from_challan":false,"challan_no":"","challan_date":""}]
+2025-12-11 10:23:08,173 - core.combined_invoice_view - INFO - Challan flag: false
+2025-12-11 10:23:08,176 - core.combined_invoice_view - INFO - Invoice created with ID: 165183
+2025-12-11 10:23:08,181 - core.combined_invoice_view - INFO - Challan data received: challan_no=, challan_date=
+2025-12-11 10:23:08,182 - core.combined_invoice_view - INFO - Setting rates for paracetamol: A=2.0, B=3.0, C=4.0
+2025-12-11 10:23:08,182 - core.combined_invoice_view - INFO - Product paracetamol: Base=1.0, CGST=0.025, SGST=0.025, Total=1.0499999999999998
+2025-12-11 10:23:08,185 - core.combined_invoice_view - INFO - Product paracetamol added to invoice
+2025-12-11 10:23:08,185 - core.combined_invoice_view - INFO - PURCHASE CREATED: paracetamol, Batch: 1234, Qty: 1.0
+2025-12-11 10:23:08,192 - core.combined_invoice_view - INFO - Products total: 1.0499999999999998, Transport: 0.0, Invoice total: 1.0499999999999998
+2025-12-11 10:23:08,193 - core.combined_invoice_view - INFO - Invoice 1122 created successfully with 1 products
+2025-12-11 11:14:16,414 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['QfN39It6Y09slScas0BPaSh0ssCh04qMcra8l36q2iT16a2wt8DdMC499hDhzosa'], 'invoice_no': ['1234'], 'invoice_date': ['2025-12-11'], 'supplierid': ['2'], 'transport_charges': ['0'], 'invoice_total': ['1.05'], 'products_data': ['[{"productid":"3377","batch_no":"234","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"1","rate_b":"2","rate_c":"3","from_challan":false,"challan_no":"","challan_date":""}]'], 'is_from_challan': ['false']}>
+2025-12-11 11:14:16,425 - core.combined_invoice_view - INFO - Products data received: [{"productid":"3377","batch_no":"234","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"1","rate_b":"2","rate_c":"3","from_challan":false,"challan_no":"","challan_date":""}]
+2025-12-11 11:14:16,426 - core.combined_invoice_view - INFO - Challan flag: false
+2025-12-11 11:14:16,430 - core.combined_invoice_view - INFO - Invoice created with ID: 165184
+2025-12-11 11:14:16,433 - core.combined_invoice_view - INFO - Challan data received: challan_no=, challan_date=
+2025-12-11 11:14:16,433 - core.combined_invoice_view - INFO - Setting rates for paracetamol: A=1.0, B=2.0, C=3.0
+2025-12-11 11:14:16,434 - core.combined_invoice_view - INFO - Product paracetamol: Base=1.0, CGST=0.025, SGST=0.025, Total=1.0499999999999998
+2025-12-11 11:14:16,436 - core.combined_invoice_view - INFO - Product paracetamol added to invoice
+2025-12-11 11:14:16,437 - core.combined_invoice_view - INFO - PURCHASE CREATED: paracetamol, Batch: 234, Qty: 1.0
+2025-12-11 11:14:16,450 - core.combined_invoice_view - INFO - Products total: 1.0499999999999998, Transport: 0.0, Invoice total: 1.0499999999999998
+2025-12-11 11:14:16,451 - core.combined_invoice_view - INFO - Invoice 1234 created successfully with 1 products
+2025-12-11 11:17:31,390 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['PzIQsTriCIOdYcelmcfbIMvzGJ0dmxLqbL5VEe4CG0yMJu4HnkhzkwiIny1dVRNO'], 'invoice_no': ['11'], 'invoice_date': ['2025-12-11'], 'supplierid': ['2'], 'transport_charges': ['0'], 'invoice_total': ['1.05'], 'products_data': ['[{"productid":"3377","batch_no":"1234","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"2","rate_b":"3","rate_c":"4","from_challan":false,"challan_no":"","challan_date":""}]'], 'is_from_challan': ['false']}>
+2025-12-11 11:17:31,401 - core.combined_invoice_view - INFO - Products data received: [{"productid":"3377","batch_no":"1234","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"2","rate_b":"3","rate_c":"4","from_challan":false,"challan_no":"","challan_date":""}]
+2025-12-11 11:17:31,402 - core.combined_invoice_view - INFO - Challan flag: false
+2025-12-11 11:17:31,406 - core.combined_invoice_view - INFO - Invoice created with ID: 165185
+2025-12-11 11:17:31,409 - core.combined_invoice_view - INFO - Challan data received: challan_no=, challan_date=
+2025-12-11 11:17:31,411 - core.combined_invoice_view - INFO - Setting rates for paracetamol: A=2.0, B=3.0, C=4.0
+2025-12-11 11:17:31,414 - core.combined_invoice_view - INFO - Product paracetamol: Base=1.0, CGST=0.025, SGST=0.025, Total=1.0499999999999998
+2025-12-11 11:17:31,419 - core.combined_invoice_view - INFO - Product paracetamol added to invoice
+2025-12-11 11:17:31,420 - core.combined_invoice_view - INFO - PURCHASE CREATED: paracetamol, Batch: 1234, Qty: 1.0
+2025-12-11 11:17:31,427 - core.combined_invoice_view - INFO - Products total: 1.0499999999999998, Transport: 0.0, Invoice total: 1.0499999999999998
+2025-12-11 11:17:31,428 - core.combined_invoice_view - INFO - Invoice 11 created successfully with 1 products
+2025-12-11 14:39:17,340 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['WwB8HXEVwsgHmcCD1A37jsC2w2jXHPW3iIYdTihfAK0g7usZ2I5vVcpbdRkXg9Yr'], 'invoice_no': ['1234'], 'invoice_date': ['2025-12-11'], 'supplierid': ['2'], 'transport_charges': ['0'], 'invoice_total': ['1.05'], 'products_data': ['[{"productid":"3377","batch_no":"1234","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"1","rate_b":"2","rate_c":"3","from_challan":false,"challan_no":"","challan_date":""}]'], 'is_from_challan': ['false']}>
+2025-12-11 14:39:17,352 - core.combined_invoice_view - INFO - Products data received: [{"productid":"3377","batch_no":"1234","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"1","rate_b":"2","rate_c":"3","from_challan":false,"challan_no":"","challan_date":""}]
+2025-12-11 14:39:17,353 - core.combined_invoice_view - INFO - Challan flag: false
+2025-12-11 14:39:17,355 - core.combined_invoice_view - INFO - Invoice created with ID: 165186
+2025-12-11 14:39:17,358 - core.combined_invoice_view - INFO - Challan data received: challan_no=, challan_date=
+2025-12-11 14:39:17,359 - core.combined_invoice_view - INFO - Setting rates for paracetamol: A=1.0, B=2.0, C=3.0
+2025-12-11 14:39:17,360 - core.combined_invoice_view - INFO - Product paracetamol: Base=1.0, CGST=0.025, SGST=0.025, Total=1.0499999999999998
+2025-12-11 14:39:17,364 - core.combined_invoice_view - INFO - Product paracetamol added to invoice
+2025-12-11 14:39:17,365 - core.combined_invoice_view - INFO - PURCHASE CREATED: paracetamol, Batch: 1234, Qty: 1.0
+2025-12-11 14:39:17,373 - core.combined_invoice_view - INFO - Products total: 1.0499999999999998, Transport: 0.0, Invoice total: 1.0499999999999998
+2025-12-11 14:39:17,373 - core.combined_invoice_view - INFO - Invoice 1234 created successfully with 1 products
