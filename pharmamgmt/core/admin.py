@@ -6,7 +6,7 @@ from .models import (
     SalesInvoicePaid, ProductRateMaster, ReturnInvoiceMaster, PurchaseReturnInvoicePaid,
     ReturnPurchaseMaster, ReturnSalesInvoiceMaster, ReturnSalesInvoicePaid, ReturnSalesMaster,
     Challan1, SupplierChallanMaster, SupplierChallanMaster2, CustomerChallan, CustomerChallanMaster, CustomerChallanMaster2, ChallanSeries,
-    InvoiceSeries, StockIssueMaster, StockIssueDetail
+    InvoiceSeries, StockIssueMaster, StockIssueDetail, ContraEntry
 )
 
 # Define custom admin classes
@@ -133,3 +133,16 @@ class StockIssueDetailAdmin(admin.ModelAdmin):
 # admin.site.register(BatchStockSummary, BatchStockSummaryAdmin)
 admin.site.register(StockIssueMaster, StockIssueMasterAdmin)
 admin.site.register(StockIssueDetail, StockIssueDetailAdmin)
+
+# ============================================
+# CONTRA ENTRY MODULE - ADMIN
+# ============================================
+class ContraEntryAdmin(admin.ModelAdmin):
+    list_display = ('contra_no', 'contra_date', 'contra_type', 'from_account', 'to_account', 'amount', 'created_by')
+    list_filter = ('contra_type', 'contra_date', 'created_by')
+    search_fields = ('contra_no', 'from_account', 'to_account', 'reference_no')
+    readonly_fields = ('contra_no', 'created_at', 'updated_at')
+    date_hierarchy = 'contra_date'
+
+admin.site.register(ContraEntry, ContraEntryAdmin)
+# ============================================

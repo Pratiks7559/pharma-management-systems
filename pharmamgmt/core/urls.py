@@ -27,6 +27,11 @@ from .inventory_export_views import (
 from .financial_views import financial_report, export_financial_pdf, export_financial_excel
 from .backup_views import backup_list, create_backup, restore_backup, download_backup, delete_backup
 from .return_receipt_views import print_purchase_return_receipt, print_sales_return_receipt
+# ============================================
+# CONTRA ENTRY MODULE - IMPORTS
+# ============================================
+from .contra_views import contra_list, add_contra, edit_contra, delete_contra, contra_detail
+# ============================================
 
 urlpatterns = [
     # Authentication
@@ -304,6 +309,16 @@ urlpatterns = [
     path('system/backups/download/<str:filename>/', download_backup, name='download_backup'),
     path('system/backups/delete/', delete_backup, name='delete_backup'),
     path('download-backup-logout/<str:filename>/', views.download_backup_and_logout, name='download_backup_and_logout'),
+    
+    # ============================================
+    # CONTRA ENTRY MODULE - URLS
+    # ============================================
+    path('contra/', contra_list, name='contra_list'),
+    path('contra/add/', add_contra, name='add_contra'),
+    path('contra/<int:contra_id>/', contra_detail, name='contra_detail'),
+    path('contra/<int:contra_id>/edit/', edit_contra, name='edit_contra'),
+    path('contra/<int:contra_id>/delete/', delete_contra, name='delete_contra'),
+    # ============================================
 ]
 
 

@@ -817,14 +817,25 @@ document.addEventListener('DOMContentLoaded', function() {
             submitText.textContent = 'Add Receipt';
             console.log('Receipt selected - button should be visible');
         } else if (selectedType === 'contra') {
-            selectionMessage.textContent = 'Contra entry - direct cash/bank transfer.';
+            selectionMessage.innerHTML = '<p style="margin-bottom: 0.5rem;">Contra entry - direct cash/bank transfer.</p>';
+            const contraButtons = `
+                <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+                    <a href="/contra/" class="btn btn-secondary" style="text-decoration: none;">
+                        <i class="fas fa-list"></i> Contra List
+                    </a>
+                    <a href="/contra/add/" class="btn btn-primary" style="text-decoration: none;">
+                        <i class="fas fa-plus"></i> Add Contra
+                    </a>
+                </div>
+            `;
+            selectionMessage.innerHTML += contraButtons;
             selectInvoiceBtn.style.display = 'none';
             submitText.textContent = 'Add Contra Entry';
-            // Enable form for contra entry
+            // Disable form for contra entry
             if (selectedInfo) selectedInfo.style.display = 'none';
             if (noInvoiceSelected) noInvoiceSelected.style.display = 'block';
-            if (submitBtn) submitBtn.disabled = false;
-            console.log('Contra selected - button hidden');
+            if (submitBtn) submitBtn.disabled = true;
+            console.log('Contra selected - showing contra buttons');
         } else {
             selectionMessage.textContent = 'Please select a transaction type first.';
             selectInvoiceBtn.style.display = 'none';

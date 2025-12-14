@@ -664,3 +664,50 @@ class StockIssueDetail(models.Model):
         self.total_amount = self.quantity_issued * self.unit_rate
         super().save(*args, **kwargs)
 
+
+
+# ============================================
+# CONTRA ENTRY MODULE - START
+# ============================================
+class ContraEntry(models.Model):
+    """Model for Contra Entry - Fund transfer between Cash and Bank"""
+    CONTRA_TYPES = [
+        ('BANK_TO_CASH', 'Bank to Cash'),
+        ('CASH_TO_BANK', 'Cash to Bank'),
+    ]
+    
+    contra_id = models.BigAutoField(primary_key=True, auto_created=True)
+    contra_no = models.CharField(max_length=20, unique=True)
+    contra_date = models.DateField(default=timezone.now)
+    contra_type = models.CharField(max_length=20, choices=CONTRA_TYPES)
+    amount = models.FloatField(validators=[MinValueValidator(0.01)])
+    from_account = models.CharField(max_length=100, help_text="Bank name or 'Cash'")
+    to_account = models.CharField(max_length=100, help_text="Bank name or 'Cash'")
+    reference_no = models.CharField(max_length=50, blank=True, null=True)
+    narration = models.TextField(blank=True, null=True)
+    created_by = models.ForeignKey(Web_User, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'contra_entry'
+        ordering = ['-contra_date', '-contra_id']
+        verbose_name = 'Contra Entry'
+        verbose_name_plural = 'Contra Entries'
+    
+    def __str__(self):
+        return f"Contra #{self.contra_no} - {self.get_contra_type_display()} - ₹{self.amount}"
+    
+    def save(self, *args, **kwargs):
+        if not self.contra_no:
+            # Generate contra number
+            last_contra = ContraEntry.objects.order_by('-contra_id').first()
+            if last_contra:
+                last_num = int(last_contra.contra_no.split('CE')[-1])
+                self.contra_no = f"CE{last_num + 1:06d}"
+            else:
+                self.contra_no = "CE000001"
+        super().save(*args, **kwargs)
+# ============================================
+# CONTRA ENTRY MODULE - END
+# ============================================
