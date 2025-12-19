@@ -10,7 +10,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-5&j%-b#2a$=_!)^-n2x7iq9m$w
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', '.replit.dev', '.repl.co']
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', '.replit.dev', '.repl.co', 'testserver']
 
 # CSRF settings for Replit
 CSRF_TRUSTED_ORIGINS = ['https://*.replit.dev', 'https://*.repl.co']
@@ -34,9 +34,17 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'core.middleware.DatabaseRetryMiddleware',
-    'core.middleware.DatabaseConnectionMiddleware',
 ]
+
+# Session optimization for better performance with 600K records
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Use DB only, no cache
+
+# SESSION_CACHE_ALIAS = 'default'
+SESSION_COOKIE_AGE = 3600  # 1 hour
+SESSION_SAVE_EVERY_REQUEST = False
+
+# Admin pagination for large datasets
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 50000
 
 ROOT_URLCONF = 'pharmamgmt.urls'
 
@@ -66,16 +74,26 @@ WSGI_APPLICATION = 'pharmamgmt.wsgi.application'
 
 import os
 
-# SQLite database for development with optimizations
+# PostgreSQL Configuration - Primary Database
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-        'OPTIONS': {
-            'timeout': 30,
-        },
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'pharma_db',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'localhost',
+        'PORT': '5432',
+        'CONN_MAX_AGE': 600,
     }
 }
+
+# SQLite disabled - all data goes to PostgreSQL only
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 # Custom user model
 AUTH_USER_MODEL = 'core.Web_User'
@@ -124,6 +142,10 @@ STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
 
+# Static files caching (browser cache for 1 year)
+if not DEBUG:
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+
 # Static files storage (using default for now)
 # STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
@@ -140,6 +162,35 @@ STATICFILES_DIRS += [
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Pagination Settings
+PAGINATION_ITEMS_PER_PAGE = 50
+
+# Django Admin - Handle large datasets
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 50000  # Increased for 600K records
+
+# Cache configuration
+import os
+
+# Enhanced caching for 600K records performance
+if os.getenv('REDIS_URL'):  # Production with Redis
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': os.getenv('REDIS_URL', 'redis://127.0.0.1:6379/1'),
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            },
+            'KEY_PREFIX': 'pharma',
+            'TIMEOUT': 300,  # 5 minutes default
+        }
+    }
+else:  # Development with enhanced local memory
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',  # Disable cache in development
+        }
+    }
 
 # Login URL
 LOGIN_URL = '/login/'

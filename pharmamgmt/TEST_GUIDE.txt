@@ -1,0 +1,49 @@
+========================================
+PHARMA MANAGEMENT - TESTING GUIDE
+========================================
+
+FILES CREATED:
+--------------
+1. test_complete.py  - Main test file
+2. RUN_ALL_TESTS.bat - Easy test runner
+
+HOW TO RUN:
+-----------
+
+METHOD 1 (Easiest):
+Double-click: RUN_ALL_TESTS.bat
+Select option 1 for quick test or 2 for full test
+
+METHOD 2 (Command Line):
+Quick Test:  python test_complete.py quick
+Full Test:   python test_complete.py
+
+WHAT GETS TESTED:
+-----------------
+1. Purchases      - 25,000 invoices
+2. Sales          - 25,000 invoices
+3. Payments       - 25,000 transactions
+4. Receipts       - 25,000 transactions
+5. Contra Entries - 25,000 entries
+
+Total: 125,000 records
+
+EXPECTED TIME:
+--------------
+Quick Test: 2-5 minutes
+Full Test:  15-30 minutes
+
+CLEAN TEST DATA:
+----------------
+Option 3 in RUN_ALL_TESTS.bat
+Or manually:
+python -c "from core.models import *; InvoiceMaster.objects.filter(invoice_no__startswith='TPI').delete()"
+
+NOTES:
+------
+- Test data has prefix "Test" or "T" in names/numbers
+- Real data is not affected
+- Tests can be run multiple times
+- Use Quick Test first to verify setup
+
+========================================

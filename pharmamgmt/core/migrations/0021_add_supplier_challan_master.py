@@ -8,7 +8,7 @@ from django.utils import timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0020_add_enhanced_sales_return_models'),
+        ('core', '0017_web_user_profile_picture_web_user_user_isactive'),
     ]
 
     operations = [

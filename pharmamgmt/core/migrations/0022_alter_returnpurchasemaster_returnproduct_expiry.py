@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0021_remove_enhancedsalesreturn_customer_and_more'),
+        ('core', '0021_add_supplier_challan_master'),
     ]
 
     operations = [

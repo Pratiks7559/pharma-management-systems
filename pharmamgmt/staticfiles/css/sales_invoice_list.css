@@ -236,6 +236,7 @@
 }
 
 .sales-invoice-list-view-btn,
+.sales-invoice-list-print-btn,
 .sales-invoice-list-payment-btn,
 .sales-invoice-list-delete-btn {
     display: inline-flex;
@@ -247,6 +248,8 @@
     text-decoration: none;
     margin: 0 2px;
     transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
 }
 
 .sales-invoice-list-view-btn {
@@ -258,6 +261,18 @@
     background: #138496;
     color: white;
     transform: translateY(-2px);
+}
+
+.sales-invoice-list-print-btn {
+    background: #6f42c1;
+    color: white;
+}
+
+.sales-invoice-list-print-btn:hover {
+    background: #5a32a3;
+    color: white;
+    transform: translateY(-2px);
+    text-decoration: none;
 }
 
 .sales-invoice-list-payment-btn {
@@ -418,6 +433,7 @@
     }
     
     .sales-invoice-list-view-btn,
+    .sales-invoice-list-print-btn,
     .sales-invoice-list-payment-btn,
     .sales-invoice-list-delete-btn {
         width: 28px;

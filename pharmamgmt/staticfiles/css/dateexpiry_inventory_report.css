@@ -1,10 +1,13 @@
-/* Date-wise Inventory Report Specific Styles */
+/* Date-wise Inventory Report - Compact */
 
 /* Main container */
 .date-report-container {
-    padding: 12px;
+    padding: 0.5rem;
     background-color: #f8f9fc;
-    overflow-x: hidden;
+    max-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Header section */
@@ -12,17 +15,19 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
-    padding: 20px;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 0.75rem;
     background: white;
-    border-radius: 8px;
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(58, 59, 69, 0.15);
+    flex-shrink: 0;
 }
 
 .date-report-title {
     color: #5a5c69;
     font-weight: 700;
     margin: 0;
+    font-size: 1.1rem;
 }
 
 .date-report-actions {
@@ -31,10 +36,10 @@
 }
 
 .date-report-btn {
-    padding: 8px 16px;
-    border-radius: 6px;
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
     text-decoration: none;
-    font-size: 14px;
+    font-size: 0.75rem;
     font-weight: 500;
     transition: all 0.3s ease;
 }
@@ -102,29 +107,34 @@
 /* Card section */
 .date-report-card {
     background: white;
-    border-radius: 8px;
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(58, 59, 69, 0.15);
     border: 1px solid #e3e6f0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 .date-report-card-header {
-    padding: 20px;
+    padding: 0.5rem 0.75rem;
     border-bottom: 1px solid #e3e6f0;
     background: #f8f9fc;
-    border-radius: 8px 8px 0 0;
+    border-radius: 6px 6px 0 0;
+    flex-shrink: 0;
 }
 
 .date-report-card-title {
     color: #5a5c69;
     font-weight: 700;
-    margin: 0 0 5px 0;
-    font-size: 18px;
+    margin: 0 0 0.25rem 0;
+    font-size: 0.95rem;
 }
 
 .date-report-card-subtitle {
     color: #858796;
-    margin: 0 0 15px 0;
-    font-size: 14px;
+    margin: 0 0 0.5rem 0;
+    font-size: 0.75rem;
 }
 
 /* Filter form */
@@ -142,10 +152,10 @@
 
 .date-filter-input {
     width: 100%;
-    padding: 10px 12px;
+    padding: 0.4rem 0.6rem;
     border: 1px solid #d1d3e2;
-    border-radius: 6px;
-    font-size: 14px;
+    border-radius: 4px;
+    font-size: 0.8rem;
     transition: border-color 0.3s ease;
 }
 
@@ -161,10 +171,10 @@
 }
 
 .date-filter-btn {
-    padding: 10px 16px;
+    padding: 0.4rem 0.75rem;
     border: none;
-    border-radius: 6px;
-    font-size: 14px;
+    border-radius: 4px;
+    font-size: 0.8rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -198,7 +208,10 @@
 
 /* Card body */
 .date-report-card-body {
-    padding: 20px;
+    padding: 0.5rem 0.75rem;
+    flex: 1;
+    overflow: auto;
+    max-height: calc(100vh - 250px);
 }
 
 /* Alert */
@@ -226,8 +239,8 @@
 
 /* Table container */
 .date-table-container {
-    overflow-x: auto;
-    border-radius: 6px;
+    overflow: auto;
+    border-radius: 4px;
     border: 1px solid #e3e6f0;
 }
 
@@ -244,14 +257,15 @@
 }
 
 .date-table-header th {
-    padding: 15px 12px;
+    padding: 0.4rem 0.5rem;
     text-align: left;
     font-weight: 700;
     color: #5a5c69;
-    font-size: 13px;
+    font-size: 0.75rem;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     border-right: 1px solid #e3e6f0;
+    white-space: nowrap;
 }
 
 .date-table-header th:last-child {
@@ -268,8 +282,8 @@
 }
 
 .date-inventory-table td {
-    padding: 12px;
-    font-size: 14px;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.75rem;
     color: #5a5c69;
     border-right: 1px solid #e3e6f0;
 }
@@ -431,6 +445,36 @@
         margin-bottom: 20px;
     }
     
+    /* Show pharmacy details in print */
+    .pharmacy-details {
+        display: block !important;
+        text-align: center;
+        margin-bottom: 15px;
+        padding: 10px;
+        border-bottom: 1px solid #000;
+    }
+    
+    .pharmacy-details h2 {
+        margin: 0 0 5px 0;
+        font-size: 18px;
+        color: black !important;
+    }
+    
+    .pharmacy-details p {
+        margin: 2px 0;
+        font-size: 11px;
+        color: black !important;
+    }
+    
+    .filter-info {
+        display: block !important;
+        text-align: center;
+        margin: 10px 0;
+        font-size: 11px;
+        font-weight: bold;
+        color: black !important;
+    }
+    
     .date-report-title {
         color: black !important;
         font-size: 24px;
@@ -449,6 +493,7 @@
     
     .date-report-card-title {
         color: black !important;
+        font-size: 16px;
     }
     
     .date-report-card-subtitle {
@@ -564,7 +609,14 @@
     /* Page break control */
     @page {
         size: A4 landscape;
-        margin: 1cm;
+        margin: 0.8cm;
+    }
+    
+    /* Print header with pharmacy info */
+    @page {
+        @top-center {
+            content: element(header);
+        }
     }
 }
 

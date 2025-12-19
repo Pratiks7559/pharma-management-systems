@@ -141,16 +141,16 @@ def get_batch_stock_status(product_id, batch_no, expiry_date=None, exclude_sale_
         current_stock = batch_purchased - batch_sold - purchase_returns + sales_returns - stock_issues
         
         # Debug logging for stock issue tracking - Enhanced for troubleshooting
-        print(f"✅ Stock calculation for Product {product_id}, Batch {batch_no}:")
-        print(f"   📦 Purchased: {batch_purchased} (Invoice: {batch_purchased_invoice} + Challan: {batch_purchased_challan})")
-        print(f"   📤 Sold: {batch_sold} (Invoice: {batch_sold_invoices} + Challan: {batch_sold_challans})")
-        print(f"   🔄 Returns: Purchase(-{purchase_returns}) + Sales(+{sales_returns}) = {sales_returns - purchase_returns}")
-        print(f"   ⚠️  Stock Issues: -{stock_issues}")
-        print(f"   📊 Final Stock: {current_stock} (Available: {current_stock > 0})")
+        print(f"[OK] Stock calculation for Product {product_id}, Batch {batch_no}:")
+        print(f"   [+] Purchased: {batch_purchased} (Invoice: {batch_purchased_invoice} + Challan: {batch_purchased_challan})")
+        print(f"   [-] Sold: {batch_sold} (Invoice: {batch_sold_invoices} + Challan: {batch_sold_challans})")
+        print(f"   [R] Returns: Purchase(-{purchase_returns}) + Sales(+{sales_returns}) = {sales_returns - purchase_returns}")
+        print(f"   [!] Stock Issues: -{stock_issues}")
+        print(f"   [=] Final Stock: {current_stock} (Available: {current_stock > 0})")
         
         return current_stock, float(current_stock) > 0
     except Exception as e:
-        print(f"❌ Error processing inventory for Product {product_id}, Batch {batch_no}: {e}")
+        print(f"[ERROR] Error processing inventory for Product {product_id}, Batch {batch_no}: {e}")
         return 0, False
 
 
@@ -592,7 +592,7 @@ def get_inventory_batches_info(product_id):
         for b in challan_batches:
             all_batch_nos.add(b['product_batch_no'])
         
-        print(f"📊 Processing inventory for Product {product_id} - Found {len(all_batch_nos)} unique batches")
+        print(f"[INFO] Processing inventory for Product {product_id} - Found {len(all_batch_nos)} unique batches")
         
         for batch_no in all_batch_nos:
             # Calculate stock from invoices
@@ -646,7 +646,7 @@ def get_inventory_batches_info(product_id):
             
             # Enhanced logging for UI debugging
             if batch_stock_issues > 0:
-                print(f"   ⚠️  Batch {batch_no}: Stock Issues = {batch_stock_issues}, Final Stock = {batch_stock}")
+                print(f"   [!] Batch {batch_no}: Stock Issues = {batch_stock_issues}, Final Stock = {batch_stock}")
             
             # Get MRP from first purchase or challan record
             first_purchase = PurchaseMaster.objects.filter(
@@ -691,6 +691,7 @@ def get_inventory_batches_info(product_id):
             })
     
     except Exception as e:
-        print(f"❌ Error processing inventory for Product {product_id}: {str(e)}")
+        print(f"[ERROR] Error processing inventory for Product {product_id}: {str(e)}")
     
     return batches
+

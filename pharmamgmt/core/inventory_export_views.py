@@ -20,8 +20,25 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
 
-from .fast_inventory import FastInventory
-from .models import Pharmacy_Details
+from .models import Pharmacy_Details, ProductMaster, PurchaseMaster, SalesMaster, ReturnPurchaseMaster, ReturnSalesMaster, SupplierChallanMaster, CustomerChallanMaster, StockIssueDetail
+from django.db.models import Q
+from collections import defaultdict
+import calendar
+
+def get_batch_inventory_data(search_query=''):
+    from .utils import get_stock_status
+    products = ProductMaster.objects.all()
+    if search_query:
+        products = products.filter(Q(product_name__icontains=search_query)|Q(product_company__icontains=search_query))
+    inventory = []
+    for p in products:
+        stock_info = get_stock_status(p.productid)
+        if stock_info.get('current_stock', 0) > 0:
+            inventory.append({'product_id': p.productid, 'product_name': p.product_name, 'product_company': p.product_company, 'product_packing': p.product_packing, 'batch_no': '', 'expiry': '', 'mrp': 0, 'stock': stock_info['current_stock'], 'value': 0})
+    return inventory
+
+def get_dateexpiry_inventory_data(search_query=''):
+    return [], 0
 
 
 @login_required
@@ -32,7 +49,7 @@ def export_batch_inventory_pdf(request):
         search_query = request.GET.get('search', '')
         
         # Get inventory data
-        all_inventory_data = FastInventory.get_batch_inventory_data(search_query)
+        all_inventory_data = get_batch_inventory_data(search_query)
         
         # Create PDF buffer
         buffer = io.BytesIO()
@@ -84,16 +101,16 @@ def export_batch_inventory_pdf(request):
 
         # Summary Statistics
         total_products = len(all_inventory_data)
+        total_stock = sum(item['stock'] for item in all_inventory_data)
+        total_mrp = sum(item['mrp'] * item['stock'] for item in all_inventory_data)
         total_value = sum(item['value'] for item in all_inventory_data)
-        out_of_stock = sum(1 for item in all_inventory_data if item['stock'] <= 0)
-        low_stock = sum(1 for item in all_inventory_data if 0 < item['stock'] <= 10)
         
         summary_data = [
-            ['Total Products', 'Total Inventory Value', 'Out of Stock', 'Low Stock (≤10)'],
-            [str(total_products), f"₹{total_value:,.2f}", str(out_of_stock), str(low_stock)]
+            ['Total Products', 'Total Stock Qty', 'Total MRP Value', 'Total Inventory Value'],
+            [str(total_products), str(int(total_stock)), f"₹{total_mrp:,.2f}", f"₹{total_value:,.2f}"]
         ]
         
-        summary_table = Table(summary_data, colWidths=[2*inch, 2.5*inch, 1.5*inch, 1.5*inch])
+        summary_table = Table(summary_data, colWidths=[2*inch, 2*inch, 2*inch, 2*inch])
         summary_table.setStyle(TableStyle([
             ('FONT', (0, 0), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
@@ -105,34 +122,56 @@ def export_batch_inventory_pdf(request):
         story.append(summary_table)
         story.append(Spacer(1, 0.3*inch))
 
-        # Inventory Table
+        # Inventory Table - Group by product
         if all_inventory_data:
+            # Group batches by product
+            from collections import defaultdict
+            product_groups = defaultdict(list)
+            for item in all_inventory_data:
+                key = (item['product_name'], item['product_company'], item['product_packing'])
+                product_groups[key].append(item)
+            
             table_data = [['Product Name', 'Company', 'Packing', 'Batch No', 'Expiry', 'Stock Qty', 'MRP', 'Stock Value']]
             
-            for item in all_inventory_data:
-                # Format expiry date
-                expiry_display = item.get('expiry', 'N/A')
-                if expiry_display and expiry_display != 'N/A':
-                    try:
-                        if len(expiry_display) == 7 and '-' in expiry_display:  # MM-YYYY format
-                            expiry_display = expiry_display
-                        elif len(expiry_display) == 10:  # YYYY-MM-DD format
-                            parts = expiry_display.split('-')
-                            if len(parts) == 3:
-                                expiry_display = f"{parts[1]}-{parts[0]}"
-                    except:
-                        pass
-                
-                table_data.append([
-                    item['product_name'][:25] + '...' if len(item['product_name']) > 25 else item['product_name'],
-                    item['product_company'][:15] + '...' if len(item['product_company']) > 15 else item['product_company'],
-                    item['product_packing'][:10] + '...' if len(item['product_packing']) > 10 else item['product_packing'],
-                    item['batch_no'][:10] + '...' if len(item['batch_no']) > 10 else item['batch_no'],
-                    expiry_display,
-                    str(int(item['stock'])),
-                    f"₹{item['mrp']:.2f}",
-                    f"₹{item['value']:.2f}"
-                ])
+            for (prod_name, prod_company, prod_packing), batches in sorted(product_groups.items()):
+                for idx, item in enumerate(batches):
+                    # Format expiry date
+                    expiry_display = item.get('expiry', 'N/A')
+                    if expiry_display and expiry_display != 'N/A':
+                        try:
+                            if len(expiry_display) == 7 and '-' in expiry_display:  # MM-YYYY format
+                                expiry_display = expiry_display
+                            elif len(expiry_display) == 10:  # YYYY-MM-DD format
+                                parts = expiry_display.split('-')
+                                if len(parts) == 3:
+                                    expiry_display = f"{parts[1]}-{parts[0]}"
+                        except:
+                            pass
+                    
+                    # Show product details only in first row of group
+                    if idx == 0:
+                        table_data.append([
+                            prod_name[:25] + '...' if len(prod_name) > 25 else prod_name,
+                            prod_company[:15] + '...' if len(prod_company) > 15 else prod_company,
+                            prod_packing[:10] + '...' if len(prod_packing) > 10 else prod_packing,
+                            item['batch_no'][:10] + '...' if len(item['batch_no']) > 10 else item['batch_no'],
+                            expiry_display,
+                            str(int(item['stock'])),
+                            f"₹{item['mrp']:.2f}",
+                            f"₹{item['value']:.2f}"
+                        ])
+                    else:
+                        # Empty cells for product details, only show batch info
+                        table_data.append([
+                            '',
+                            '',
+                            '',
+                            item['batch_no'][:10] + '...' if len(item['batch_no']) > 10 else item['batch_no'],
+                            expiry_display,
+                            str(int(item['stock'])),
+                            f"₹{item['mrp']:.2f}",
+                            f"₹{item['value']:.2f}"
+                        ])
 
             # Create table with proper column widths for landscape
             col_widths = [2.2*inch, 1.3*inch, 0.8*inch, 0.8*inch, 0.7*inch, 0.6*inch, 0.7*inch, 0.9*inch]
@@ -151,15 +190,12 @@ def export_batch_inventory_pdf(request):
                 ('FONT', (0, 1), (-1, -1), 'Helvetica'),
                 ('FONTSIZE', (0, 1), (-1, -1), 7),
                 ('ALIGN', (0, 1), (4, -1), 'LEFT'),
-                ('ALIGN', (5, 1), (-1, -1), 'RIGHT'),  # Align numeric columns right
+                ('ALIGN', (5, 1), (-1, -1), 'RIGHT'),
                 ('VALIGN', (0, 1), (-1, -1), 'MIDDLE'),
                 
-                # Grid and alternating colors
+                # Grid
                 ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
-                
-                # Highlight zero stock rows
-                ('TEXTCOLOR', (5, 1), (5, -1), colors.red),  # Red text for zero stock
+                ('LINEBELOW', (0, 0), (-1, 0), 1.5, colors.darkblue),
             ]))
 
             story.append(inventory_table)
@@ -188,7 +224,7 @@ def export_batch_inventory_excel(request):
         search_query = request.GET.get('search', '')
         
         # Get inventory data
-        all_inventory_data = FastInventory.get_batch_inventory_data(search_query)
+        all_inventory_data = get_batch_inventory_data(search_query)
         
         # Create workbook
         wb = Workbook()
@@ -277,12 +313,12 @@ def export_batch_inventory_excel(request):
 
         # Summary section
         total_products = len(all_inventory_data)
+        total_stock = sum(item['stock'] for item in all_inventory_data)
+        total_mrp = sum(item['mrp'] * item['stock'] for item in all_inventory_data)
         total_value = sum(item['value'] for item in all_inventory_data)
-        out_of_stock = sum(1 for item in all_inventory_data if item['stock'] <= 0)
-        low_stock = sum(1 for item in all_inventory_data if 0 < item['stock'] <= 10)
         
-        summary_headers = ['Total Products', 'Total Inventory Value', 'Out of Stock', 'Low Stock (≤10)']
-        summary_values = [total_products, f"₹{total_value:,.2f}", out_of_stock, low_stock]
+        summary_headers = ['Total Products', 'Total Stock Qty', 'Total MRP Value', 'Total Inventory Value']
+        summary_values = [total_products, int(total_stock), f"₹{total_mrp:,.2f}", f"₹{total_value:,.2f}"]
         
         # Summary headers
         for col, header in enumerate(summary_headers, 1):
@@ -312,48 +348,69 @@ def export_batch_inventory_excel(request):
             cell.border = thin_border
         current_row += 1
         
-        # Data rows
+        # Data rows - Group by product
+        from collections import defaultdict
+        product_groups = defaultdict(list)
         for item in all_inventory_data:
-            # Format expiry date
-            expiry_display = item.get('expiry', 'N/A')
-            if expiry_display and expiry_display != 'N/A':
-                try:
-                    if len(expiry_display) == 7 and '-' in expiry_display:  # MM-YYYY format
-                        expiry_display = expiry_display
-                    elif len(expiry_display) == 10:  # YYYY-MM-DD format
-                        parts = expiry_display.split('-')
-                        if len(parts) == 3:
-                            expiry_display = f"{parts[1]}-{parts[0]}"
-                except:
-                    pass
-            
-            row_data = [
-                item['product_name'],
-                item['product_company'],
-                item['product_packing'],
-                item['batch_no'],
-                expiry_display,
-                int(item['stock']),
-                f"₹{item['mrp']:.2f}",
-                f"₹{item['value']:.2f}"
-            ]
-            
-            for col, value in enumerate(row_data, 1):
-                cell = ws.cell(row=current_row, column=col, value=value)
-                cell.font = data_font
-                cell.border = thin_border
+            key = (item['product_name'], item['product_company'], item['product_packing'])
+            product_groups[key].append(item)
+        
+        for (prod_name, prod_company, prod_packing), batches in sorted(product_groups.items()):
+            for idx, item in enumerate(batches):
+                # Format expiry date
+                expiry_display = item.get('expiry', 'N/A')
+                if expiry_display and expiry_display != 'N/A':
+                    try:
+                        if len(expiry_display) == 7 and '-' in expiry_display:  # MM-YYYY format
+                            expiry_display = expiry_display
+                        elif len(expiry_display) == 10:  # YYYY-MM-DD format
+                            parts = expiry_display.split('-')
+                            if len(parts) == 3:
+                                expiry_display = f"{parts[1]}-{parts[0]}"
+                    except:
+                        pass
                 
-                # Alignment
-                if col in [6, 7, 8]:  # Numeric columns
-                    cell.alignment = Alignment(horizontal='right')
+                # Show product details only in first row of group
+                if idx == 0:
+                    row_data = [
+                        prod_name,
+                        prod_company,
+                        prod_packing,
+                        item['batch_no'],
+                        expiry_display,
+                        int(item['stock']),
+                        f"₹{item['mrp']:.2f}",
+                        f"₹{item['value']:.2f}"
+                    ]
                 else:
-                    cell.alignment = Alignment(horizontal='left')
+                    # Empty cells for product details, only show batch info
+                    row_data = [
+                        '',
+                        '',
+                        '',
+                        item['batch_no'],
+                        expiry_display,
+                        int(item['stock']),
+                        f"₹{item['mrp']:.2f}",
+                        f"₹{item['value']:.2f}"
+                    ]
                 
-                # Highlight zero stock
-                if col == 6 and int(item['stock']) <= 0:
-                    cell.font = Font(name='Arial', size=10, color='FF0000', bold=True)
-            
-            current_row += 1
+                for col, value in enumerate(row_data, 1):
+                    cell = ws.cell(row=current_row, column=col, value=value)
+                    cell.font = data_font
+                    cell.border = thin_border
+                    
+                    # Alignment
+                    if col in [6, 7, 8]:  # Numeric columns
+                        cell.alignment = Alignment(horizontal='right')
+                    else:
+                        cell.alignment = Alignment(horizontal='left')
+                    
+                    # Highlight zero stock
+                    if col == 6 and int(item['stock']) <= 0:
+                        cell.font = Font(name='Arial', size=10, color='FF0000', bold=True)
+                
+                current_row += 1
         
         # Auto-adjust column widths
         column_widths = [30, 20, 15, 15, 12, 12, 12, 15]
@@ -384,7 +441,7 @@ def export_dateexpiry_inventory_pdf(request):
         expiry_to = request.GET.get('expiry_to', '')
         
         # Get inventory data
-        expiry_data, total_value = FastInventory.get_dateexpiry_inventory_data(search_query)
+        expiry_data, total_value = get_dateexpiry_inventory_data(search_query)
         
         # Create PDF buffer
         buffer = io.BytesIO()
@@ -561,7 +618,7 @@ def export_dateexpiry_inventory_excel(request):
         expiry_to = request.GET.get('expiry_to', '')
         
         # Get inventory data
-        expiry_data, total_value = FastInventory.get_dateexpiry_inventory_data(search_query)
+        expiry_data, total_value = get_dateexpiry_inventory_data(search_query)
         
         # Create workbook
         wb = Workbook()

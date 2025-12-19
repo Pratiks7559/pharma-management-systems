@@ -86,3 +86,187 @@ def update_sales_invoice_payment_on_delete(sender, instance, **kwargs):
 
 # REMOVED: Inventory Management Signals - no longer needed
 # Inventory is now tracked through PurchaseMaster and SalesMaster tables directly
+
+# ============================================
+# INVENTORY CACHE UPDATE SIGNALS - START
+# ============================================
+from .models import (
+    ReturnPurchaseMaster, ReturnSalesMaster, StockIssueDetail,
+    CustomerChallanMaster
+)
+from .inventory_cache import update_batch_cache, update_product_cache, update_all_batches_for_product
+
+@receiver(post_save, sender=PurchaseMaster)
+def update_cache_on_purchase_save(sender, instance, **kwargs):
+    """Update cache when purchase is added/modified"""
+    try:
+        update_batch_cache(
+            instance.productid.productid,
+            instance.product_batch_no,
+            instance.product_expiry
+        )
+        update_product_cache(instance.productid.productid)
+    except Exception as e:
+        print(f"[ERROR] update_cache_on_purchase_save: {e}")
+
+@receiver(post_delete, sender=PurchaseMaster)
+def update_cache_on_purchase_delete(sender, instance, **kwargs):
+    """Update cache when purchase is deleted - recalculate from remaining records"""
+    try:
+        product_id = instance.productid.productid
+        batch_no = instance.product_batch_no
+        expiry_date = instance.product_expiry
+        
+        # Recalculate batch stock from remaining transactions
+        from .inventory_cache import calculate_batch_stock
+        current_stock = calculate_batch_stock(product_id, batch_no, expiry_date)
+        
+        if current_stock <= 0:
+            # Delete batch cache if no stock remains
+            from .models import BatchInventoryCache
+            BatchInventoryCache.objects.filter(
+                product_id=product_id,
+                batch_no=batch_no,
+                expiry_date=expiry_date
+            ).delete()
+        else:
+            # Update batch cache with recalculated stock
+            update_batch_cache(product_id, batch_no, expiry_date)
+        
+        # Update product summary
+        update_product_cache(product_id)
+    except Exception as e:
+        print(f"[ERROR] update_cache_on_purchase_delete: {e}")
+
+@receiver(post_save, sender=SalesMaster)
+def update_cache_on_sale_save(sender, instance, **kwargs):
+    """Update cache when sale is added/modified"""
+    try:
+        update_batch_cache(
+            instance.productid.productid,
+            instance.product_batch_no,
+            instance.product_expiry
+        )
+        update_product_cache(instance.productid.productid)
+    except Exception as e:
+        print(f"[ERROR] update_cache_on_sale_save: {e}")
+
+@receiver(post_delete, sender=SalesMaster)
+def update_cache_on_sale_delete(sender, instance, **kwargs):
+    """Update cache when sale is deleted - recalculate from remaining records"""
+    try:
+        product_id = instance.productid.productid
+        batch_no = instance.product_batch_no
+        expiry_date = instance.product_expiry
+        
+        # Recalculate and update batch cache
+        update_batch_cache(product_id, batch_no, expiry_date)
+        update_product_cache(product_id)
+    except Exception as e:
+        print(f"[ERROR] update_cache_on_sale_delete: {e}")
+
+@receiver(post_save, sender=SupplierChallanMaster)
+def update_cache_on_supplier_challan_save(sender, instance, **kwargs):
+    """Update cache when supplier challan is added/modified"""
+    try:
+        update_batch_cache(
+            instance.product_id.productid,
+            instance.product_batch_no,
+            instance.product_expiry
+        )
+        update_product_cache(instance.product_id.productid)
+    except Exception as e:
+        print(f"[ERROR] update_cache_on_supplier_challan_save: {e}")
+
+@receiver(post_delete, sender=SupplierChallanMaster)
+def update_cache_on_supplier_challan_delete(sender, instance, **kwargs):
+    """Update cache when supplier challan is deleted - recalculate from remaining records"""
+    try:
+        product_id = instance.product_id.productid
+        batch_no = instance.product_batch_no
+        expiry_date = instance.product_expiry
+        
+        # Recalculate batch stock from remaining transactions
+        from .inventory_cache import calculate_batch_stock
+        current_stock = calculate_batch_stock(product_id, batch_no, expiry_date)
+        
+        if current_stock <= 0:
+            # Delete batch cache if no stock remains
+            from .models import BatchInventoryCache
+            BatchInventoryCache.objects.filter(
+                product_id=product_id,
+                batch_no=batch_no,
+                expiry_date=expiry_date
+            ).delete()
+        else:
+            # Update batch cache with recalculated stock
+            update_batch_cache(product_id, batch_no, expiry_date)
+        
+        # Update product summary
+        update_product_cache(product_id)
+    except Exception as e:
+        print(f"[ERROR] update_cache_on_supplier_challan_delete: {e}")
+
+@receiver(post_save, sender=CustomerChallanMaster)
+def update_cache_on_customer_challan_save(sender, instance, **kwargs):
+    """Update cache when customer challan is added/modified"""
+    try:
+        update_batch_cache(
+            instance.product_id.productid,
+            instance.product_batch_no,
+            instance.product_expiry
+        )
+        update_product_cache(instance.product_id.productid)
+    except Exception as e:
+        print(f"[ERROR] update_cache_on_customer_challan_save: {e}")
+
+@receiver(post_delete, sender=CustomerChallanMaster)
+def update_cache_on_customer_challan_delete(sender, instance, **kwargs):
+    """Update cache when customer challan is deleted - recalculate from remaining records"""
+    try:
+        product_id = instance.product_id.productid
+        batch_no = instance.product_batch_no
+        expiry_date = instance.product_expiry
+        
+        # Recalculate and update batch cache
+        update_batch_cache(product_id, batch_no, expiry_date)
+        update_product_cache(product_id)
+    except Exception as e:
+        print(f"[ERROR] update_cache_on_customer_challan_delete: {e}")
+
+@receiver([post_save, post_delete], sender=ReturnPurchaseMaster)
+def update_cache_on_purchase_return(sender, instance, **kwargs):
+    """Update cache when purchase return is added/modified/deleted"""
+    try:
+        update_all_batches_for_product(instance.returnproductid.productid)
+    except Exception as e:
+        print(f"[ERROR] update_cache_on_purchase_return: {e}")
+
+@receiver([post_save, post_delete], sender=ReturnSalesMaster)
+def update_cache_on_sales_return(sender, instance, **kwargs):
+    """Update cache when sales return is added/modified/deleted"""
+    try:
+        update_batch_cache(
+            instance.return_productid.productid,
+            instance.return_product_batch_no,
+            instance.return_product_expiry
+        )
+        update_product_cache(instance.return_productid.productid)
+    except Exception as e:
+        print(f"[ERROR] update_cache_on_sales_return: {e}")
+
+@receiver([post_save, post_delete], sender=StockIssueDetail)
+def update_cache_on_stock_issue(sender, instance, **kwargs):
+    """Update cache when stock issue is added/modified/deleted"""
+    try:
+        update_batch_cache(
+            instance.product.productid,
+            instance.batch_no,
+            instance.expiry_date
+        )
+        update_product_cache(instance.product.productid)
+    except Exception as e:
+        print(f"[ERROR] update_cache_on_stock_issue: {e}")
+# ============================================
+# INVENTORY CACHE UPDATE SIGNALS - END
+# ============================================

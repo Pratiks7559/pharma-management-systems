@@ -19,11 +19,11 @@ def financial_report(request):
     product_id = request.GET.get('product_id')
     product_search = request.GET.get('product_search', '')
     
-    # Base querysets
-    sales_query = SalesMaster.objects.select_related('productid', 'sales_invoice_no', 'customerid')
-    purchase_query = PurchaseMaster.objects.select_related('productid', 'product_invoiceid', 'product_supplierid')
-    supplier_challan_query = SupplierChallanMaster.objects.select_related('product_id', 'product_suppliername', 'product_challan_id').filter(product_challan_id__is_invoiced=False)
-    customer_challan_query = CustomerChallanMaster.objects.select_related('product_id', 'customer_name', 'customer_challan_id')
+    # Base querysets with ordering
+    sales_query = SalesMaster.objects.select_related('productid', 'sales_invoice_no', 'customerid').order_by('-sale_entry_date')
+    purchase_query = PurchaseMaster.objects.select_related('productid', 'product_invoiceid', 'product_supplierid').order_by('-purchase_entry_date')
+    supplier_challan_query = SupplierChallanMaster.objects.select_related('product_id', 'product_suppliername', 'product_challan_id').filter(product_challan_id__is_invoiced=False).order_by('-challan_entry_date')
+    customer_challan_query = CustomerChallanMaster.objects.select_related('product_id', 'customer_name', 'customer_challan_id').order_by('-sales_entry_date')
     
     # Apply date filters
     if start_date:
@@ -65,7 +65,14 @@ def financial_report(request):
         supplier_challan_query = supplier_challan_query.filter(product_name__icontains=search_term)
         customer_challan_query = customer_challan_query.filter(product_name__icontains=search_term)
     
-    # Fetch all data
+    # Limit data if no date filter
+    if not (start_date and end_date):
+        sales_query = sales_query[:500]
+        purchase_query = purchase_query[:500]
+        customer_challan_query = customer_challan_query[:500]
+        supplier_challan_query = supplier_challan_query[:500]
+    
+    # Fetch data
     sales_list = list(sales_query)
     purchase_list = list(purchase_query)
     customer_challan_list = list(customer_challan_query)
@@ -249,13 +256,13 @@ def financial_report(request):
     
     # Summary statistics
     summary = {
-        'total_sales_value': round(total_sales_value, 2),
-        'total_purchase_cost': round(total_purchase_cost, 2),
-        'total_gst': round(total_gst, 2),
-        'total_profit': round(total_profit, 2),
-        'profit_percentage': round((total_profit / total_sales_value * 100), 2) if total_sales_value > 0 else 0,
+        'total_sales_value': total_sales_value,
+        'total_purchase_cost': total_purchase_cost,
+        'total_gst': total_gst,
+        'total_profit': total_profit,
+        'profit_percentage': (total_profit / total_sales_value * 100) if total_sales_value > 0 else 0,
         'total_transactions': len(financial_data),
-        'stock_valuation': round(stock_valuation, 2)
+        'stock_valuation': stock_valuation
     }
     
     # Pagination - 20 records per page

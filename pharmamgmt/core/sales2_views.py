@@ -30,27 +30,19 @@ def sales2_report(request):
         start_date = None
         end_date = None
     
-    # Get sales invoices - always show all, filter only if dates provided
-    invoices = SalesInvoiceMaster.objects.all().order_by('-sales_invoice_date')
+    invoices = SalesInvoiceMaster.objects.select_related('customerid').order_by('-sales_invoice_date')
     
-    # Apply date filter only if both dates provided
     if start_date and end_date:
         invoices = invoices.filter(sales_invoice_date__range=[start_date, end_date])
+    else:
+        invoices = invoices[:500]
     
-    # Calculate totals for each invoice
     invoice_data = []
-    total_sales = 0
-    total_received = 0
-    total_pending = 0
+    total_sales = total_received = total_pending = 0
     
     for invoice in invoices:
-        # Calculate invoice total from sales items
-        invoice_total = SalesMaster.objects.filter(
-            sales_invoice_no=invoice.sales_invoice_no
-        ).aggregate(Sum('sale_total_amount'))['sale_total_amount__sum'] or 0
-        
+        invoice_total = invoice.sales_invoice_total
         balance = invoice_total - invoice.sales_invoice_paid
-        
         invoice_data.append({
             'invoice_no': invoice.sales_invoice_no,
             'date': invoice.sales_invoice_date,
@@ -59,7 +51,6 @@ def sales2_report(request):
             'paid': invoice.sales_invoice_paid,
             'balance': balance
         })
-        
         total_sales += invoice_total
         total_received += invoice.sales_invoice_paid
         total_pending += balance

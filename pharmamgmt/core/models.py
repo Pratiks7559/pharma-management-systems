@@ -711,3 +711,78 @@ class ContraEntry(models.Model):
 # ============================================
 # CONTRA ENTRY MODULE - END
 # ============================================
+
+# ============================================
+# INVENTORY CACHE TABLES - START
+# ============================================
+class ProductInventoryCache(models.Model):
+    """Cache table for product-level inventory summary"""
+    product = models.OneToOneField(ProductMaster, on_delete=models.CASCADE, primary_key=True, related_name='inventory_cache')
+    
+    # Stock Summary
+    total_stock = models.FloatField(default=0, db_index=True, help_text="Total stock across all batches")
+    total_batches = models.IntegerField(default=0, help_text="Number of active batches")
+    
+    # Financial Summary
+    avg_mrp = models.FloatField(default=0, help_text="Average MRP across batches")
+    avg_purchase_rate = models.FloatField(default=0, help_text="Average purchase rate")
+    total_stock_value = models.FloatField(default=0, help_text="Total stock value (stock × MRP)")
+    
+    # Status
+    stock_status = models.CharField(max_length=20, db_index=True, default='out_of_stock', 
+                                    help_text="in_stock, low_stock, out_of_stock")
+    has_expired_batches = models.BooleanField(default=False, db_index=True)
+    
+    # Timestamps
+    last_updated = models.DateTimeField(auto_now=True, db_index=True)
+    
+    class Meta:
+        db_table = 'product_inventory_cache'
+        indexes = [
+            models.Index(fields=['stock_status', 'total_stock']),
+            models.Index(fields=['has_expired_batches']),
+        ]
+    
+    def __str__(self):
+        return f"Cache: {self.product.product_name} - Stock: {self.total_stock}"
+
+class BatchInventoryCache(models.Model):
+    """Cache table for batch-level inventory details"""
+    product = models.ForeignKey(ProductMaster, on_delete=models.CASCADE, related_name='batch_caches')
+    batch_no = models.CharField(max_length=20, db_index=True)
+    expiry_date = models.CharField(max_length=7, help_text="Format: MM-YYYY")
+    
+    # Stock Details
+    current_stock = models.FloatField(default=0, db_index=True)
+    mrp = models.FloatField(default=0)
+    purchase_rate = models.FloatField(default=0)
+    
+    # Rates
+    rate_a = models.FloatField(default=0)
+    rate_b = models.FloatField(default=0)
+    rate_c = models.FloatField(default=0)
+    
+    # Status
+    is_expired = models.BooleanField(default=False, db_index=True)
+    expiry_status = models.CharField(max_length=20, default='valid', 
+                                     help_text="expired, expiring_soon, valid")
+    
+    # Timestamps
+    last_updated = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'batch_inventory_cache'
+        unique_together = [['product', 'batch_no', 'expiry_date']]
+        indexes = [
+            models.Index(fields=['product', 'current_stock']),
+            models.Index(fields=['is_expired']),
+            models.Index(fields=['expiry_date']),
+            models.Index(fields=['batch_no']),
+        ]
+        ordering = ['expiry_date', 'batch_no']
+    
+    def __str__(self):
+        return f"{self.product.product_name} - Batch: {self.batch_no} - Stock: {self.current_stock}"
+# ============================================
+# INVENTORY CACHE TABLES - END
+# ============================================

@@ -30,37 +30,27 @@ def purchase2_report(request):
         start_date = None
         end_date = None
     
-    # Get purchase invoices - always show all, filter only if dates provided
-    invoices = InvoiceMaster.objects.all().order_by('-invoice_date')
+    invoices = InvoiceMaster.objects.select_related('supplierid').order_by('-invoice_date')
     
-    # Apply date filter only if both dates provided
     if start_date and end_date:
         invoices = invoices.filter(invoice_date__range=[start_date, end_date])
+    else:
+        invoices = invoices[:500]
     
-    # Calculate totals for each invoice
     invoice_data = []
-    total_purchases = 0
-    total_paid = 0
-    total_pending = 0
+    total_purchases = total_paid = total_pending = 0
     
     for invoice in invoices:
-        # Calculate invoice total from purchase items
-        invoice_total = PurchaseMaster.objects.filter(
-            product_invoiceid=invoice.invoiceid
-        ).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
-        
-        balance = invoice_total - invoice.invoice_paid
-        
+        balance = invoice.invoice_total - invoice.invoice_paid
         invoice_data.append({
             'invoice_no': invoice.invoice_no,
             'date': invoice.invoice_date,
             'supplier_name': invoice.supplierid.supplier_name,
-            'total': invoice_total,
+            'total': invoice.invoice_total,
             'paid': invoice.invoice_paid,
             'balance': balance
         })
-        
-        total_purchases += invoice_total
+        total_purchases += invoice.invoice_total
         total_paid += invoice.invoice_paid
         total_pending += balance
     

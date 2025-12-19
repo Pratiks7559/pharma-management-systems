@@ -57,9 +57,13 @@
                 <div class="customer-info-display">
                     <h6 class="customer-info-label">Customer</h6>
                     <h5 class="customer-info-value">
+                        {% if invoice.customerid %}
                         <a href="{% url 'customer_detail' pk=invoice.customerid.customerid %}" class="customer-detail-link">
                             {{ invoice.customerid.customer_name }}
                         </a>
+                        {% else %}
+                        <span class="text-muted">No Customer</span>
+                        {% endif %}
                     </h5>
                 </div>
                 

@@ -162,3 +162,99 @@ Cannot delete invoice. Error: name 'SupplierChallanMaster' is not defined solve 
 supplier challan list me and supplier challan detaiil me kya ho raha hai challan dikh raha hai pr uski details me product section me product nhi dikh raha hai kyo ki hum supplierchallanmaster ka data supplierchallanmaster2 ko de rahe hai to iske liye bhi kuch adjust karo
 
 1)jab bhi kisi product ka purchase ho ya supplier challan ho invenotry master me uski entry hogi 2) jab bhi kisi product ka customer challan ho ya salse ho to inventory master me se stock qty kam hogi 3) agar kisi product ki stock qty 0 hai to vo product inventory master me se delte ho jayega 4) invenotry master me se kuch bhi delete ho ga to inventory transactino me se kuch bhi delete na ho
+
+so you mean redis work better than locall also so our chaches whill store in redis and fast an easy deploy
+
+when i use aws db instead of sql lite it will work
+
+when i use aws db instead of redis it will work
+
+how locust use in testing for my site
+
+ab tum muze batao locust ke kaun kaun se command step by step run karu
+
+you can test usig locust full compnents
+
+
+you can test usig locust full compnents
+or all routes in our website
+
+
+locust kya purchase invoces sales inovices sales challan purchase challan saels return pruchase return ki 100000 entries ke liye trsting
+
+
+waise nhi har ek compmnent me 100000 entries honge
+
+per section one lakh entries maat karo jaise pehel kiya the wiase karo
+
+
+locust ki testing kaun se aadhar pr kar rahe ho local storage pr ya redis pr
+
+per section one lakh entries maat karo jaise pehel kiya the wiase karo
+
+tumne jo combine 100000 entries add hai usko delete karne liye file do
+
+🐌 Main Reasons Why 100K Entries Make Website Slow:
+1. Database Query Issues
+-- Slow queries without indexes
+SELECT * FROM products ORDER BY id DESC;  -- 100K records scan
+SELECT * FROM sales WHERE date >= '2024-01-01';  -- Full table scan
+Copy
+2. No Pagination
+Loading all 100K records at once
+Browser crashes with large DOM
+Memory overflow
+3. Missing Database Indexes
+-- Missing indexes on frequently queried columns
+CREATE INDEX idx_product_name ON products(product_name);
+CREATE INDEX idx_sales_date ON sales(sale_entry_date);
+CREATE INDEX idx_batch_expiry ON purchases(product_batch_no, product_expiry);
+Copy
+sql
+4. Inefficient Django ORM
+# Slow - N+1 queries
+for sale in SalesMaster.objects.all():  # 100K queries
+    print(sale.productid.product_name)
+# Fast - Single query with joins
+
+
+check karo jab bhi sale inovice with product ho raha hai tabhi product cache and batch cache me stock update means decreas nhi ho rahe
+sales = SalesMaster.objects.select_related('productid').all()
+Copy
+python
+5. No Caching
+Same queries run repeatedly
+No Redis/Memcached
+Database hit every time
+6. Large HTML Rendering
+<!-- 100K rows in single page -->
+<table>
+  {% for product in products %}  <!-- 100K iterations -->
+    <tr>...</tr>
+  {% endfor %}
+</table>
+Copy
+html
+7. SQLite Limitations
+Single file database
+No concurrent writes
+Limited performance with large data
+
+🚀 Solutions:
+Immediate Fixes:
+Add Pagination: Show 50 records per page
+Add Indexes: On search columns
+Use select_related(): Reduce queries
+Implement Search: Filter before display
+Long-term Solutions:
+Move to PostgreSQL/MySQL
+Add Redis Caching
+Implement AJAX Loading
+Use Database Views
+Root Cause: Your website loads ALL 100K records at once without optimization!
+
+
+jab bhi mai 10k+ records add karata hu to har product ke liye muiple batches,batch rates,expiry dates,stock value ,statu sab calculate ya fetch karke dikhan padata hai o 10K+ entries hongi ti sab multiple hone to usme invenotry list pr load aayega muze sirf tum itna batao ki without removing batches and stock,expiry date,batch rates,stock value,stock status muze unhe jaldi fetch karke ui pr load na aaye info do muze
+
+jaise all product inventory ke calculation runtime me ho rahe hai ek kam karo all products invenotry ke liye table banao jo calcualtion honge vo db me hone fir db ka data all products inventory me dikhengeu
+check karo jab bhi sale inovice with product ho raha hai tabhi product cache and batch cache me stock update means decreas nhi ho rahe

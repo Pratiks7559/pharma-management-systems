@@ -458,7 +458,8 @@ function quickSearchProducts(event) {
     
     resultsDiv.innerHTML = filtered.map((product, index) => `
         <div class="quick-result-item ${index === 0 ? 'selected' : ''}" 
-             onclick="quickSelectProduct(${product.id}, '${product.name.replace(/'/g, "\\'").replace(/"/g, '\\"')}', '${product.company.replace(/'/g, "\\'").replace(/"/g, '\\"')}')">
+             data-product-id="${product.id}" 
+             onclick="quickSelectProduct(this.dataset.productId)">
             <div class="product-name">${product.name}</div>
             <div class="product-company">${product.company}</div>
         </div>
@@ -486,7 +487,7 @@ function navigateResults(direction) {
     items[newIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function quickSelectProduct(productId, productName, productCompany) {
+function quickSelectProduct(productId) {
     // Close modal immediately to prevent double-click issues
     closeQuickSearch();
     

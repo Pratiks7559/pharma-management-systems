@@ -18,6 +18,7 @@
 .add-product-action-btn,
 .edit-invoice-action-btn,
 .print-bill-action-btn,
+.print-receipt-action-btn,
 .add-payment-action-btn,
 .delete-invoice-action-btn,
 .back-to-invoices-action-btn {
@@ -63,6 +64,17 @@
 
 .print-bill-action-btn:hover {
     background: #138496;
+    color: white;
+    text-decoration: none;
+}
+
+.print-receipt-action-btn {
+    background: #6f42c1;
+    color: white;
+}
+
+.print-receipt-action-btn:hover {
+    background: #5a32a3;
     color: white;
     text-decoration: none;
 }
@@ -975,6 +987,7 @@
     .add-product-action-btn,
     .edit-invoice-action-btn,
     .print-bill-action-btn,
+    .print-receipt-action-btn,
     .add-payment-action-btn,
     .delete-invoice-action-btn,
     .back-to-invoices-action-btn {
@@ -1113,6 +1126,7 @@
     .add-product-action-btn,
     .edit-invoice-action-btn,
     .print-bill-action-btn,
+    .print-receipt-action-btn,
     .add-payment-action-btn,
     .delete-invoice-action-btn,
     .back-to-invoices-action-btn {
@@ -1233,6 +1247,7 @@
     .add-product-action-btn,
     .edit-invoice-action-btn,
     .print-bill-action-btn,
+    .print-receipt-action-btn,
     .add-payment-action-btn,
     .delete-invoice-action-btn,
     .back-to-invoices-action-btn {
@@ -1306,6 +1321,7 @@
     .add-product-action-btn,
     .edit-invoice-action-btn,
     .print-bill-action-btn,
+    .print-receipt-action-btn,
     .add-payment-action-btn,
     .delete-invoice-action-btn,
     .back-to-invoices-action-btn {
@@ -1318,6 +1334,7 @@
     .add-product-action-btn,
     .edit-invoice-action-btn,
     .print-bill-action-btn,
+    .print-receipt-action-btn,
     .add-payment-action-btn,
     .delete-invoice-action-btn,
     .back-to-invoices-action-btn {

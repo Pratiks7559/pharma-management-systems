@@ -755,19 +755,11 @@ body.modal-open {
                             </a>
                         </th>
                         <th class="product-list-packing-header">Packing</th>
-                        <th class="product-list-batch-header">Batches & Stock</th>
-                        <th class="product-list-rates-header">Batch Rates (A/B/C)</th>
                         <th class="product-list-barcode-header">Barcode</th>
                         <th class="product-list-category-header">
                             <a href="?sort=category{% if search_query %}&search={{ search_query }}{% endif %}" 
                                class="sort-link {% if sort_by == 'category' %}active{% endif %}">
                                 Category <i class="fas fa-sort"></i>
-                            </a>
-                        </th>
-                        <th class="product-list-stock-header">
-                            <a href="?sort=stock{% if search_query %}&search={{ search_query }}{% endif %}" 
-                               class="sort-link {% if sort_by == 'stock' %}active{% endif %}">
-                                Stock <i class="fas fa-sort"></i>
                             </a>
                         </th>
                         <th class="product-list-actions-header">Actions</th>
@@ -780,48 +772,6 @@ body.modal-open {
                         <td class="product-list-name-cell">{{ product.product_name }}</td>
                         <td class="product-list-company-cell">{{ product.product_company }}</td>
                         <td class="product-list-packing-cell">{{ product.product_packing }}</td>
-                        <td class="product-list-batch-cell">
-                            {% if product.batches_info %}
-                                <div class="batches-container">
-                                    {% for batch in product.batches_info %}
-                                        <div class="batch-item" style="margin-bottom: 5px; padding: 3px 6px; background: #f8f9fa; border-radius: 3px; font-size: 12px;">
-                                            <strong>{{ batch.batch_no }}</strong>
-                                            <span class="{% if batch.stock <= 0 %}text-danger{% elif batch.stock <= 10 %}text-warning{% else %}text-success{% endif %}" style="margin-left: 8px;">
-                                                ({{ batch.stock|floatformat:0 }})
-                                            </span>
-                                            {% if batch.expiry %}
-                                                <br><small class="text-muted">Exp: {{ batch.expiry|expiry_mmyyyy }}</small>
-                                            {% endif %}
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <span class="text-muted">No Batches</span>
-                            {% endif %}
-                        </td>
-                        <td class="product-list-rates-cell">
-                            {% if product.batches_info %}
-                                <div class="rates-container" style="max-height: 120px; overflow-y: auto;">
-                                    {% for batch in product.batches_info %}
-                                        <div style="margin-bottom: 3px; font-size: 12px; padding: 2px 4px; background: #f8f9fa; border-radius: 3px;">
-                                            <strong>{{ batch.batch_no }}</strong><br>
-                                            {% if batch.rates.rate_A > 0 or batch.rates.rate_B > 0 or batch.rates.rate_C > 0 %}
-                                                <small class="text-primary">
-                                                    {% if batch.rates.rate_A > 0 %}A: ₹{{ batch.rates.rate_A|floatformat:0 }}<br>{% endif %}
-                                                    {% if batch.rates.rate_B > 0 %}B: ₹{{ batch.rates.rate_B|floatformat:0 }}<br>{% endif %}
-                                                    {% if batch.rates.rate_C > 0 %}C: ₹{{ batch.rates.rate_C|floatformat:0 }}{% endif %}
-                                                </small>
-                                            {% else %}
-                                                <small class="text-muted">No rates</small>
-                                            {% endif %}
-                                            <br><small class="text-success">MRP: ₹{{ batch.mrp|floatformat:2 }}</small>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <span class="text-muted">No batches</span>
-                            {% endif %}
-                        </td>
                         <td class="product-list-barcode-cell">{% if product.product_barcode %}
                             <span class="product-list-barcode-value">
                                 <i class="fas fa-barcode product-list-barcode-icon"></i>{{ product.product_barcode }}
@@ -831,16 +781,6 @@ body.modal-open {
                             {% endif %}
                         </td>
                         <td class="product-list-category-cell">{{ product.product_category }}</td>
-                        <td class="product-list-stock-cell">
-                            <span class="{% if product.current_stock <= 0 %}text-danger{% elif product.current_stock <= 10 %}text-warning{% else %}text-success{% endif %}">
-                                {{ product.current_stock|default:0|floatformat:0 }}
-                                {% if product.current_stock <= 0 %}
-                                    <i class="fas fa-exclamation-triangle" title="Out of Stock"></i>
-                                {% elif product.current_stock <= 10 %}
-                                    <i class="fas fa-exclamation-circle" title="Low Stock"></i>
-                                {% endif %}
-                            </span>
-                        </td>
                         <td class="product-list-actions-cell">
                             <a href="{% url 'product_detail' pk=product.productid %}" class="product-list-action-btn product-list-view-btn">
                                 <i class="fas fa-eye product-list-view-icon"></i>
@@ -862,7 +802,7 @@ body.modal-open {
                     </tr>
                     {% empty %}
                     <tr class="product-list-empty-row">
-                        <td colspan="10" class="product-list-empty-cell">No products found.</td>
+                        <td colspan="7" class="product-list-empty-cell">No products found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>

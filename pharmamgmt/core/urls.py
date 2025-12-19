@@ -27,6 +27,7 @@ from .inventory_export_views import (
 from .financial_views import financial_report, export_financial_pdf, export_financial_excel
 from .backup_views import backup_list, create_backup, restore_backup, download_backup, delete_backup
 from .return_receipt_views import print_purchase_return_receipt, print_sales_return_receipt
+from .cached_inventory_views import inventory_list_cached
 # ============================================
 # CONTRA ENTRY MODULE - IMPORTS
 # ============================================
@@ -60,6 +61,14 @@ urlpatterns = [
     path('products/<int:pk>/', views.product_detail, name='product_detail'),
     path('products/<int:pk>/update/', views.update_product, name='update_product'),
     path('products/<int:pk>/delete/', views.delete_product, name='delete_product'),
+    
+    # Backup Management (MOVED BEFORE SUPPLIERS TO AVOID CONFLICT)
+    path('system/backups/', backup_list, name='backup_list'),
+    path('system/backups/create/', create_backup, name='create_backup'),
+    path('system/backups/restore/', restore_backup, name='restore_backup'),
+    path('system/backups/download/<str:filename>/', download_backup, name='download_backup'),
+    path('system/backups/delete/', delete_backup, name='delete_backup'),
+    path('download-backup-logout/<str:filename>/', views.download_backup_and_logout, name='download_backup_and_logout'),
     
     # Suppliers
     path('suppliers/', views.supplier_list, name='supplier_list'),
@@ -170,8 +179,8 @@ urlpatterns = [
     path('api/product-search-suggestions/', views.product_search_suggestions, name='product_search_suggestions'),
     path('api/delete-invoice-series/<int:series_id>/', views.delete_invoice_series, name='delete_invoice_series'),
  
-    # Inventory
-    path('inventory/', views.inventory_list, name='inventory_list'),
+    # Inventory (Cache will auto-populate via signals)
+    path('inventory/', inventory_list_cached, name='inventory_list'),
     path('api/inventory-search-suggestions/', views.inventory_search_suggestions, name='inventory_search_suggestions'),
     
     # Reports
@@ -181,7 +190,6 @@ urlpatterns = [
     path('reports/stock-statement/batch-details/<int:product_id>/', stock_statement_batch_detail, name='stock_statement_batch_detail'),
     path('reports/stock-statement/pdf/', export_stock_statement_pdf, name='export_stock_statement_pdf'),
     path('reports/sales/', views.sales_report, name='sales_report'),
-    path('reports/sales/analytics/', views.sales_report, name='enhanced_sales_analytics'),
     path('reports/sales2/', sales2_report, name='sales2_report'),
     path('reports/sales2/pdf/', sales2_report_pdf, name='sales2_report_pdf'),
     path('reports/sales2/excel/', sales2_report_excel, name='sales2_report_excel'),
@@ -204,7 +212,6 @@ urlpatterns = [
     path('api/product-info/', views.get_product_info, name='get_product_info_api'),
     path('api/product-by-barcode/', views.get_product_by_barcode, name='get_product_by_barcode'),
     path('api/export-inventory/', views.export_inventory_csv, name='export_inventory_csv'),
-    path('api/sales-analytics/', views.get_sales_analytics_api, name='get_sales_analytics_api'),
 
     
     # Export URLs
@@ -302,14 +309,6 @@ urlpatterns = [
     path('bulk-upload-invoices/', bulk_upload_invoices, name='bulk_upload_invoices'),
     path('api/get-suppliers-with-invoices/', views.get_suppliers_with_invoices, name='get_suppliers_with_invoices'),
     
-    # Backup Management
-    path('system/backups/', backup_list, name='backup_list'),
-    path('system/backups/create/', create_backup, name='create_backup'),
-    path('system/backups/restore/', restore_backup, name='restore_backup'),
-    path('system/backups/download/<str:filename>/', download_backup, name='download_backup'),
-    path('system/backups/delete/', delete_backup, name='delete_backup'),
-    path('download-backup-logout/<str:filename>/', views.download_backup_and_logout, name='download_backup_and_logout'),
-    
     # ============================================
     # CONTRA ENTRY MODULE - URLS
     # ============================================
@@ -318,7 +317,8 @@ urlpatterns = [
     path('contra/<int:contra_id>/', contra_detail, name='contra_detail'),
     path('contra/<int:contra_id>/edit/', edit_contra, name='edit_contra'),
     path('contra/<int:contra_id>/delete/', delete_contra, name='delete_contra'),
-    # ============================================
+    # ====================
+    # ========================
 ]
 
 

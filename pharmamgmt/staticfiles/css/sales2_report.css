@@ -4,19 +4,20 @@
 /* Container & Layout */
 .sales2-report-container {
     max-width: 1400px;
-    margin: 15px auto;
-    padding: 15px;
+    margin: 0.75rem auto;
+    padding: 0.75rem;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: transparent;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    min-height: calc(100vh - 80px);
 }
 
 /* Header Card */
 .sales2-header-card {
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    padding: 20px;
-    margin-bottom: 15px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    padding: 1rem;
+    margin-bottom: 0.75rem;
     border: 1px solid #e5e7eb;
 }
 
@@ -24,49 +25,50 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 15px;
+    gap: 0.75rem;
 }
 
 .sales2-action-buttons {
     display: flex;
-    gap: 10px;
+    gap: 0.5rem;
     align-items: center;
 }
 
 .sales2-export-btn {
-    padding: 10px 16px;
+    padding: 0.5rem 1rem;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s ease;
+    font-weight: 600;
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.9rem;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
     position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .sales2-pdf-btn {
-    background: #dc2626;
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
     color: white;
 }
 
 .sales2-pdf-btn:hover {
-    background: #b91c1c;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    background: linear-gradient(135deg, #b91c1c, #991b1b);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
 }
 
 .sales2-excel-btn {
-    background: #059669;
+    background: linear-gradient(135deg, #059669, #047857);
     color: white;
 }
 
 .sales2-excel-btn:hover {
-    background: #047857;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+    background: linear-gradient(135deg, #047857, #065f46);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
 }
 
 .sales2-shortcut {
@@ -80,48 +82,52 @@
 
 .sales2-title {
     margin: 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #1f2937;
+    font-size: 1.375rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 0.625rem;
+    letter-spacing: 0.5px;
 }
 
 .sales2-print-btn {
-    background: #10b981;
+    background: linear-gradient(135deg, #10b981, #059669);
     color: white;
-    padding: 10px 20px;
+    padding: 0.625rem 1.25rem;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s ease;
+    font-weight: 600;
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.9rem;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .sales2-print-btn:hover {
-    background: #059669;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    background: linear-gradient(135deg, #059669, #047857);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
 }
 
 /* Filter Card */
 .sales2-filter-card {
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    padding: 20px;
-    margin-bottom: 15px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    padding: 1rem;
+    margin-bottom: 0.75rem;
     border: 1px solid #e5e7eb;
 }
 
 .sales2-filter-form {
     display: flex;
-    gap: 15px;
+    gap: 0.75rem;
     align-items: end;
 }
 
@@ -132,19 +138,21 @@
 
 .sales2-date-label {
     display: block;
-    margin-bottom: 6px;
-    font-weight: 500;
+    margin-bottom: 0.375rem;
+    font-weight: 600;
     color: #374151;
-    font-size: 0.9rem;
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
 .sales2-date-input {
     width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    transition: border-color 0.2s ease;
+    padding: 0.625rem 0.75rem;
+    border: 2px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
     background: #ffffff;
     color: #1f2937;
 }
@@ -156,43 +164,44 @@
 }
 
 .sales2-filter-btn {
-    background: #3b82f6;
+    background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
-    padding: 10px 24px;
+    padding: 0.625rem 1.5rem;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s ease;
+    font-weight: 600;
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.9rem;
+    gap: 0.5rem;
+    font-size: 0.875rem;
     white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .sales2-filter-btn:hover {
-    background: #2563eb;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    background: linear-gradient(135deg, #764ba2, #667eea);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
 /* Stats Grid */
 .sales2-stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
 }
 
 .sales2-stat-card {
     border-radius: 12px;
-    padding: 20px;
+    padding: 1rem;
     color: white;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
 }
 
 .sales2-stat-card:hover {
@@ -212,23 +221,25 @@
 }
 
 .sales2-stat-label {
-    font-size: 0.9rem;
+    font-size: 0.8125rem;
     opacity: 0.9;
-    margin-bottom: 8px;
-    font-weight: 500;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .sales2-stat-value {
-    font-size: 1.8rem;
+    font-size: 1.625rem;
     font-weight: 700;
     line-height: 1.2;
 }
 
 /* Table Card */
 .sales2-table-card {
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
     overflow: hidden;
     border: 1px solid #e5e7eb;
 }
@@ -245,10 +256,10 @@
 }
 
 .sales2-th {
-    padding: 12px 15px;
-    font-weight: 600;
+    padding: 0.75rem;
+    font-weight: 700;
     color: #374151;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -275,9 +286,10 @@
 }
 
 .sales2-td {
-    padding: 12px 15px;
+    padding: 0.75rem;
     color: #374151;
     vertical-align: middle;
+    font-size: 0.875rem;
 }
 
 .sales2-td-right {
