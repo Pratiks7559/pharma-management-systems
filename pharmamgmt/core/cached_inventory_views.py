@@ -19,8 +19,10 @@ def inventory_list_cached(request):
     search_query = request.GET.get('search', '').strip()
     offset = int(request.GET.get('offset', 0))
     
-    # Get ALL products (not just cached ones)
-    products = ProductMaster.objects.all()
+    # Get ALL products but optimize with prefetch
+    products = ProductMaster.objects.prefetch_related(
+        'inventory_cache', 'batch_caches'
+    ).all()
     
     if search_query:
         products = products.filter(
@@ -32,7 +34,7 @@ def inventory_list_cached(request):
     products = products.order_by('product_name')
     
     # Manual pagination with offset
-    per_page = 50
+    per_page = 25  # Smaller pages for faster loading
     start = offset
     end = offset + per_page
     
@@ -44,18 +46,11 @@ def inventory_list_cached(request):
     # Prepare data with on-the-fly cache
     inventory_data = []
     for product in products_slice:
-        # Get or create cache
-        cache = ProductInventoryCache.objects.filter(product=product).first()
-        if not cache:
-            # Create cache on-the-fly for products without cache
-            update_all_batches_for_product(product.productid)
-            cache = ProductInventoryCache.objects.filter(product=product).first()
+        # Use prefetched cache (no additional queries)
+        cache = getattr(product, 'inventory_cache', None)
         
-        # Get batches
-        batches = BatchInventoryCache.objects.filter(
-            product=product,
-            current_stock__gt=0
-        ).order_by('expiry_date')
+        # Use prefetched batches (no additional queries)
+        batches = [b for b in product.batch_caches.all() if b.current_stock > 0]
         
         batches_info = [{
             'batch_no': b.batch_no,

@@ -2861,7 +2861,9 @@ function navigateSeries(direction) {
 
 // Highlight series item
 function highlightSeriesItem(item) {
+    if (!item) return;
     const seriesList = document.getElementById('seriesList');
+    if (!seriesList) return;
     seriesList.querySelectorAll('.series-item').forEach(i => i.classList.remove('highlighted'));
     item.classList.add('highlighted');
     item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });

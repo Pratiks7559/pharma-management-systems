@@ -66,7 +66,20 @@ def stock_statement_report(request):
     page_number = request.GET.get('page')
     products_page = paginator.get_page(page_number)
     
-    # Process stock data for each product
+    # OPTIMIZED: Bulk fetch all data in 4 queries instead of N+1
+    from .models import PurchaseMaster, SalesMaster, ReturnPurchaseMaster, ReturnSalesMaster
+    
+    product_ids = [p.productid for p in products_page]
+    purchases = PurchaseMaster.objects.filter(productid__in=product_ids).values('productid').annotate(qty=Sum('product_quantity'), avg_mrp=Sum('product_MRP')/Sum('product_quantity'))
+    sales = SalesMaster.objects.filter(productid__in=product_ids).values('productid').annotate(qty=Sum('sale_quantity'))
+    purchase_returns = ReturnPurchaseMaster.objects.filter(returnproductid__in=product_ids).values('returnproductid').annotate(qty=Sum('returnproduct_quantity'))
+    sales_returns = ReturnSalesMaster.objects.filter(return_productid__in=product_ids).values('return_productid').annotate(qty=Sum('return_sale_quantity'))
+    
+    purchase_dict = {p['productid']: {'qty': p['qty'] or 0, 'mrp': p['avg_mrp'] or 0} for p in purchases}
+    sales_dict = {s['productid']: s['qty'] or 0 for s in sales}
+    pr_dict = {pr['returnproductid']: pr['qty'] or 0 for pr in purchase_returns}
+    sr_dict = {sr['return_productid']: sr['qty'] or 0 for sr in sales_returns}
+    
     stock_data = []
     total_opening = 0
     total_received = 0
@@ -76,37 +89,48 @@ def stock_statement_report(request):
     
     for product in products_page:
         try:
-            # Get comprehensive stock summary
-            stock_summary = StockManager.get_stock_summary(product.productid)
+            # OPTIMIZED: Use pre-fetched data
+            pid = product.productid
             
-            # Calculate opening stock (this would need historical data - for now using current stock)
-            # In a real scenario, you'd calculate this based on a specific date
-            opening_stock = 0  # This should be calculated based on date_from parameter
+            # Calculate opening stock (stock before start date)
+            if date_from:
+                try:
+                    from datetime import datetime
+                    start_date = datetime.strptime(date_from, '%Y-%m-%d')
+                    
+                    # Get transactions before start date
+                    from .models import PurchaseMaster, SalesMaster, ReturnPurchaseMaster, ReturnSalesMaster
+                    
+                    prev_purchases = PurchaseMaster.objects.filter(
+                        productid=pid,
+                        purchase_entry_date__lt=start_date
+                    ).aggregate(qty=Sum('product_quantity'))['qty'] or 0
+                    
+                    prev_sales = SalesMaster.objects.filter(
+                        productid=pid,
+                        sale_entry_date__lt=start_date
+                    ).aggregate(qty=Sum('sale_quantity'))['qty'] or 0
+                    
+                    prev_pr = ReturnPurchaseMaster.objects.filter(
+                        returnproductid=pid,
+                        returnpurchase_entry_date__lt=start_date
+                    ).aggregate(qty=Sum('returnproduct_quantity'))['qty'] or 0
+                    
+                    prev_sr = ReturnSalesMaster.objects.filter(
+                        return_productid=pid,
+                        return_entry_date__lt=start_date
+                    ).aggregate(qty=Sum('return_sale_quantity'))['qty'] or 0
+                    
+                    opening_stock = (prev_purchases + prev_sr) - (prev_sales + prev_pr)
+                except:
+                    opening_stock = 0
+            else:
+                opening_stock = 0
             
-            received_stock = stock_summary['total_purchased'] + stock_summary['total_sales_returns']
-            sold_stock = stock_summary['total_sold'] + stock_summary['total_purchase_returns']
-            balance_stock = stock_summary['total_stock']
-            
-            # Get average MRP for value calculation
-            avg_mrp = 0
-            if stock_summary['batches']:
-                mrp_values = []
-                for batch in stock_summary['batches']:
-                    try:
-                        # Get MRP from purchase records for this batch
-                        from .models import PurchaseMaster
-                        purchase = PurchaseMaster.objects.filter(
-                            productid=product.productid,
-                            product_batch_no=batch['batch_no']
-                        ).first()
-                        if purchase and purchase.product_MRP:
-                            mrp_values.append(float(purchase.product_MRP))
-                    except:
-                        continue
-                
-                if mrp_values:
-                    avg_mrp = sum(mrp_values) / len(mrp_values)
-            
+            received_stock = purchase_dict.get(pid, {}).get('qty', 0) + sr_dict.get(pid, 0)
+            sold_stock = sales_dict.get(pid, 0) + pr_dict.get(pid, 0)
+            balance_stock = opening_stock + received_stock - sold_stock
+            avg_mrp = purchase_dict.get(pid, {}).get('mrp', 0)
             stock_value = balance_stock * avg_mrp
             
             # Determine stock status
@@ -138,7 +162,7 @@ def stock_statement_report(request):
                 'status': status,
                 'status_label': status_label,
                 'status_class': status_class,
-                'batches': stock_summary['batches']
+                'batches': []  # OPTIMIZED: Skip batch details for performance
             }
             
             stock_data.append(stock_item)
@@ -243,31 +267,29 @@ def export_stock_statement_pdf(request):
     stock_data = []
     totals = {'opening': 0, 'received': 0, 'sold': 0, 'balance': 0, 'value': 0}
     
-    # Get products list (handle both queryset and page object)
+    # OPTIMIZED: Bulk queries for PDF export
     products_list = products_query.object_list if hasattr(products_query, 'object_list') else products_query
+    product_ids = [p.productid for p in products_list]
+    
+    from .models import PurchaseMaster, SalesMaster, ReturnPurchaseMaster, ReturnSalesMaster
+    purchases = PurchaseMaster.objects.filter(productid__in=product_ids).values('productid').annotate(qty=Sum('product_quantity'), avg_mrp=Sum('product_MRP')/Sum('product_quantity'))
+    sales = SalesMaster.objects.filter(productid__in=product_ids).values('productid').annotate(qty=Sum('sale_quantity'))
+    purchase_returns = ReturnPurchaseMaster.objects.filter(returnproductid__in=product_ids).values('returnproductid').annotate(qty=Sum('returnproduct_quantity'))
+    sales_returns = ReturnSalesMaster.objects.filter(return_productid__in=product_ids).values('return_productid').annotate(qty=Sum('return_sale_quantity'))
+    
+    purchase_dict = {p['productid']: {'qty': p['qty'] or 0, 'mrp': p['avg_mrp'] or 0} for p in purchases}
+    sales_dict = {s['productid']: s['qty'] or 0 for s in sales}
+    pr_dict = {pr['returnproductid']: pr['qty'] or 0 for pr in purchase_returns}
+    sr_dict = {sr['return_productid']: sr['qty'] or 0 for sr in sales_returns}
     
     for product in products_list:
         try:
-            stock_summary = StockManager.get_stock_summary(product.productid)
+            pid = product.productid
             opening_stock = 0
-            received_stock = stock_summary['total_purchased'] + stock_summary['total_sales_returns']
-            sold_stock = stock_summary['total_sold'] + stock_summary['total_purchase_returns']
-            balance_stock = stock_summary['total_stock']
-            
-            avg_mrp = 0
-            if stock_summary['batches']:
-                from .models import PurchaseMaster
-                mrp_values = []
-                for batch in stock_summary['batches']:
-                    purchase = PurchaseMaster.objects.filter(
-                        productid=product.productid,
-                        product_batch_no=batch['batch_no']
-                    ).first()
-                    if purchase and purchase.product_MRP:
-                        mrp_values.append(float(purchase.product_MRP))
-                if mrp_values:
-                    avg_mrp = sum(mrp_values) / len(mrp_values)
-            
+            received_stock = purchase_dict.get(pid, {}).get('qty', 0) + sr_dict.get(pid, 0)
+            sold_stock = sales_dict.get(pid, 0) + pr_dict.get(pid, 0)
+            balance_stock = received_stock - sold_stock
+            avg_mrp = purchase_dict.get(pid, {}).get('mrp', 0)
             stock_value = balance_stock * avg_mrp
             
             if balance_stock <= 0:
@@ -442,32 +464,30 @@ def export_stock_statement_excel(request, stock_data=None):
             except:
                 products_query = paginator.page(1)
         
-        # Get products list (handle both queryset and page object)
+        # OPTIMIZED: Bulk queries for Excel export
         products_list = products_query.object_list if hasattr(products_query, 'object_list') else products_query
+        product_ids = [p.productid for p in products_list]
+        
+        from .models import PurchaseMaster, SalesMaster, ReturnPurchaseMaster, ReturnSalesMaster
+        purchases = PurchaseMaster.objects.filter(productid__in=product_ids).values('productid').annotate(qty=Sum('product_quantity'), avg_mrp=Sum('product_MRP')/Sum('product_quantity'))
+        sales = SalesMaster.objects.filter(productid__in=product_ids).values('productid').annotate(qty=Sum('sale_quantity'))
+        purchase_returns = ReturnPurchaseMaster.objects.filter(returnproductid__in=product_ids).values('returnproductid').annotate(qty=Sum('returnproduct_quantity'))
+        sales_returns = ReturnSalesMaster.objects.filter(return_productid__in=product_ids).values('return_productid').annotate(qty=Sum('return_sale_quantity'))
+        
+        purchase_dict = {p['productid']: {'qty': p['qty'] or 0, 'mrp': p['avg_mrp'] or 0} for p in purchases}
+        sales_dict = {s['productid']: s['qty'] or 0 for s in sales}
+        pr_dict = {pr['returnproductid']: pr['qty'] or 0 for pr in purchase_returns}
+        sr_dict = {sr['return_productid']: sr['qty'] or 0 for sr in sales_returns}
         
         stock_data = []
         for product in products_list:
             try:
-                stock_summary = StockManager.get_stock_summary(product.productid)
+                pid = product.productid
                 opening_stock = 0
-                received_stock = stock_summary['total_purchased'] + stock_summary['total_sales_returns']
-                sold_stock = stock_summary['total_sold'] + stock_summary['total_purchase_returns']
-                balance_stock = stock_summary['total_stock']
-                
-                avg_mrp = 0
-                if stock_summary['batches']:
-                    from .models import PurchaseMaster
-                    mrp_values = []
-                    for batch in stock_summary['batches']:
-                        purchase = PurchaseMaster.objects.filter(
-                            productid=product.productid,
-                            product_batch_no=batch['batch_no']
-                        ).first()
-                        if purchase and purchase.product_MRP:
-                            mrp_values.append(float(purchase.product_MRP))
-                    if mrp_values:
-                        avg_mrp = sum(mrp_values) / len(mrp_values)
-                
+                received_stock = purchase_dict.get(pid, {}).get('qty', 0) + sr_dict.get(pid, 0)
+                sold_stock = sales_dict.get(pid, 0) + pr_dict.get(pid, 0)
+                balance_stock = received_stock - sold_stock
+                avg_mrp = purchase_dict.get(pid, {}).get('mrp', 0)
                 stock_value = balance_stock * avg_mrp
                 
                 if balance_stock <= 0:

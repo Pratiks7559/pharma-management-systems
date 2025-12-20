@@ -113,8 +113,8 @@ def financial_report(request):
         
         purchase_cost = purchase_rate * quantity
         sales_value = sale_rate * quantity
-        gst_amount = (cgst + sgst) * quantity
-        profit = (sales_value - purchase_cost) + gst_amount
+        gst_amount = sales_value * (cgst + sgst) / 100
+        profit = sales_value - purchase_cost
         
         financial_data.append({
             'type': 'Sale',
@@ -152,8 +152,8 @@ def financial_report(request):
         
         purchase_cost = purchase_rate * quantity
         sales_value = sale_rate * quantity
-        gst_amount = (cgst + sgst) * quantity
-        profit = (sales_value - purchase_cost) + gst_amount
+        gst_amount = sales_value * (cgst + sgst) / 100
+        profit = sales_value - purchase_cost
         
         financial_data.append({
             'type': 'Customer Challan',
@@ -189,7 +189,7 @@ def financial_report(request):
         sgst = float(purchase.SGST)
         
         purchase_cost = purchase_rate * quantity
-        gst_amount = (cgst + sgst) * quantity
+        gst_amount = purchase_cost * (cgst + sgst) / 100
         
         financial_data.append({
             'type': 'Purchase',
@@ -224,7 +224,7 @@ def financial_report(request):
         sgst = float(challan.sgst)
         
         purchase_cost = purchase_rate * quantity
-        gst_amount = (cgst + sgst) * quantity
+        gst_amount = purchase_cost * (cgst + sgst) / 100
         
         financial_data.append({
             'type': 'Supplier Challan',
@@ -265,9 +265,9 @@ def financial_report(request):
         'stock_valuation': stock_valuation
     }
     
-    # Pagination - 20 records per page
+    # Pagination - 50 records per page
     from django.core.paginator import Paginator
-    paginator = Paginator(financial_data, 20)
+    paginator = Paginator(financial_data, 50)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
@@ -356,10 +356,10 @@ def export_financial_pdf(request):
         purchase_rate = float(purchase.product_purchase_rate) if purchase else 0.0
         quantity = float(sale.sale_quantity)
         sale_rate = float(sale.sale_rate)
-        gst_amount = (float(sale.sale_cgst) + float(sale.sale_sgst)) * quantity
+        gst_amount = sales_value * (float(sale.sale_cgst) + float(sale.sale_sgst)) / 100
         purchase_cost = purchase_rate * quantity
         sales_value = sale_rate * quantity
-        profit = (sales_value - purchase_cost) + gst_amount
+        profit = sales_value - purchase_cost
         all_txns.append({
             'date': sale.sale_entry_date, 'type': 'Sale', 'invoice': sale.sales_invoice_no.sales_invoice_no,
             'party': sale.customerid.customer_name, 'product': sale.product_name[:15], 'batch': sale.product_batch_no,
@@ -371,10 +371,10 @@ def export_financial_pdf(request):
         purchase_rate = float(purchase.product_purchase_rate) if purchase else 0.0
         quantity = float(challan.sale_quantity)
         sale_rate = float(challan.sale_rate)
-        gst_amount = (float(challan.sale_cgst) + float(challan.sale_sgst)) * quantity
+        gst_amount = sales_value * (float(challan.sale_cgst) + float(challan.sale_sgst)) / 100
         purchase_cost = purchase_rate * quantity
         sales_value = sale_rate * quantity
-        profit = (sales_value - purchase_cost) + gst_amount
+        profit = sales_value - purchase_cost
         all_txns.append({
             'date': challan.sales_entry_date, 'type': 'C.Challan', 'invoice': challan.customer_challan_no,
             'party': challan.customer_name.customer_name, 'product': challan.product_name[:15], 'batch': challan.product_batch_no,
@@ -384,7 +384,7 @@ def export_financial_pdf(request):
     for challan in supplier_challan_query:
         quantity = float(challan.product_quantity)
         purchase_rate = float(challan.product_purchase_rate)
-        gst_amount = (float(challan.cgst) + float(challan.sgst)) * quantity
+        gst_amount = purchase_cost * (float(challan.cgst) + float(challan.sgst)) / 100
         purchase_cost = purchase_rate * quantity
         profit = -purchase_cost
         all_txns.append({
@@ -506,10 +506,10 @@ def export_financial_excel(request):
         purchase_rate = float(purchase.product_purchase_rate) if purchase else 0.0
         quantity = float(sale.sale_quantity)
         sale_rate = float(sale.sale_rate)
-        gst_amount = (float(sale.sale_cgst) + float(sale.sale_sgst)) * quantity
+        gst_amount = sales_value * (float(sale.sale_cgst) + float(sale.sale_sgst)) / 100
         purchase_cost = purchase_rate * quantity
         sales_value = sale_rate * quantity
-        profit = (sales_value - purchase_cost) + gst_amount
+        profit = sales_value - purchase_cost
         profit_pct = (profit / sales_value * 100) if sales_value > 0 else 0
         
         row_data = [
@@ -538,10 +538,10 @@ def export_financial_excel(request):
         purchase_rate = float(purchase.product_purchase_rate) if purchase else 0.0
         quantity = float(challan.sale_quantity)
         sale_rate = float(challan.sale_rate)
-        gst_amount = (float(challan.sale_cgst) + float(challan.sale_sgst)) * quantity
+        gst_amount = sales_value * (float(challan.sale_cgst) + float(challan.sale_sgst)) / 100
         purchase_cost = purchase_rate * quantity
         sales_value = sale_rate * quantity
-        profit = (sales_value - purchase_cost) + gst_amount
+        profit = sales_value - purchase_cost
         profit_pct = (profit / sales_value * 100) if sales_value > 0 else 0
         
         row_data = [
@@ -568,7 +568,7 @@ def export_financial_excel(request):
     for challan in supplier_challan_query:
         quantity = float(challan.product_quantity)
         purchase_rate = float(challan.product_purchase_rate)
-        gst_amount = (float(challan.cgst) + float(challan.sgst)) * quantity
+        gst_amount = purchase_cost * (float(challan.cgst) + float(challan.sgst)) / 100
         purchase_cost = purchase_rate * quantity
         profit = -purchase_cost
         
@@ -620,3 +620,4 @@ def export_financial_excel(request):
     wb.save(response)
     
     return response
+

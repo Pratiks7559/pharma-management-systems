@@ -729,7 +729,7 @@ class ProductInventoryCache(models.Model):
     total_stock_value = models.FloatField(default=0, help_text="Total stock value (stock × MRP)")
     
     # Status
-    stock_status = models.CharField(max_length=20, db_index=True, default='out_of_stock', 
+    stock_status = models.CharField(max_length=50, db_index=True, default='out_of_stock', 
                                     help_text="in_stock, low_stock, out_of_stock")
     has_expired_batches = models.BooleanField(default=False, db_index=True)
     

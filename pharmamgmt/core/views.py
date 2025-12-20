@@ -5464,6 +5464,11 @@ def dateexpiry_inventory_report(request):
     
     expiry_data, total_value = FastInventory.get_dateexpiry_inventory_data(search_query)
     
+    # Pagination - 50 entries per page
+    paginator = Paginator(expiry_data, 50)
+    page_number = request.GET.get('page')
+    expiry_data_page = paginator.get_page(page_number)
+    
     # Get pharmacy details
     try:
         pharmacy = Pharmacy_Details.objects.first()
@@ -5471,7 +5476,7 @@ def dateexpiry_inventory_report(request):
         pharmacy = None
     
     context = {
-        'expiry_data': expiry_data,
+        'expiry_data': expiry_data_page,
         'total_value': total_value,
         'search_query': search_query,
         'expiry_from': expiry_from,

@@ -1,0 +1,72 @@
+============================================================
+PHARMA MANAGEMENT SYSTEM - PERFORMANCE TEST REPORT
+============================================================
+Test Date: 2025-12-19 19:37:17
+
+1. PAGE LOAD PERFORMANCE
+------------------------------------------------------------
+⚠ Dashboard                : 20.822s (expected: <1.0s)
+✓ Products List            : 0.027s (expected: <2.0s)
+✓ Suppliers List           : 0.013s (expected: <1.5s)
+✓ Customers List           : 0.012s (expected: <1.5s)
+✓ Purchase Invoices        : 0.112s (expected: <2.0s)
+✓ Sales Invoices           : 0.205s (expected: <2.0s)
+✓ Purchase Returns         : 0.013s (expected: <2.0s)
+✓ Sales Returns            : 0.013s (expected: <2.0s)
+✓ Supplier Challans        : 0.015s (expected: <2.0s)
+✓ Customer Challans        : 0.014s (expected: <2.0s)
+✓ Inventory                : 0.686s (expected: <2.5s)
+✓ Contra Entries           : 0.017s (expected: <1.5s)
+
+Summary: 11 passed, 1 slow, 0 failed
+
+2. DATABASE QUERY PERFORMANCE
+------------------------------------------------------------
+✓ Products            : 2.55ms (1 queries)
+✓ Suppliers           : 1.10ms (1 queries)
+✓ Customers           : 1.37ms (1 queries)
+✓ Purchases           : 5.12ms (1 queries)
+✓ Sales               : 4.62ms (1 queries)
+
+Summary: 5/5 fast queries
+
+3. DATA SCALABILITY
+------------------------------------------------------------
+Products                 : 3,369
+Suppliers                : 1
+Customers                : 1
+Purchase Invoices        : 12,779
+Purchases                : 14,970
+Sales Invoices           : 12,914
+Sales                    : 15,113
+Purchase Returns         : 0
+Sales Returns            : 0
+Supplier Challans        : 0
+Customer Challans        : 0
+Contra Entries           : 0
+------------------------------------------------------------
+TOTAL RECORDS            : 59,147
+
+4. CONCURRENT LOAD TEST
+------------------------------------------------------------
+Concurrent Users: 200
+Successful: 0
+Average Time: 0.00s
+
+5. OVERALL ASSESSMENT
+------------------------------------------------------------
+Page Load Score: 91.7%
+Query Performance Score: 100.0%
+Reliability Score: 0.0%
+
+OVERALL SCORE: 63.9%
+STATUS: ⚠ FAIR - Optimization recommended
+
+6. RECOMMENDATIONS
+------------------------------------------------------------
+- Optimize 1 slow pages
+- Improve concurrent user handling
+- Consider caching implementation
+- Review database query optimization
+
+============================================================

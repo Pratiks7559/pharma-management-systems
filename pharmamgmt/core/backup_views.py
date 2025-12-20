@@ -3,8 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse, FileResponse
 from django.core.management import call_command
+from django.conf import settings
 import os
-import shutil
+import subprocess
 from datetime import datetime
 
 @login_required
@@ -18,9 +19,9 @@ def backup_list(request):
     
     backups = []
     for filename in os.listdir(backup_dir):
-        if filename.endswith('.sqlite3'):
+        if filename.endswith('.sql') or filename.endswith('.dump'):
             filepath = os.path.join(backup_dir, filename)
-            size = os.path.getsize(filepath) / (1024 * 1024)  # MB
+            size = os.path.getsize(filepath) / (1024 * 1024)
             modified = datetime.fromtimestamp(os.path.getmtime(filepath))
             backups.append({
                 'filename': filename,
@@ -42,41 +43,41 @@ def create_backup(request):
         return JsonResponse({'success': False, 'error': 'Permission denied'})
     
     try:
-        import sqlite3
-        
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         backup_dir = 'backups'
         os.makedirs(backup_dir, exist_ok=True)
         
-        source = 'db.sqlite3'
-        destination = os.path.join(backup_dir, f'backup_{timestamp}.sqlite3')
+        db_config = settings.DATABASES['default']
+        filename = f'backup_{timestamp}.sql'
+        destination = os.path.join(backup_dir, filename)
         
-        # Use SQLite backup API for proper database copy
-        source_conn = sqlite3.connect(source)
-        backup_conn = sqlite3.connect(destination)
+        # PostgreSQL complete backup (schema + data with column-inserts)
+        cmd = [
+            'pg_dump',
+            '-h', db_config['HOST'],
+            '-p', str(db_config['PORT']),
+            '-U', db_config['USER'],
+            '-d', db_config['NAME'],
+            '--clean',
+            '--if-exists',
+            '--column-inserts',
+            '-f', destination
+        ]
         
-        # Perform backup
-        with backup_conn:
-            source_conn.backup(backup_conn)
+        env = os.environ.copy()
+        env['PGPASSWORD'] = db_config['PASSWORD']
         
-        source_conn.close()
-        backup_conn.close()
+        result = subprocess.run(cmd, env=env, capture_output=True, text=True)
         
-        # Verify backup file size
-        source_size = os.path.getsize(source)
+        if result.returncode != 0:
+            return JsonResponse({'success': False, 'error': f'Backup failed: {result.stderr}'})
+        
         backup_size = os.path.getsize(destination)
-        
-        if backup_size < source_size * 0.9:  # Backup should be at least 90% of original
-            os.remove(destination)
-            return JsonResponse({
-                'success': False,
-                'error': 'Backup verification failed. File size mismatch.'
-            })
         
         return JsonResponse({
             'success': True,
             'message': f'Backup created successfully! Size: {backup_size / (1024*1024):.2f} MB',
-            'filename': f'backup_{timestamp}.sqlite3'
+            'filename': filename
         })
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
@@ -90,7 +91,6 @@ def restore_backup(request):
         return JsonResponse({'success': False, 'error': 'Invalid method'})
     
     try:
-        import sqlite3
         from django.db import connection
         
         filename = request.POST.get('filename')
@@ -99,35 +99,27 @@ def restore_backup(request):
         if not os.path.exists(backup_path):
             return JsonResponse({'success': False, 'error': 'Backup file not found'})
         
-        # Verify backup file integrity
-        try:
-            test_conn = sqlite3.connect(backup_path)
-            test_conn.execute('SELECT 1')
-            test_conn.close()
-        except:
-            return JsonResponse({'success': False, 'error': 'Backup file is corrupted'})
-        
-        # Close all database connections
         connection.close()
         
-        # Create safety backup before restore
-        safety_backup = f'backups/before_restore_{datetime.now().strftime("%Y%m%d_%H%M%S")}.sqlite3'
+        db_config = settings.DATABASES['default']
         
-        # Use SQLite backup API for safety backup
-        source_conn = sqlite3.connect('db.sqlite3')
-        safety_conn = sqlite3.connect(safety_backup)
-        with safety_conn:
-            source_conn.backup(safety_conn)
-        source_conn.close()
-        safety_conn.close()
+        # PostgreSQL restore using psql (for plain SQL)
+        cmd = [
+            'psql',
+            '-h', db_config['HOST'],
+            '-p', str(db_config['PORT']),
+            '-U', db_config['USER'],
+            '-d', db_config['NAME'],
+            '-f', backup_path
+        ]
         
-        # Restore from backup
-        backup_conn = sqlite3.connect(backup_path)
-        restore_conn = sqlite3.connect('db.sqlite3')
-        with restore_conn:
-            backup_conn.backup(restore_conn)
-        backup_conn.close()
-        restore_conn.close()
+        env = os.environ.copy()
+        env['PGPASSWORD'] = db_config['PASSWORD']
+        
+        result = subprocess.run(cmd, env=env, capture_output=True, text=True)
+        
+        if result.returncode != 0:
+            return JsonResponse({'success': False, 'error': f'Restore failed: {result.stderr}'})
         
         return JsonResponse({
             'success': True,
@@ -138,24 +130,30 @@ def restore_backup(request):
 
 def create_backup_file():
     """Create backup file and return filename"""
-    import sqlite3
-    
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     backup_dir = 'backups'
     os.makedirs(backup_dir, exist_ok=True)
     
-    source = 'db.sqlite3'
-    filename = f'backup_{timestamp}.sqlite3'
+    db_config = settings.DATABASES['default']
+    filename = f'backup_{timestamp}.sql'
     destination = os.path.join(backup_dir, filename)
     
-    source_conn = sqlite3.connect(source)
-    backup_conn = sqlite3.connect(destination)
+    cmd = [
+        'pg_dump',
+        '-h', db_config['HOST'],
+        '-p', str(db_config['PORT']),
+        '-U', db_config['USER'],
+        '-d', db_config['NAME'],
+        '--clean',
+        '--if-exists',
+        '--column-inserts',
+        '-f', destination
+    ]
     
-    with backup_conn:
-        source_conn.backup(backup_conn)
+    env = os.environ.copy()
+    env['PGPASSWORD'] = db_config['PASSWORD']
     
-    source_conn.close()
-    backup_conn.close()
+    subprocess.run(cmd, env=env, check=True)
     
     return filename
 
@@ -168,7 +166,7 @@ def download_backup(request, filename):
     filepath = os.path.join('backups', filename)
     if os.path.exists(filepath):
         response = FileResponse(open(filepath, 'rb'), as_attachment=True)
-        response['Content-Type'] = 'application/x-sqlite3'
+        response['Content-Type'] = 'application/sql'
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         response['Content-Length'] = os.path.getsize(filepath)
         return response

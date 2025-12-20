@@ -121,6 +121,47 @@
                     </tfoot>
                 </table>
             </div>
+            
+            <!-- Pagination Controls -->
+            {% if expiry_data.has_other_pages %}
+            <div class="pagination-container" style="margin-top: 20px; display: flex; justify-content: center; align-items: center;">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination" style="margin: 0;">
+                        {% if expiry_data.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if expiry_from %}&expiry_from={{ expiry_from }}{% endif %}{% if expiry_to %}&expiry_to={{ expiry_to }}{% endif %}" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ expiry_data.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if expiry_from %}&expiry_from={{ expiry_from }}{% endif %}{% if expiry_to %}&expiry_to={{ expiry_to }}{% endif %}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ expiry_data.number }} of {{ expiry_data.paginator.num_pages }}
+                            </span>
+                        </li>
+                        
+                        {% if expiry_data.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ expiry_data.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if expiry_from %}&expiry_from={{ expiry_from }}{% endif %}{% if expiry_to %}&expiry_to={{ expiry_to }}{% endif %}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ expiry_data.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if expiry_from %}&expiry_from={{ expiry_from }}{% endif %}{% if expiry_to %}&expiry_to={{ expiry_to }}{% endif %}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
             {% else %}
             <div class="date-empty-state">
                 <i class="fas fa-info-circle me-2"></i>
