@@ -204,17 +204,20 @@ def dashboard(request):
     # Create a dictionary mapping invoice numbers to their total amounts
     invoice_totals = {item['sales_invoice_no']: item['invoice_total'] for item in sales_totals}
     
-    # Calculate total receivable properly
-    total_receivable = 0
-    for invoice in SalesInvoiceMaster.objects.all():
-        # Get actual invoice total from sales items
-        invoice_total = SalesMaster.objects.filter(
-            sales_invoice_no=invoice.sales_invoice_no
-        ).aggregate(Sum('sale_total_amount'))['sale_total_amount__sum'] or 0
-        
-        balance = invoice_total - invoice.sales_invoice_paid
-        if balance > 0:
-            total_receivable += balance
+    # OPTIMIZED: Calculate total receivable in single query
+    from django.db.models import OuterRef, Subquery, DecimalField, FloatField
+    from django.db.models.functions import Coalesce
+    
+    sales_subquery = SalesMaster.objects.filter(
+        sales_invoice_no=OuterRef('sales_invoice_no')
+    ).values('sales_invoice_no').annotate(
+        total=Sum('sale_total_amount', output_field=FloatField())
+    ).values('total')
+    
+    total_receivable = SalesInvoiceMaster.objects.annotate(
+        invoice_total=Coalesce(Subquery(sales_subquery, output_field=FloatField()), 0.0),
+        balance=F('invoice_total') - F('sales_invoice_paid')
+    ).filter(balance__gt=0).aggregate(total=Sum('balance', output_field=FloatField()))['total'] or 0
     
     # Total outstanding payments to suppliers
     total_payable = InvoiceMaster.objects.aggregate(

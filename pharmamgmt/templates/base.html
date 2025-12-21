@@ -42,16 +42,22 @@
 </head>
 <body class="body-gradient">
     <!-- Loading Screen -->
-    <div id="loadingScreen" class="loading-screen">
+    <div class="loading-screen" id="loadingScreen">
         <div class="loader-container">
             <div class="loader-logo-wrapper">
-                <img src="{% static 'weblogo.jpeg' %}" alt="MedicVista" class="loader-logo-img">
+                <div class="medical-icon">
+                    <i class="fas fa-heartbeat"></i>
+                </div>
                 <div class="loader-ring"></div>
                 <div class="loader-ring-2"></div>
+                <div class="loader-ring-3"></div>
             </div>
             
             <div class="loading-text">MedicVista</div>
-            <div class="loading-subtitle">Loading...</div>
+            <div class="loading-subtitle">Loading your pharmacy...</div>
+            <div class="loading-dots">
+                <span></span><span></span><span></span>
+            </div>
         </div>
     </div>
     
@@ -431,7 +437,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #667eea 100%);
+        background: linear-gradient(135deg, #8c9ad8 0%, #b48cdc 100%);
         display: flex;
         justify-content: center;
         align-items: center;
@@ -443,60 +449,23 @@
     .loading-screen::before {
         content: '';
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: radial-gradient(circle at 30% 70%, rgba(76, 175, 80, 0.2) 0%, transparent 50%),
-                    radial-gradient(circle at 70% 30%, rgba(33, 150, 243, 0.2) 0%, transparent 50%);
-        animation: backgroundPulse 4s ease-in-out infinite;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+        background-size: 50px 50px;
+        animation: backgroundMove 20s linear infinite;
     }
     
-    @keyframes backgroundPulse {
-        0%, 100% { opacity: 0.3; }
-        50% { opacity: 0.7; }
+    @keyframes backgroundMove {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(50px, 50px); }
     }
     
     .loader-container {
         text-align: center;
         color: white;
         position: relative;
-    }
-    
-    .loading-text {
-        margin-top: 30px;
-        font-size: 1.8rem;
-        font-weight: 700;
-        background: linear-gradient(90deg, #4CAF50, #2196F3, #9C27B0);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        animation: textGlow 2s ease-in-out infinite alternate;
-        letter-spacing: 2px;
-    }
-    
-    .loading-subtitle {
-        margin-top: 15px;
-        font-size: 1.1rem;
-        color: rgba(255, 255, 255, 0.9);
-        font-weight: 400;
-        animation: fadeInOut 2s ease-in-out infinite;
-    }
-    
-    @keyframes textGlow {
-        0% { 
-            text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
-            transform: scale(1);
-        }
-        100% { 
-            text-shadow: 0 0 20px rgba(33, 150, 243, 0.8);
-            transform: scale(1.02);
-        }
-    }
-    
-    @keyframes fadeInOut {
-        0%, 100% { opacity: 0.7; }
-        50% { opacity: 1; }
+        z-index: 1;
     }
     
     .loader-logo-wrapper {
@@ -509,53 +478,55 @@
         justify-content: center;
     }
     
-    .loader-logo-img {
-        width: 120px;
-        height: 120px;
-        object-fit: contain;
-        position: relative;
+    .medical-icon {
+        font-size: 60px;
+        color: white;
+        animation: iconPulse 2s ease-in-out infinite;
         z-index: 10;
-        animation: logoBreath 2s ease-in-out infinite, logoRotate 4s ease-in-out infinite;
-        filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6));
+        position: relative;
+    }
+    
+    @keyframes iconPulse {
+        0%, 100% { 
+            transform: scale(1);
+            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8));
+        }
+        50% { 
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 30px rgba(255, 255, 255, 1));
+        }
     }
     
     .loader-ring {
         position: absolute;
-        width: 140px;
-        height: 140px;
+        width: 120px;
+        height: 120px;
         border: 4px solid transparent;
-        border-top-color: #FFD700;
-        border-right-color: #FFD700;
+        border-top-color: #fff;
+        border-right-color: #fff;
         border-radius: 50%;
         animation: ringRotate 1.5s linear infinite;
     }
     
     .loader-ring-2 {
         position: absolute;
-        width: 160px;
-        height: 160px;
+        width: 140px;
+        height: 140px;
         border: 3px solid transparent;
-        border-bottom-color: #FF6B6B;
-        border-left-color: #4ECDC4;
+        border-bottom-color: rgba(255, 255, 255, 0.7);
+        border-left-color: rgba(255, 255, 255, 0.7);
         border-radius: 50%;
         animation: ringRotate 2s linear infinite reverse;
     }
     
-    @keyframes logoBreath {
-        0%, 100% { 
-            transform: scale(1);
-            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6));
-        }
-        50% { 
-            transform: scale(1.1);
-            filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.9));
-        }
-    }
-    
-    @keyframes logoRotate {
-        0%, 100% { transform: rotate(0deg); }
-        25% { transform: rotate(-5deg); }
-        75% { transform: rotate(5deg); }
+    .loader-ring-3 {
+        position: absolute;
+        width: 160px;
+        height: 160px;
+        border: 2px solid transparent;
+        border-top-color: rgba(255, 255, 255, 0.5);
+        border-radius: 50%;
+        animation: ringRotate 2.5s linear infinite;
     }
     
     @keyframes ringRotate {
@@ -563,210 +534,85 @@
         100% { transform: rotate(360deg); }
     }
     
-    /* Fix loader elements positioning */
-    #loadingScreen .medical-cross {
-        width: 48px !important;
-        height: 48px !important;
-        position: absolute !important;
-        top: 50% !important;
-        left: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        z-index: 5 !important;
+    .loading-text {
+        margin-top: 40px;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: white;
+        letter-spacing: 3px;
+        animation: textGlow 2s ease-in-out infinite;
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
     }
     
-    #loadingScreen .cross-vertical {
-        width: 16px !important;
-        height: 48px !important;
-    }
-    
-    #loadingScreen .cross-horizontal {
-        width: 48px !important;
-        height: 16px !important;
-    }
-    
-    #loadingScreen .pills-orbit {
-        position: absolute !important;
-        width: 100% !important;
-        height: 100% !important;
-        top: 0 !important;
-        left: 0 !important;
-    }
-    
-    #loadingScreen .pill {
-        width: 24px !important;
-        height: 12px !important;
-        border-radius: 12px !important;
-        position: absolute !important;
-        top: 50% !important;
-        left: 50% !important;
-        z-index: 3 !important;
-    }
-    
-    #loadingScreen .pill-1 {
-        transform: translate(-50%, -50%) rotate(0deg) translateX(50px) !important;
-        animation: pillFloat 4s ease-in-out infinite, pillOrbit1 6s linear infinite !important;
-    }
-    
-    #loadingScreen .pill-2 {
-        transform: translate(-50%, -50%) rotate(120deg) translateX(50px) !important;
-        animation: pillFloat 4s ease-in-out infinite 1.3s, pillOrbit2 7s linear infinite !important;
-    }
-    
-    #loadingScreen .pill-3 {
-        transform: translate(-50%, -50%) rotate(240deg) translateX(50px) !important;
-        animation: pillFloat 4s ease-in-out infinite 2.6s, pillOrbit3 8s linear infinite !important;
-    }
-    
-    #loadingScreen .pulse-ring {
-        position: absolute !important;
-        top: 50% !important;
-        left: 50% !important;
-        border: 4px solid rgba(0, 230, 118, 0.3) !important;
-        border-radius: 50% !important;
-        transform: translate(-50%, -50%) !important;
-    }
-    
-    #loadingScreen .ring-1 {
-        width: 70px !important;
-        height: 70px !important;
-    }
-    
-    #loadingScreen .ring-2 {
-        width: 90px !important;
-        height: 90px !important;
-    }
-    
-    #loadingScreen .ring-3 {
-        width: 110px !important;
-        height: 110px !important;
-    }
-    
-    /* Override any responsive styles for loading screen */
-    @media (max-width: 768px) {
-        #loadingScreen .pharma-logo-main,
-        #loadingScreen .loader-logo {
-            width: 100px !important;
-            height: 100px !important;
+    @keyframes textGlow {
+        0%, 100% { 
+            opacity: 1;
+            transform: translateY(0);
         }
-        
-        #loadingScreen .medical-cross {
-            width: 40px !important;
-            height: 40px !important;
-        }
-        
-        #loadingScreen .cross-vertical {
-            width: 12px !important;
-            height: 40px !important;
-        }
-        
-        #loadingScreen .cross-horizontal {
-            width: 40px !important;
-            height: 12px !important;
-        }
-        
-        #loadingScreen .pill {
-            width: 20px !important;
-            height: 10px !important;
-        }
-        
-        #loadingScreen .pill-1,
-        #loadingScreen .pill-2,
-        #loadingScreen .pill-3 {
-            transform: translate(-50%, -50%) rotate(var(--rotation, 0deg)) translateX(42px) !important;
-        }
-        
-        #loadingScreen .ring-1 {
-            width: 60px !important;
-            height: 60px !important;
-        }
-        
-        #loadingScreen .ring-2 {
-            width: 75px !important;
-            height: 75px !important;
-        }
-        
-        #loadingScreen .ring-3 {
-            width: 90px !important;
-            height: 90px !important;
+        50% { 
+            opacity: 0.8;
+            transform: translateY(-5px);
         }
     }
     
-    @media (max-width: 480px) {
-        #loadingScreen .pharma-logo-main,
-        #loadingScreen .loader-logo {
-            width: 80px !important;
-            height: 80px !important;
-        }
-        
-        #loadingScreen .medical-cross {
-            width: 32px !important;
-            height: 32px !important;
-        }
-        
-        #loadingScreen .cross-vertical {
-            width: 10px !important;
-            height: 32px !important;
-        }
-        
-        #loadingScreen .cross-horizontal {
-            width: 32px !important;
-            height: 10px !important;
-        }
-        
-        #loadingScreen .pill {
-            width: 16px !important;
-            height: 8px !important;
-        }
-        
-        #loadingScreen .pill-1,
-        #loadingScreen .pill-2,
-        #loadingScreen .pill-3 {
-            transform: translate(-50%, -50%) rotate(var(--rotation, 0deg)) translateX(35px) !important;
-        }
-        
-        #loadingScreen .ring-1 {
-            width: 50px !important;
-            height: 50px !important;
-        }
-        
-        #loadingScreen .ring-2 {
-            width: 65px !important;
-            height: 65px !important;
-        }
-        
-        #loadingScreen .ring-3 {
-            width: 80px !important;
-            height: 80px !important;
-        }
+    .loading-subtitle {
+        margin-top: 15px;
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 400;
     }
     
-
-    
-    @keyframes loaderSpin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+    .loading-dots {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 20px;
     }
     
-    @keyframes pillOrbit1 {
-        0% { transform: translate(-50%, -50%) rotate(0deg) translateX(50px) rotate(0deg); }
-        100% { transform: translate(-50%, -50%) rotate(360deg) translateX(50px) rotate(-360deg); }
+    .loading-dots span {
+        width: 10px;
+        height: 10px;
+        background: white;
+        border-radius: 50%;
+        animation: dotBounce 1.4s infinite ease-in-out both;
     }
     
-    @keyframes pillOrbit2 {
-        0% { transform: translate(-50%, -50%) rotate(120deg) translateX(50px) rotate(0deg); }
-        100% { transform: translate(-50%, -50%) rotate(480deg) translateX(50px) rotate(-360deg); }
-    }
+    .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+    .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
     
-    @keyframes pillOrbit3 {
-        0% { transform: translate(-50%, -50%) rotate(240deg) translateX(50px) rotate(0deg); }
-        100% { transform: translate(-50%, -50%) rotate(600deg) translateX(50px) rotate(-360deg); }
+    @keyframes dotBounce {
+        0%, 80%, 100% { 
+            transform: scale(0);
+            opacity: 0.5;
+        }
+        40% { 
+            transform: scale(1);
+            opacity: 1;
+        }
     }
-    
-
     
     .loading-screen.fade-out {
         opacity: 0;
         pointer-events: none;
+    }
+    
+    @media (max-width: 768px) {
+        .loader-logo-wrapper {
+            width: 120px;
+            height: 120px;
+        }
+        
+        .medical-icon {
+            font-size: 50px;
+        }
+        
+        .loader-ring { width: 100px; height: 100px; }
+        .loader-ring-2 { width: 120px; height: 120px; }
+        .loader-ring-3 { width: 140px; height: 140px; }
+        
+        .loading-text {
+            font-size: 2rem;
+        }
     }
     </style>
     
