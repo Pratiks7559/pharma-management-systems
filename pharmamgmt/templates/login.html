@@ -49,5 +49,25 @@
             <div class="footer-text">&copy; {% now 'Y' %} MedicVista. All Rights Reserved</div>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const firstInput = document.querySelector('input[type="text"], input[name="username"]');
+            if (firstInput) {
+                firstInput.focus();
+            }
+        });
+        
+        // Prevent form submission delay
+        const loginForm = document.querySelector('.login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+                }
+            });
+        }
+    </script>
 </body>
 </html>
