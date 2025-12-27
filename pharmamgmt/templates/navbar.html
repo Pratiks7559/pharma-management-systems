@@ -24,6 +24,22 @@
     
     <!-- Right Section -->
     <div class="pharma-navbar-right">
+        <!-- Financial Year Filter Dropdown -->
+        <div class="year-filter-dropdown">
+            <button class="year-filter-button" id="yearFilterButton">
+                <i class="fas fa-calendar-alt"></i>
+                <span class="year-text">FY {{ selected_year }}-{{ selected_year|add:1|stringformat:"02d"|slice:"-2:" }}</span>
+                <i class="fas fa-chevron-down year-arrow"></i>
+            </button>
+            <div class="year-dropdown-menu" id="yearDropdownMenu">
+                {% for year in year_range %}
+                <button class="year-option {% if year == selected_year %}active{% endif %}" data-year="{{ year }}">
+                    FY {{ year }}-{{ year|add:1|stringformat:"02d"|slice:"-2:" }}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+        
         {% if user.is_authenticated %}
         <!-- User Dropdown -->
         <div class="pharma-user-dropdown">
@@ -450,6 +466,119 @@
         transform: translate(-50%, -50%) rotate(var(--rotation)) translateX(22px);
     }
 }
+
+/* Year Filter Styles */
+.year-filter-dropdown {
+    position: relative;
+    margin-right: 20px;
+    z-index: 1001;
+}
+
+.year-filter-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    position: relative;
+    z-index: 1001;
+}
+
+.year-filter-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.year-text {
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.year-arrow {
+    font-size: 12px;
+    transition: transform 0.3s ease;
+}
+
+.year-filter-button.active .year-arrow {
+    transform: rotate(180deg);
+}
+
+.year-dropdown-menu {
+    position: fixed !important;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    min-width: 160px;
+    max-height: 400px;
+    overflow-y: auto;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 99999 !important;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    margin-top: 8px;
+}
+
+.year-dropdown-menu.show {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+    display: block !important;
+}
+
+.year-option {
+    width: 100%;
+    padding: 12px 16px;
+    border: none;
+    background: white;
+    color: #333;
+    text-align: left;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: block;
+}
+
+.year-option:hover {
+    background: #f5f5f5;
+    color: #667eea;
+}
+
+.year-option.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .year-filter-dropdown {
+        margin-right: 10px;
+    }
+    
+    .year-filter-button {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+    
+    .year-text {
+        font-size: 13px;
+    }
+    
+    .year-dropdown-menu {
+        min-width: 140px;
+        max-height: 300px;
+    }
+}
 </style>
 
 <script>
@@ -514,6 +643,79 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
+    }
+    
+    // Year Filter Dropdown
+    const yearFilterButton = document.getElementById('yearFilterButton');
+    const yearDropdownMenu = document.getElementById('yearDropdownMenu');
+    
+    if (yearFilterButton && yearDropdownMenu) {
+        console.log('Year filter elements found');
+        
+        yearFilterButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const isOpen = yearDropdownMenu.classList.contains('show');
+            console.log('Dropdown clicked, currently open:', isOpen);
+            
+            if (isOpen) {
+                yearDropdownMenu.classList.remove('show');
+                yearFilterButton.classList.remove('active');
+            } else {
+                // Position dropdown below button
+                const rect = yearFilterButton.getBoundingClientRect();
+                yearDropdownMenu.style.top = (rect.bottom + 5) + 'px';
+                yearDropdownMenu.style.left = rect.left + 'px';
+                
+                yearDropdownMenu.classList.add('show');
+                yearFilterButton.classList.add('active');
+            }
+        });
+        
+        // Close year dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!yearFilterButton.contains(e.target) && !yearDropdownMenu.contains(e.target)) {
+                yearDropdownMenu.classList.remove('show');
+                yearFilterButton.classList.remove('active');
+            }
+        });
+        
+        // Handle year selection
+        const yearOptions = document.querySelectorAll('.year-option');
+        console.log('Year options found:', yearOptions.length);
+        
+        yearOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const year = this.getAttribute('data-year');
+                console.log('Year selected:', year);
+                
+                // Send AJAX request to set year
+                fetch('/set-year-filter/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                                      document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    },
+                    body: 'year=' + year
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Response:', data);
+                    if (data.success) {
+                        // Reload page to apply filter
+                        window.location.reload();
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+    } else {
+        console.log('Year filter elements NOT found');
     }
 });
 </script>

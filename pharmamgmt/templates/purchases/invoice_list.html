@@ -33,11 +33,11 @@
                 <form method="GET" class="purchase-filter-form">
                     <div class="purchase-date-group">
                         <label class="purchase-date-label">Start Date</label>
-                        <input type="date" name="start_date" class="purchase-date-input" value="{{ start_date }}">
+                        <input type="date" name="start_date" class="purchase-date-input" value="{{ start_date|default:'' }}">
                     </div>
                     <div class="purchase-date-group">
                         <label class="purchase-date-label">End Date</label>
-                        <input type="date" name="end_date" class="purchase-date-input" value="{{ end_date }}">
+                        <input type="date" name="end_date" class="purchase-date-input" value="{{ end_date|default:'' }}">
                     </div>
                     <button type="submit" class="purchase-filter-btn">
                         <i class="fas fa-filter purchase-filter-icon"></i>

@@ -34,6 +34,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.year_filter_middleware.YearFilterMiddleware',
+    'core.auth_middleware.LoginRequiredMiddleware',  # Authentication middleware
 ]
 
 # Session optimization for better performance with 600K records
@@ -62,6 +64,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'core.context_processors.year_context',
             ],
         },
     },

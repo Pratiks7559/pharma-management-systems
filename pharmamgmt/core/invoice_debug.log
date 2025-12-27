@@ -2060,3 +2060,31 @@
 2025-12-20 14:14:31,816 - core.combined_invoice_view - INFO - PURCHASE CREATED: RESTUSS SYP 100ML, Batch: 1, Qty: 30.0
 2025-12-20 14:14:31,829 - core.combined_invoice_view - INFO - Products total: 829.5, Transport: 0.0, Invoice total: 829.5
 2025-12-20 14:14:31,829 - core.combined_invoice_view - INFO - Invoice 111 created successfully with 3 products
+2025-12-23 18:06:30,936 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['CC71bW42KwpOIUqE32nhM3VhmeZOCAiKGAkHJlNyNjgQqUJ9TFSbDCLlMMb4dSSN'], 'invoice_no': ['111'], 'invoice_date': ['2012-11-11'], 'supplierid': ['210'], 'transport_charges': ['0'], 'invoice_total': ['1.05'], 'products_data': ['[{"productid":"2","batch_no":"03838","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"2","rate_b":"3","rate_c":"3","from_challan":false,"challan_no":"","challan_date":""}]'], 'is_from_challan': ['false']}>
+2025-12-23 18:06:31,049 - core.combined_invoice_view - ERROR - Invoice form validation errors: <ul class="errorlist"><li>__all__<ul class="errorlist nonfield"><li>Invoice master with this Invoice no and Supplierid already exists.</li></ul></li></ul>
+2025-12-23 18:07:30,820 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['iNL1d2wlHMYmuSIKX3oUIuli3C6b0eG5mLYHLrfRKzPocS1fNGTOz3bmtairBwg8'], 'invoice_no': ['111'], 'invoice_date': ['2014-12-23'], 'supplierid': ['210'], 'transport_charges': ['0'], 'invoice_total': ['1.05'], 'products_data': ['[{"productid":"2","batch_no":"11111","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"2","rate_b":"3","rate_c":"3","from_challan":false,"challan_no":"","challan_date":""}]'], 'is_from_challan': ['false']}>
+2025-12-23 18:07:30,830 - core.combined_invoice_view - INFO - Products data received: [{"productid":"2","batch_no":"11111","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"2","rate_b":"3","rate_c":"3","from_challan":false,"challan_no":"","challan_date":""}]
+2025-12-23 18:07:30,831 - core.combined_invoice_view - INFO - Challan flag: false
+2025-12-23 18:07:30,841 - core.combined_invoice_view - INFO - Invoice created with ID: 134986
+2025-12-23 18:07:30,846 - core.combined_invoice_view - INFO - Challan data received: challan_no=, challan_date=
+2025-12-23 18:07:30,846 - core.combined_invoice_view - INFO - Setting rates for 1ST AID TRANSPORE TAPE .5"": A=2.0, B=3.0, C=3.0
+2025-12-23 18:07:30,847 - core.combined_invoice_view - INFO - Product 1ST AID TRANSPORE TAPE .5"": Base=1.0, CGST=0.025, SGST=0.025, Total=1.0499999999999998
+2025-12-23 18:07:30,932 - core.combined_invoice_view - INFO - Product 1ST AID TRANSPORE TAPE .5"" added to invoice
+2025-12-23 18:07:30,933 - core.combined_invoice_view - INFO - PURCHASE CREATED: 1ST AID TRANSPORE TAPE .5"", Batch: 11111, Qty: 1.0
+2025-12-23 18:07:30,944 - core.combined_invoice_view - INFO - Products total: 1.0499999999999998, Transport: 0.0, Invoice total: 1.0499999999999998
+2025-12-23 18:07:30,944 - core.combined_invoice_view - INFO - Invoice 111 created successfully with 1 products
+2025-12-25 21:03:41,260 - core.combined_invoice_view - INFO - POST data received: <QueryDict: {'csrfmiddlewaretoken': ['OrN7Pno74Msmopu2tiOdIoilPnEwUQxtWEKQOFl1sdsRenOGmqQvbbAEuwuh0tAf'], 'invoice_no': ['1111'], 'invoice_date': ['2025-12-25'], 'supplierid': ['210'], 'transport_charges': ['0'], 'invoice_total': ['1.05'], 'products_data': ['[{"productid":"2","batch_no":"101","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"2","rate_b":"3","rate_c":"4","from_challan":true,"challan_no":"110101","challan_date":"25-12-2025"}]'], 'is_from_challan': ['true']}>
+2025-12-25 21:03:41,279 - core.combined_invoice_view - INFO - Products data received: [{"productid":"2","batch_no":"101","expiry":"12-2034","mrp":"1","purchase_rate":"1","quantity":"1","scheme":"0","discount":"0","cgst":"2.5","sgst":"2.5","calculation_mode":"flat","rate_a":"2","rate_b":"3","rate_c":"4","from_challan":true,"challan_no":"110101","challan_date":"25-12-2025"}]
+2025-12-25 21:03:41,280 - core.combined_invoice_view - INFO - Challan flag: true
+2025-12-25 21:03:41,284 - core.combined_invoice_view - INFO - Invoice created with ID: 134987
+2025-12-25 21:03:41,289 - core.combined_invoice_view - INFO - Challan data received: challan_no=110101, challan_date=25-12-2025
+2025-12-25 21:03:41,289 - core.combined_invoice_view - INFO - Set source_challan_no: 110101
+2025-12-25 21:03:41,291 - core.combined_invoice_view - INFO - Set source_challan_date: 2025-12-25
+2025-12-25 21:03:41,291 - core.combined_invoice_view - INFO - Setting rates for 1ST AID TRANSPORE TAPE .5"": A=2.0, B=3.0, C=4.0
+2025-12-25 21:03:41,292 - core.combined_invoice_view - INFO - Product 1ST AID TRANSPORE TAPE .5"": Base=1.0, CGST=0.025, SGST=0.025, Total=1.0499999999999998
+2025-12-25 21:03:41,455 - core.combined_invoice_view - INFO - Product 1ST AID TRANSPORE TAPE .5"" added to invoice
+2025-12-25 21:03:41,456 - core.combined_invoice_view - INFO - PURCHASE CREATED: 1ST AID TRANSPORE TAPE .5"", Batch: 101, Qty: 1.0
+2025-12-25 21:03:41,465 - core.combined_invoice_view - INFO - Products total: 1.0499999999999998, Transport: 0.0, Invoice total: 1.0499999999999998
+2025-12-25 21:03:41,554 - core.combined_invoice_view - INFO - Moved challan entry to SupplierChallanMaster2: 1ST AID TRANSPORE TAPE .5"" - 101
+2025-12-25 21:03:41,554 - core.combined_invoice_view - INFO - Total 1 challan entries moved to SupplierChallanMaster2
+2025-12-25 21:03:41,555 - core.combined_invoice_view - INFO - Invoice 1111 created successfully with 1 products

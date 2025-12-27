@@ -258,3 +258,18 @@ jab bhi mai 10k+ records add karata hu to har product ke liye muiple batches,bat
 
 jaise all product inventory ke calculation runtime me ho rahe hai ek kam karo all products invenotry ke liye table banao jo calcualtion honge vo db me hone fir db ka data all products inventory me dikhengeu
 check karo jab bhi sale inovice with product ho raha hai tabhi product cache and batch cache me stock update means decreas nhi ho rahe
+
+muze mere system me pichle 12 year ka data dalana hai to agar mai ek sath data dalunga aur use view karne baithunga to sab data 12 year ka ek sath showmat karo user ko year wise dropdown migla jisme year honge user ne jo year select fir pure website me us year me jo added data hoga wahi dikhyi dega samje me aa gaya
+
+all years ke drodown jab khulta tab uski css main css collapse ho rahi hai
+
+ek kam karo mera financial year period 1 april se lekar next 31 march hoga vo update kro
+
+Edit challan functionality is not yet implemented. Please contact administrator. write or add proper backend to update cusotmer challan properly with flow
+
+
+jab bhi user login karne ke baad ek box aaye fy year drodown ka waha pe bhi do user navbar me hai pr login ke turant baad bhi do ki user waha se bhi select hos
+
+jab bhi mai website chalu karu to landing page pr jane ki vajah vo login ke page pr ja raha hai aisa na ho
+
+jab bhi mai page ko chota karta hu to instead of navabr ke jagah hambuger menu aatapr usr click karne pr kuch nhi ho raha hai solve

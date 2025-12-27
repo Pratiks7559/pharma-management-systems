@@ -2532,6 +2532,14 @@ function displayChallans(challans) {
     
     // Add search functionality
     setupChallanSearch();
+    
+    // Auto-focus on first checkbox after challans are loaded
+    setTimeout(() => {
+        const firstCheckbox = document.querySelector('.challan-checkbox');
+        if (firstCheckbox) {
+            firstCheckbox.focus();
+        }
+    }, 100);
 }
 
 function setupChallanSearch() {
@@ -2724,12 +2732,24 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Close dialog with Escape key
+// Close dialog with Escape key and handle Shift+Enter for pull button
 document.addEventListener('keydown', function(e) {
+    const dialog = document.getElementById('pullChallanDialog');
+    
     if (e.key === 'Escape') {
-        const dialog = document.getElementById('pullChallanDialog');
-        if (dialog.style.display === 'flex') {
+        if (dialog && dialog.style.display === 'flex') {
             closePullChallanDialog();
+        }
+    }
+    
+    // Shift+Enter to trigger Pull Selected Challans button
+    if (e.shiftKey && e.key === 'Enter') {
+        if (dialog && dialog.style.display === 'flex') {
+            e.preventDefault();
+            const pullBtn = document.getElementById('pullSelectedBtn');
+            if (pullBtn && !pullBtn.disabled) {
+                pullSelectedChallans();
+            }
         }
     }
 });

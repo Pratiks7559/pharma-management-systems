@@ -13,6 +13,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.units import inch
 from .models import SalesInvoiceMaster, SalesMaster, Pharmacy_Details
+from core.year_filter_utils import apply_year_filter
 
 @login_required
 def sales2_report(request):
@@ -31,6 +32,7 @@ def sales2_report(request):
         end_date = None
     
     invoices = SalesInvoiceMaster.objects.select_related('customerid').order_by('-sales_invoice_date')
+    invoices = apply_year_filter(invoices, request, 'sales_invoice_date')
     
     if start_date and end_date:
         invoices = invoices.filter(sales_invoice_date__range=[start_date, end_date])

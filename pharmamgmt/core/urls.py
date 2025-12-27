@@ -34,7 +34,15 @@ from .cached_inventory_views import inventory_list_cached
 from .contra_views import contra_list, add_contra, edit_contra, delete_contra, contra_detail
 # ============================================
 
+from .year_filter_views import set_year_filter
+
 urlpatterns = [
+    # Landing Page (Root URL)
+    path('', views.landing_page, name='landing_page'),
+    
+    # Year Filter
+    path('set-year-filter/', set_year_filter, name='set_year_filter'),
+    
     # Authentication
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
@@ -47,7 +55,6 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     
     # Dashboard
-    path('', views.dashboard, name='dashboard'),
     path('dashboard/', views.dashboard, name='dashboard'),
     
     # Pharmacy details

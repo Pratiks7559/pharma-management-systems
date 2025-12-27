@@ -1,0 +1,263 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedicVista - Complete Pharmacy Management Solution</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/landing.css' %}">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-brand">
+                <img src="{% static 'weblogo.jpeg' %}" alt="MedicVista Logo" class="nav-logo">
+                <span class="nav-title">MedicVista</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li><a href="{% url 'login' %}" class="login-btn">Login</a></li>
+            </ul>
+            <button class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1>Transform Your Pharmacy Management</h1>
+                <p>Complete digital solution for modern pharmacies. Manage inventory, billing, customers, and reports all in one place.</p>
+                <div class="hero-buttons">
+                    <a href="{% url 'login' %}" class="btn-primary">Get Started</a>
+                    <a href="#features" class="btn-secondary">Learn More</a>
+                </div>
+            </div>
+            <div class="hero-card">
+                <h3>Why Choose MedicVista?</h3>
+                <p>Trusted by pharmacies nationwide for efficient management</p>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <h4>500+</h4>
+                        <p>Active Users</p>
+                    </div>
+                    <div class="stat-item">
+                        <h4>99.9%</h4>
+                        <p>Uptime</p>
+                    </div>
+                    <div class="stat-item">
+                        <h4>24/7</h4>
+                        <p>Support</p>
+                    </div>
+                    <div class="stat-item">
+                        <h4>100%</h4>
+                        <p>Secure</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="section-header">
+            <h2>Powerful Features</h2>
+            <p>Everything you need to run your pharmacy efficiently</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <h3>Inventory Management</h3>
+                <p>Track stock levels, batch numbers, expiry dates, and get low stock alerts automatically</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <h3>Smart Billing</h3>
+                <p>Generate professional invoices instantly with GST calculations and payment tracking</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Advanced Reports</h3>
+                <p>Get detailed insights with sales, purchase, and financial reports in real-time</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>Customer & Supplier Management</h3>
+                <p>Maintain comprehensive records with credit tracking and ledger management</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Enterprise Security</h3>
+                <p>Your data is protected with bank-grade encryption and regular backups</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h3>Multi-Device Access</h3>
+                <p>Access from desktop, tablet, or mobile - works seamlessly on all devices</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="about-container">
+            <div>
+                <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&h=400&fit=crop" alt="Pharmacy" class="about-image">
+            </div>
+            <div class="about-content">
+                <h2>Built for Modern Pharmacies</h2>
+                <p>MedicVista is designed specifically for Indian pharmacies, understanding the unique challenges and requirements of the pharmaceutical retail industry.</p>
+                <p>Our platform streamlines your daily operations, reduces errors, and helps you focus on what matters most - serving your customers better.</p>
+                <div class="about-features">
+                    <div class="about-feature-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Easy to learn and use - no technical expertise required</span>
+                    </div>
+                    <div class="about-feature-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>GST compliant with automatic tax calculations</span>
+                    </div>
+                    <div class="about-feature-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Batch-wise inventory tracking with expiry management</span>
+                    </div>
+                    <div class="about-feature-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Comprehensive customer and supplier ledgers</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <h2>Ready to Transform Your Pharmacy?</h2>
+        <p>Join hundreds of pharmacies already using MedicVista</p>
+        <a href="{% url 'login' %}" class="btn-primary">Start Now - It's Free</a>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer" id="contact">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3>MedicVista</h3>
+                <p>Complete pharmacy management solution designed for modern pharmacies in India.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <a href="#home">Home</a>
+                <a href="#features">Features</a>
+                <a href="#about">About Us</a>
+                <a href="{% url 'login' %}">Login</a>
+            </div>
+            <div class="footer-section">
+                <h3>Features</h3>
+                <a href="#features">Inventory Management</a>
+                <a href="#features">Billing & Invoicing</a>
+                <a href="#features">Reports & Analytics</a>
+                <a href="#features">Customer Management</a>
+            </div>
+            <div class="footer-section">
+                <h3>Contact Us</h3>
+                <p><i class="fas fa-envelope"></i> support@medicvista.com</p>
+                <p><i class="fas fa-phone"></i> +91 9595663391</p>
+                <p><i class="fas fa-map-marker-alt"></i> Bhusawal, Maharashtra, India</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; {% now 'Y' %} MedicVista. All Rights Reserved. | Privacy Policy | Terms of Service</p>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+        const navLinks = document.querySelector('.nav-links');
+        
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', function() {
+                navLinks.classList.toggle('active');
+                const icon = this.querySelector('i');
+                icon.classList.toggle('fa-bars');
+                icon.classList.toggle('fa-times');
+            });
+        }
+
+        // Close mobile menu when clicking on a link
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', function() {
+                navLinks.classList.remove('active');
+                const icon = mobileMenuBtn.querySelector('i');
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            });
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Scroll to section if hash is present in URL (from login page navigation)
+        window.addEventListener('load', function() {
+            if (window.location.hash) {
+                const target = document.querySelector(window.location.hash);
+                if (target) {
+                    setTimeout(() => {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }, 100);
+                }
+            }
+        });
+
+        // Navbar background on scroll with class toggle
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+    </script>
+</body>
+</html>

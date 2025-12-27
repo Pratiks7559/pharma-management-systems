@@ -31,8 +31,8 @@
             </div>
             <div class="sales-invoice-list-date-section">
                 <form method="GET" class="sales-invoice-list-date-form">
-                    <input type="date" name="start_date" value="{{ start_date }}" placeholder="Start Date" class="sales-invoice-list-start-date">
-                    <input type="date" name="end_date" value="{{ end_date }}" placeholder="End Date" class="sales-invoice-list-end-date">
+                    <input type="date" name="start_date" value="{{ start_date|default:'' }}" placeholder="Start Date" class="sales-invoice-list-start-date">
+                    <input type="date" name="end_date" value="{{ end_date|default:'' }}" placeholder="End Date" class="sales-invoice-list-end-date">
                     <button type="submit" class="sales-invoice-list-filter-btn">
                         <i class="fas fa-filter"></i>
                     </button>

@@ -3,6 +3,12 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Count, F, Q, Func, Value, Avg, Case, When, FloatField, DecimalField
+from core.year_filter_utils import apply_year_filter
+
+# Landing page view
+def landing_page(request):
+    """Display the intro/landing page before login"""
+    return render(request, 'landing.html', {'title': 'Welcome to MedicVista'})
 from django.db.models.functions import TruncMonth, TruncYear, Coalesce
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
@@ -157,45 +163,54 @@ def dashboard(request):
     supplier_count = SupplierMaster.objects.count()
     customer_count = CustomerMaster.objects.count()
     
-    recent_sales = SalesInvoiceMaster.objects.select_related('customerid').order_by('-sales_invoice_date')[:5]
-    recent_purchases = InvoiceMaster.objects.select_related('supplierid').order_by('-invoice_date')[:5]
+    recent_sales = SalesInvoiceMaster.objects.select_related('customerid').order_by('-sales_invoice_date')
+    recent_sales = apply_year_filter(recent_sales, request, 'sales_invoice_date')[:5]
+    
+    recent_purchases = InvoiceMaster.objects.select_related('supplierid').order_by('-invoice_date')
+    recent_purchases = apply_year_filter(recent_purchases, request, 'invoice_date')[:5]
     
     today = timezone.now().date()
     
     # Calculate financial overview
     current_month_start = today.replace(day=1)
     
-    # Monthly sales
+    # Monthly sales - with FY filter
     monthly_sales_invoices = SalesInvoiceMaster.objects.filter(
         sales_invoice_date__gte=current_month_start
     )
+    monthly_sales_invoices = apply_year_filter(monthly_sales_invoices, request, 'sales_invoice_date')
     monthly_sales = SalesMaster.objects.filter(
         sales_invoice_no__in=monthly_sales_invoices
     ).aggregate(total=Sum('sale_total_amount'))['total'] or 0
     
-    # Monthly purchases - use invoice total
-    monthly_purchases = InvoiceMaster.objects.filter(
+    # Monthly purchases - with FY filter
+    monthly_purchases_qs = InvoiceMaster.objects.filter(
         invoice_date__gte=current_month_start
-    ).aggregate(total=Sum('invoice_total'))['total'] or 0
+    )
+    monthly_purchases_qs = apply_year_filter(monthly_purchases_qs, request, 'invoice_date')
+    monthly_purchases = monthly_purchases_qs.aggregate(total=Sum('invoice_total'))['total'] or 0
     
-    # Today's sales
+    # Today's sales - with FY filter
     today_sales_invoices = SalesInvoiceMaster.objects.filter(
         sales_invoice_date=today
     )
+    today_sales_invoices = apply_year_filter(today_sales_invoices, request, 'sales_invoice_date')
     today_sales = SalesMaster.objects.filter(
         sales_invoice_no__in=today_sales_invoices
     ).aggregate(total=Sum('sale_total_amount'))['total'] or 0
     
-    # Today's purchases - use invoice total
-    today_purchases = InvoiceMaster.objects.filter(
+    # Today's purchases - with FY filter
+    today_purchases_qs = InvoiceMaster.objects.filter(
         invoice_date=today
-    ).aggregate(total=Sum('invoice_total'))['total'] or 0
+    )
+    today_purchases_qs = apply_year_filter(today_purchases_qs, request, 'invoice_date')
+    today_purchases = today_purchases_qs.aggregate(total=Sum('invoice_total'))['total'] or 0
     
     # Calculate profit: Sales - Purchases (using invoice totals)
     today_profit = today_sales - today_purchases
     monthly_profit = monthly_sales - monthly_purchases
     
-    # Total outstanding payments from customers
+    # Total outstanding payments from customers - with FY filter
     # Calculate total sales amounts
     sales_totals = SalesMaster.objects.values('sales_invoice_no').annotate(
         invoice_total=Sum('sale_total_amount')
@@ -204,7 +219,7 @@ def dashboard(request):
     # Create a dictionary mapping invoice numbers to their total amounts
     invoice_totals = {item['sales_invoice_no']: item['invoice_total'] for item in sales_totals}
     
-    # OPTIMIZED: Calculate total receivable in single query
+    # OPTIMIZED: Calculate total receivable in single query with FY filter
     from django.db.models import OuterRef, Subquery, DecimalField, FloatField
     from django.db.models.functions import Coalesce
     
@@ -214,13 +229,19 @@ def dashboard(request):
         total=Sum('sale_total_amount', output_field=FloatField())
     ).values('total')
     
-    total_receivable = SalesInvoiceMaster.objects.annotate(
+    sales_invoices_fy = SalesInvoiceMaster.objects.all()
+    sales_invoices_fy = apply_year_filter(sales_invoices_fy, request, 'sales_invoice_date')
+    
+    total_receivable = sales_invoices_fy.annotate(
         invoice_total=Coalesce(Subquery(sales_subquery, output_field=FloatField()), 0.0),
         balance=F('invoice_total') - F('sales_invoice_paid')
     ).filter(balance__gt=0).aggregate(total=Sum('balance', output_field=FloatField()))['total'] or 0
     
-    # Total outstanding payments to suppliers
-    total_payable = InvoiceMaster.objects.aggregate(
+    # Total outstanding payments to suppliers - with FY filter
+    purchase_invoices_fy = InvoiceMaster.objects.all()
+    purchase_invoices_fy = apply_year_filter(purchase_invoices_fy, request, 'invoice_date')
+    
+    total_payable = purchase_invoices_fy.aggregate(
         total=Sum(F('invoice_total') - F('invoice_paid'))
     )['total'] or 0
     
@@ -869,6 +890,7 @@ def delete_customer(request, pk):
 @login_required
 def invoice_list(request):
     invoices = InvoiceMaster.objects.all().order_by('-invoice_date')
+    invoices = apply_year_filter(invoices, request, 'invoice_date')
     
     # Search functionality
     search_query = request.GET.get('search', '')
@@ -1829,6 +1851,7 @@ def delete_invoice(request, pk):
 @login_required
 def sales_invoice_list(request):
     invoices = SalesInvoiceMaster.objects.all().order_by('-sales_invoice_date')
+    invoices = apply_year_filter(invoices, request, 'sales_invoice_date')
     
     # Search functionality
     search_query = request.GET.get('search', '')
@@ -2939,6 +2962,7 @@ def delete_sales_payment(request, invoice_id, payment_id):
 @login_required
 def purchase_return_list(request):
     returns = ReturnInvoiceMaster.objects.all().order_by('-returninvoice_date')
+    returns = apply_year_filter(returns, request, 'returninvoice_date')
     
     search_query = request.GET.get('search', '')
     if search_query:
@@ -3469,6 +3493,7 @@ def delete_purchase_return_item(request, return_id, item_id):
 @login_required
 def sales_return_list(request):
     returns = ReturnSalesInvoiceMaster.objects.all().order_by('-return_sales_invoice_date')
+    returns = apply_year_filter(returns, request, 'return_sales_invoice_date')
     
     search_query = request.GET.get('search', '')
     if search_query:

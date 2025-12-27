@@ -3005,6 +3005,14 @@ function displayChallans(challans) {
             <div class="challan-total">₹${challan.total}</div>
         </div>
     `).join('');
+    
+    // Auto-focus on first checkbox after challans are loaded
+    setTimeout(() => {
+        const firstCheckbox = document.querySelector('.challan-checkbox');
+        if (firstCheckbox) {
+            firstCheckbox.focus();
+        }
+    }, 100);
 }
 
 function pullSelectedChallans() {
@@ -3069,6 +3077,22 @@ function fillChallanProducts(products) {
     // Calculate grand total
     calculateGrandTotal();
 }
+
+// Add Shift+Enter handler for pull challan dialog
+document.addEventListener('keydown', function(e) {
+    const dialog = document.getElementById('pullChallanDialog');
+    
+    // Shift+Enter to trigger Pull Selected Challans button
+    if (e.shiftKey && e.key === 'Enter') {
+        if (dialog && dialog.style.display === 'flex') {
+            e.preventDefault();
+            const selectedCheckboxes = document.querySelectorAll('.challan-checkbox:checked');
+            if (selectedCheckboxes.length > 0) {
+                pullSelectedChallans();
+            }
+        }
+    }
+});
 
 // Initialize page with single product row and current date
 document.addEventListener('DOMContentLoaded', function() {

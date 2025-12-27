@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from django.db.models import Q
+from core.year_filter_utils import apply_year_filter
 
 @login_required
 def supplier_challan_list(request):
@@ -15,6 +16,7 @@ def supplier_challan_list(request):
     
     # Only show challans that haven't been invoiced yet
     challans = Challan1.objects.select_related('supplier').filter(is_invoiced=False).order_by('-challan_date', '-challan_id')
+    challans = apply_year_filter(challans, request, 'challan_date')
     suppliers = SupplierMaster.objects.all().order_by('supplier_name')
     
     # Pagination
@@ -152,21 +154,113 @@ def add_supplier_challan(request):
 @login_required
 def view_supplier_challan(request, challan_id):
     """View for displaying supplier challan details"""
-    from core.models import Challan1, SupplierChallanMaster, SupplierChallanMaster2
+    from core.models import Challan1, SupplierChallanMaster, SupplierChallanMaster2, SupplierMaster, ProductMaster
     from django.db.models import Sum
     from itertools import chain
+    from django.db import transaction
+    import json
+    from decimal import Decimal
     
     challan = get_object_or_404(Challan1, challan_id=challan_id)
+    
+    # Handle POST request for editing challan
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                # Get form data
+                challan_date = request.POST.get('challan_date')
+                supplier_id = request.POST.get('supplier')
+                transport_charges = Decimal(request.POST.get('transport_charges', 0))
+                products_data = json.loads(request.POST.get('products_data', '[]'))
+                
+                if not products_data:
+                    return JsonResponse({'success': False, 'error': 'Please add at least one product'})
+                
+                # Update challan basic info
+                supplier = SupplierMaster.objects.get(supplierid=supplier_id)
+                challan.challan_date = challan_date
+                challan.supplier = supplier
+                challan.transport_charges = float(transport_charges)
+                
+                # Calculate new total
+                products_total = sum(
+                    Decimal(p.get('purchase_rate', 0)) * Decimal(p.get('quantity', 0)) - 
+                    Decimal(p.get('discount', 0)) + 
+                    (Decimal(p.get('purchase_rate', 0)) * Decimal(p.get('quantity', 0)) - Decimal(p.get('discount', 0))) * 
+                    (Decimal(p.get('cgst', 0)) + Decimal(p.get('sgst', 0))) / 100
+                    for p in products_data
+                )
+                challan.challan_total = float(products_total + transport_charges)
+                challan.save()
+                
+                # Delete existing products
+                SupplierChallanMaster.objects.filter(product_challan_id=challan).delete()
+                
+                # Add new products
+                for product_data in products_data:
+                    product = ProductMaster.objects.get(productid=product_data['productid'])
+                    
+                    rate = Decimal(product_data.get('purchase_rate', 0))
+                    qty = Decimal(product_data.get('quantity', 0))
+                    discount = Decimal(product_data.get('discount', 0))
+                    cgst = Decimal(product_data.get('cgst', 2.5))
+                    sgst = Decimal(product_data.get('sgst', 2.5))
+                    
+                    subtotal = rate * qty
+                    after_discount = subtotal - discount
+                    cgst_amount = (after_discount * cgst) / 100
+                    sgst_amount = (after_discount * sgst) / 100
+                    total = after_discount + cgst_amount + sgst_amount
+                    
+                    SupplierChallanMaster.objects.create(
+                        product_suppliername=supplier,
+                        product_challan_id=challan,
+                        product_challan_no=challan.challan_no,
+                        product_id=product,
+                        product_name=product.product_name,
+                        product_company=product.product_company,
+                        product_packing=product.product_packing,
+                        product_batch_no=product_data.get('batch_no', ''),
+                        product_expiry=product_data.get('expiry', ''),
+                        product_mrp=float(product_data.get('mrp', 0)),
+                        product_purchase_rate=float(rate),
+                        product_quantity=float(qty),
+                        product_scheme=0,
+                        product_discount=float(discount),
+                        cgst=float(cgst),
+                        sgst=float(sgst),
+                        total_amount=float(total),
+                        challan_calculation_mode='flat',
+                        rate_a=0,
+                        rate_b=0,
+                        rate_c=0
+                    )
+                
+                return JsonResponse({'success': True, 'message': 'Challan updated successfully'})
+                
+        except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
+            print(f"ERROR updating supplier challan: {error_details}")
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    # GET request - show details
     challan_items_1 = SupplierChallanMaster.objects.filter(product_challan_id=challan).select_related('product_id')
     challan_items_2 = SupplierChallanMaster2.objects.filter(product_challan_id=challan).select_related('product_id')
     challan_items = list(chain(challan_items_1, challan_items_2))
     
     products_total = (challan_items_1.aggregate(total=Sum('total_amount'))['total'] or 0) + (challan_items_2.aggregate(total=Sum('total_amount'))['total'] or 0)
     
+    # Get suppliers and products for edit modal
+    suppliers = SupplierMaster.objects.all().order_by('supplier_name')
+    products = ProductMaster.objects.all().order_by('product_name')
+    
     context = {
         'challan': challan,
         'challan_items': challan_items,
         'products_total': products_total,
+        'suppliers': suppliers,
+        'products': products,
         'title': f'Challan {challan.challan_no}'
     }
     return render(request, 'challan/supplier_challan_detail.html', context)
@@ -225,6 +319,7 @@ def customer_challan_list(request):
     
     # Only show challans that haven't been invoiced yet
     challans = CustomerChallan.objects.select_related('customer_name').filter(is_invoiced=False)
+    challans = apply_year_filter(challans, request, 'customer_challan_date')
     
     # Apply date filters
     from_date = request.GET.get('from_date')
@@ -428,11 +523,93 @@ def add_customer_challan(request):
 @login_required
 def view_customer_challan(request, challan_id):
     """View for displaying customer challan details"""
-    from core.models import CustomerChallan, CustomerChallanMaster, CustomerChallanMaster2
+    from core.models import CustomerChallan, CustomerChallanMaster, CustomerChallanMaster2, CustomerMaster, ProductMaster
     from django.db.models import Sum
     from itertools import chain
+    from django.db import transaction
+    import json
+    from decimal import Decimal
     
     challan = get_object_or_404(CustomerChallan, customer_challan_id=challan_id)
+    
+    # Handle POST request for editing challan
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                # Get form data
+                challan_date = request.POST.get('challan_date')
+                customer_id = request.POST.get('customer_name')
+                transport_charges = Decimal(request.POST.get('transport_charges', 0))
+                products_data = json.loads(request.POST.get('products_data', '[]'))
+                
+                if not products_data:
+                    return JsonResponse({'success': False, 'error': 'Please add at least one product'})
+                
+                # Update challan basic info
+                customer = CustomerMaster.objects.get(customerid=customer_id)
+                challan.customer_challan_date = challan_date
+                challan.customer_name = customer
+                challan.customer_transport_charges = float(transport_charges)
+                
+                # Calculate new total
+                products_total = sum(
+                    Decimal(p.get('rate', 0)) * Decimal(p.get('quantity', 0)) - 
+                    Decimal(p.get('discount', 0)) + 
+                    (Decimal(p.get('rate', 0)) * Decimal(p.get('quantity', 0)) - Decimal(p.get('discount', 0))) * 
+                    (Decimal(p.get('cgst', 0)) + Decimal(p.get('sgst', 0))) / 100
+                    for p in products_data
+                )
+                challan.challan_total = float(products_total + transport_charges)
+                challan.save()
+                
+                # Delete existing products
+                CustomerChallanMaster.objects.filter(customer_challan_id=challan).delete()
+                
+                # Add new products
+                for product_data in products_data:
+                    product = ProductMaster.objects.get(productid=product_data['productid'])
+                    
+                    rate = Decimal(product_data.get('rate', 0))
+                    qty = Decimal(product_data.get('quantity', 0))
+                    discount = Decimal(product_data.get('discount', 0))
+                    cgst = Decimal(product_data.get('cgst', 2.5))
+                    sgst = Decimal(product_data.get('sgst', 2.5))
+                    
+                    subtotal = rate * qty
+                    after_discount = subtotal - discount
+                    cgst_amount = (after_discount * cgst) / 100
+                    sgst_amount = (after_discount * sgst) / 100
+                    total = after_discount + cgst_amount + sgst_amount
+                    
+                    CustomerChallanMaster.objects.create(
+                        customer_challan_id=challan,
+                        customer_challan_no=challan.customer_challan_no,
+                        customer_name=customer,
+                        product_id=product,
+                        product_name=product.product_name,
+                        product_company=product.product_company,
+                        product_packing=product.product_packing,
+                        product_batch_no=product_data.get('batch_no', ''),
+                        product_expiry=product_data.get('expiry', ''),
+                        product_mrp=float(product_data.get('mrp', 0)),
+                        sale_rate=float(rate),
+                        sale_quantity=float(qty),
+                        sale_discount=float(discount),
+                        sale_cgst=float(cgst),
+                        sale_sgst=float(sgst),
+                        sale_total_amount=float(total),
+                        rate_applied='NA'
+                    )
+                
+                return JsonResponse({'success': True, 'message': 'Challan updated successfully'})
+                
+        except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
+            print(f"ERROR updating customer challan: {error_details}")
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    # GET request - show details
     challan_items_1 = CustomerChallanMaster.objects.filter(customer_challan_id=challan).select_related('product_id')
     challan_items_2 = CustomerChallanMaster2.objects.filter(customer_challan_id=challan).select_related('product_id')
     challan_items = list(chain(challan_items_1, challan_items_2))
@@ -441,11 +618,17 @@ def view_customer_challan(request, challan_id):
     grand_total = (challan_items_1.aggregate(total=Sum('sale_total_amount'))['total'] or 0) + (challan_items_2.aggregate(total=Sum('sale_total_amount'))['total'] or 0)
     final_total = grand_total + (challan.customer_transport_charges or 0)
     
+    # Get customers and products for edit modal
+    customers = CustomerMaster.objects.all().order_by('customer_name')
+    products = ProductMaster.objects.all().order_by('product_name')
+    
     context = {
         'challan': challan,
         'challan_items': challan_items,
         'grand_total': grand_total,
         'final_total': final_total,
+        'customers': customers,
+        'products': products,
         'title': f'Challan {challan.customer_challan_no}'
     }
     return render(request, 'challan/customer_challan_detail.html', context)
